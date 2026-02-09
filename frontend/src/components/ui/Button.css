@@ -1,4 +1,4 @@
-.link-button {
+.button {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
@@ -11,16 +11,16 @@
   margin-right: 15px;
 }
 
-.link-button:hover {
+.button:hover {
     border-color: #6a70e1;
 }
 
-.link-button:focus,
-.link-button:focus-visible {
+.button:focus,
+.button:focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
 }
 
-.link-button.active {
+.button.active {
     font-weight: bold;
     background-color: rgba(130, 136, 255, 0.5);
     color: #2f326c;
@@ -28,15 +28,15 @@
 
 
 @media (prefers-color-scheme: light) {
-    .link-button {
+    .button {
         background-color: #e0e0e0;
         color: #333;
     }
-    .link-button:hover {
+    .button:hover {
         background-color: #d0d0d0;
         border-color: #6a70e1;
     }
-    .link-button.active {
+    .button.active {
         background-color: rgba(130, 136, 255, 0.5);
         color: #2f326c;
     }
