@@ -21,7 +21,7 @@ const Header = ({ page }) => {
             <div id="header-title">🚲 Itinéraire vélo</div>
         </div>
         <nav>
-            <LinkButton to="/" className={isPage(page, "home")}>Accueil</LinkButton>
+            <LinkButton to="/" className={isPage(page, "home") + ' margin-right'}>Accueil</LinkButton>
             <LinkButton to="/itineraire" className={isPage(page, "itineraire")}>Itinéraire</LinkButton>
         </nav>
         <ProfileButton />
