@@ -1,8 +1,70 @@
+.adress-input-and-suggestions {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.input-with-icon {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
 .adress-input {
-    margin-bottom: 1em;
     width: 90%;
     padding: 10px;
     font-size: 16px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
+
+.adress-input:hover {
+    border-color: #8d92ff;
+    box-shadow: 0 0 8px rgba(142, 147, 255, 0.8);
+}
+
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 40px;
+    right: 0;
+    background: #333;
+    border: 2px solid #222;
+    border-radius: 7px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 2000;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.autocomplete-list li {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 2px solid #222;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.autocomplete-list li:hover {
+    background-color: #ccc;
+}
+
+.autocomplete-list li:hover strong {
+    color: #222;
+}
+
+.autocomplete-list li small {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+.autocomplete-list li:hover small {
+    color: #444;
+}
+

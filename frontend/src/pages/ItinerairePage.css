@@ -19,7 +19,7 @@
 
 }
 
-@media (max-height: 800px) {
+@media (max-height: 900px) {
     .map-container {
         max-height: 50vh;
     }

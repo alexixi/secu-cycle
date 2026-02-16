@@ -1,14 +1,21 @@
-.input-zone {
+.adress-inputs {
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
+.adress-input-wrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
 .search-aside {
     width: 35%;
     max-width: 350px;
-    min-width: 200px;
+    min-width: 250px;
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -21,7 +28,7 @@
 
 @media (max-width: 600px) {
     .search-aside {
-        width: 99%;
+        width: 100%;
         max-width: none;
         min-width: none;
         padding-left: 0.5em;
