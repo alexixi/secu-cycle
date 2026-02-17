@@ -11,9 +11,6 @@ import './App.css'; // Vos styles globaux (reset CSS, polices)
 function App() {
   return (
     <BrowserRouter>
-      {/* Le Router englobe toute l'app.
-         C'est lui qui permet de changer de page sans recharger le navigateur.
-      */}
       <Routes>
 
         <Route path="/" element={<HomePage />} />

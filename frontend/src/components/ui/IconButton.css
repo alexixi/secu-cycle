@@ -1,0 +1,14 @@
+.icon-button {
+    border: none;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    background: none;
+    transition: all 0.25s ease;
+}
+
+.icon-button:hover, .icon-button:focus {
+    outline: none;
+    color: #d4d6ff;
+    filter: drop-shadow(0 0 8px rgb(142, 147, 255));
+}

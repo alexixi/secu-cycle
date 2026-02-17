@@ -1,0 +1,8 @@
+.swap-button.is-rotated {
+    transform: rotate(180deg);
+}
+
+.swap-button {
+    transition: transform 0.3s ease;
+}
+

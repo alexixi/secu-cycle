@@ -1,0 +1,26 @@
+.main-page-itineraire {
+    display: flex;
+    flex-direction: row;
+}
+
+.map-container {
+    height: 90vh;
+    width: 100%;
+}
+
+@media (max-width: 600px) {
+    .main-page-itineraire {
+        flex-direction: column-reverse;
+    }
+
+    .map-container {
+        max-height: 65vh;
+    }
+
+}
+
+@media (max-height: 900px) {
+    .map-container {
+        max-height: 50vh;
+    }
+}
