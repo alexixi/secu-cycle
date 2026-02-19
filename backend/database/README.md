@@ -66,10 +66,38 @@ Backend API for the bike routing and tracking application.
             .then(response => response.json())  
             .then(data => console.log(data))
             .catch(error => console.error(error));
-            Get users:
-            fetch("http://localhost:8000/users")
-            .then(response => response.json())
+
+        Login User:
+            try {
+                const response = await fetch("http://localhost:8000/users/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+                });
+
+                if (!response.ok) {
+                throw new Error("Identifiants invalides");
+                }
+
+                const data = await response.json();
+                localStorage.setItem("token", data.access_token);
+                console.log("Connexion réussie");
+
+                } catch (error) {
+                    console.error("Erreur :", error);
+                }
+        Get users:
+            fetch("http://localhost:8000/users/me", {
+            headers: {"Authorization": "Bearer " + localStorage.getItem("token") }
+            })
+            .then(res => res.json())
             .then(data => console.log(data));
+
     📌 Common Issues
         Port 5432 already in use:
         lsof -i :5432
