@@ -68,3 +68,11 @@
     color: #444;
 }
 
+@media (prefers-color-scheme: light) {
+    .autocomplete-list {
+        background: rgb(162, 166, 229);
+    }
+    .autocomplete-list li small {
+        color: #575454;
+    }
+}

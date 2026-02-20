@@ -1,6 +1,6 @@
 # Frontend
 
-## Installer les dépendaces
+## Installer les dépendances
 ```sh
 npm install
 ```
