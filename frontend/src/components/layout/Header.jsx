@@ -2,31 +2,34 @@ import './Header.css';
 import LinkButton from '../ui/LinkButton';
 
 const isPage = (currentPage, targetPage) => {
-  return currentPage === targetPage ? "active" : "";
+    return currentPage === targetPage ? "active" : "";
 };
 
 const ProfileButton = () => {
-  return (
-    <a href="/profil" id="profile-button">
-        <img id="profile-icon" src="https://img.icons8.com/ios-glyphs/30/user--v1.png" alt="user--v1"/>
-    </a>
-  );
+    return (
+        <a href="/profil" id="profile-button">
+            <img id="profile-icon" src="https://img.icons8.com/ios-glyphs/30/user--v1.png" alt="user--v1" />
+        </a>
+    );
 };
 
 const Header = ({ page }) => {
-  return (
-    <header>
-        <div id="header-logo-title">
-            {/* <img src="" alt="" /> */}
-            <div id="header-title">🚲 Itinéraire vélo</div>
-        </div>
-        <nav>
-            <LinkButton to="/" className={isPage(page, "home") + ' margin-right'}>Accueil</LinkButton>
-            <LinkButton to="/itineraire" className={isPage(page, "itineraire")}>Itinéraire</LinkButton>
-        </nav>
-        <ProfileButton />
-    </header>
-  );
+    return (
+        <header>
+            <div id="header-logo-title">
+                <picture>
+                    <source srcSet="src/assets/logo_clair.png" height="40" media="(prefers-color-scheme: dark)" alt="Logo Sécu'Cycle" />
+                    <img src="src/assets/logo.png" height="40" alt="Logo Sécu'Cycle" />
+                </picture>
+                <div id="header-title">Sécu'Cycle</div>
+            </div>
+            <nav>
+                <LinkButton to="/" className={isPage(page, "home") + ' margin-right'}>Accueil</LinkButton>
+                <LinkButton to="/itineraire" className={isPage(page, "itineraire")}>Itinéraire</LinkButton>
+            </nav>
+            <ProfileButton />
+        </header>
+    );
 };
 
 export default Header;
