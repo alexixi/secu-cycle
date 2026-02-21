@@ -2,26 +2,43 @@ import { useState } from "react";
 import Header from "../components/layout/Header";
 import MapComponent from "../modules/map/MapComponent";
 import SearchAside from "../components/layout/SearchAside";
+import { calculateItineraries } from "../services/apiBack.mock";
 import "./ItinerairePage.css";
 
 export default function ItinerairePage() {
     const [startPoint, setStartPoint] = useState(null);
     const [endPoint, setEndPoint] = useState(null);
+    const [routePaths, setRoutePaths] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleStartSelect = (coords) => {
         console.log("Départ sélectionné :", coords);
-        setStartPoint(coords); // On met à jour l'état
+        setRoutePaths(null);
+        setStartPoint(coords);
     };
 
     const handleEndSelect = (coords) => {
         console.log("Arrivée sélectionnée :", coords);
+        setRoutePaths(null);
         setEndPoint(coords);
     };
 
-    const handleCalculateRoute = () => {
+    const handleCalculateRoute = async () => {
         if (startPoint && endPoint) {
             console.log("Lancement du calcul entre", startPoint.name, "et", endPoint.name);
-            // CALL bakcend
+
+            setIsLoading(true);
+            setRoutePaths(null);
+            const paths = await calculateItineraries(startPoint, endPoint);
+
+            if (paths && paths.length > 0) {
+                setRoutePaths(paths);
+                console.log("Itinéraires reçus", paths);
+            } else {
+                alert("Erreur lors du calcul de l'itinéraire. Vérifiez que le backend est lancé.");
+            }
+
+            setIsLoading(false);
         } else {
             alert("Veuillez sélectionner un départ et une arrivée !");
         }
@@ -44,14 +61,13 @@ export default function ItinerairePage() {
                     onEndSelect={handleEndSelect}
                     onSearchClick={handleCalculateRoute}
                     onSwap={handleSwap}
-                    isReady={startPoint !== null && endPoint !== null}
+                    isReady={startPoint && endPoint && !isLoading}
                 />
                 <MapComponent
                     start={startPoint}
                     end={endPoint}
-                    roadPaths={[startPoint && endPoint ? [startPoint, endPoint] : []]}
-                    color="blue"
-                    dashed={true}
+                    pointilles={[startPoint && endPoint && !routePaths ? [startPoint, endPoint] : []]}
+                    itineraires={routePaths}
                 />
             </div>
         </>

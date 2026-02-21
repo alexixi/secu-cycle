@@ -19,7 +19,7 @@ const MapController = ({ center, bounds }) => {
     return null;
 };
 
-export default function MapComponent({ start, end, roadPaths, color = "green", dashed = false }) {
+export default function MapComponent({ start, end, pointilles, itineraires }) {
     return (
         <MapContainer center={start ? start : [44.8378, -0.5795]} zoom={13} scrollWheelZoom={true} className="map-container">
             <TileLayer
@@ -49,8 +49,11 @@ export default function MapComponent({ start, end, roadPaths, color = "green", d
                     center={{ lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 }}
                     bounds={[start, end]} />
             )}
-            {roadPaths && roadPaths.map((path, index) => (
-                <Polyline key={index} positions={path} color={color} dashArray={dashed ? "10,10" : undefined} />
+            {pointilles && pointilles.map((path, index) => (
+                <Polyline key={index} positions={path} color="blue" dashArray="10,10" />
+            ))}
+            {itineraires && itineraires.map((itineraire, index) => (
+                <Polyline key={index} positions={itineraire} color="green" />
             ))}
         </MapContainer>
     );
