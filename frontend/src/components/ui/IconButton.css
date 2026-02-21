@@ -5,10 +5,16 @@
     cursor: pointer;
     background: none;
     transition: all 0.25s ease;
+    color: var(--text-main);
 }
 
-.icon-button:hover, .icon-button:focus {
+.icon-button:hover {
+    color: var(--primary);
+    filter: drop-shadow(0 0 8px var(--primary));
+}
+
+.icon-button:focus {
     outline: none;
-    color: #d4d6ff;
-    filter: drop-shadow(0 0 8px rgb(142, 147, 255));
+    color: var(--primary);
+    filter: drop-shadow(0 0 5px var(--primary));
 }

@@ -1,27 +1,27 @@
-header #profile-icon{
+header #profile-button {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
-    background-color: #1a1a1a;
+    background-color: var(--bg-surface);
+    color: var(--text-main);
     padding: 10px;
     border: 1px solid transparent;
     transition: all 0.3s ease;
-}
-
-header #profile-icon:hover {
-    border-color: #6a70e1;
-}
-
-header #profile-button {
-    background: none;
-    border: none;
-    padding: 0;
     cursor: pointer;
 }
 
+header #profile-button:hover {
+    border-color: var(--primary);
+}
+
+header #profile-button.active {
+    background-color: var(--primary);
+    color: var(--text-inverse);
+}
+
 header {
-    background-color: #002347;
+    background-color: var(--bg-secondary);
     box-sizing: border-box;
     width: 100%;
     margin-top: 0;
@@ -33,20 +33,16 @@ header {
     justify-content: space-between;
 }
 
-header #header-title {
-    font-size: 1.5em;
-    margin: 0;
+header #header-logo-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 10px;
 }
 
-
-@media (prefers-color-scheme: light) {
-    header {
-        background-color: #f0f0f0;
-    }
-    header #profile-icon {
-        background-color: #e0e0e0;
-    }
-    header #profile-icon:hover {
-        border-color: #6a70e1;
-    }
+header #header-title {
+    font-weight: bold;
+    font-size: 1.5em;
+    margin: 0;
 }

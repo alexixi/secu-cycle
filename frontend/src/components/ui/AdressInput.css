@@ -12,22 +12,31 @@
 }
 
 .input-with-icon.input-error .adress-input {
-    border: 2px solid #ff4d4d;
-    background-color: #fffafa;
+    border: 2px solid var(--error);
+    color: var(--error);
+    background-color: var(--error-bg);
+}
+
+.input-with-icon.input-error .adress-input:hover {
+    box-shadow: 0 0 8px var(--error);
+}
+
+.input-with-icon.input-error .input-icon {
+    color: var(--error);
 }
 
 .adress-input {
     width: 90%;
     padding: 10px;
     font-size: 16px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--text-main);
     border-radius: 4px;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: all 0.3s ease;
 }
 
 .adress-input:hover {
-    border-color: #8d92ff;
-    box-shadow: 0 0 8px rgba(142, 147, 255, 0.8);
+    border-color: var(--primary);
+    box-shadow: 0 0 8px var(--primary);
 }
 
 .autocomplete-list {
@@ -35,8 +44,8 @@
     top: 100%;
     left: 40px;
     right: 0;
-    background: #333;
-    border: 2px solid #222;
+    background-color: var(--bg-surface);
+    border: 2px solid var(--primary);
     border-radius: 7px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     max-height: 200px;
@@ -50,36 +59,37 @@
 .autocomplete-list li {
     padding: 10px;
     cursor: pointer;
-    border-bottom: 2px solid #222;
+    border-bottom: 2px solid var(--primary);
+    background-color: var(--bg-surface);
     display: flex;
     flex-direction: column;
-    transition: background-color 0.2s, color 0.2s;
+    transition: all 0.3s ease;
 }
 
 .autocomplete-list li:hover {
-    background-color: #ccc;
+    background-color: var(--bg-surface-hover);
 }
 
 .autocomplete-list li:hover strong {
-    color: #222;
+    color: var(--primary-hover);
 }
 
 .autocomplete-list li small {
-    color: #888;
+    color: var(--text-secondary);
     font-size: 0.8rem;
 }
 
 .autocomplete-list li:hover small {
-    color: #444;
+    color: var(--primary-hover);
 }
 
 .autocomplete-list li.active {
-    background-color: #ccc;
+    background-color: var(--primary);
     cursor: pointer;
 }
 
 .error-text {
-    color: #ff4d4d;
+    color: var(--error);
     font-size: 0.85rem;
     margin-top: 5px;
     font-weight: 500;
@@ -87,15 +97,13 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@media (prefers-color-scheme: light) {
-    .autocomplete-list {
-        background: rgb(162, 166, 229);
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
     }
-    .autocomplete-list li small {
-        color: #575454;
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
