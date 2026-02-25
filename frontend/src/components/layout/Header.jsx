@@ -8,7 +8,7 @@ const isPage = (currentPage, targetPage) => {
 
 const ProfileButton = ({ className }) => {
     return (
-        <a href="/profil" id="profile-button" className={className}>
+        <a href="/login" id="profile-button" className={className}>
             <FaUser size={20} />
         </a>
     );

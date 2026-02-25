@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { searchAddressAutocomplete } from "../../services/geocodingService";
 import "./AdressInput.css";
+import "./Input.css"
 
 export default function AdressInput({ placeholder, onSelect, defaultValue, children: icon }) {
     const [query, setQuery] = useState("");
@@ -109,7 +110,7 @@ export default function AdressInput({ placeholder, onSelect, defaultValue, child
                     {icon}
                 </div>
                 <input
-                    className="adress-input"
+                    className="input"
                     type="text"
                     autoComplete="street-address"
                     placeholder={placeholder}

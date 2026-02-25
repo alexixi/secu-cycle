@@ -23,3 +23,11 @@ export async function calculateItineraries(start, end) {
     console.log("Itinéraires simulés :", itineraries);
     return itineraries;
 }
+
+export async function login(email, password) {
+
+    // Simuler un délai de réponse du backend
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    return true;    
+}
