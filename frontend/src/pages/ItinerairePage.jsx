@@ -10,6 +10,7 @@ export default function ItinerairePage() {
     const [endPoint, setEndPoint] = useState(null);
     const [routePaths, setRoutePaths] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedBike, setSelectedBike] = useState(null);
 
     const handleStartSelect = (coords) => {
         console.log("Départ sélectionné :", coords);
@@ -29,7 +30,7 @@ export default function ItinerairePage() {
 
             setIsLoading(true);
             setRoutePaths(null);
-            const paths = await calculateItineraries(startPoint, endPoint);
+            const paths = await calculateItineraries(startPoint, endPoint, selectedBike);
 
             if (paths && paths.length > 0) {
                 setRoutePaths(paths);
@@ -61,7 +62,9 @@ export default function ItinerairePage() {
                     onEndSelect={handleEndSelect}
                     onSearchClick={handleCalculateRoute}
                     onSwap={handleSwap}
-                    isReady={startPoint && endPoint && !isLoading}
+                    selectedBike={selectedBike}
+                    onBikeSelect={setSelectedBike}
+                    isReady={startPoint && endPoint && selectedBike && !isLoading}
                 />
                 <MapComponent
                     start={startPoint}

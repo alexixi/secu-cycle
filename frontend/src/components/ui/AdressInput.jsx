@@ -3,7 +3,7 @@ import { searchAddressAutocomplete } from "../../services/geocodingService";
 import "./AdressInput.css";
 import "./Input.css"
 
-export default function AdressInput({ placeholder, onSelect, defaultValue, children: icon }) {
+export default function AdressInput({ id, placeholder, onSelect, defaultValue, children: icon }) {
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -66,7 +66,7 @@ export default function AdressInput({ placeholder, onSelect, defaultValue, child
             name: place.display_name
         });
     };
-    
+
     const handleBlur = () => {
         setTimeout(() => {
             setIsOpen(false);
@@ -106,10 +106,11 @@ export default function AdressInput({ placeholder, onSelect, defaultValue, child
     return (
         <div className="adress-input-and-suggestions">
             <div className={`input-with-icon ${hasError ? "input-error" : ""}`}>
-                <div className="input-icon">
+                <label htmlFor={id} className="input-icon">
                     {icon}
-                </div>
+                </label>
                 <input
+                    id={id}
                     className="input"
                     type="text"
                     autoComplete="street-address"
@@ -117,8 +118,8 @@ export default function AdressInput({ placeholder, onSelect, defaultValue, child
                     value={query}
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    onKeyDown={handleKeyDown} 
-                    onFocus={handleFocus}                   
+                    onKeyDown={handleKeyDown}
+                    onFocus={handleFocus}
                 />
             </div>
 
@@ -131,8 +132,8 @@ export default function AdressInput({ placeholder, onSelect, defaultValue, child
             {isOpen && suggestions.length > 0 && (
                 <ul className="autocomplete-list">
                     {suggestions.map((place, i) => (
-                        <li 
-                            key={place.id} 
+                        <li
+                            key={place.id}
                             ref={el => suggestionRefs.current[i] = el}
                             onMouseDown={() => handleSelect(place)}
                             className={cursor === i ? "active" : ""}

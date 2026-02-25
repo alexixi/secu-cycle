@@ -1,0 +1,32 @@
+.icon-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid var(--text-main);
+    border-radius: 18px;
+    transition: all 0.3s ease;
+    background-color: var(--bg-surface);
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.icon-card:hover {
+    background-color: var(--bg-main);
+    border-color: var(--primary-hover);
+    transform: translateY(-3px);
+}
+
+.icon-card.selected {
+    background-color: var(--primary-light);
+    color: var(--text-main);
+    border-color: var(--primary);
+    transform: translateY(-3px);
+}
+
+.icon-card-icon {
+    width: 100px;
+    height: auto;
+    margin-bottom: 5px;
+    border-radius: 10px;
+}
