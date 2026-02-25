@@ -5,7 +5,8 @@
 
     --bg-main: #ffffff;
     --bg-secondary: #c0cafd;
-    --bg-surface: #ecf0ff;
+    --bg-tertiary: #f3f4ff;
+    --bg-surface: #dfe5fb;
     --bg-surface-hover: #f9fafc;
 
     --text-main: #1e2030;
@@ -27,6 +28,7 @@
 
         --bg-main: #2b2c3d;
         --bg-secondary: #1a1b26;
+        --bg-tertiary: #2f3148;
         --bg-surface: #242533;
         --bg-surface-hover: #2b2d3d;
 

@@ -23,8 +23,13 @@
 }
 
 .button:disabled {
-    opacity: 0.7;
+    opacity: 0.4;
     cursor: not-allowed;
+}
+
+.button:disabled:hover {
+    border: 1px solid transparent;
+    background-color: var(--bg-surface);
 }
 
 /* Sert pour la navbar */

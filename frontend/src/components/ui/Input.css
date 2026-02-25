@@ -15,6 +15,7 @@
     border: 1px solid var(--text-main);
     border-radius: 4px;
     transition: all 0.3s ease;
+    background-color: var(--bg-main);
 }
 
 .input:hover {

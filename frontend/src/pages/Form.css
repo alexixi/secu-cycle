@@ -7,9 +7,10 @@
 }
 
 form {
+    background-color: var(--bg-tertiary);
     padding: 2rem;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     width: 100%;
     max-width: 400px;
 }
