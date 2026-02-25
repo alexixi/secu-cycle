@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { login } from "../services/apiBack.mock";
 import { LuLogIn } from "react-icons/lu";
 import "../components/ui/Input.css"
-import "./Login.css"
+import "./Form.css"
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -14,10 +14,10 @@ export default function Login() {
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
-        if (e) e.preventDefault(); // Empêche le rechargement de la page
+        if (e) e.preventDefault();
         try {
             await login(email, password);
-            navigate("/profil"); // Maintenant React peut changer de page tranquillement
+            navigate("/profil");
         } catch (error) {
             console.error("Erreur de connexion", error);
         }
@@ -26,8 +26,8 @@ export default function Login() {
     return (
         <>
             <Header page="login" />
-            <div className="login-container">
-                <form className="login-form" onSubmit={handleSubmit}>
+            <div className="form-container">
+                <form className="form" onSubmit={handleSubmit}>
                     <h2>Connexion</h2>
 
                     <div className="input-container">

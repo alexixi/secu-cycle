@@ -1,4 +1,4 @@
-.login-container {
+.form-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -6,7 +6,7 @@
     padding: 20px;
 }
 
-.login-form {
+form {
     padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -14,7 +14,7 @@
     max-width: 400px;
 }
 
-.login-form h2 {
+form h2 {
     text-align: center;
     font-size: 1.9rem;
     margin-bottom: 1.5rem;
