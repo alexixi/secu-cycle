@@ -1,0 +1,48 @@
+
+.leaflet-tooltip.custom-map-tooltip {
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    font-family: inherit;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.itineraire-tooltip {
+    padding: 10px 15px;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+.itineraire-tooltip strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.tooltip-details {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.tooltip-standard {
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+}
+
+.leaflet-tooltip-top.tooltip-standard::before {
+    border-top-color: var(--bg-surface);
+}
+
+.tooltip-selected {
+    background-color: var(--primary);
+    color: var(--text-main);
+    font-weight: bold;
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+}
+
+.leaflet-tooltip-top.tooltip-selected::before {
+    border-top-color: var(--primary);
+}

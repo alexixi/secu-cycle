@@ -11,6 +11,7 @@ export default function ItinerairePage() {
     const [routePaths, setRoutePaths] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedBike, setSelectedBike] = useState(null);
+    const [selectedItineraire, setSelectedItineraire] = useState(null);
 
     const handleStartSelect = (coords) => {
         console.log("Départ sélectionné :", coords);
@@ -30,11 +31,11 @@ export default function ItinerairePage() {
 
             setIsLoading(true);
             setRoutePaths(null);
-            const paths = await calculateItineraries(startPoint, endPoint, selectedBike);
+            const itineraries = await calculateItineraries(startPoint, endPoint, selectedBike);
 
-            if (paths && paths.length > 0) {
-                setRoutePaths(paths);
-                console.log("Itinéraires reçus", paths);
+            if (itineraries && itineraries.length > 0) {
+                setRoutePaths(itineraries);
+                console.log("Itinéraires reçus", itineraries);
             } else {
                 alert("Erreur lors du calcul de l'itinéraire. Vérifiez que le backend est lancé.");
             }
@@ -64,6 +65,9 @@ export default function ItinerairePage() {
                     onSwap={handleSwap}
                     selectedBike={selectedBike}
                     onBikeSelect={setSelectedBike}
+                    itineraires={routePaths}
+                    selectedItineraire={selectedItineraire}
+                    setSelectedItineraire={setSelectedItineraire}
                     isReady={startPoint && endPoint && selectedBike && !isLoading}
                 />
                 <MapComponent
@@ -71,6 +75,8 @@ export default function ItinerairePage() {
                     end={endPoint}
                     pointilles={[startPoint && endPoint && !routePaths ? [startPoint, endPoint] : []]}
                     itineraires={routePaths}
+                    selectedItineraire={selectedItineraire}
+                    setSelectedItineraire={setSelectedItineraire}
                 />
             </div>
         </>

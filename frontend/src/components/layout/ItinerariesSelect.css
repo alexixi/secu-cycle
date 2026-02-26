@@ -1,0 +1,63 @@
+.itineraries-select {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 2em;
+}
+
+.itineraries-select h2 {
+    margin: 0;
+    font-size: 1.2em;
+    color: var(--text-main);
+}
+
+.path-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.path {
+    height: 4em;
+    background-color: var(--bg-surface);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.path:hover {
+    background-color: var(--bg-surface-hover);
+    border-color: var(--primary-hover);
+}
+
+.path.path-selected {
+    background-color: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--text-main);
+}
+
+.path h3 {
+    max-width: 50%;
+    margin-right: 10px;
+    font-size: 1em;
+    color: var(--text-main);
+    text-align: left;
+}
+
+.path-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.path-info span {
+    font-size: 0.9em;
+    color: var(--text-main);
+}

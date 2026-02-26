@@ -1,5 +1,6 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, Tooltip } from 'react-leaflet';
 import { useEffect } from 'react';
+import './MapComponent.css';
 
 const MapController = ({ center, bounds }) => {
     const map = useMap();
@@ -19,7 +20,7 @@ const MapController = ({ center, bounds }) => {
     return null;
 };
 
-export default function MapComponent({ start, end, pointilles, itineraires }) {
+export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire }) {
     return (
         <MapContainer center={start ? start : [44.8378, -0.5795]} zoom={13} scrollWheelZoom={true} className="map-container">
             <TileLayer
@@ -52,9 +53,42 @@ export default function MapComponent({ start, end, pointilles, itineraires }) {
             {pointilles && pointilles.map((path, index) => (
                 <Polyline key={index} positions={path} color="blue" dashArray="10,10" />
             ))}
-            {itineraires && itineraires.map((itineraire, index) => (
-                <Polyline key={index} positions={itineraire} color="green" />
-            ))}
+            {itineraires && itineraires.map((itineraire, index) => {
+                const isSelected = selectedItineraire === itineraire.id;
+
+                return (
+                    <Polyline
+                        key={`${index}-${isSelected ? 'selected' : 'unselected'}`}
+                        positions={itineraire.path}
+                        color={isSelected ? "#3d46f6" : "#555df6"}
+                        weight={isSelected ? 5 : 4}
+                        zIndexOffset={isSelected ? 1000 : 0}
+                        opacity={isSelected ? 1 : 0.7}
+                        eventHandlers={{
+                            click: (e) => {
+                                setSelectedItineraire(itineraire.id);
+                                L.DomEvent.stopPropagation(e);
+                            },
+                        }}
+                    >
+                        <Tooltip
+                            key={`${index}-${isSelected ? 'permanent' : 'sticky'}`}
+                            direction="top"
+                            opacity="1"
+                            permanent={isSelected}
+                            sticky={!isSelected}
+                            className={`custom-map-tooltip ${isSelected ? 'tooltip-selected' : 'tooltip-standard'}`}
+                        >
+                            <div className="itineraire-tooltip">
+                                <strong>{itineraire.name}</strong>
+                                <span className="tooltip-details">
+                                    {itineraire.distance.toFixed(2)} km - {Math.round(itineraire.duration)} min
+                                </span>
+                            </div>
+                        </Tooltip>
+                    </Polyline>
+                )
+            })}
         </MapContainer>
     );
 }
