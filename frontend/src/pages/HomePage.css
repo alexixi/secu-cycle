@@ -1,12 +1,12 @@
 #container-top-homepage {
-    height: 100vh;
+    height: 90vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
 }
 
-.logo-homepage {
+#logo-homepage {
     width: 35em;
     height: auto;
     max-width: 80%;
@@ -36,6 +36,7 @@
     font-size: 1.2rem;
     color: var(--text-main);
     text-align: justify;
+    line-height: 1.6;
 }
 
 .home-section p em {

@@ -1,6 +1,7 @@
 import Header from "../components/layout/Header"
 import './HomePage.css';
 import IconButton from "../components/ui/IconButton";
+import Logo from "../assets/logo.svg?react";
 import { IoIosArrowDropdown } from "react-icons/io";
 
 export default function HomePage() {
@@ -8,10 +9,7 @@ export default function HomePage() {
         <>
             <Header page="home" />
             <div id="container-top-homepage">
-                <picture>
-                    <source className="logo-homepage" srcSet="src/assets/logo_clair.png" media="(prefers-color-scheme: dark)" alt="Logo Sécu'Cycle" />
-                    <img className="logo-homepage" src="src/assets/logo.png" alt="Logo Sécu'Cycle" />
-                </picture>
+                <Logo id="logo-homepage" />
                 <div>
                     <h1 id="title-homepage">Sécu'Cycle</h1>
                     <p>Découvrez le projet</p>

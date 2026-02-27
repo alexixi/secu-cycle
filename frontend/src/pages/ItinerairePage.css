@@ -1,26 +1,29 @@
 .main-page-itineraire {
     display: flex;
     flex-direction: row;
+    height: calc(100vh - 4em);
+    width: 100vw;
+    overflow: hidden;
 }
 
 .map-container {
-    height: 90vh;
+    flex: 1;
+    position: relative;
+}
+
+.map-container .leaflet-container {
+    height: 100%;
     width: 100%;
 }
 
 @media (max-width: 600px) {
     .main-page-itineraire {
         flex-direction: column-reverse;
+        height: auto;
     }
 
     .map-container {
-        max-height: 65vh;
-    }
-
-}
-
-@media (max-height: 900px) {
-    .map-container {
-        max-height: 50vh;
+        flex: none;
+        height: 65vh;
     }
 }

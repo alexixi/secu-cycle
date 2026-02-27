@@ -1,9 +1,9 @@
 import './IconCard.css'
 
-export default function IconCard({ key, iconPath, label, selected, onClick }) {
+export default function IconCard({ id, IconSVG, label, selected, onClick }) {
     return (
-        <div id={key} className={`icon-card ${selected ? "selected" : ""}`} onClick={onClick}>
-            <img className="icon-card-icon" src={`src/assets/${iconPath}`} alt={label} />
+        <div id={id} className={`icon-card ${selected ? "selected" : ""}`} onClick={onClick}>
+            <IconSVG className="icon-card-icon" />
             <div className="icon-card-label">{label}</div>
         </div>
     );

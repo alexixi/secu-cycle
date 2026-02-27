@@ -1,6 +1,11 @@
 import './BikeSelect.css';
 import IconCard from '../ui/IconCard';
 import { useRef, useState, useEffect } from 'react';
+import IconBikeStandard from '../../assets/bikes/standard.svg?react';
+import IconBikeStandardElectric from '../../assets/bikes/standard-electric.svg?react';
+import IconBikeVTT from '../../assets/bikes/vtt.svg?react';
+import IconBikeVTT_Electric from '../../assets/bikes/vtt-electric.svg?react';
+import IconBikeRoute from '../../assets/bikes/route.svg?react';
 
 export default function BikeSelect({ selectedBike, onSelect }) {
 
@@ -34,11 +39,11 @@ export default function BikeSelect({ selectedBike, onSelect }) {
     }, []);
 
     const bikes = [
-        { id: "standard", type: "standard", electric: false, name: "Vélo standard" },
-        { id: "standard-electric", type: "standard", electric: true, name: "Vélo électrique" },
-        { id: "vtt", type: "vtt", electric: false, name: "VTT" },
-        { id: "vtt-electric", type: "vtt", electric: true, name: "VTT électrique" },
-        { id: "route", type: "route", electric: false, name: "Vélo de route" },
+        { id: "standard", type: "standard", electric: false, name: "Vélo standard", icon: IconBikeStandard },
+        { id: "standard-electric", type: "standard", electric: true, name: "Vélo électrique", icon: IconBikeStandardElectric },
+        { id: "vtt", type: "vtt", electric: false, name: "VTT", icon: IconBikeVTT },
+        { id: "vtt-electric", type: "vtt", electric: true, name: "VTT électrique", icon: IconBikeVTT_Electric },
+        { id: "route", type: "route", electric: false, name: "Vélo de route", icon: IconBikeRoute },
     ];
 
     return (
@@ -48,7 +53,8 @@ export default function BikeSelect({ selectedBike, onSelect }) {
                 {bikes.map((bike) => (
                     <IconCard
                         key={bike.id}
-                        iconPath={`/bikes/${bike.id}.png`}
+                        id={bike.id}
+                        IconSVG={bike.icon}
                         label={bike.name}
                         selected={selectedBike === bike.id}
                         onClick={() => onSelect(bike.id)}
