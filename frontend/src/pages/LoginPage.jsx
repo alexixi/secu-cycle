@@ -6,6 +6,7 @@ import IconButton from "../components/ui/IconButton";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/apiBack.mock";
 import { LuLogIn } from "react-icons/lu";
+import { FaPersonCirclePlus } from "react-icons/fa6";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "../components/ui/Input.css"
 import "./Form.css"
@@ -72,7 +73,7 @@ export default function Login() {
 
                         <div className="separator">ou</div>
 
-                        <LinkButton to={"/signin"}>Créer un compte</LinkButton>
+                        <LinkButton to={"/signin"}><FaPersonCirclePlus/> Créer un compte</LinkButton>
                     </form>
                 </div>
             </div>

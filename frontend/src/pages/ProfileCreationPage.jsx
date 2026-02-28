@@ -8,6 +8,7 @@ import { FaPersonCirclePlus } from "react-icons/fa6";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { register } from "../services/apiBack.mock";
 import { useNavigate } from "react-router-dom";
+import { LuLogIn } from "react-icons/lu";
 import confetti from "canvas-confetti"
 import "./Form.css"
 
@@ -19,6 +20,7 @@ export default function ProfileCreationPage() {
     const navigate = useNavigate();
     const [password2, setPassword2] = useState("");
     const [hasError, setHasError] = useState(false);
+    const [isValidated, setIsValidated] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showPassword2, setShowPassword2] = useState(false);
 
@@ -49,8 +51,10 @@ export default function ProfileCreationPage() {
         if (password && password2) {
             if (password !== password2) {
                 setHasError(true);
+                setIsValidated(false);
             } else {
                 setHasError(false);
+                setIsValidated(true);
             }
         }
     };
@@ -166,13 +170,13 @@ export default function ProfileCreationPage() {
 
                         {hasError && <p className="error-text">Les mots de passe ne correspondent pas.</p>}
 
-                        <Button type="submit" id="signin-button" disabled={!email || !password || !password2}><FaPersonCirclePlus />    Créer mon compte</Button>
+                        <Button type="submit" id="signin-button" disabled={!email || !password || !password2 || hasError || !isValidated}><FaPersonCirclePlus />    Créer mon compte</Button>
 
                     </form>
 
                     <div className="separator">ou</div>
 
-                    <LinkButton to={"/login"}>J'ai déjà un compte</LinkButton>
+                    <LinkButton to={"/login"}>J'ai déjà un compte <LuLogIn/></LinkButton>
 
                     <div className="rule">* Les champs marqués d'une étoile sont obligatoires.</div>
 
