@@ -1,4 +1,4 @@
-export async function calculateItineraries(start, end, bikeType) {
+export async function calculateItineraries(start, end, bikeType, maxDuration) {
     try {
         const response = await fetch("/api/itineraries", {
             method: "POST",
@@ -10,7 +10,8 @@ export async function calculateItineraries(start, end, bikeType) {
                 start_lon: start.lon,
                 end_lat: end.lat,
                 end_lon: end.lon,
-                bike_type: bikeType
+                bike_type: bikeType,
+                max_duration: maxDuration
             })
         });
 

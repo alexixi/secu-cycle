@@ -12,38 +12,33 @@ export default function ItinerairePage() {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedBike, setSelectedBike] = useState(null);
     const [selectedItineraire, setSelectedItineraire] = useState(null);
+    const [maxTime, setMaxTime] = useState(null);
+    const [maxDuration, setMaxDuration] = useState(null);
 
     const handleStartSelect = (coords) => {
-        console.log("Départ sélectionné :", coords);
         setRoutePaths(null);
         setStartPoint(coords);
     };
 
     const handleEndSelect = (coords) => {
-        console.log("Arrivée sélectionnée :", coords);
         setRoutePaths(null);
         setEndPoint(coords);
     };
 
     const handleCalculateRoute = async () => {
-        if (startPoint && endPoint) {
-            console.log("Lancement du calcul entre", startPoint.name, "et", endPoint.name);
+        if (!startPoint || !endPoint) { return; }
 
-            setIsLoading(true);
-            setRoutePaths(null);
-            const itineraries = await calculateItineraries(startPoint, endPoint, selectedBike);
+        setIsLoading(true);
+        setRoutePaths(null);
+        const itineraries = await calculateItineraries(startPoint, endPoint, selectedBike, maxDuration);
 
-            if (itineraries && itineraries.length > 0) {
-                setRoutePaths(itineraries);
-                console.log("Itinéraires reçus", itineraries);
-            } else {
-                alert("Erreur lors du calcul de l'itinéraire. Vérifiez que le backend est lancé.");
-            }
-
-            setIsLoading(false);
+        if (itineraries && itineraries.length > 0) {
+            setRoutePaths(itineraries);
         } else {
-            alert("Veuillez sélectionner un départ et une arrivée !");
+            alert("Erreur lors du calcul de l'itinéraire.");
         }
+
+        setIsLoading(false);
     };
 
     const handleSwap = () => {
@@ -51,6 +46,37 @@ export default function ItinerairePage() {
         setStartPoint(endPoint);
         setEndPoint(temp);
     };
+
+    const handleMaxTimeChange = (e) => {
+        const [hours, minutes] = e.target.value.split(":").map(Number);
+        if (!isNaN(hours) && !isNaN(minutes)) {
+            const newMaxTime = new Date();
+            newMaxTime.setHours(hours);
+            newMaxTime.setMinutes(minutes);
+            const newMaxDuration = Math.round((newMaxTime.getTime() - Date.now()) / 60000);
+            if (newMaxDuration > 0) {
+                setMaxDuration(newMaxDuration);
+                setMaxTime(e.target.value);
+            }
+        } else {
+            setMaxTime(null);
+            setMaxDuration(null);
+        }
+    }
+
+    const handleMaxDurationChange = (e) => {
+        setMaxDuration(e.target.value);
+        const minutes = parseInt(e.target.value);
+        if (!isNaN(minutes) && minutes > 0) {
+            let newMaxTime = new Date();
+            newMaxTime.setMinutes(newMaxTime.getMinutes() + minutes % 60);
+            newMaxTime.setHours(newMaxTime.getHours() + Math.floor(minutes / 60));
+            setMaxTime(newMaxTime.toTimeString().slice(0, 5));
+        } else {
+            setMaxDuration(null);
+            setMaxTime(null);
+        }
+    }
 
     return (
         <>
@@ -63,6 +89,10 @@ export default function ItinerairePage() {
                     onEndSelect={handleEndSelect}
                     onSearchClick={handleCalculateRoute}
                     onSwap={handleSwap}
+                    maxTime={maxTime}
+                    onMaxTimeChange={handleMaxTimeChange}
+                    maxDuration={maxDuration}
+                    onMaxDurationChange={handleMaxDurationChange}
                     selectedBike={selectedBike}
                     onBikeSelect={setSelectedBike}
                     itineraires={routePaths}

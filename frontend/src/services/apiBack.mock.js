@@ -1,7 +1,7 @@
 // Simulation des requêtes vers le backend pour le développement frontend sans dépendance au backend
 
-export async function calculateItineraries(start, end, bikeType) {
-    console.log("Calcul des itinéraires entre", start, "et", end, "avec le vélo de type", bikeType);
+export async function calculateItineraries(start, end, bikeType, maxDuration) {
+    console.log("Calcul des itinéraires entre", start, "et", end, "avec le vélo de type", bikeType, "et une durée maximale de", maxDuration, "minutes");
 
     // Simuler un délai de réponse du backend
     await new Promise(resolve => setTimeout(resolve, 1500));

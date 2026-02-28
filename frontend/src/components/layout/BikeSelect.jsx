@@ -6,6 +6,8 @@ import IconBikeStandardElectric from '../../assets/bikes/standard-electric.svg?r
 import IconBikeVTT from '../../assets/bikes/vtt.svg?react';
 import IconBikeVTT_Electric from '../../assets/bikes/vtt-electric.svg?react';
 import IconBikeRoute from '../../assets/bikes/route.svg?react';
+import { BsLightningChargeFill } from "react-icons/bs";
+import { MdBatteryChargingFull } from "react-icons/md";
 
 export default function BikeSelect({ selectedBike, onSelect }) {
 
@@ -39,11 +41,11 @@ export default function BikeSelect({ selectedBike, onSelect }) {
     }, []);
 
     const bikes = [
-        { id: "standard", type: "standard", electric: false, name: "Vélo standard", icon: IconBikeStandard },
-        { id: "standard-electric", type: "standard", electric: true, name: "Vélo électrique", icon: IconBikeStandardElectric },
+        { id: "standard", type: "standard", electric: false, name: "Ville", icon: IconBikeStandard },
+        { id: "standard-electric", type: "standard", electric: true, name: "Ville", icon: IconBikeStandardElectric },
         { id: "vtt", type: "vtt", electric: false, name: "VTT", icon: IconBikeVTT },
-        { id: "vtt-electric", type: "vtt", electric: true, name: "VTT électrique", icon: IconBikeVTT_Electric },
-        { id: "route", type: "route", electric: false, name: "Vélo de route", icon: IconBikeRoute },
+        { id: "vtt-electric", type: "vtt", electric: true, name: "VTT", icon: IconBikeVTT_Electric },
+        { id: "route", type: "route", electric: false, name: "Route", icon: IconBikeRoute },
     ];
 
     return (
@@ -56,6 +58,7 @@ export default function BikeSelect({ selectedBike, onSelect }) {
                         id={bike.id}
                         IconSVG={bike.icon}
                         label={bike.name}
+                        LabelIcon={bike.electric ? <MdBatteryChargingFull /> : null}
                         selected={selectedBike === bike.id}
                         onClick={() => onSelect(bike.id)}
                     />

@@ -47,6 +47,20 @@
     animation: fadeIn 0.3s ease-in;
 }
 
+.input.input-time {
+    padding: 3px;
+    height: fit-content;
+    min-width: 5em;
+    width: fit-content;
+    max-width: 90%;
+}
+
+.input.input-number {
+    padding: 3px;
+    height: fit-content;
+    width: 5em;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
