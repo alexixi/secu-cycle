@@ -87,85 +87,88 @@ export default function ProfileCreationPage() {
     return (
         <>
             <Header page="signin" />
-            <div className="form-container">
-                <form className="form" onSubmit={handleSubmit}>
-                    <h2>Créer un compte</h2>
+            <div className="page-form-container">
+                <div className="form-container">
+                    <form className="form" onSubmit={handleSubmit}>
+                        <h2>Créer un compte</h2>
 
-                    <div className="input-group">
-                        <label htmlFor="text">Prénom</label>
-                        <input
-                            className="input"
-                            type="text"
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="input-group">
-                        <label htmlFor="birthdate">Date de naissance</label>
-                        <input
-                            className="input"
-                            type="date"
-                            id="birthdate"
-                            value={birthDate}
-                            onChange={(e) => setBirthdate(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="input-group">
-                        <label htmlFor="email">Adresse mail *</label>
-                        <input
-                            className="input"
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="exemple@gmail.com"
-                            required
-                        />
-                    </div>
-
-                    <div className={`input-group ${hasError ? "input-error" : ""}`}>
-                        <label htmlFor="password">Mot de passe *</label>
-                        <div className="password-container">
+                        <div className="input-group">
+                            <label htmlFor="text">Prénom</label>
                             <input
                                 className="input"
-                                type={showPassword ? "text" : "password"}
-                                id="password"
-                                value={password}
-                                onChange={handlePasswordChange(setPassword)}
-                                onBlur={handlePasswordBlur}
+                                type="text"
+                                id="name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="input-group">
+                            <label htmlFor="birthdate">Date de naissance</label>
+                            <input
+                                className="input"
+                                type="date"
+                                id="birthdate"
+                                value={birthDate}
+                                onChange={(e) => setBirthdate(e.target.value)}
+                                />
+                        </div>
+
+                        <div className="input-group">
+                            <label htmlFor="email">Adresse mail *</label>
+                            <input
+                                className="input"
+                                type="email"
+                                id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="exemple@gmail.com"
                                 required
                                 />
-                            <IconButton className="show-password" onClick={()=>setShowPassword(!showPassword)}>
-                                {showPassword ? <FaEyeSlash/> : <FaEye/>}
-                            </IconButton>
-
                         </div>
-                    </div>
 
-                    <div className={`input-group ${hasError ? "input-error" : ""}`}>
-                        <label htmlFor="password2">Confirmation du mot de passe *</label>
-                        <div className="password-container">
-                            <input
-                                className="input"
-                                type={showPassword ? "text" : "password"}
-                                id="password2"
-                                value={password2}
-                                onChange={handlePasswordChange(setPassword2)}
-                                onBlur={handlePasswordBlur}
-                                required
-                            />
-                            <IconButton className="show-password" onClick={()=>setShowPassword2(!showPassword2)}>
-                                    {showPassword2 ? <FaEyeSlash/> : <FaEye/>}
-                            </IconButton>
+                        <div className={`input-group ${hasError ? "input-error" : ""}`}>
+                            <label htmlFor="password">Mot de passe *</label>
+                            <div className="password-container">
+                                <input
+                                    className="input"
+                                    type={showPassword ? "text" : "password"}
+                                    id="password"
+                                    value={password}
+                                    onChange={handlePasswordChange(setPassword)}
+                                    onBlur={handlePasswordBlur}
+                                    required
+                                    />
+                                <IconButton type="button" className="show-password" onClick={()=>setShowPassword(!showPassword)}>
+                                    {showPassword ? <FaEyeSlash/> : <FaEye/>}
+                                </IconButton>
+
+                            </div>
                         </div>
-                    </div>
 
-                    {hasError && <p className="error-text">Les mots de passe ne correspondent pas.</p>}
+                        <div className={`input-group ${hasError ? "input-error" : ""}`}>
+                            <label htmlFor="password2">Confirmation du mot de passe *</label>
+                            <div className="password-container">
+                                <input
+                                    className="input"
+                                    type={showPassword2 ? "text" : "password"}
+                                    id="password2"
+                                    value={password2}
+                                    onChange={handlePasswordChange(setPassword2)}
+                                    onBlur={handlePasswordBlur}
+                                    required
+                                />
+                                <IconButton type="button" className="show-password" onClick={()=>setShowPassword2(!showPassword2)}>
+                                        {showPassword2 ? <FaEyeSlash/> : <FaEye/>}
+                                </IconButton>
+                            </div>
+                        </div>
 
-                    <Button id="signin-button" disabled={!email || !password || !password2}><FaPersonCirclePlus />    Créer mon compte</Button>
+                        {hasError && <p className="error-text">Les mots de passe ne correspondent pas.</p>}
+
+                        <Button type="submit" id="signin-button" disabled={!email || !password || !password2}><FaPersonCirclePlus />    Créer mon compte</Button>
+
+                    </form>
 
                     <div className="separator">ou</div>
 
@@ -173,7 +176,7 @@ export default function ProfileCreationPage() {
 
                     <div className="rule">* Les champs marqués d'une étoile sont obligatoires.</div>
 
-                </form>
+                </div>
             </div>
         </>
     )
