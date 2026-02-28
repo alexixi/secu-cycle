@@ -1,4 +1,4 @@
-.input-with-icon.input-error .input {
+.input-error .input {
     border: 2px solid var(--error);
     color: var(--error);
     background-color: var(--error-bg);

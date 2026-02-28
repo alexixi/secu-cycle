@@ -2,10 +2,13 @@ import { useState } from "react";
 import Header from "../components/layout/Header";
 import Button from "../components/ui/Button";
 import LinkButton from "../components/ui/LinkButton";
+import IconButton from "../components/ui/IconButton";
 import "../components/ui/Input.css"
 import { FaPersonCirclePlus } from "react-icons/fa6";
-import { login } from "../services/apiBack.mock";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { register } from "../services/apiBack.mock";
 import { useNavigate } from "react-router-dom";
+import confetti from "canvas-confetti"
 import "./Form.css"
 
 export default function ProfileCreationPage() {
@@ -14,15 +17,71 @@ export default function ProfileCreationPage() {
     const [birthDate, setBirthdate] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
+    const [password2, setPassword2] = useState("");
+    const [hasError, setHasError] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPassword2, setShowPassword2] = useState(false);
 
     const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
+        e.preventDefault();
+
+        if (password !== password2){
+            setHasError(true);
+            return;
+        }
+
         try {
-            await login(email, password);
+            triggerConfetti();
+            await register(name, birthDate, email, password);
             navigate("/profil");
         } catch (error) {
             console.error("Erreur de connexion", error);
         }
+
+    };
+
+    const handlePasswordChange = (setter) => (e) => {
+        setter(e.target.value);
+        if (hasError) setHasError(false);
+    };
+
+    const handlePasswordBlur = () => {
+        if (password && password2) {
+            if (password !== password2) {
+                setHasError(true);
+            } else {
+                setHasError(false);
+            }
+        }
+    };
+
+    const triggerConfetti = () => {
+        const end = Date.now() + 3 * 1000;
+        const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+
+        const frame = () => {
+            if (Date.now() > end) return;
+
+            confetti({
+                particleCount: 3,
+                angle: 60,
+                spread: 55,
+                startVelocity: 80,
+                origin: { x: 0, y: 0.8 },
+                colors: colors,
+            });
+            confetti({
+                particleCount: 2,
+                angle: 120,
+                spread: 55,
+                startVelocity: 80,
+                origin: { x: 1, y: 0.8 },
+                colors: colors,
+            });
+
+            requestAnimationFrame(frame);
+        };
+        frame();
     };
 
     return (
@@ -44,7 +103,7 @@ export default function ProfileCreationPage() {
                     </div>
 
                     <div className="input-group">
-                        <label htmlFor="date">Date de naissance</label>
+                        <label htmlFor="birthdate">Date de naissance</label>
                         <input
                             className="input"
                             type="date"
@@ -55,7 +114,7 @@ export default function ProfileCreationPage() {
                     </div>
 
                     <div className="input-group">
-                        <label htmlFor="email">Adresse mail</label>
+                        <label htmlFor="email">Adresse mail *</label>
                         <input
                             className="input"
                             type="email"
@@ -67,23 +126,52 @@ export default function ProfileCreationPage() {
                         />
                     </div>
 
-                    <div className="input-group">
-                        <label htmlFor="password">Mot de passe</label>
-                        <input
-                            className="input"
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                    <div className={`input-group ${hasError ? "input-error" : ""}`}>
+                        <label htmlFor="password">Mot de passe *</label>
+                        <div className="password-container">
+                            <input
+                                className="input"
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                value={password}
+                                onChange={handlePasswordChange(setPassword)}
+                                onBlur={handlePasswordBlur}
+                                required
+                                />
+                            <IconButton className="show-password" onClick={()=>setShowPassword(!showPassword)}>
+                                {showPassword ? <FaEyeSlash/> : <FaEye/>}
+                            </IconButton>
+
+                        </div>
                     </div>
 
-                    <Button id="signin-button" disabled={!email || !password}><FaPersonCirclePlus />    Créer mon compte</Button>
+                    <div className={`input-group ${hasError ? "input-error" : ""}`}>
+                        <label htmlFor="password2">Confirmation du mot de passe *</label>
+                        <div className="password-container">
+                            <input
+                                className="input"
+                                type={showPassword ? "text" : "password"}
+                                id="password2"
+                                value={password2}
+                                onChange={handlePasswordChange(setPassword2)}
+                                onBlur={handlePasswordBlur}
+                                required
+                            />
+                            <IconButton className="show-password" onClick={()=>setShowPassword2(!showPassword2)}>
+                                    {showPassword2 ? <FaEyeSlash/> : <FaEye/>}
+                            </IconButton>
+                        </div>
+                    </div>
+
+                    {hasError && <p className="error-text">Les mots de passe ne correspondent pas.</p>}
+
+                    <Button id="signin-button" disabled={!email || !password || !password2}><FaPersonCirclePlus />    Créer mon compte</Button>
 
                     <div className="separator">ou</div>
 
                     <LinkButton to={"/login"}>J'ai déjà un compte</LinkButton>
+
+                    <div className="rule">* Les champs marqués d'une étoile sont obligatoires.</div>
 
                 </form>
             </div>

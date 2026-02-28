@@ -29,13 +29,13 @@ form h2 {
     align-items: center;
 }
 
-.input-group label {
+.rule, .input-group label {
     margin-bottom: 0.5rem;
     font-size: 1.1rem;
     color: var(--text-secondary);
 }
 
-.input-container{
+.input-container {
     margin-bottom: 2.4rem;
 }
 
@@ -44,4 +44,30 @@ form h2 {
     margin: 1rem;
     position: relative;
     color: var(--text-secondary);
+}
+
+.rule {
+    margin-top: 1.8rem;
+    font-size: 0.8rem;
+}
+
+.password-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 90%;
+}
+
+.password-container .input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.show-password {
+    position: absolute;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
 }

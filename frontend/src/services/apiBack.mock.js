@@ -65,3 +65,10 @@ export async function login(email, password) {
 
     return true;
 }
+
+export async function register(name, birthdate, email, password) {
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    return true;
+}
