@@ -42,7 +42,3 @@
 .button.active:hover {
     background-color: var(--primary-hover);
 }
-
-.button.margin-right {
-    margin-right: 12px;
-}

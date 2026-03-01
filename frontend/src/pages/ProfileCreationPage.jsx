@@ -6,7 +6,8 @@ import IconButton from "../components/ui/IconButton";
 import "../components/ui/Input.css"
 import { FaPersonCirclePlus } from "react-icons/fa6";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { register } from "../services/apiBack.mock";
+import { ImSad2 } from "react-icons/im";
+import { register } from "../services/apiBack";
 import { useNavigate } from "react-router-dom";
 import { LuLogIn } from "react-icons/lu";
 import confetti from "canvas-confetti"
@@ -23,23 +24,27 @@ export default function ProfileCreationPage() {
     const [isValidated, setIsValidated] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showPassword2, setShowPassword2] = useState(false);
+    const [emailSyntaxError, setemailSyntaxError] = useState(false);
+    const [emailAlreadyUsedError, setEmailAlreadyUsedError] = useState(false);
+    const [generalError, setGeneralError] = useState(false);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (password !== password2){
+        if (password !== password2) {
             setHasError(true);
             return;
         }
 
         try {
-            triggerConfetti();
             await register(name, birthDate, email, password);
+            triggerConfetti();
             navigate("/profil");
         } catch (error) {
-            console.error("Erreur de connexion", error);
+            console.error("Erreur de création du compte", error);
+            setGeneralError(true);
         }
-
     };
 
     const handlePasswordChange = (setter) => (e) => {
@@ -115,20 +120,39 @@ export default function ProfileCreationPage() {
                                 id="birthdate"
                                 value={birthDate}
                                 onChange={(e) => setBirthdate(e.target.value)}
-                                />
+                            />
                         </div>
 
-                        <div className="input-group">
+                        <div className={`input-group ${emailSyntaxError ? "input-error" : ""}`}>
                             <label htmlFor="email">Adresse mail *</label>
                             <input
                                 className="input"
                                 type="email"
                                 id="email"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => setEmail(e.target.value) || setemailSyntaxError(false)}
+                                onBlur={(e) => {
+                                    if (!e.target.value) {
+                                        setemailSyntaxError(false);
+                                    } else if (!e.target.value.includes("@") || !e.target.value.includes(".")) {
+                                        setemailSyntaxError(true);
+                                    } else {
+                                        setemailSyntaxError(false);
+                                    }
+                                }}
                                 placeholder="exemple@gmail.com"
                                 required
-                                />
+                            />
+                            {emailSyntaxError && (
+                                <div className="error-text">
+                                    Adresse mail invalide.
+                                </div>
+                            )}
+                            {emailAlreadyUsedError && (
+                                <div className="error-text">
+                                    Adresse mail déjà utilisée.
+                                </div>
+                            )}
                         </div>
 
                         <div className={`input-group ${hasError ? "input-error" : ""}`}>
@@ -142,9 +166,9 @@ export default function ProfileCreationPage() {
                                     onChange={handlePasswordChange(setPassword)}
                                     onBlur={handlePasswordBlur}
                                     required
-                                    />
-                                <IconButton type="button" className="show-password" onClick={()=>setShowPassword(!showPassword)}>
-                                    {showPassword ? <FaEyeSlash/> : <FaEye/>}
+                                />
+                                <IconButton type="button" className="show-password" onClick={() => setShowPassword(!showPassword)}>
+                                    {showPassword ? <FaEyeSlash /> : <FaEye />}
                                 </IconButton>
 
                             </div>
@@ -162,8 +186,8 @@ export default function ProfileCreationPage() {
                                     onBlur={handlePasswordBlur}
                                     required
                                 />
-                                <IconButton type="button" className="show-password" onClick={()=>setShowPassword2(!showPassword2)}>
-                                        {showPassword2 ? <FaEyeSlash/> : <FaEye/>}
+                                <IconButton type="button" className="show-password" onClick={() => setShowPassword2(!showPassword2)}>
+                                    {showPassword2 ? <FaEyeSlash /> : <FaEye />}
                                 </IconButton>
                             </div>
                         </div>
@@ -172,11 +196,12 @@ export default function ProfileCreationPage() {
 
                         <Button type="submit" id="signin-button" disabled={!email || !password || !password2 || hasError || !isValidated}><FaPersonCirclePlus />    Créer mon compte</Button>
 
+                        {generalError && <p className="error-text"><ImSad2 /> Une erreur est survenue lors de la création du compte.<br />Veuillez réessayer.</p>   }
                     </form>
 
                     <div className="separator">ou</div>
 
-                    <LinkButton to={"/login"}>J'ai déjà un compte <LuLogIn/></LinkButton>
+                    <LinkButton to={"/login"}>J'ai déjà un compte <LuLogIn /></LinkButton>
 
                     <div className="rule">* Les champs marqués d'une étoile sont obligatoires.</div>
 

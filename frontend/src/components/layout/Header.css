@@ -12,9 +12,50 @@ header {
     justify-content: space-between;
 }
 
+header nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+header .button {
+    height: 40px;
+    padding-top: 0;
+    padding-bottom: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+header #header-logo-title {
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 10px;
+}
+
+header #header-logo-title:hover {
+    color: var(--primary-hover);
+}
+
 header #header-logo {
-    width: 30px;
-    height: 30px;
+    width: 45px;
+    height: 45px;
+}
+
+header #header-title {
+    font-weight: bold;
+    font-size: 1.5em;
+    margin: 0;
+}
+
+header .header-user-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
 }
 
 header #profile-button {
@@ -30,6 +71,7 @@ header #profile-button {
     cursor: pointer;
 }
 
+
 header #profile-button:hover {
     border-color: var(--primary);
 }
@@ -39,16 +81,69 @@ header #profile-button.active {
     color: var(--text-inverse);
 }
 
-header #header-logo-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: nowrap;
-    gap: 10px;
+.dropdown.profile-dropdown {
+    top: 55px;
+    right: 0;
+    margin-right: 10px;
+    width: 200px;
 }
 
-header #header-title {
+.dropdown {
+    position: absolute;
+    background-color: var(--bg-surface);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+    z-index: 1000;
+    animation: fadeInDown 0.2s ease forwards;
+}
+
+.dropdown-divider {
+    border: none;
+    height: 1px;
+    background-color: var(--border-light);
+    margin: 4px 0;
+}
+
+.dropdown-item {
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: 10px 16px;
+    color: var(--text-main);
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    height: auto;
+}
+
+.dropdown-item:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-hover);
+}
+
+.dropdown-item.logout-btn {
+    color: var(--primary);
     font-weight: bold;
-    font-size: 1.5em;
-    margin: 0;
+}
+
+.dropdown-item.logout-btn:hover {
+    color: var(--primary-hover);
+    background-color: var(--primary-light);
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
