@@ -9,7 +9,7 @@ import { LuLogIn } from "react-icons/lu";
 import { FaPersonCirclePlus } from "react-icons/fa6";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "../components/ui/Input.css"
-import "./Form.css"
+import "../components/ui/Form.css"
 
 export default function Login() {
     const [email, setEmail] = useState("");

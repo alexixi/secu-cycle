@@ -72,3 +72,24 @@ export async function register(name, birthdate, email, password) {
 
     return true;
 }
+
+export async function addBike(name, type, isElectric) {
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    return true;
+}
+
+export async function changeProfileInfo(firstName, lastName, email, birthDate, password, level) {
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    return true;
+}
+
+export async function changeAddress(homeAddress, workAddress) {
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    return true;
+}

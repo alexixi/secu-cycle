@@ -11,10 +11,12 @@
     margin-top: 4px;
 }
 
-.icon-card:hover {
-    background-color: var(--bg-main);
-    border-color: var(--primary-hover);
-    transform: translateY(-3px);
+@media (hover: hover) {
+    .icon-card:hover {
+        background-color: var(--bg-main);
+        border-color: var(--primary-hover);
+        transform: translateY(-3px);
+    } 
 }
 
 .icon-card.selected {
@@ -39,4 +41,9 @@
     align-items: center;
     justify-content: center;
     color: var(--text-main);
+}
+
+.icon-card-context{
+    color: var(--text-secondary);
+    font-size: 0.8em;
 }

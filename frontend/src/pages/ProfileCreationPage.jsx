@@ -10,7 +10,7 @@ import { register } from "../services/apiBack.mock";
 import { useNavigate } from "react-router-dom";
 import { LuLogIn } from "react-icons/lu";
 import confetti from "canvas-confetti"
-import "./Form.css"
+import "../components/ui/Form.css"
 
 export default function ProfileCreationPage() {
     const [name, setName] = useState("");

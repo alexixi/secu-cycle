@@ -1,0 +1,86 @@
+.profile-page h1{
+  margin-left: 5%;
+  margin-bottom: 2%;
+  text-align: left;
+}
+
+.profile-page h2{
+  margin-left: 3%;
+  text-align: left;
+}
+
+.profile-section{
+  background-color: var(--bg-tertiary);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  min-width: 350px;
+  width: 45%;
+  text-align: left;
+  padding-left: 20px;
+  padding-bottom: 30px;
+
+}
+
+.content{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 1em;
+}
+
+.bike-section{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-left: 3%;
+}
+
+.address-section{
+  padding-left: 3%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height:5em;
+}
+
+.form-group-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.form-group-checkbox label {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.button-modification{
+  margin-right: 5%;
+  font-size: 1.3em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-left: 5%;
+}
+
+.button-address{
+  font-size: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-left: 5%;
+  margin-right: 5%;
+}
+
+.address-title, .title{
+  display: flex;
+  align-items: center;
+  justify-content: space-between ;
+  flex-wrap: wrap;
+}
