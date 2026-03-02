@@ -71,14 +71,47 @@ header #profile-button {
     cursor: pointer;
 }
 
-
 header #profile-button:hover {
     border-color: var(--primary);
+}
+
+@media (max-width: 700px) {
+    header nav.media-large {
+        display: none;
+    }
+
+    header .header-user-section.media-large {
+        display: none;
+    }
+
+    header .mobile-menu-button.media-small {
+        display: block;
+    }
+
 }
 
 header #profile-button.active {
     background-color: var(--primary);
     color: var(--text-inverse);
+}
+
+.mobile-menu-button {
+    position: relative;
+}
+
+.dropdown.mobile-dropdown {
+    font-size: 1.2em;
+    top: 55px;
+    right: 0;
+    margin-right: 10px;
+    width: 200px;
+}
+
+.dropdown.profile-dropdown {
+    top: 55px;
+    right: 0;
+    margin-right: 10px;
+    width: 200px;
 }
 
 .dropdown.profile-dropdown {
@@ -111,6 +144,7 @@ header #profile-button.active {
 .dropdown-item {
     background: transparent;
     border: none;
+    display: block;
     width: 100%;
     text-align: left;
     padding: 10px 16px;

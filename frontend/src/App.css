@@ -1,3 +1,17 @@
 #root {
-  text-align: center;
+    text-align: center;
+}
+
+.media-small {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .media-small {
+        display: block;
+    }
+
+    .media-large {
+        display: none;
+    }
 }

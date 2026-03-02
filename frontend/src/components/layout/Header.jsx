@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import './Header.css';
 import LinkButton from '../ui/LinkButton';
+import IconButton from '../ui/IconButton';
 import Logo from "../../assets/logo.svg?react";
 import { useAuth } from "../../context/AuthContext";
-import { FaUser } from "react-icons/fa";
-import { LuLogIn } from "react-icons/lu";
-import { LuLogOut } from "react-icons/lu";
+import { LuLogIn, LuLogOut, LuMenu } from "react-icons/lu";
+import { FaUser, FaHome } from "react-icons/fa";
 import { FaPersonCirclePlus } from "react-icons/fa6";
+import { PiPathBold } from "react-icons/pi";
 
 const isPage = (currentPage, targetPage) => {
     return currentPage === targetPage ? "active" : "";
@@ -24,13 +25,14 @@ const ProfileButton = ({ className, onClick }) => {
 const Header = ({ page }) => {
     const { user, logoutAuth } = useAuth();
 
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isProfileMenuOpen, setisProfileMenuOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (!event.target.closest('.profile-dropdown') && !event.target.closest('#profile-button')) {
-                setIsMenuOpen(false);
+                setisProfileMenuOpen(false);
             }
         };
 
@@ -46,32 +48,58 @@ const Header = ({ page }) => {
                 <Logo id="header-logo" />
                 <div id="header-title">Sécu'Cycle</div>
             </a>
-            <nav>
+            <nav className='media-large'>
                 <LinkButton to="/" className={isPage(page, "home")}>Accueil</LinkButton>
                 <LinkButton to="/itineraire" className={isPage(page, "itineraire")}>Itinéraire</LinkButton>
             </nav>
-            <div className='header-user-section'>
+            <div className='header-user-section media-large'>
                 {user
                     ? <div className="user-connected">{user.first_name}</div>
                     : <LinkButton to="/login" className={isPage(page, "login")}>Connexion</LinkButton>
                 }
                 <ProfileButton
-                    className={isMenuOpen || page in ["profil", "login", "signin"] ? 'active' : ''}
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className={isProfileMenuOpen || page in ["profil", "login", "signin"] ? 'active' : ''}
+                    onClick={() => setisProfileMenuOpen(!isProfileMenuOpen)}
                 />
             </div>
 
-            {isMenuOpen && user && (
+            {isProfileMenuOpen && user && (
                 <div className="dropdown profile-dropdown">
                     <a className="dropdown-item" href="/profil"><FaUser /> Mon Profil</a>
-                    <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setIsMenuOpen(false); navigate("/"); }}><LuLogOut /> Se déconnecter</button>
+                    <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setisProfileMenuOpen(false); navigate("/"); }}><LuLogOut /> Se déconnecter</button>
                 </div>
             )}
 
-            {isMenuOpen && !user && (
+            {isProfileMenuOpen && !user && (
                 <div className="dropdown profile-dropdown">
                     <a className="dropdown-item" href="/login"><LuLogIn /> Se connecter</a>
                     <a className="dropdown-item" href="/signin"><FaPersonCirclePlus /> Créer un compte</a>
+                </div>
+            )}
+
+            <IconButton
+                className="mobile-menu-button media-small"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+                <LuMenu size={24} />
+            </IconButton>
+
+            {isMobileMenuOpen && (
+                <div className="dropdown mobile-dropdown media-small">
+                    <a className="dropdown-item" href="/"><FaHome /> Accueil</a>
+                    <a className="dropdown-item" href="/itineraire"><PiPathBold /> Itinéraires</a>
+                    <hr className="dropdown-divider" />
+                    {user ? (
+                        <>
+                            <a className="dropdown-item" href="/profil"><FaUser /> Mon Profil</a>
+                            <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setIsMobileMenuOpen(false); navigate("/"); }}><LuLogOut /> Se déconnecter</button>
+                        </>
+                    ) : (
+                        <>
+                            <a className="dropdown-item" href="/login"><LuLogIn /> Se connecter</a>
+                            <a className="dropdown-item" href="/signin"><FaPersonCirclePlus /> Créer un compte</a>
+                        </>
+                    )}
                 </div>
             )}
 
