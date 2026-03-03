@@ -3,3 +3,5 @@ cache/
 *.pyo
 *.pyd
 __pycache__/
+venv/
+database/venv/

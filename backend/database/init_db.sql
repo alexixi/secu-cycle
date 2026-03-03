@@ -1,3 +1,4 @@
+
 -- USERS
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -49,6 +50,16 @@ CREATE TABLE user_badges (
     badge_id INTEGER REFERENCES badges(id) ON DELETE CASCADE,
     obtained_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, badge_id)
+);
+
+
+-- USER HISTORY (historique utilisateur)
+CREATE TABLE user_history (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    route_id INTEGER NOT NULL REFERENCES routes(id) ON DELETE CASCADE,
+    action_type VARCHAR(50) NOT NULL, -- trajet, consultation, signalement
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
