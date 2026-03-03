@@ -93,3 +93,10 @@ export async function changeAddress(homeAddress, workAddress) {
 
     return true;
 }
+
+export async function suppressBike(bike) {
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    return true;
+}

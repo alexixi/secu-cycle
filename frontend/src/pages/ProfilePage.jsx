@@ -1,30 +1,30 @@
+import "./ProfilePage.css"
 import { useState } from "react";
 import Header from "../components/layout/Header";
 import IconButton from "../components/ui/IconButton";
-import Button from "../components/ui/Button";
-import "../components/ui/Input.css"
-import "../components/ui/PopUp.css"
-import "../components/ui/Form.css"
-import { AiFillPlusCircle } from "react-icons/ai";
-import { FaHome, FaUserEdit } from "react-icons/fa";
-import { MdOutlineWork, MdEditLocationAlt } from "react-icons/md";
-import "./ProfilePage.css"
+import EditAddressModal from "../components/layout/modals/EditAddressModal";
+import EditProfileModal from "../components/layout/modals/EditProfileModal";
+import SuppressBikeModal from "../components/layout/modals/SuppressBikeModal";
+import AddBikeModal from "../components/layout/modals/AddBikeModal"
 import IconCard from '../components/ui/IconCard';
+import { addBike, changeProfileInfo, changeAddress, suppressBike } from "../services/apiBack.mock";
+
 import IconBikeStandard from '../assets/bikes/standard.svg?react';
 import IconBikeStandardElectric from '../assets/bikes/standard-electric.svg?react';
 import IconBikeVTT from '../assets/bikes/vtt.svg?react';
 import IconBikeVTT_Electric from '../assets/bikes/vtt-electric.svg?react';
 import IconBikeRoute from '../assets/bikes/route.svg?react';
-import { MdBatteryChargingFull } from "react-icons/md";
-import { addBike, changeProfileInfo, changeAddress } from "../services/apiBack.mock";
+import { AiFillPlusCircle } from "react-icons/ai";
+import { FaHome, FaUserEdit } from "react-icons/fa";
+import { MdOutlineWork, MdEditLocationAlt } from "react-icons/md";
+import { MdBatteryChargingFull, MdDelete} from "react-icons/md";
+
 
 export default function ProfilePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalOpenInfo, setIsModalOpenInfo] = useState(false);
   const [isModalOpenAddress, setIsModalOpenAddress] = useState(false);
-  const [bikeName, setBikeName] = useState("");
-  const [bikeType, setBikeType] = useState("vtt");
-  const [bikeIsElectric, setBikeIsElectric] = useState("");
+  const [isModalOpenSuppress, setIsModalOpenSuppress] = useState(false);
 
   const [firstName, setFirstName] = useState("Henri");
   const [lastName, setLastName] = useState("Dupont");
@@ -80,53 +80,67 @@ export default function ProfilePage() {
         LabelIcon={isElec ? <MdBatteryChargingFull /> : null} 
       />
     );
-  }
+  };
 
-  const handleSubmitAddVelo = async (e) => {
-          e.preventDefault();
-
-          const newBike = {
-            type: bikeType, 
-            name: bikeName, 
-            isElectric: bikeIsElectric
-          };
-
-          try {
-              await addBike(bikeName, bikeType, bikeIsElectric);
-              
-              setBikes([...bikes, newBike]); 
-      
-              setBikeName("");
-              setBikeType("vtt");
-              setIsModalOpen(false);
-          } catch (error) {
-              console.error("Erreur lors de l'ajout du vélo", error);
-          }
-  
-      };
-
-  const handleSubmitInfo = async (e) => {
-    e.preventDefault();
-
+  const handleSubmitAddBike = async (newBike) => {
     try {
-        await changeProfileInfo(firstName, lastName, email, birthDate, password, level);
-        setIsModalOpenInfo(false);
+      await addBike(newBike.name, newBike.type, newBike.isElectric);
+      setBikes([...bikes, newBike]); 
+      setIsModalOpen(false);
     } catch (error) {
-        console.error("Erreur lors de la modification du profil", error);
+      console.error("Erreur lors de l'ajout du vélo", error);
     }
+  };
 
+const handleSubmitInfo = async (updatedData) => {
+  try {
+      await changeProfileInfo(
+          updatedData.firstName, 
+          updatedData.lastName, 
+          updatedData.email, 
+          updatedData.birthDate, 
+          updatedData.password, 
+          updatedData.level
+      );
+
+      setFirstName(updatedData.firstName);
+      setLastName(updatedData.lastName);
+      setEmail(updatedData.email);
+      setBirthdate(updatedData.birthDate);
+      setPassword(updatedData.password);
+      setLevel(updatedData.level);
+
+      setIsModalOpenInfo(false);
+  } catch (error) {
+      console.error("Erreur lors de la modification du profil", error);
+  }
 };
 
-  const handleSubmitAddress = async (e) => {
-    e.preventDefault();
-
+  const handleSubmitAddress = async (updatedAddresses) => {
     try {
-        await changeAddress(homeAddress, workAddress);
+        await changeAddress(updatedAddresses.homeAddress, updatedAddresses.workAddress);
+        setHomeAddress(updatedAddresses.homeAddress);
+        setWorkAddress(updatedAddresses.workAddress);
         setIsModalOpenAddress(false);
     } catch (error) {
         console.error("Erreur lors du changement d'adresse.", error);
     }
+};
 
+  const handleSuppressBike = async (indexesToDelete) => {
+    const bikesToProcess = indexesToDelete.map(i => bikes[i]);
+
+    try{
+      for (const bike of bikesToProcess) {
+        await suppressBike(bike);
+      }
+      
+      setBikes(bikes.filter((_, i) => !indexesToDelete.includes(i)));
+      setIsModalOpenSuppress(false);
+    } catch (error) {
+      console.error("Erreur lors de la suppression du vélo", error);
+    }
+    
   };
 
   return (
@@ -142,7 +156,7 @@ export default function ProfilePage() {
       <div className="content">
 
         <div className="profile-section">
-          <div className="address-title">
+          <div className="section-title">
             <h2>Mes adresses</h2>
             <IconButton className="button-address" onClick={() => setIsModalOpenAddress(true)}>Modifier mes adresses<MdEditLocationAlt size={20}/></IconButton>
           </div>
@@ -153,143 +167,57 @@ export default function ProfilePage() {
         </div>
 
         <div className="profile-section">
-          <h2>Mes vélos</h2>
+          <div className="section-title">
+            <h2>Mes vélos</h2>
+            <IconButton className="button-suppress-bike" onClick={() => setIsModalOpenSuppress(true)} >Supprimer un vélo <MdDelete size={20}/></IconButton>
+          </div>
+
           <div className="bike-section">
             {bikes.map((bike, index) => (handleBike(bike, index)))}
             <IconButton onClick={() => setIsModalOpen(true)}><AiFillPlusCircle size={40}/></IconButton>
           </div>
         </div>
 
+        <div className="profile-section">
+          <h2>Historique</h2>
+          <div className="historic">
+          </div>
+        </div>
+
+        <div className="profile-section">
+          <h2>Statistiques</h2>
+          <div className="statistic">
+          </div>
+        </div>
+
       </div>
     </div>
 
-    {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content form-container">
-            <h2>Ajouter un vélo</h2>
-            <form onSubmit={handleSubmitAddVelo}>
+    <EditProfileModal
+      isOpen={isModalOpenInfo}    
+      onClose={() => setIsModalOpenInfo(false)}
+      onConfirm={handleSubmitInfo}
+      userData={{ firstName, lastName, email, birthDate, level, password }}
+    />
 
-              <div className="input-container">
-                <div className="input-group">
-                  <label>Nom du vélo :</label>
-                  <input className="input" type="text" placeholder="Ex: Nakamura Summit 700" value={bikeName}
-                    onChange={(e) => setBikeName(e.target.value)} />
-                </div>
+    <EditAddressModal
+      isOpen={isModalOpenAddress}
+      onClose={() => setIsModalOpenAddress(false)}
+      onConfirm={handleSubmitAddress}
+    />
 
-                <div className="input-group">
-                  <label>Type :</label>
-                  <select className="input" value={bikeType} onChange={(e) => setBikeType(e.target.value)}>
-                    <option value="vtt">VTT</option>
-                    <option value="ville">Ville</option>
-                    <option value="route">Route</option>
-                  </select>
-                </div>
+    <AddBikeModal 
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      onConfirm={handleSubmitAddBike}
+    />
 
-                <div className="input-group">
-                  <div className="form-group-checkbox">
-                    <label>Électrique</label> 
-                    <input type="checkbox" checked={bikeIsElectric} 
-                    onChange={(e) => setBikeIsElectric(e.target.checked)} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-actions">
-                <Button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Annuler</Button>
-                <Button type="submit" className="btn-add">Ajouter <AiFillPlusCircle size={13}/></Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-        {isModalOpenInfo && (
-        <div className="modal-overlay">
-          <div className="modal-content form-container">
-            <h2>Modifier mon profil</h2>
-            <form onSubmit={handleSubmitInfo}>
-
-              <div className="input-container">
-                <div className="input-group">
-                  <label>Prénom</label>
-                  <input className="input" type="text" value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)} />
-                </div>
-
-                <div className="input-group">
-                  <label>Nom</label>
-                  <input className="input" type="text" value={lastName}
-                    onChange={(e) => setLastName(e.target.value)} />
-                </div>
-
-                <div className="input-group">
-                  <label>Adresse mail</label>
-                  <input className="input" type="mail" value={email}
-                    onChange={(e) => setEmail(e.target.value)} />
-                </div>
-
-                <div className="input-group">
-                  <label>Date de naissance</label>
-                  <input className="input" type="date" value={birthDate}
-                    onChange={(e) => setBirthdate(e.target.value)} />
-                </div>
-
-                <div className="input-group">
-                  <label>Niveau sportif</label>
-                  <select className="input" value={level} onChange={(e) => setLevel(e.target.value)}>
-                    <option value="debutant">Débutant</option>
-                    <option value="intermediaire">Intermédiaire</option>
-                    <option value="experimente">Experimenté</option>
-                  </select>
-                </div>
-
-                <div className="input-group">
-                  <label>Mot de passe</label>
-                  <input className="input" type="text" value={password}
-                    onChange={(e) => setPassword(e.target.value)} />
-                </div>
-
-              </div>
-
-              <div className="modal-actions">
-                <Button type="button" className="btn-cancel" onClick={() => setIsModalOpenInfo(false)}>Annuler</Button>
-                <Button type="submit" className="btn-add">Modifier <FaUserEdit size={13}/></Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-    {isModalOpenAddress && (
-        <div className="modal-overlay">
-          <div className="modal-content form-container">
-            <h2>Modifier mes adresses</h2>
-            <form onSubmit={handleSubmitAddress}>
-
-              <div className="input-container">
-          
-                <div className="input-group">
-                  <label><FaHome size={15}/>Adresse du domicile</label>
-                  <input className="input" type="text" value={homeAddress}
-                    onChange={(e) => setHomeAddress(e.target.value)} />
-                </div>
-
-                <div className="input-group">
-                  <label><MdOutlineWork size={15}/>Adresse du travail</label>
-                  <input className="input" type="text" value={workAddress}
-                    onChange={(e) => setWorkAddress(e.target.value)} />
-                </div>
-
-              </div>
-
-              <div className="modal-actions">
-                <Button type="button" className="btn-cancel" onClick={() => setIsModalOpenAddress(false)}>Annuler</Button>
-                <Button type="submit" className="btn-add">Modifier <MdEditLocationAlt size={13}/></Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+    <SuppressBikeModal 
+      isOpen={isModalOpenSuppress} 
+      onClose={() => setIsModalOpenSuppress(false)}
+      bikes={bikes}
+      onConfirm={handleSuppressBike}
+    />
 
     </>
   )

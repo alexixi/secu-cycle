@@ -7,6 +7,7 @@
 .profile-page h2{
   margin-left: 3%;
   text-align: left;
+  margin-bottom: 2%;
 }
 
 .profile-section{
@@ -55,7 +56,6 @@
 .form-group-checkbox label {
   margin-bottom: 0.5rem;
   font-size: 1.1rem;
-  color: var(--text-secondary);
 }
 
 .button-modification{
@@ -68,19 +68,28 @@
   margin-left: 5%;
 }
 
-.button-address{
+.button-suppress-bike, .button-address{
   font-size: 1em;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  margin-left: 5%;
+  margin-left: 3%;
   margin-right: 5%;
 }
 
-.address-title, .title{
+.section-title, .title{
   display: flex;
   align-items: center;
   justify-content: space-between ;
   flex-wrap: wrap;
+}
+
+.group-checkbox-container{
+  display: flex;
+  flex-direction: column;
+}
+
+.group-checkbox-container .form-group-checkbox{
+  margin-left: 1em;
 }
