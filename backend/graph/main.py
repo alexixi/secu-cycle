@@ -1,67 +1,58 @@
+import time
 import osmnx as ox
 from graph_manager import create_graph
-from routing import calculate_weights, get_routes_from_coords, find_time_bounded_safe_path
+from routing import get_optimal_routes
 from statistique import calculer_statistiques_osm, analyser_qualite_trajet
-from config import VITESSE_M_MIN
 
-def main():
-    print("--- Démarrage de l'analyse réseau ---")
+def main():    
+    print("\nChargement de la carte en cours...")
     G = create_graph("victoire_campus.graphml")
+    
+    home_location = (44.80675179469633, -0.6049172894710938)  # Campus
+    work_location = (44.831248775946655, -0.5725108299552651) # Victoire
+    limite_temps = 20 # minutes
 
     calculer_statistiques_osm(G)
+
+    print(f"\nRecherche des itinéraires (Contrainte : {limite_temps} min max)...")
+    start = time.perf_counter()
     
-    G = calculate_weights(G, alpha=0)
+    resultats = get_optimal_routes(G, home_location, work_location, temps_max_min=limite_temps, iterations=30)
+    
+    end = time.perf_counter()
+    print(f"Calculs terminés en {end - start:.2f} secondes !\n")
 
-    home_location = (44.80660548319982, -0.6049046483120086) # Campus
-    work_location = (44.83118685447089, -0.5725666164697867) # Victoire
-
-    print("\nCalcul des itinéraires en cours...")
-
-    resultats = get_routes_from_coords(G, home_location, work_location)
-
-    if not resultats["success"]:
-        print(f"Erreur : {resultats['error']}")
+    if not resultats.get("success"):
+        print(f"Erreur : {resultats.get('error')}")
         return
 
-    # Extraction des données renvoyées par la fonction
-    route_fast = resultats["fast_route"]["path"]
-    dist_fast = resultats["fast_route"]["distance"]
+    fast = resultats["fast_route"]
+    safe = resultats["safe_route"]
+    bounded = resultats.get("bounded_route")
+
+    print("--- RÉSULTATS ---")
+    print(f"Trajet Rapide   : {fast['distance']:.0f} m | {fast['temps']:.1f} min")
+    print(f"Trajet Sécurisé : {safe['distance']:.0f} m | {safe['temps']:.1f} min")
     
-    route_safe = resultats["safe_route"]["path"]
-    dist_safe = resultats["safe_route"]["distance"]
-
-    limite_temps = 22.0 # En minutes
-
-    print(f"\n--- RECHERCHE SOUS CONTRAINTE : Max {limite_temps} min ---")
-    resultat = find_time_bounded_safe_path(G, home_location, work_location, limite_temps)
-
-    if resultat["success"]:
-        print(resultat["message"])
-        print(f"Temps final estimé : {resultat['temps']:.2f} min")
-        print(f"Valeur Alpha optimale : {resultat['alpha_final']:.3f}")
-    
-        
+    if bounded:
+        print(f"Trajet Compromis: {bounded['distance']:.0f} m | {bounded['temps']:.1f} min (Alpha optimal : {bounded.get('alpha_final', 0):.2f})")
     else:
-        print(f"Erreur : {resultat['error']}")
+        print(f"Compromis impossible : {resultats.get('bounded_error')}")
 
-    # --- AFFICHAGE CONSOLE ---
-    print(f"\nRAPIDE   : {dist_fast/1000:.2f} km | Temps : {dist_fast/VITESSE_M_MIN:.2f} min")
-    print(f"SÉCURISÉ : {dist_safe/1000:.2f} km | Temps : {dist_safe/VITESSE_M_MIN:.2f} min")
-
-
-    analyser_qualite_trajet(G, route_fast, "Trajet RAPIDE (Distance pure)")
-    analyser_qualite_trajet(G, route_safe, "Trajet SÉCURISÉ (Imputation active)")
-    # --- VISUALISATION ---
-    route_edges = ox.routing.route_to_gdf(G, route_fast)
-    route_safe_edges = ox.routing.route_to_gdf(G, route_safe)
-    route_contrainte_edges = ox.routing.route_to_gdf(G, resultat["path"])
-
-    m = route_edges.explore(color="red", name="Trajet Rapide")
-    route_safe_edges.explore(m=m, color="green", name="Trajet Sécurisé")
-    route_contrainte_edges.explore(m=m, color="blue", name="Trajet sous contrainte de temps")
+    m = ox.routing.route_to_gdf(G, fast['path']).explore(color="red", name="Rapide", style_kwds={'weight': 5})
     
-    m.save("itineraire_2026.html")
-    print("Carte mise à jour : itineraire_2026.html")
+    ox.routing.route_to_gdf(G, safe['path']).explore(m=m, color="green", name="Sécurisé", style_kwds={'weight': 5})
+    
+    if bounded and bounded['path'] != fast['path'] and bounded['path'] != safe['path']:
+        ox.routing.route_to_gdf(G, bounded['path']).explore(m=m, color="blue", name="Compromis (Contrainte Temps)", style_kwds={'weight': 5, 'opacity': 0.8})
+
+    nom_fichier = "itineraire_2026.html"
+    m.save(nom_fichier)
+    print(f"Carte sauvegardée sous '{nom_fichier}'. Ouvre-le dans ton navigateur !")
+
+    analyser_qualite_trajet(G, fast['path'], nom_trajet="Trajet rapide")
+    analyser_qualite_trajet(G, safe['path'], nom_trajet="Trajet sécurisé")
+    analyser_qualite_trajet(G, bounded['path'], nom_trajet="Trajet limite de temps")
 
 if __name__ == "__main__":
     main()

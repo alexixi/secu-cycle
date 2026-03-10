@@ -120,111 +120,93 @@ def calculate_route_distance(G, route):
                 distance += float(edge_data.get('length', 0))
     return distance
 
-def get_routes_from_coords(G, start_coords, end_coords):
+def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iterations=6):
     """
-    Généralise le calcul d'itinéraires à partir de coordonnées GPS.
-    
-    :param G: Le graphe OSMnx pondéré
-    :param start_coords: Tuple (latitude, longitude) du départ
-    :param end_coords: Tuple (latitude, longitude) de l'arrivée
-    :return: Dictionnaire contenant les chemins et les distances
+    Calcule et renvoie le trajet le plus rapide, le plus sécurisé, 
+    et (optionnellement) le meilleur compromis respectant une contrainte de temps.
     """
     try:
         start_node = ox.distance.nearest_nodes(G, start_coords[1], start_coords[0])
         end_node = ox.distance.nearest_nodes(G, end_coords[1], end_coords[0])
-
-        # 1. Calcul du trajet Rapide
-        route_fast = nx.shortest_path(G, start_node, end_node, weight='length')
+        
+        # --- 1. TRAJET LE PLUS RAPIDE (Alpha = 1.0) ---
+        G = calculate_weights(G, alpha=1.0)
+        route_fast = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_fast = calculate_route_distance(G, route_fast)
-
-        # 2. Calcul du trajet Sécurisé
+        temps_fast = dist_fast / VITESSE_M_MIN
+        
+        # --- 2. TRAJET LE PLUS SÉCURISÉ (Alpha = 0.0) ---
+        G = calculate_weights(G, alpha=0.0)
         route_safe = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_safe = calculate_route_distance(G, route_safe)
+        temps_safe = dist_safe / VITESSE_M_MIN
 
-        return {
+        # Construction du dictionnaire de base
+        result = {
             "success": True,
             "fast_route": {
                 "path": route_fast,
-                "distance": dist_fast
+                "distance": dist_fast,
+                "temps": temps_fast
             },
             "safe_route": {
                 "path": route_safe,
-                "distance": dist_safe
+                "distance": dist_safe,
+                "temps": temps_safe
             }
         }
-        
+
+        # --- 3. TRAJET SOUS CONTRAINTE DE TEMPS (Optionnel) ---
+        if temps_max_min is not None:
+            # Cas A : Même le trajet le plus rapide est trop long
+            if temps_fast > temps_max_min:
+                result["bounded_route"] = None
+                result["bounded_error"] = "time_limit_too_low"
+            
+            # Cas B : Le trajet le plus sûr respecte déjà la contrainte
+            elif temps_safe <= temps_max_min:
+                result["bounded_route"] = {
+                    "path": route_safe,
+                    "distance": dist_safe,
+                    "temps": temps_safe,
+                    "alpha_final": 0.0
+                }
+            
+            # Cas C : Recherche du meilleur compromis (Dichotomie)
+            else:
+                alpha_low = 0.0
+                alpha_high = 1.0
+                best_path = route_fast
+                best_temps = temps_fast
+                best_dist = dist_fast
+                best_alpha = 1.0
+
+                for _ in range(iterations):
+                    alpha_mid = (alpha_low + alpha_high) / 2.0
+                    G = calculate_weights(G, alpha=alpha_mid)
+                    route_mid = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
+                    dist_mid = calculate_route_distance(G, route_mid)
+                    temps_mid = dist_mid / VITESSE_M_MIN
+
+                    if temps_mid <= temps_max_min:
+                        best_path = route_mid
+                        best_temps = temps_mid
+                        best_dist = dist_mid
+                        best_alpha = alpha_mid
+                        alpha_high = alpha_mid 
+                    else:
+                        alpha_low = alpha_mid
+
+                result["bounded_route"] = {
+                    "path": best_path,
+                    "distance": best_dist,
+                    "temps": best_temps,
+                    "alpha_final": best_alpha
+                }
+
+        return result
+
     except nx.NetworkXNoPath:
-        return {"success": False, "error": "Aucun chemin trouvé entre ces deux points."}
+        return {"success": False, "error": "no_path_found"}
     except Exception as e:
         return {"success": False, "error": str(e)}
-
-
-def find_time_bounded_safe_path(G, start_coords, end_coords, temps_max_min, iterations=6):
-    """
-    Trouve le trajet le plus sécurisé respectant une limite de temps stricte
-    en utilisant une recherche dichotomique sur le paramètre Alpha.
-    """
-    start_node = ox.distance.nearest_nodes(G, start_coords[1], start_coords[0])
-    end_node = ox.distance.nearest_nodes(G, end_coords[1], end_coords[0])
-    
-    # 1. Vérification de faisabilité (Trajet le plus rapide, Alpha = 1.0)
-    G = calculate_weights(G, alpha=1.0)
-    try:
-        route_fast = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
-    except nx.NetworkXNoPath:
-        return {"success": False, "error": "Aucun chemin possible entre ces points."}
-        
-    dist_fast = calculate_route_distance(G, route_fast)
-    temps_fast = dist_fast / VITESSE_M_MIN
-    
-    if temps_fast > temps_max_min:
-        return {"success": False, "error": f"Impossible. Le trajet le plus rapide prend déjà {temps_fast:.1f} min."}
-
-    # 2. Le trajet le plus sûr (Alpha = 0.0) passe-t-il la limite ?
-    G = calculate_weights(G, alpha=0.0)
-    route_safe = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
-    dist_safe = calculate_route_distance(G, route_safe)
-    temps_safe = dist_safe / VITESSE_M_MIN
-    
-    if temps_safe <= temps_max_min:
-        return {
-            "success": True, 
-            "path": route_safe, 
-            "temps": temps_safe, 
-            "alpha_final": 0.0,
-            "message": "Le trajet le plus sûr respecte déjà la contrainte."
-        }
-
-    # 3. Recherche Dichotomique pour trouver le meilleur compromis
-    alpha_low = 0.0  # Zone trop lente (mais très sûre)
-    alpha_high = 1.0 # Zone respectant le temps (mais dangereuse)
-    
-    best_path = route_fast
-    best_temps = temps_fast
-    best_alpha = 1.0
-
-    for _ in range(iterations):
-        alpha_mid = (alpha_low + alpha_high) / 2.0
-        
-        G = calculate_weights(G, alpha=alpha_mid)
-        route_mid = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
-        dist_mid = calculate_route_distance(G, route_mid)
-        temps_mid = dist_mid / VITESSE_M_MIN
-
-        if temps_mid <= temps_max_min:
-            # Succès : on respecte le temps. On sauvegarde et on essaie d'être encore plus sûr (baisser alpha)
-            best_path = route_mid
-            best_temps = temps_mid
-            best_alpha = alpha_mid
-            alpha_high = alpha_mid 
-        else:
-            # Échec : trajet trop long. Il faut prioriser la vitesse (augmenter alpha)
-            alpha_low = alpha_mid
-
-    return {
-        "success": True, 
-        "path": best_path, 
-        "temps": best_temps, 
-        "alpha_final": best_alpha,
-        "message": f"Compromis trouvé avec un profil à {100 - (best_alpha*100):.0f}% axé sur la sécurité."
-    }
