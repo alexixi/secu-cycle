@@ -1,6 +1,6 @@
 import osmnx as ox
 from graph_manager import create_graph
-from routing import calculate_weights, get_routes_from_coords
+from routing import calculate_weights, get_routes_from_coords, find_time_bounded_safe_path
 from statistique import calculer_statistiques_osm, analyser_qualite_trajet
 from config import VITESSE_M_MIN
 
@@ -30,6 +30,20 @@ def main():
     route_safe = resultats["safe_route"]["path"]
     dist_safe = resultats["safe_route"]["distance"]
 
+    limite_temps = 22.0 # En minutes
+
+    print(f"\n--- RECHERCHE SOUS CONTRAINTE : Max {limite_temps} min ---")
+    resultat = find_time_bounded_safe_path(G, home_location, work_location, limite_temps)
+
+    if resultat["success"]:
+        print(resultat["message"])
+        print(f"Temps final estimé : {resultat['temps']:.2f} min")
+        print(f"Valeur Alpha optimale : {resultat['alpha_final']:.3f}")
+    
+        
+    else:
+        print(f"Erreur : {resultat['error']}")
+
     # --- AFFICHAGE CONSOLE ---
     print(f"\nRAPIDE   : {dist_fast/1000:.2f} km | Temps : {dist_fast/VITESSE_M_MIN:.2f} min")
     print(f"SÉCURISÉ : {dist_safe/1000:.2f} km | Temps : {dist_safe/VITESSE_M_MIN:.2f} min")
@@ -40,9 +54,11 @@ def main():
     # --- VISUALISATION ---
     route_edges = ox.routing.route_to_gdf(G, route_fast)
     route_safe_edges = ox.routing.route_to_gdf(G, route_safe)
+    route_contrainte_edges = ox.routing.route_to_gdf(G, resultat["path"])
 
     m = route_edges.explore(color="red", name="Trajet Rapide")
     route_safe_edges.explore(m=m, color="green", name="Trajet Sécurisé")
+    route_contrainte_edges.explore(m=m, color="blue", name="Trajet sous contrainte de temps")
     
     m.save("itineraire_2026.html")
     print("Carte mise à jour : itineraire_2026.html")
