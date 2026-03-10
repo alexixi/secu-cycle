@@ -10,16 +10,62 @@ def _get_speed_score(vmax):
     else: return 1
 
 def _parse_maxspeed(vmax, h_type):
-    if isinstance(vmax, list): vmax = vmax[0]
-    try:
-        return int(str(vmax).split()[0])
-    except (ValueError, AttributeError):
-        return 25 if h_type == 'cycleway' else 30
+    """
+    Parse la vitesse max si elle existe, sinon l'impute selon le type de voie
+    en respectant les règles d'urbanisme de Bordeaux Métropole (Ville 30).
+    """
+    # 1. Si la donnée est renseignée dans OpenStreetMap
+    if vmax and str(vmax).lower() not in ['unknown', 'none', 'nan', '']:
+        if isinstance(vmax, list):
+            vmax = vmax[0]
+        try:
+            # On extrait les chiffres (ex: "30 mph" ou "50" -> 30 ou 50)
+            return int(str(vmax).split()[0])
+        except (ValueError, AttributeError):
+            pass
 
-def _get_lit_score(lit):
-    if lit == 'yes': return 1.0
-    elif lit == 'no': return 0.0
-    else: return 0.5
+    # Les grands axes de transit restent souvent à 50 km/h
+    if h_type in ['primary', 'primary_link', 'secondary', 'secondary_link']:
+        return 50
+    # Règle de la Ville 30 pour le reste du réseau routier standard
+    elif h_type in ['residential', 'tertiary', 'tertiary_link', 'unclassified']:
+        return 30
+    # Zones de rencontre (priorité piéton)
+    elif h_type == 'living_street':
+        return 20
+    # Infrastructures dédiées aux vélos ou hors route
+    elif h_type in ['cycleway', 'path', 'track']:
+        return 25
+    # Zones piétonnes (les vélos y roulent au pas)
+    elif h_type in ['footway', 'pedestrian']:
+        return 10
+    
+    # Valeur par défaut de sécurité
+    return 30
+
+def _get_lit_score(lit, h_type):
+    """
+    Retourne le score d'éclairage ou l'impute de manière probabiliste
+    selon le type de route si la donnée est manquante.
+    """
+    # 1. Donnée explicite
+    if lit == 'yes':
+        return 1.0
+    elif lit == 'no':
+        return 0.0
+
+    # Les rues en ville sont presque toujours éclairées
+    if h_type in ['residential', 'primary', 'secondary', 'tertiary', 'living_street', 'pedestrian']:
+        return 0.9  
+    # Les pistes cyclables urbaines le sont souvent, mais pas toujours
+    elif h_type == 'cycleway':
+        return 0.7  
+    # Les chemins de terre, forêts ou parcs sont rarement éclairés
+    elif h_type in ['path', 'track', 'footway']:
+        return 0.2  
+    
+    # Doute raisonnable
+    return 0.5
 
 def calculate_weights(G, alpha=0.5):
     """Calcule les poids de sécurité et hybrides pour le routage."""
@@ -36,7 +82,7 @@ def calculate_weights(G, alpha=0.5):
         if isinstance(c_type, list): c_type = c_type[0]
         n_cycleway = SCORE_CYCLEWAY.get(c_type, 1)
 
-        n_lit = _get_lit_score(data.get('lit', 'unknown'))
+        n_lit = _get_lit_score(data.get('lit', 'unknown'), h_type)
         vmax = _parse_maxspeed(data.get('maxspeed', 30), h_type)
         n_vitesse = _get_speed_score(vmax)
 
@@ -112,3 +158,32 @@ def get_routes_from_coords(G, start_coords, end_coords):
         return {"success": False, "error": "Aucun chemin trouvé entre ces deux points."}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+def analyser_qualite_trajet(G, route, nom_trajet="Trajet"):
+    """Analyse les types de routes et vitesses empruntés par un itinéraire."""
+    vitesses = []
+    scores = []
+    
+    for i in range(len(route) - 1):
+        u, v = route[i], route[i + 1]
+        edge_data = G.get_edge_data(u, v)
+        if edge_data:
+            data = edge_data[0] if isinstance(edge_data, dict) and 0 in edge_data else edge_data
+            
+            # On récupère la vitesse (imputée ou réelle)
+            h_type = data.get('highway', 'unknown')
+            if isinstance(h_type, list): h_type = h_type[0]
+            vmax = _parse_maxspeed(data.get('maxspeed', None), h_type)
+            
+            vitesses.append(vmax)
+            scores.append(data.get('safety_score', 0))
+
+    vitesse_moyenne_axes = sum(vitesses) / len(vitesses) if vitesses else 0
+    score_moyen = sum(scores) / len(scores) if scores else 0
+    pct_zone30 = sum(1 for v in vitesses if v <= 30) / len(vitesses) * 100 if vitesses else 0
+
+    print(f"\nANALYSE : {nom_trajet}")
+    print(f" - Note de sécurité moyenne : {score_moyen:.2f}/10")
+    print(f" - Vitesse moyenne des axes empruntés : {vitesse_moyenne_axes:.1f} km/h")
+    print(f" - % du trajet en zone apaisée (<= 30 km/h) : {pct_zone30:.1f} %")

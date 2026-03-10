@@ -1,12 +1,14 @@
 import time
 import osmnx as ox
-from graph_manager import create_graph
-from routing import calculate_weights, get_routes_from_coords
+from graph_manager import create_graph, calculer_statistiques_osm
+from routing import calculate_weights, get_routes_from_coords, analyser_qualite_trajet
 from config import VITESSE_M_MIN
 
 def main():
     print("--- Démarrage de l'analyse réseau ---")
     G = create_graph("victoire_campus.graphml")
+
+    calculer_statistiques_osm(G)
     
     G = calculate_weights(G, alpha=0)
 
@@ -32,6 +34,9 @@ def main():
     print(f"\nRAPIDE   : {dist_fast/1000:.2f} km | Temps : {dist_fast/VITESSE_M_MIN:.2f} min")
     print(f"SÉCURISÉ : {dist_safe/1000:.2f} km | Temps : {dist_safe/VITESSE_M_MIN:.2f} min")
 
+
+    analyser_qualite_trajet(G, route_fast, "Trajet RAPIDE (Distance pure)")
+    analyser_qualite_trajet(G, route_safe, "Trajet SÉCURISÉ (Imputation active)")
     # --- VISUALISATION ---
     route_edges = ox.routing.route_to_gdf(G, route_fast)
     route_safe_edges = ox.routing.route_to_gdf(G, route_safe)
