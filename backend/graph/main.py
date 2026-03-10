@@ -1,7 +1,7 @@
-import time
 import osmnx as ox
-from graph_manager import create_graph, calculer_statistiques_osm
-from routing import calculate_weights, get_routes_from_coords, analyser_qualite_trajet
+from graph_manager import create_graph
+from routing import calculate_weights, get_routes_from_coords
+from statistique import calculer_statistiques_osm, analyser_qualite_trajet
 from config import VITESSE_M_MIN
 
 def main():

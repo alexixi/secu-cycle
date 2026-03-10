@@ -158,32 +158,3 @@ def get_routes_from_coords(G, start_coords, end_coords):
         return {"success": False, "error": "Aucun chemin trouvé entre ces deux points."}
     except Exception as e:
         return {"success": False, "error": str(e)}
-
-
-def analyser_qualite_trajet(G, route, nom_trajet="Trajet"):
-    """Analyse les types de routes et vitesses empruntés par un itinéraire."""
-    vitesses = []
-    scores = []
-    
-    for i in range(len(route) - 1):
-        u, v = route[i], route[i + 1]
-        edge_data = G.get_edge_data(u, v)
-        if edge_data:
-            data = edge_data[0] if isinstance(edge_data, dict) and 0 in edge_data else edge_data
-            
-            # On récupère la vitesse (imputée ou réelle)
-            h_type = data.get('highway', 'unknown')
-            if isinstance(h_type, list): h_type = h_type[0]
-            vmax = _parse_maxspeed(data.get('maxspeed', None), h_type)
-            
-            vitesses.append(vmax)
-            scores.append(data.get('safety_score', 0))
-
-    vitesse_moyenne_axes = sum(vitesses) / len(vitesses) if vitesses else 0
-    score_moyen = sum(scores) / len(scores) if scores else 0
-    pct_zone30 = sum(1 for v in vitesses if v <= 30) / len(vitesses) * 100 if vitesses else 0
-
-    print(f"\nANALYSE : {nom_trajet}")
-    print(f" - Note de sécurité moyenne : {score_moyen:.2f}/10")
-    print(f" - Vitesse moyenne des axes empruntés : {vitesse_moyenne_axes:.1f} km/h")
-    print(f" - % du trajet en zone apaisée (<= 30 km/h) : {pct_zone30:.1f} %")
