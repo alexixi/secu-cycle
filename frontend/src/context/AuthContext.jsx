@@ -4,14 +4,31 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [token, setToken] = useState(null);
+    const [userBikes, setUserBikes] = useState([]);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        if (storedUser && storedUser !== "undefined") {
+        const storedToken = localStorage.getItem('access_token');
+        const storedBikes = localStorage.getItem('bikes');
+        if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
             setUser(JSON.parse(storedUser));
         } else {
             localStorage.removeItem('user');
             setUser(null);
+        }
+        if (storedToken && storedToken !== "undefined" && storedToken !== "null") {
+            setToken(storedToken);
+        } else {
+            localStorage.removeItem('access_token');
+            setToken(null);
+        }
+        if (storedBikes && storedBikes !== "undefined" && storedBikes !== "null") {
+            console.log("Bikes loaded from localStorage:", JSON.parse(storedBikes));
+            setUserBikes(JSON.parse(storedBikes));
+        } else {
+            localStorage.removeItem('bikes');
+            setUserBikes([]);
         }
     }, []);
 
@@ -20,21 +37,28 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(userData));
     }
 
-    const loginAuth = (token, userData) => {
-        console.log("Authentification réussie, données utilisateur :", userData, token);
+    const updateBikes = (bikesData) => {
+        console.log("Updating bikes in context and localStorage:", bikesData);
+        setUserBikes(bikesData);
+        localStorage.setItem('bikes', JSON.stringify(bikesData));
+    }
+
+    const loginAuth = (token) => {
         localStorage.setItem('access_token', token);
-        localStorage.setItem('user', JSON.stringify(userData));
-        setUser(userData);
+        setToken(token);
     };
 
     const logoutAuth = () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
+        localStorage.removeItem('bikes');
         setUser(null);
+        setToken(null);
+        setUserBikes([]);
     };
 
     return (
-        <AuthContext.Provider value={{ user, loginAuth, logoutAuth, updateUser }}>
+        <AuthContext.Provider value={{ user, token, userBikes, loginAuth, logoutAuth, updateUser, updateBikes }}>
             {children}
         </AuthContext.Provider>
     );

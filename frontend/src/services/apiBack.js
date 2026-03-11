@@ -56,7 +56,7 @@ export async function login(email, password) {
     }
 }
 
-export async function register(name, birthdate, email, password) {
+export async function register(firstName, lastName, birthdate, email, password) {
     try {
         const response = await fetch("/api/users/", {
             method: "POST",
@@ -64,14 +64,11 @@ export async function register(name, birthdate, email, password) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                first_name: name,
-                last_name: "test",
+                first_name: firstName,
+                last_name: lastName,
                 birth_date: birthdate,
                 email: email,
                 password: password,
-                sport_level: "test",
-                home_adress: "test",
-                work_adress: "test",
             })
         });
         console.log("Réponse du serveur register : ", response);
@@ -106,6 +103,114 @@ export async function getUserProfile(token) {
 
         const data = await response.json();
         return data;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function changeProfileInfo(token, firstName, lastName, email, birthDate, password, level) {
+    try {
+        const response = await fetch("/api/users/me", {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                birth_date: birthDate,
+                password: password,
+                sport_level: level
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(errorData.detail || "Erreur lors de la modification du profil");
+        }
+
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function changeAddress(token, homeAddress, workAddress) {
+    try {
+        const response = await fetch("/api/users/me", {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                home_address: homeAddress,
+                work_address: workAddress
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(errorData.detail || "Erreur lors de la modification des adresses");
+        }
+
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function addBike(token, name, type, isElectric) {
+    try {
+        const response = await fetch("/api/bikes/", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: name,
+                type: type,
+                is_electric: isElectric
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(errorData.detail || "Erreur lors de l'ajout du vélo");
+        }
+
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function suppressBike(token, bike) {
+    try {
+        const response = await fetch(`/api/bikes/${bike.id}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(errorData.detail || "Erreur lors de la suppression du vélo");
+        }
+
+        return response.json();
 
     } catch (error) {
         throw error;

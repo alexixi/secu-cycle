@@ -4,17 +4,19 @@ import Button from "../components/ui/Button";
 import LinkButton from "../components/ui/LinkButton";
 import IconButton from "../components/ui/IconButton";
 import "../components/ui/Input.css"
+import { useAuth } from "../context/AuthContext";
 import { FaPersonCirclePlus } from "react-icons/fa6";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { ImSad2 } from "react-icons/im";
-import { register } from "../services/apiBack";
+import { register, login, getUserProfile } from "../services/apiBack";
 import { useNavigate } from "react-router-dom";
 import { LuLogIn } from "react-icons/lu";
 import confetti from "canvas-confetti"
 import "../components/ui/Form.css"
 
 export default function ProfileCreationPage() {
-    const [name, setName] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [birthDate, setBirthdate] = useState("");
     const [password, setPassword] = useState("");
@@ -28,6 +30,8 @@ export default function ProfileCreationPage() {
     const [emailAlreadyUsedError, setEmailAlreadyUsedError] = useState(false);
     const [generalError, setGeneralError] = useState(false);
 
+    const { loginAuth, updateUser } = useAuth();
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -38,11 +42,18 @@ export default function ProfileCreationPage() {
         }
 
         try {
-            await register(name, birthDate, email, password);
+            await register(firstName, lastName, birthDate, email, password);
             triggerConfetti();
-            navigate("/profil");
+            try {
+                const response_login = await login(email, password);
+                loginAuth(response_login.access_token);
+                const response_user = await getUserProfile(response_login.access_token);
+                updateUser(response_user);
+                navigate("/profil");
+            } catch (error) {
+                navigate("/login");
+            }
         } catch (error) {
-            console.error("Erreur de création du compte", error);
             setGeneralError(true);
         }
     };
@@ -50,9 +61,11 @@ export default function ProfileCreationPage() {
     const handlePasswordChange = (setter) => (e) => {
         setter(e.target.value);
         if (hasError) setHasError(false);
+        setGeneralError(false);
     };
 
     const handlePasswordBlur = () => {
+        setGeneralError(false);
         if (password && password2) {
             if (password !== password2) {
                 setHasError(true);
@@ -106,9 +119,20 @@ export default function ProfileCreationPage() {
                             <input
                                 className="input"
                                 type="text"
-                                id="name"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                id="firstName"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="input-group">
+                            <label htmlFor="lastName">Nom</label>
+                            <input
+                                className="input"
+                                type="text"
+                                id="lastName"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value) && setGeneralError(false)}
                             />
                         </div>
 
@@ -119,7 +143,7 @@ export default function ProfileCreationPage() {
                                 type="date"
                                 id="birthdate"
                                 value={birthDate}
-                                onChange={(e) => setBirthdate(e.target.value)}
+                                onChange={(e) => setBirthdate(e.target.value) && setGeneralError(false)}
                             />
                         </div>
 
@@ -130,7 +154,7 @@ export default function ProfileCreationPage() {
                                 type="email"
                                 id="email"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value) || setemailSyntaxError(false)}
+                                onChange={(e) => setEmail(e.target.value) || setemailSyntaxError(false) || setEmailAlreadyUsedError(false) || setGeneralError(false)}
                                 onBlur={(e) => {
                                     if (!e.target.value) {
                                         setemailSyntaxError(false);
@@ -196,7 +220,7 @@ export default function ProfileCreationPage() {
 
                         <Button type="submit" id="signin-button" disabled={!email || !password || !password2 || hasError || !isValidated}><FaPersonCirclePlus />    Créer mon compte</Button>
 
-                        {generalError && <p className="error-text"><ImSad2 /> Une erreur est survenue lors de la création du compte.<br />Veuillez réessayer.</p>   }
+                        {generalError && <p className="error-text"><ImSad2 /> Une erreur est survenue lors de la création du compte.<br />Veuillez réessayer.</p>}
                     </form>
 
                     <div className="separator">ou</div>

@@ -6,7 +6,7 @@ import "../../ui/Input.css"
 import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 
-export default function AddBikeModal({ isOpen, onClose, onConfirm }) {
+export default function AddBikeModal({ isOpen, hasError, onClose, onConfirm }) {
   const [bikeName, setBikeName] = useState("");
   const [bikeType, setBikeType] = useState("vtt");
   const [bikeIsElectric, setBikeIsElectric] = useState(false);
@@ -20,7 +20,7 @@ export default function AddBikeModal({ isOpen, onClose, onConfirm }) {
       type: bikeType,
       isElectric: bikeIsElectric
     });
-    
+
     setBikeName("");
     setBikeType("vtt");
     setBikeIsElectric(false);
@@ -34,20 +34,20 @@ export default function AddBikeModal({ isOpen, onClose, onConfirm }) {
           <div className="input-container">
             <div className="input-group">
               <label>Nom du vélo :</label>
-              <input 
-                className="input" 
-                type="text" 
-                placeholder="Ex: Nakamura Summit 700" 
+              <input
+                className="input"
+                type="text"
+                placeholder="Ex: Nakamura Summit 700"
                 value={bikeName}
-                onChange={(e) => setBikeName(e.target.value)} 
+                onChange={(e) => setBikeName(e.target.value)}
               />
             </div>
 
             <div className="input-group">
               <label>Type :</label>
-              <select 
-                className="input" 
-                value={bikeType} 
+              <select
+                className="input"
+                value={bikeType}
                 onChange={(e) => setBikeType(e.target.value)}
               >
                 <option value="vtt">VTT</option>
@@ -58,21 +58,23 @@ export default function AddBikeModal({ isOpen, onClose, onConfirm }) {
 
             <div className="input-group">
               <div className="form-group-checkbox">
-                <label>Électrique</label> 
-                <input 
-                  type="checkbox" 
-                  checked={bikeIsElectric} 
-                  onChange={(e) => setBikeIsElectric(e.target.checked)} 
+                <label>Électrique</label>
+                <input
+                  type="checkbox"
+                  checked={bikeIsElectric}
+                  onChange={(e) => setBikeIsElectric(e.target.checked)}
                 />
               </div>
             </div>
+            {hasError && <p className="error-text">Une erreur est survenue. Veuillez réessayer.</p>}
           </div>
 
           <div className="modal-actions">
             <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
-            <Button type="submit" className="btn-add">Ajouter <AiFillPlusCircle size={13}/></Button>
+            <Button type="submit" className="btn-add">Ajouter <AiFillPlusCircle size={13} /></Button>
           </div>
         </form>
+
       </div>
     </div>
   );
