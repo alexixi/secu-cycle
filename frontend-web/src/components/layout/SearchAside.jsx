@@ -3,7 +3,7 @@ import Button from "../ui/Button";
 import SwapButton from "../ui/SwapButton";
 import AdressInput from "../ui/AdressInput";
 import BikeSelect from "./BikeSelect";
-import IntinerariesSelect from "./ItinerariesSelect";
+import ItinerariesSelect from "./ItinerariesSelect";
 import "../ui/Input.css";
 import { MdDirectionsBike } from "react-icons/md";
 import { FaFlagCheckered } from "react-icons/fa";
@@ -33,7 +33,7 @@ export default function SearchAside({ startAdress, endAdress, onStartSelect, onE
                 </div>
             </div>
             <BikeSelect selectedBike={selectedBike} onSelect={onBikeSelect} />
-            <IntinerariesSelect itineraires={itineraires} selectedItineraire={selectedItineraire} setSelectedItineraire={setSelectedItineraire} />
+            <ItinerariesSelect itineraires={itineraires} selectedItineraire={selectedItineraire} setSelectedItineraire={setSelectedItineraire} />
             <Button id="search-button" onClick={onSearchClick} disabled={!isReady}><PiPathBold /> Calculer les itinéraires</Button>
         </aside>
     );
