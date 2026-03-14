@@ -29,15 +29,32 @@ def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends
         raise HTTPException(status_code=404, detail="Route introuvable")
     return route
 
-
 @router.post("/route")
 async def compute_route(request: Request, data: dict):
-
     G = request.app.state.G
+    if G is None:
+        raise HTTPException(status_code=500, detail="Graphe non chargé")
 
-    start = (data["start_lat"], data["start_lon"])
-    end = (data["end_lat"], data["end_lon"])
+    try:
+        # Coordonnées obligatoires
+        start = (data["start_lat"], data["start_lon"])
+        end = (data["end_lat"], data["end_lon"])
 
-    result = get_optimal_routes(G, start, end)
+        # Paramètres optionnels
+        temps_max_min = data.get("temps_max_min")  # None si pas fourni
+        iterations = data.get("iterations", 6)    # 6 par défaut
 
-    return result
+        result = get_optimal_routes(
+            G,
+            start_coords=start,
+            end_coords=end,
+            temps_max_min=temps_max_min,
+            iterations=iterations
+        )
+        return result
+
+    except KeyError as e:
+        raise HTTPException(status_code=422, detail=f"Missing required field: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
