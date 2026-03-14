@@ -1,6 +1,6 @@
 import osmnx as ox
 import networkx as nx
-from config import SCORE_HIGHWAY, SCORE_CYCLEWAY, VITESSE_M_MIN
+from graph.config import SCORE_HIGHWAY, SCORE_CYCLEWAY, VITESSE_M_MIN
 
 def _get_speed_score(vmax):
     if vmax <= 20: return 10
