@@ -11,7 +11,7 @@ import { PiPathBold } from "react-icons/pi";
 import { FaRegClock } from "react-icons/fa6";
 
 
-export default function SearchAside({ startAdress, endAdress, onStartSelect, onEndSelect, onSearchClick, onSwap, maxTime, onMaxTimeChange, maxDuration, onMaxDurationChange, selectedBike, onBikeSelect, itineraires, selectedItineraire, setSelectedItineraire, isReady }) {
+export default function SearchAside({ startAdress, endAdress, onStartSelect, onEndSelect, onSearchClick, onSwap, maxTime, onMaxTimeChange, maxDuration, onMaxDurationChange, selectedBike, onBikeSelect, itineraires, selectedItineraire, setSelectedItineraire, errorPath, isReady }) {
     return (
         <aside className="search-aside">
             <div className="adress-input-wrapper">
@@ -35,6 +35,7 @@ export default function SearchAside({ startAdress, endAdress, onStartSelect, onE
             <BikeSelect selectedBike={selectedBike} onSelect={onBikeSelect} />
             <ItinerariesSelect itineraires={itineraires} selectedItineraire={selectedItineraire} setSelectedItineraire={setSelectedItineraire} />
             <Button id="search-button" onClick={onSearchClick} disabled={!isReady}><PiPathBold /> Calculer les itinéraires</Button>
+            {errorPath && <div className="error-text">Une erreur est survenue lors de la recherche de l'itinéraire.</div>}
         </aside>
     );
 }

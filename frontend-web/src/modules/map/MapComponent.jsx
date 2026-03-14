@@ -26,7 +26,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                // url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            // url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
 
             />
             {start && (
@@ -53,7 +53,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             {pointilles && pointilles.map((path, index) => (
                 <Polyline key={index} positions={path} color="blue" dashArray="10,10" />
             ))}
-            {itineraires && itineraires.map((itineraire, index) => {
+            {itineraires && itineraires.length > 0 && itineraires.map((itineraire, index) => {
                 const isSelected = selectedItineraire === itineraire.id;
 
                 return (

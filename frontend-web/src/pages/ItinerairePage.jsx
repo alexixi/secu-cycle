@@ -2,7 +2,7 @@ import { useState } from "react";
 import Header from "../components/layout/Header";
 import MapComponent from "../modules/map/MapComponent";
 import SearchAside from "../components/layout/SearchAside";
-import { calculateItineraries } from "../services/apiBack.mock";
+import { calculateItineraries } from "../services/apiBack";
 import "./ItinerairePage.css";
 
 export default function ItinerairePage() {
@@ -14,6 +14,7 @@ export default function ItinerairePage() {
     const [selectedItineraire, setSelectedItineraire] = useState(null);
     const [maxTime, setMaxTime] = useState(null);
     const [maxDuration, setMaxDuration] = useState(null);
+    const [errorPath, setErrorPath] = useState(false);
 
     const handleStartSelect = (coords) => {
         setRoutePaths(null);
@@ -33,9 +34,10 @@ export default function ItinerairePage() {
         const itineraries = await calculateItineraries(startPoint, endPoint, selectedBike, maxDuration);
 
         if (itineraries && itineraries.length > 0) {
+            setErrorPath(false);
             setRoutePaths(itineraries);
         } else {
-            alert("Erreur lors du calcul de l'itinéraire.");
+            setErrorPath(true);
         }
 
         setIsLoading(false);
@@ -98,6 +100,7 @@ export default function ItinerairePage() {
                     itineraires={routePaths}
                     selectedItineraire={selectedItineraire}
                     setSelectedItineraire={setSelectedItineraire}
+                    errorPath={errorPath}
                     isReady={startPoint && endPoint && selectedBike && !isLoading}
                 />
                 <MapComponent

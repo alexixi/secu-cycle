@@ -14,8 +14,8 @@ export default function ItinerariesSelect({ itineraires, selectedItineraire, set
                         >
                             <h3>{itineraire.name}</h3>
                             <div className='path-info'>
-                                <span>{itineraire.distance} km</span>
-                                <span>{itineraire.duration} min</span>
+                                <span>{itineraire.distance.toFixed(2)} km</span>
+                                <span>{Math.round(itineraire.duration)} min</span>
                             </div>
                         </div>
                     ))}
