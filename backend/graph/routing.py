@@ -38,7 +38,7 @@ def _parse_maxspeed(vmax, h_type):
     # Zones piétonnes (les vélos y roulent au pas)
     elif h_type in ['footway', 'pedestrian']:
         return 10
-    
+
     # Valeur par défaut de sécurité
     return 30
 
@@ -55,14 +55,14 @@ def _get_lit_score(lit, h_type):
 
     # Les rues en ville sont presque toujours éclairées
     if h_type in ['residential', 'primary', 'secondary', 'tertiary', 'living_street', 'pedestrian']:
-        return 0.9  
+        return 0.9
     # Les pistes cyclables urbaines le sont souvent, mais pas toujours
     elif h_type == 'cycleway':
-        return 0.7  
+        return 0.7
     # Les chemins de terre, forêts ou parcs sont rarement éclairés
     elif h_type in ['path', 'track', 'footway']:
-        return 0.2  
-    
+        return 0.2
+
     # Doute raisonnable
     return 0.5
 
@@ -70,7 +70,7 @@ def calculate_weights(G, alpha=0.5):
     """Calcule les poids de sécurité et hybrides pour le routage."""
     s_min, s_max = float('inf'), float('-inf')
     l_min, l_max = float('inf'), float('-inf')
-    
+
     # Passe 1 : Calculs de base
     for u, v, k, data in G.edges(keys=True, data=True):
         h_type = data.get('highway', 'unclassified')
@@ -87,10 +87,10 @@ def calculate_weights(G, alpha=0.5):
 
         score = (n_highway * 0.15) + (n_cycleway * 0.2) + (n_vitesse * 0.35) + (n_lit * 0.3)
         length = float(data.get('length', 1))
-        
+
         # On stocke le score pur pour information
         data['safety_score'] = score
-        
+
         s_min, s_max = min(s_min, score), max(s_max, score)
         l_min, l_max = min(l_min, length), max(l_max, length)
 
@@ -102,12 +102,12 @@ def calculate_weights(G, alpha=0.5):
         norm_dist = (float(data['length']) - l_min) / l_range
         # Inverse le score : 0 = très sûr (score max), 1 = dangereux (score min)
         norm_risque = (s_max - data['safety_score']) / s_range
-        
+
         data['hybrid_weight'] = (alpha * norm_dist) + ((1 - alpha) * norm_risque)
 
     return G
 
-def calculate_route_distance(G, route):
+def     calculate_route_distance(G, route):
     """Calcule la distance réelle d'un itinéraire."""
     distance = 0
     for i in range(len(route) - 1):
@@ -118,42 +118,50 @@ def calculate_route_distance(G, route):
                 distance += float(edge_data[0].get('length', 0))
             else:
                 distance += float(edge_data.get('length', 0))
-    return distance
+    return distance / 1000
 
 def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iterations=6):
     """
-    Calcule et renvoie le trajet le plus rapide, le plus sécurisé, 
+    Calcule et renvoie le trajet le plus rapide, le plus sécurisé,
     et (optionnellement) le meilleur compromis respectant une contrainte de temps.
     """
     try:
         start_node = ox.distance.nearest_nodes(G, start_coords[1], start_coords[0])
         end_node = ox.distance.nearest_nodes(G, end_coords[1], end_coords[0])
-        
+
         # --- 1. TRAJET LE PLUS RAPIDE (Alpha = 1.0) ---
         G = calculate_weights(G, alpha=1.0)
         route_fast = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_fast = calculate_route_distance(G, route_fast)
         temps_fast = dist_fast / VITESSE_M_MIN
-        
+        coords_fast = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in route_fast]
+
         # --- 2. TRAJET LE PLUS SÉCURISÉ (Alpha = 0.0) ---
         G = calculate_weights(G, alpha=0.0)
         route_safe = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_safe = calculate_route_distance(G, route_safe)
         temps_safe = dist_safe / VITESSE_M_MIN
+        coords_safe = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in route_safe]
 
         # Construction du dictionnaire de base
         result = {
             "success": True,
-            "fast_route": {
-                "path": route_fast,
-                "distance": dist_fast,
-                "temps": temps_fast
-            },
-            "safe_route": {
-                "path": route_safe,
-                "distance": dist_safe,
-                "temps": temps_safe
-            }
+            "routes": [
+                {
+                    "id": "fast",
+                    "name": "Rapide",
+                    "path": coords_fast,
+                    "distance": dist_fast,
+                    "duration": temps_fast
+                },
+                {
+                    "id": "safe",
+                    "name": "Sécurisé",
+                    "path": coords_safe,
+                    "distance": dist_safe,
+                    "duration": temps_safe
+                }
+            ]
         }
 
         # --- 3. TRAJET SOUS CONTRAINTE DE TEMPS (Optionnel) ---
@@ -162,16 +170,16 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
             if temps_fast > temps_max_min:
                 result["bounded_route"] = None
                 result["bounded_error"] = "time_limit_too_low"
-            
+
             # Cas B : Le trajet le plus sûr respecte déjà la contrainte
             elif temps_safe <= temps_max_min:
                 result["bounded_route"] = {
-                    "path": route_safe,
+                    "path": coords_safe,
                     "distance": dist_safe,
-                    "temps": temps_safe,
+                    "duration": temps_safe,
                     "alpha_final": 0.0
                 }
-            
+
             # Cas C : Recherche du meilleur compromis (Dichotomie)
             else:
                 alpha_low = 0.0
@@ -193,14 +201,15 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
                         best_temps = temps_mid
                         best_dist = dist_mid
                         best_alpha = alpha_mid
-                        alpha_high = alpha_mid 
+                        alpha_high = alpha_mid
                     else:
                         alpha_low = alpha_mid
 
+                coords_best = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in best_path]
                 result["bounded_route"] = {
-                    "path": best_path,
+                    "path": coords_best,
                     "distance": best_dist,
-                    "temps": best_temps,
+                    "duration": best_temps,
                     "alpha_final": best_alpha
                 }
 
