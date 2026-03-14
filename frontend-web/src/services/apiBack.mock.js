@@ -121,3 +121,7 @@ export async function addBike(token, name, type, isElectric) {
 export async function suppressBike(token, bike) {
     await new Promise(resolve => setTimeout(resolve, 500));
 }
+
+export async function changePassword(token, oldPassword, newPassword) {
+    await new Promise(resolve => setTimeout(resolve, 500));
+}

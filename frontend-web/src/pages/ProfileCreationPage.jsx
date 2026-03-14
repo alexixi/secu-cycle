@@ -2,11 +2,10 @@ import { useState } from "react";
 import Header from "../components/layout/Header";
 import Button from "../components/ui/Button";
 import LinkButton from "../components/ui/LinkButton";
-import IconButton from "../components/ui/IconButton";
+import PasswordInput from "../components/ui/PasswordInput";
 import "../components/ui/Input.css"
 import { useAuth } from "../context/AuthContext";
 import { FaPersonCirclePlus } from "react-icons/fa6";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { ImSad2 } from "react-icons/im";
 import { register, login, getUserProfile } from "../services/apiBack";
 import { useNavigate } from "react-router-dom";
@@ -78,7 +77,7 @@ export default function ProfileCreationPage() {
     };
 
     const triggerConfetti = () => {
-        const end = Date.now() + 3 * 1000;
+        const end = Date.now() + 1 * 1000;
         const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
 
         const frame = () => {
@@ -181,39 +180,12 @@ export default function ProfileCreationPage() {
 
                         <div className={`input-group ${hasError ? "input-error" : ""}`}>
                             <label htmlFor="password">Mot de passe *</label>
-                            <div className="password-container">
-                                <input
-                                    className="input"
-                                    type={showPassword ? "text" : "password"}
-                                    id="password"
-                                    value={password}
-                                    onChange={handlePasswordChange(setPassword)}
-                                    onBlur={handlePasswordBlur}
-                                    required
-                                />
-                                <IconButton type="button" className="show-password" onClick={() => setShowPassword(!showPassword)}>
-                                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                                </IconButton>
-
-                            </div>
+                            <PasswordInput value={password} onChange={handlePasswordChange(setPassword)} onBlur={handlePasswordBlur}></PasswordInput>
                         </div>
 
                         <div className={`input-group ${hasError ? "input-error" : ""}`}>
                             <label htmlFor="password2">Confirmation du mot de passe *</label>
-                            <div className="password-container">
-                                <input
-                                    className="input"
-                                    type={showPassword2 ? "text" : "password"}
-                                    id="password2"
-                                    value={password2}
-                                    onChange={handlePasswordChange(setPassword2)}
-                                    onBlur={handlePasswordBlur}
-                                    required
-                                />
-                                <IconButton type="button" className="show-password" onClick={() => setShowPassword2(!showPassword2)}>
-                                    {showPassword2 ? <FaEyeSlash /> : <FaEye />}
-                                </IconButton>
-                            </div>
+                            <PasswordInput value={password2} onChange={handlePasswordChange(setPassword2)} onBlur={handlePasswordBlur}></PasswordInput>
                         </div>
 
                         {hasError && <p className="error-text">Les mots de passe ne correspondent pas.</p>}

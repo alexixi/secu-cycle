@@ -7,7 +7,7 @@
 .autocomplete-list {
     position: absolute;
     top: 100%;
-    left: 40px;
+    left: 35px;
     right: 0;
     background-color: var(--bg-surface);
     border: 2px solid var(--primary);
@@ -51,4 +51,8 @@
 .autocomplete-list li.active {
     background-color: var(--primary);
     cursor: pointer;
+}
+
+.autocomplete-list li.active small {
+    color: var(--text-primary);
 }

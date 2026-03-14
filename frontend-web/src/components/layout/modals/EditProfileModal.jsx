@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../../context/AuthContext";
 import Button from "../../ui/Button";
-import { FaUserEdit } from "react-icons/fa";
+import IconButton from "../../ui/IconButton";
+import { FaUserEdit, FaPen } from "react-icons/fa";
+import EditPasswordModal from "./EditPasswordModal"
+import { changePassword } from "../../../services/apiBack.mock";
 
 import "../../ui/Input.css"
 import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 
 export default function EditProfileModal({ isOpen, hasError, onClose, userData, onConfirm }) {
+    const { token } = useAuth();
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -15,6 +20,9 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
         level: "intermediaire",
         password: ""
     });
+
+  const [isModalOpenPassword, setIsModalOpenPassword] = useState(false);
+
 
     useEffect(() => {
         if (userData) {
@@ -32,6 +40,16 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
     const handleSubmit = (e) => {
         e.preventDefault();
         onConfirm(formData);
+    };
+
+    const handleSubmitPassword = async (passwordData) => {    
+        try{
+            await changePassword(token, passwordData.oldPassword, passwordData.newPassword);
+            setIsModalOpenPassword(false);
+        } catch (error) {
+            console.error("Erreur lors du changement de mot de passe", error);
+        }
+        
     };
 
     return (
@@ -55,43 +73,43 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
 
                         <div className="input-group">
                             <label>Nom</label>
-                            <input
-                                className="input"
-                                type="text"
+                            <input 
+                                className="input" 
+                                type="text" 
                                 name="lastName"
                                 value={formData.lastName}
-                                onChange={handleChange}
+                                onChange={handleChange} 
                             />
                         </div>
 
                         <div className="input-group">
                             <label>Adresse mail</label>
-                            <input
-                                className="input"
-                                type="email"
+                            <input 
+                                className="input" 
+                                type="email" 
                                 name="email"
                                 value={formData.email}
-                                onChange={handleChange}
+                                onChange={handleChange} 
                             />
                         </div>
 
                         <div className="input-group">
                             <label>Date de naissance</label>
-                            <input
-                                className="input"
-                                type="date"
+                            <input 
+                                className="input" 
+                                type="date" 
                                 name="birthDate"
                                 value={formData.birthDate}
-                                onChange={handleChange}
+                                onChange={handleChange} 
                             />
                         </div>
 
                         <div className="input-group">
                             <label>Niveau sportif</label>
-                            <select
-                                className="input"
+                            <select 
+                                className="input" 
                                 name="level"
-                                value={formData.level}
+                                value={formData.level} 
                                 onChange={handleChange}
                             >
                                 <option value="debutant">Débutant</option>
@@ -100,26 +118,22 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                             </select>
                         </div>
 
-                        <div className="input-group">
-                            <label>Mot de passe</label>
-                            <input
-                                className="input"
-                                type="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        {hasError && <p className="error-text">Une erreur est survenue. Veuillez réessayer.</p>}
                     </div>
+                        
+                    <IconButton type="button" className="button-change-password" onClick={() => setIsModalOpenPassword(true)} >Modifier le mot de passe <FaPen size={13}/></IconButton>
 
                     <div className="modal-actions">
                         <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
-                        <Button type="submit" className="btn-add">Modifier <FaUserEdit size={13} /></Button>
+                        <Button type="submit" className="btn-add">Modifier <FaUserEdit size={13}/></Button>
                     </div>
                 </form>
             </div>
+
+            <EditPasswordModal
+                isOpen={isModalOpenPassword}    
+                onClose={() => setIsModalOpenPassword(false)}
+                onConfirm={handleSubmitPassword}
+            />
         </div>
     )
 }
