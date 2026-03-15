@@ -107,7 +107,7 @@ def calculate_weights(G, alpha=0.5):
 
     return G
 
-def     calculate_route_distance(G, route):
+def calculate_route_distance(G, route):
     """Calcule la distance réelle d'un itinéraire."""
     distance = 0
     for i in range(len(route) - 1):
@@ -118,7 +118,7 @@ def     calculate_route_distance(G, route):
                 distance += float(edge_data[0].get('length', 0))
             else:
                 distance += float(edge_data.get('length', 0))
-    return distance / 1000
+    return distance/1000
 
 def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iterations=6):
     """
@@ -142,7 +142,6 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
         dist_safe = calculate_route_distance(G, route_safe)
         temps_safe = dist_safe / VITESSE_M_MIN
         coords_safe = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in route_safe]
-
         # Construction du dictionnaire de base
         result = {
             "success": True,
@@ -166,6 +165,7 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
 
         # --- 3. TRAJET SOUS CONTRAINTE DE TEMPS (Optionnel) ---
         if temps_max_min is not None:
+            temps_max_min = float(temps_max_min)
             # Cas A : Même le trajet le plus rapide est trop long
             if temps_fast > temps_max_min:
                 result["bounded_route"] = None
@@ -173,12 +173,14 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
 
             # Cas B : Le trajet le plus sûr respecte déjà la contrainte
             elif temps_safe <= temps_max_min:
-                result["bounded_route"] = {
-                    "path": coords_safe,
-                    "distance": dist_safe,
-                    "duration": temps_safe,
-                    "alpha_final": 0.0
-                }
+                result["routes"].append({
+                        "id": "compromise",
+                        "name": "Compromis",
+                        "path": coords_safe,
+                        "distance": dist_safe,
+                        "duration": temps_safe,
+                        "alpha_final": 0
+                    })
 
             # Cas C : Recherche du meilleur compromis (Dichotomie)
             else:
@@ -206,12 +208,14 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
                         alpha_low = alpha_mid
 
                 coords_best = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in best_path]
-                result["bounded_route"] = {
-                    "path": coords_best,
-                    "distance": best_dist,
-                    "duration": best_temps,
-                    "alpha_final": best_alpha
-                }
+                result["routes"].append({
+                        "id": "compromise",
+                        "name": "Compromis",
+                        "path": coords_best,
+                        "distance": best_dist,
+                        "duration": best_temps,
+                        "alpha_final": best_alpha
+                    })
 
         return result
 
