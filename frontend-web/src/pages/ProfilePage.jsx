@@ -6,6 +6,7 @@ import EditAddressModal from "../components/layout/modals/EditAddressModal";
 import EditProfileModal from "../components/layout/modals/EditProfileModal";
 import SuppressBikeModal from "../components/layout/modals/SuppressBikeModal";
 import AddBikeModal from "../components/layout/modals/AddBikeModal"
+import EditBikeModal from "../components/layout/modals/EditBikeModal"
 import IconCard from '../components/ui/IconCard';
 import { addBike, changeProfileInfo, changeAddress, suppressBike } from "../services/apiBack.mock";
 import { getUserProfile, getUserBikes } from "../services/apiBack.mock";
@@ -31,6 +32,8 @@ export default function ProfilePage() {
   const [isModalOpenAddress, setIsModalOpenAddress] = useState(false);
   const [isModalOpenSuppress, setIsModalOpenSuppress] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isModalOpenEditBike, setIsModalOpenEditBike] = useState(false);
+  const [selectedBike, setSelectedBike] = useState(null);
 
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
@@ -68,6 +71,7 @@ export default function ProfilePage() {
           IconSVG={isElec ? IconBikeVTT_Electric : IconBikeVTT}
           label={nameLabel}
           LabelIcon={isElec ? <MdBatteryChargingFull /> : null}
+          onClick={() => handleEditClick(bike)}
         />
       );
     }
@@ -80,6 +84,7 @@ export default function ProfilePage() {
           IconSVG={IconBikeRoute}
           label={nameLabel}
           LabelIcon={isElec ? <MdBatteryChargingFull /> : null}
+          onClick={() => handleEditClick(bike)}
         />
       );
     }
@@ -91,6 +96,7 @@ export default function ProfilePage() {
         IconSVG={isElec ? IconBikeStandardElectric : IconBikeStandard}
         label={nameLabel}
         LabelIcon={isElec ? <MdBatteryChargingFull /> : null}
+        onClick={() => handleEditClick(bike)}
       />
     );
   };
@@ -155,8 +161,32 @@ export default function ProfilePage() {
     } catch (error) {
       setHasError(true);
     }
-
   };
+
+  const handleSubmitEditBike = async (updatedBike) => {
+    try {
+      const updatedBikes = bikes.map(b => b === selectedBike ? updatedBike : b);
+      setBikes(updatedBikes);
+      setIsModalOpenEditBike(false);
+    } catch (error) {
+      setHasError(true);
+    }
+  };
+
+  const handleEditClick = (bike) => {
+    setSelectedBike(bike);
+    setIsModalOpenEditBike(true);
+  };
+
+  const handleDeleteSingleBike = async (bike) => {
+  try {
+    await suppressBike(token, bike);
+    setBikes(bikes.filter(b => b !== bike));
+    setIsModalOpenEditBike(false);
+  } catch (error) {
+    setHasError(true);
+  }
+};
 
   return (
     <>
@@ -249,6 +279,15 @@ export default function ProfilePage() {
         onClose={() => setIsModalOpenSuppress(false) || setHasError(false)}
         bikes={bikes}
         onConfirm={handleSuppressBike}
+      />
+
+      <EditBikeModal
+        isOpen={isModalOpenEditBike}
+        onClose={() => setIsModalOpenEditBike(false)}
+        bikeToEdit={selectedBike}
+        onConfirm={handleSubmitEditBike}
+        hasError={hasError}
+        onDelete={handleDeleteSingleBike}
       />
 
     </>
