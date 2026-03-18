@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IoCheckmark } from "react-icons/io5";
 import Button from "../../ui/Button";
 
@@ -8,6 +8,35 @@ import "../../ui/Form.css"
 
 export default function SuppressBikeModal({ isOpen, hasError, onClose, bikes, onConfirm }) {
     const [selectedIndexes, setSelectedIndexes] = useState([]);
+
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener("keydown", handleKeyDown);
+            document.addEventListener("click", (e) => {
+                if (e.target.classList.contains("modal-overlay")) {
+                    onClose();
+                }
+            });
+            document.body.style.overflow = "hidden";
+        }
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener("click", (e) => {
+                if (e.target.classList.contains("modal-overlay")) {
+                    onClose();
+                }
+            });
+            document.body.style.overflow = "auto";
+        };
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 

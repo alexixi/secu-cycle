@@ -21,6 +21,35 @@ export default function EditAddressModal({ isOpen, hasError, onClose, addresses,
         }
     }, [addresses, isOpen]);
 
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener("keydown", handleKeyDown);
+            document.addEventListener("click", (e) => {
+                if (e.target.classList.contains("modal-overlay")) {
+                    onClose();
+                }
+            });
+            document.body.style.overflow = "hidden";
+        }
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener("click", (e) => {
+                if (e.target.classList.contains("modal-overlay")) {
+                    onClose();
+                }
+            });
+            document.body.style.overflow = "auto";
+        };
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     const handleChange = (e) => {
@@ -41,17 +70,18 @@ export default function EditAddressModal({ isOpen, hasError, onClose, addresses,
                     <div className="input-container">
 
                         <div className="input-group changeAddressInput">
-                            <label><FaHome size={15} /> Adresse du domicile</label>
+                            <label htmlFor="homeAddress"><FaHome size={15} /> Adresse du domicile</label>
                             <AdressInput
                                 id="homeAddress"
                                 placeholder="Domicile"
                                 defaultValue={formData.homeAddress}
                                 onSelect={(place) => setFormData(prev => ({ ...prev, homeAddress: place.name }))}
+                                autoFocus
                             />
                         </div>
 
                         <div className="input-group changeAddressInput">
-                            <label><MdOutlineWork size={15} /> Adresse du travail</label>
+                            <label htmlFor="workAddress"><MdOutlineWork size={15} /> Adresse du travail</label>
                             <AdressInput
                                 id="workAddress"
                                 placeholder="Travail"

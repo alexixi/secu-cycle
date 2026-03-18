@@ -50,11 +50,9 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 1rem;
-  align-items: center;
 }
 
 .form-group-checkbox label {
-  margin-bottom: 0.5rem;
   font-size: 1.1rem;
 }
 

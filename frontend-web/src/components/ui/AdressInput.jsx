@@ -3,7 +3,7 @@ import { searchAddressAutocomplete } from "../../services/geocodingService";
 import "./AdressInput.css";
 import "./Input.css"
 
-export default function AdressInput({ id, placeholder, onSelect, defaultValue, children: icon }) {
+export default function AdressInput({ id, placeholder, onSelect, defaultValue, autoFocus = false, children: icon }) {
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -120,6 +120,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, c
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
                     onFocus={handleFocus}
+                    autoFocus={autoFocus}
                 />
             </div>
 

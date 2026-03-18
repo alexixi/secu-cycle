@@ -22,7 +22,7 @@ import { MdOutlineWork, MdEditLocationAlt } from "react-icons/md";
 import { MdBatteryChargingFull, MdDelete } from "react-icons/md";
 
 export default function ProfilePage() {
-  const { user, token, userBikes, updateBikes } = useAuth();
+  const { user, updateUser, token, userBikes, updateBikes } = useAuth();
   console.log("Données utilisateur dans ProfilePage :", user);
   console.log("Vélos dans ProfilePage :", userBikes);
 
@@ -118,12 +118,13 @@ export default function ProfilePage() {
         updatedData.level
       );
 
-      setFirstName(updatedData.firstName);
-      setLastName(updatedData.lastName);
-      setEmail(updatedData.email);
-      setBirthdate(updatedData.birthDate);
-      setPassword(updatedData.password);
-      setLevel(updatedData.level);
+      updateUser({
+        first_name: updatedData.firstName,
+        last_name: updatedData.lastName,
+        email: updatedData.email,
+        birth_date: updatedData.birthDate,
+        sport_level: updatedData.level
+      });
 
       setIsModalOpenInfo(false);
     } catch (error) {
@@ -163,7 +164,11 @@ export default function ProfilePage() {
       <div className="profile-page">
 
         <div className="title">
-          <h1>{firstName} {lastName}</h1>
+          {firstName || lastName ? (
+            <h1>{firstName} {lastName}</h1>
+          ) : (
+            <h1>Mon Profil</h1>
+          )}
           <IconButton className="button-modification" onClick={() => setIsModalOpenInfo(true)}>Modifier mon compte < FaUserEdit size={30} /></IconButton>
         </div>
 

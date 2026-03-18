@@ -17,6 +17,35 @@ export default function EditPasswordModal({ isOpen, onClose, onConfirm }) {
     const [errorMessage, setErrorMessage] = useState("");
     const hasError = errorMessage.length > 0;
 
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener("keydown", handleKeyDown);
+            document.addEventListener("click", (e) => {
+                if (e.target.classList.contains("modal-overlay")) {
+                    onClose();
+                }
+            });
+            document.body.style.overflow = "hidden";
+        }
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener("click", (e) => {
+                if (e.target.classList.contains("modal-overlay")) {
+                    onClose();
+                }
+            });
+            document.body.style.overflow = "auto";
+        };
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     const handleChange = (e) => {
@@ -37,40 +66,40 @@ export default function EditPasswordModal({ isOpen, onClose, onConfirm }) {
 
     return (
         <div className="modal-overlay">
-          <div className="modal-content form-container">
-            <h2>Modifier mon mot de passe</h2>
-            <form onSubmit={handleSubmit}>
+            <div className="modal-content form-container">
+                <h2>Modifier mon mot de passe</h2>
+                <form onSubmit={handleSubmit}>
 
-              <div className="input-container">
-          
-                <div className="input-group">
-                    <label>Mot de passe actuel</label>
-                    <PasswordInput value={formData.oldPassword} onChange={handleChange} name="oldPassword">
-                    </PasswordInput>
-                </div>
+                    <div className="input-container">
 
-                <div className={"input-group" + (hasError ? " input-error" : "")}>
-                    <label>Nouveau mot de passe</label>
-                    <PasswordInput value={formData.newPassword} onChange={handleChange} name="newPassword">
-                    </PasswordInput>
-                </div>
+                        <div className="input-group">
+                            <label>Mot de passe actuel</label>
+                            <PasswordInput value={formData.oldPassword} onChange={handleChange} name="oldPassword" autoFocus>
+                            </PasswordInput>
+                        </div>
 
-                <div className={"input-group" + (hasError ? " input-error" : "")}>
-                    <label>Confirmation du nouveau mot de passe</label>
-                    <PasswordInput value={formData.confirmPassword} onChange={handleChange} name="confirmPassword">
-                    </PasswordInput>
-                </div>
+                        <div className={"input-group" + (hasError ? " input-error" : "")}>
+                            <label>Nouveau mot de passe</label>
+                            <PasswordInput value={formData.newPassword} onChange={handleChange} name="newPassword">
+                            </PasswordInput>
+                        </div>
 
-              </div>
+                        <div className={"input-group" + (hasError ? " input-error" : "")}>
+                            <label>Confirmation du nouveau mot de passe</label>
+                            <PasswordInput value={formData.confirmPassword} onChange={handleChange} name="confirmPassword">
+                            </PasswordInput>
+                        </div>
 
-              {hasError && <p className="error-text">{errorMessage}</p>}
+                    </div>
 
-              <div className="modal-actions">
-                <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
-                <Button type="submit" className="btn-add">Confirmer <FaPen size={13}/></Button>
-              </div>
-            </form>
-          </div>
+                    {hasError && <p className="error-text">{errorMessage}</p>}
+
+                    <div className="modal-actions">
+                        <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
+                        <Button type="submit" className="btn-add">Confirmer <FaPen size={13} /></Button>
+                    </div>
+                </form>
+            </div>
         </div>
     )
 }

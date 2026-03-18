@@ -3,7 +3,7 @@ import { useState } from "react";
 import IconButton from "./IconButton";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-export default function PasswordInput({ value, onChange, name, onBlur}) {
+export default function PasswordInput({ value, onChange, name, onBlur, autoFocus = false }) {
     const [showPassword, setShowPassword] = useState(false);
 
     return (
@@ -18,6 +18,7 @@ export default function PasswordInput({ value, onChange, name, onBlur}) {
                 onChange={onChange}
                 onBlur={onBlur}
                 required
+                autoFocus={autoFocus}
             />
             <IconButton type="button" className="show-password" onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
