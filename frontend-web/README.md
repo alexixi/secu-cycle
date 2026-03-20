@@ -1,36 +1,28 @@
 # Frontend
 
+## Prérequis
+- [Node.js](https://nodejs.org/)
+
 ## Installer les dépendances
 ```sh
-npm install
+make install
 ```
 
 ## Développement
 
 ### Lancer le projet en mode développement
 ```sh
-npm run dev
+make dev
 ```
 
 ### Lancer le projet en mode développement ouvert aux autre appareils du réseau
 Cela permet de tester le projet sur d'autres appareils du même réseau local, surtout utile pour tester sur téléphone.
 ```sh
-npm run dev -- --host
+make host
 ```
 
-## Build production
-### Build le projet pour la production
+## Build
+### Build le projet
 ```sh
-npm run build
-```
-
-### Lancer la preview du build production
-```sh
-npm run preview
-```
-
-## Linting
-### Lancer le linting pour vérifier les erreurs de code
-```sh
-npm run lint
+make build
 ```
