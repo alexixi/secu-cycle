@@ -1,4 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, Tooltip } from 'react-leaflet';
+import { renderToString } from 'react-dom/server';
+import { MdDirectionsBike } from "react-icons/md";
+import { FaFlagCheckered } from "react-icons/fa";
 import { useEffect } from 'react';
 import './MapComponent.css';
 
@@ -21,6 +24,31 @@ const MapController = ({ center, bounds }) => {
 };
 
 export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire }) {
+
+    const startIconHtml = renderToString(
+        <MdDirectionsBike size={32} color="#3d46f6" style={{ filter: "drop-shadow(2px 4px 8px rgba(255, 255, 255, 0.9))" }} />
+    );
+
+    const endIconHtml = renderToString(
+        <FaFlagCheckered size={32} color="#3d46f6" style={{ filter: "drop-shadow(2px 4px 8px rgba(255, 255, 255, 0.9))" }} />
+    );
+
+    const startIcon = L.divIcon({
+        html: startIconHtml,
+        className: '',
+        iconSize: [32, 32],
+        iconAnchor: [16, 25],
+        popupAnchor: [0, -32]
+    });
+
+    const endIcon = L.divIcon({
+        html: endIconHtml,
+        className: '',
+        iconSize: [32, 32],
+        iconAnchor: [5, 32],
+        popupAnchor: [6, -32]
+    });
+
     return (
         <MapContainer center={start ? start : [44.8378, -0.5795]} zoom={13} scrollWheelZoom={true} className="map-container">
             <TileLayer
@@ -31,7 +59,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             />
             {start && (
                 <>
-                    <Marker position={start}>
+                    <Marker position={start} icon={startIcon}>
                         <Popup>Départ</Popup>
                     </Marker>
                     {start && !end && <MapController center={start} zoom={15} />}
@@ -39,7 +67,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             )}
             {end && (
                 <>
-                    <Marker position={end}>
+                    <Marker position={end} icon={endIcon}>
                         <Popup>Arrivée</Popup>
                     </Marker>
                     {end && !start && <MapController center={end} zoom={15} />}
