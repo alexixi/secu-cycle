@@ -24,8 +24,6 @@ import { MdBatteryChargingFull, MdDelete } from "react-icons/md";
 
 export default function ProfilePage() {
   const { user, updateUser, token, userBikes, updateBikes } = useAuth();
-  console.log("Données utilisateur dans ProfilePage :", user);
-  console.log("Vélos dans ProfilePage :", userBikes);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalOpenInfo, setIsModalOpenInfo] = useState(false);
@@ -138,13 +136,16 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSubmitAddress = async (updatedAddresses) => {
+  const handleSubmitAddress = async (updatedHomeAddress, updatedWorkAddress) => {
     try {
-      await changeAddress(token, updatedAddresses.homeAddress, updatedAddresses.workAddress);
-      setHomeAddress(updatedAddresses.homeAddress);
-      setWorkAddress(updatedAddresses.workAddress);
+      setHomeAddress(updatedHomeAddress);
+      setWorkAddress(updatedWorkAddress);
+      await changeAddress(token, updatedHomeAddress, updatedWorkAddress);
+      const response = await getUserProfile(token);
+      updateUser(response);
       setIsModalOpenAddress(false);
     } catch (error) {
+      console.error("Error updating addresses:", error);
       setHasError(true);
     }
   };

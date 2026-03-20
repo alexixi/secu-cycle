@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { searchAddressAutocomplete } from "../../services/geocodingService";
+import { searchAddressAutocomplete, getCoordinatesFromAddress } from "../../services/geocodingService";
+import { useAuth } from "../../context/AuthContext";
 import "./AdressInput.css";
 import "./Input.css"
 
-export default function AdressInput({ id, placeholder, onSelect, defaultValue, autoFocus = false, children: icon }) {
+export default function AdressInput({ id, placeholder, onSelect, defaultValue, autoFocus = false, showFavorite = false, children: icon }) {
+    const { user } = useAuth();
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -12,6 +14,30 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
     const [cursor, setCursor] = useState(-1);
 
     const suggestionRefs = useRef([]);
+
+    const getFavorites = () => {
+        if (!user) return [];
+        const favs = [];
+
+        if (user.home_address) {
+            favs.push({
+                id: "fav-home",
+                name: "🏠 Domicile",
+                display_name: user.home_address,
+                isFavorite: true
+            });
+        }
+
+        if (user.work_address) {
+            favs.push({
+                id: "fav-work",
+                name: "💼 Travail",
+                display_name: user.work_address,
+                isFavorite: true
+            });
+        }
+        return favs;
+    };
 
     useEffect(() => {
         if (defaultValue !== undefined) {
@@ -27,13 +53,13 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
                 setSuggestions(results);
                 setIsOpen(true);
                 setCursor(-1);
-            } else {
+            } else if (!showFavorite && (!query || query.length < 3)) {
                 setSuggestions([]);
                 setIsOpen(false);
             }
         }, 300);
         return () => clearTimeout(delayDebounceFn);
-    }, [query, isValidated]);
+    }, [query, isValidated, showFavorite]);
 
     useEffect(() => {
         if (cursor >= 0 && suggestionRefs.current[cursor]) {
@@ -44,8 +70,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         }
     }, [cursor]);
 
-
-    const handleSelect = (place) => {
+    const handleSelect = async (place) => {
         if (!place || place.id === "no-result") {
             setQuery("");
             setSuggestions([]);
@@ -60,11 +85,21 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         setHasError(false);
         setIsValidated(true);
 
-        onSelect({
-            lat: parseFloat(place.lat),
-            lon: parseFloat(place.lon),
-            name: place.display_name
-        });
+        if (place.isFavorite) {
+            const coords = await getCoordinatesFromAddress(place.display_name);
+
+            if (coords) {
+                onSelect(coords);
+            } else {
+                setHasError(true);
+            }
+        } else {
+            onSelect({
+                lat: parseFloat(place.lat),
+                lon: parseFloat(place.lon),
+                name: place.display_name
+            });
+        }
     };
 
     const handleBlur = () => {
@@ -80,6 +115,19 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         setQuery(e.target.value);
         setIsValidated(false);
         if (hasError) setHasError(false);
+
+        if (e.target.value.trim() === "") {
+            onSelect(null);
+            setIsValidated(true);
+            setSuggestions([]);
+            setIsOpen(false);
+            return;
+        }
+
+        if (showFavorite && e.target.value.length < 3) {
+            setSuggestions(getFavorites());
+            setIsOpen(true);
+        }
     };
 
     const handleKeyDown = (e) => {
@@ -101,6 +149,12 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
 
     const handleFocus = () => {
         setHasError(false);
+        if (showFavorite && (!query || query.length < 3)) {
+            setSuggestions(getFavorites());
+            setIsOpen(true);
+        } else if (query && query.length >= 3) {
+            setIsOpen(true);
+        }
     };
 
     return (

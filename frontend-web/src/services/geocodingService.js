@@ -48,3 +48,44 @@ export const searchAddressAutocomplete = async (query) => {
         return [];
     }
 };
+
+export const getCoordinatesFromAddress = async (address) => {
+    if (!address) return null;
+
+    const params = new URLSearchParams({
+        q: address.trim(),
+        limit: "1"
+    });
+
+    try {
+        const response = await fetch(`${API_URL}?${params}`);
+
+        if (!response.ok) {
+            console.error("Erreur HTTP API BAN (Coordonnées) : ", response.status);
+            return null;
+        }
+
+        const data = await response.json();
+
+        if (!data || !data.features || data.features.length === 0) {
+            console.warn("Aucune coordonnée trouvée pour l'adresse : ", address);
+            return null;
+        }
+
+        const bestMatch = data.features[0];
+
+        return {
+            id: bestMatch.properties.id,
+            lat: bestMatch.geometry.coordinates[1],
+            lon: bestMatch.geometry.coordinates[0],
+            display_name: bestMatch.properties.label,
+            name: bestMatch.properties.name,
+            city: bestMatch.properties.city,
+            postcode: bestMatch.properties.postcode
+        };
+
+    } catch (error) {
+        console.error("Erreur technique lors de la récupération des coordonnées : ", error);
+        return null;
+    }
+};

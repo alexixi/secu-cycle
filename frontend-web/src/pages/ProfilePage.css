@@ -38,11 +38,12 @@
 }
 
 .address-section{
+  margin-top: 1em;
   padding-left: 3%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  height:5em;
+  justify-content: space-around ;
+  height: 30%;
 }
 
 .form-group-checkbox {

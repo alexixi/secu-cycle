@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
+import { useAuth } from "../../../context/AuthContext";
 import Button from "../../ui/Button";
 import AdressInput from "../../ui/AdressInput";
 import { FaHome } from "react-icons/fa";
@@ -9,18 +10,18 @@ import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 import "./AddressModal.css"
 
-export default function EditAddressModal({ isOpen, hasError, onClose, addresses, onConfirm }) {
-    const [formData, setFormData] = useState({
-        homeAddress: "",
-        workAddress: ""
-    });
+export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm }) {
+    const { user } = useAuth();
+
+    const [homeAddress, setHomeAddress] = useState(user?.home_address || "");
+    const [workAddress, setWorkAddress] = useState(user?.work_address || "");
 
     useEffect(() => {
-        if (addresses) {
-            setFormData(addresses);
+        if (isOpen && user) {
+            setHomeAddress(user.home_address || "");
+            setWorkAddress(user.work_address || "");
         }
-    }, [addresses, isOpen]);
-
+    }, [isOpen, user]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -52,14 +53,9 @@ export default function EditAddressModal({ isOpen, hasError, onClose, addresses,
 
     if (!isOpen) return null;
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
     const handleSubmit = (e) => {
         e.preventDefault();
-        onConfirm(formData);
+        onConfirm(homeAddress, workAddress);
     };
 
     return (
@@ -74,8 +70,8 @@ export default function EditAddressModal({ isOpen, hasError, onClose, addresses,
                             <AdressInput
                                 id="homeAddress"
                                 placeholder="Domicile"
-                                defaultValue={formData.homeAddress}
-                                onSelect={(place) => setFormData(prev => ({ ...prev, homeAddress: place.name }))}
+                                defaultValue={homeAddress}
+                                onSelect={(address) => setHomeAddress(address?.name || "")}
                                 autoFocus
                             />
                         </div>
@@ -85,8 +81,8 @@ export default function EditAddressModal({ isOpen, hasError, onClose, addresses,
                             <AdressInput
                                 id="workAddress"
                                 placeholder="Travail"
-                                defaultValue={formData.workAddress}
-                                onSelect={(place) => setFormData(prev => ({ ...prev, workAddress: place.name }))}
+                                defaultValue={workAddress}
+                                onSelect={(address) => setWorkAddress(address?.name || "")}
                             />
                         </div>
 

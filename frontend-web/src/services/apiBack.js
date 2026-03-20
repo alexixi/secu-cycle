@@ -1,9 +1,10 @@
-export async function calculateItineraries(start, end, bikeType, maxDuration) {
+export async function calculateItineraries(token, start, end, bikeType, maxDuration) {
     try {
         const response = await fetch("/api/routes/route", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
                 start_lat: start.lat,
@@ -21,7 +22,6 @@ export async function calculateItineraries(start, end, bikeType, maxDuration) {
         }
 
         const data = await response.json();
-        console.log(data);
         return data.routes;
 
     } catch (error) {
@@ -48,8 +48,6 @@ export async function login(email, password) {
             throw new Error(errorData.detail || "Erreur lors de la connexion");
         }
 
-        console.log("Réponse du serveur login : ", response);
-
         const data = await response.json();
         return data;
     } catch (error) {
@@ -72,7 +70,6 @@ export async function register(firstName, lastName, birthdate, email, password) 
                 password: password,
             })
         });
-        console.log("Réponse du serveur register : ", response);
         if (!response.ok) {
             const errorData = await response.text();
             throw new Error(errorData.detail || "Erreur lors de la création du compte");

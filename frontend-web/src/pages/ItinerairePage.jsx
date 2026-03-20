@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import Header from "../components/layout/Header";
 import MapComponent from "../modules/map/MapComponent";
 import SearchAside from "../components/layout/SearchAside";
@@ -16,6 +17,8 @@ export default function ItinerairePage() {
     const [maxDuration, setMaxDuration] = useState(null);
     const [errorPath, setErrorPath] = useState(false);
 
+    const { token } = useAuth();
+
     const handleStartSelect = (coords) => {
         setRoutePaths(null);
         setStartPoint(coords);
@@ -27,11 +30,13 @@ export default function ItinerairePage() {
     };
 
     const handleCalculateRoute = async () => {
-        if (!startPoint || !endPoint) { return; }
+        if (!startPoint || !endPoint || !selectedBike || startPoint === endPoint || !startPoint.lat || !endPoint.lat) {
+            return;
+        }
 
         setIsLoading(true);
         setRoutePaths(null);
-        const itineraries = await calculateItineraries(startPoint, endPoint, selectedBike, maxDuration);
+        const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration);
 
         if (itineraries && itineraries.length > 0) {
             setErrorPath(false);

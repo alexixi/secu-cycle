@@ -24,7 +24,6 @@ export const AuthProvider = ({ children }) => {
             setToken(null);
         }
         if (storedBikes && storedBikes !== "undefined" && storedBikes !== "null") {
-            console.log("Bikes loaded from localStorage:", JSON.parse(storedBikes));
             setUserBikes(JSON.parse(storedBikes));
         } else {
             localStorage.removeItem('bikes');
@@ -38,7 +37,6 @@ export const AuthProvider = ({ children }) => {
     }
 
     const updateBikes = (bikesData) => {
-        console.log("Updating bikes in context and localStorage:", bikesData);
         setUserBikes(bikesData);
         localStorage.setItem('bikes', JSON.stringify(bikesData));
     }

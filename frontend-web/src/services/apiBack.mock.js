@@ -1,13 +1,20 @@
 // Simulation des requêtes vers le backend pour le développement frontend sans dépendance au backend
+let userProfile = {
+    id: 1,
+    first_name: "Henri",
+    last_name: "Dupond",
+    email: "henri.dupond@example.com",
+    birth_date: "1990-01-01",
+    sport_level: "intermédiaire",
+    home_address: "",
+    work_address: ""
+};
 
-export async function calculateItineraries(start, end, bikeType, maxDuration) {
-    console.log("Calcul des itinéraires entre", start, "et", end, "avec le vélo de type", bikeType, "et une durée maximale de", maxDuration, "minutes");
+let userBikes = [];
 
-    // Simuler un délai de réponse du backend
-    await new Promise(resolve => setTimeout(resolve, 500));
+export async function calculateItineraries(token, start, end, bikeType, maxDuration) {
+    await new Promise(resolve => setTimeout(resolve, 250));
 
-    // Générer des itinéraires fictifs pour les tests
-    // On calcule les différences pour faire des proportions
     const dLat = end.lat - start.lat;
     const dLon = end.lon - start.lon;
 
@@ -57,12 +64,11 @@ export async function calculateItineraries(start, end, bikeType, maxDuration) {
             ]
         }
     ];
-    console.log("Itinéraires simulés :", itineraries);
     return itineraries;
 }
 
 export async function login(email, password) {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 250));
     return {
         access_token: "fake_token_12345",
         token_type: "bearer",
@@ -71,57 +77,54 @@ export async function login(email, password) {
 }
 
 export async function register(firstName, lastName, birthdate, email, password) {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 250));
+    userProfile.first_name = firstName;
+    userProfile.last_name = lastName;
+    userProfile.birth_date = birthdate;
+    userProfile.email = email;
+    localStorage.setItem("user", JSON.stringify(userProfile));
 }
 
 export async function getUserProfile(token) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return {
-        id: 1,
-        first_name: "Henri",
-        last_name: "Dupond",
-        email: "henri.dupond@example.com",
-        birth_date: "1990-01-01",
-        sport_level: "intermédiaire",
-        home_address: "12 Avenue Carnot 33200 Bordeaux",
-        work_address: "1 Avenue des Facultes 33400 Talence"
-    };
+    await new Promise(resolve => setTimeout(resolve, 250));
+    userProfile = JSON.parse(localStorage.getItem("user")) || userProfile;
+    return userProfile;
 }
 
 export async function changeProfileInfo(token, firstName, lastName, email, birthDate, password, level) {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 250));
+    userProfile.first_name = firstName;
+    userProfile.last_name = lastName;
+    userProfile.birth_date = birthDate;
+    userProfile.email = email;
+    userProfile.sport_level = level;
+    localStorage.setItem("user", JSON.stringify(userProfile));
 }
 
 export async function changeAddress(token, homeAddress, workAddress) {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 250));
+    userProfile.home_address = homeAddress;
+    userProfile.work_address = workAddress;
+    localStorage.setItem("user", JSON.stringify(userProfile));
 }
 
 export async function getUserBikes(token) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return [
-        {
-            id: 1,
-            name: "Mon VTT électrique",
-            type: "VTT",
-            isElectric: true
-        },
-        {
-            id: 2,
-            name: "Mon vélo de route",
-            type: "Route",
-            isElectric: false
-        }
-    ];
+    await new Promise(resolve => setTimeout(resolve, 250));
+    return userBikes;
 }
 
 export async function addBike(token, name, type, isElectric) {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 250));
+    userBikes.push({ id: userBikes.length + 1, name, type, isElectric });
+    localStorage.setItem("userBikes", JSON.stringify(userBikes));
 }
 
 export async function suppressBike(token, bike) {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 250));
+    userBikes = userBikes.filter(b => b.id !== bike.id);
+    localStorage.setItem("userBikes", JSON.stringify(userBikes));
 }
 
 export async function changePassword(token, oldPassword, newPassword) {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 250));
 }

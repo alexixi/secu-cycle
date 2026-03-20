@@ -13,7 +13,7 @@ const MapController = ({ center, bounds }) => {
                 duration: 1
             });
         }
-        else if (center) {
+        else if (center && center.lat !== null && center.lon !== null) {
             map.flyTo([center.lat, center.lon], 15, { duration: 1.5 });
         }
     }, [center, bounds, map]);

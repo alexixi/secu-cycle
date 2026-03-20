@@ -1,15 +1,16 @@
 import './BikeSelect.css';
 import IconCard from '../ui/IconCard';
 import { useRef, useState, useEffect } from 'react';
+import { useAuth } from "../../context/AuthContext";
 import IconBikeStandard from '../../assets/bikes/standard.svg?react';
 import IconBikeStandardElectric from '../../assets/bikes/standard-electric.svg?react';
 import IconBikeVTT from '../../assets/bikes/vtt.svg?react';
 import IconBikeVTT_Electric from '../../assets/bikes/vtt-electric.svg?react';
 import IconBikeRoute from '../../assets/bikes/route.svg?react';
-import { BsLightningChargeFill } from "react-icons/bs";
 import { MdBatteryChargingFull } from "react-icons/md";
 
 export default function BikeSelect({ selectedBike, onSelect }) {
+    const { userBikes } = useAuth();
 
     const listRef = useRef(null);
     const [scrollState, setScrollState] = useState('start');
@@ -40,13 +41,32 @@ export default function BikeSelect({ selectedBike, onSelect }) {
         return () => window.removeEventListener('resize', checkScroll);
     }, []);
 
-    const bikes = [
-        { id: "standard", type: "standard", electric: false, name: "Ville", icon: IconBikeStandard },
-        { id: "standard-electric", type: "standard", electric: true, name: "Ville", icon: IconBikeStandardElectric },
-        { id: "vtt", type: "vtt", electric: false, name: "VTT", icon: IconBikeVTT },
-        { id: "vtt-electric", type: "vtt", electric: true, name: "VTT", icon: IconBikeVTT_Electric },
-        { id: "route", type: "route", electric: false, name: "Route", icon: IconBikeRoute },
+    const defaultBikes = [
+        { id: "default-ville", type: "ville", electric: false, name: "Ville", icon: IconBikeStandard },
+        { id: "default-ville-electric", type: "ville", electric: true, name: "Ville", icon: IconBikeStandardElectric },
+        { id: "default-vtt", type: "vtt", electric: false, name: "VTT", icon: IconBikeVTT },
+        { id: "default-vtt-electric", type: "vtt", electric: true, name: "VTT", icon: IconBikeVTT_Electric },
+        { id: "default-route", type: "route", electric: false, name: "Route", icon: IconBikeRoute },
     ];
+
+    let bikes = defaultBikes;
+
+    if (userBikes && userBikes.length > 0) {
+
+        bikes = userBikes.map(bike => {
+            let icon;
+            if (bike.type.toLowerCase() === "ville") {
+                icon = bike.electric ? IconBikeStandardElectric : IconBikeStandard;
+            } else if (bike.type.toLowerCase() === "vtt") {
+                icon = bike.electric ? IconBikeVTT_Electric : IconBikeVTT;
+            } else if (bike.type.toLowerCase() === "route") {
+                icon = IconBikeRoute;
+            } else {
+                icon = IconBikeStandard;
+            }
+            return { id: bike.id, type: bike.type, electric: bike.electric, name: bike.name, icon: icon };
+        });
+    }
 
     return (
         <div className="bike-select-container">

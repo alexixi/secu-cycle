@@ -16,8 +16,8 @@ export default function SearchAside({ startAdress, endAdress, onStartSelect, onE
         <aside className="search-aside">
             <div className="adress-input-wrapper">
                 <div className="adress-inputs">
-                    <AdressInput id="adress-input-start" placeholder="Départ" defaultValue={startAdress} onSelect={onStartSelect}><MdDirectionsBike size={24} /></AdressInput>
-                    <AdressInput id="adress-input-end" placeholder="Destination" defaultValue={endAdress} onSelect={onEndSelect}><FaFlagCheckered size={24} /></AdressInput>
+                    <AdressInput id="adress-input-start" placeholder="Départ" defaultValue={startAdress} onSelect={onStartSelect} showFavorite><MdDirectionsBike size={24} /></AdressInput>
+                    <AdressInput id="adress-input-end" placeholder="Destination" defaultValue={endAdress} onSelect={onEndSelect} showFavorite><FaFlagCheckered size={24} /></AdressInput>
                 </div>
                 <SwapButton onClick={onSwap} />
             </div>
