@@ -8,7 +8,7 @@ import SuppressBikeModal from "../components/layout/modals/SuppressBikeModal";
 import AddBikeModal from "../components/layout/modals/AddBikeModal"
 import EditBikeModal from "../components/layout/modals/EditBikeModal"
 import IconCard from '../components/ui/IconCard';
-import { addBike, changeProfileInfo, changeAddress, suppressBike } from "../services/apiBack.mock";
+import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike } from "../services/apiBack.mock";
 import { getUserProfile, getUserBikes } from "../services/apiBack.mock";
 import { useAuth } from "../context/AuthContext";
 
@@ -166,6 +166,7 @@ export default function ProfilePage() {
 
   const handleSubmitEditBike = async (updatedBike) => {
     try {
+      await editBike(token, updatedBike.id, updatedBike.name, updatedBike.type, updatedBike.isElectric);
       const updatedBikes = bikes.map(b => b === selectedBike ? updatedBike : b);
       setBikes(updatedBikes);
       setIsModalOpenEditBike(false);
@@ -180,14 +181,14 @@ export default function ProfilePage() {
   };
 
   const handleDeleteSingleBike = async (bike) => {
-  try {
-    await suppressBike(token, bike);
-    setBikes(bikes.filter(b => b !== bike));
-    setIsModalOpenEditBike(false);
-  } catch (error) {
-    setHasError(true);
-  }
-};
+    try {
+      await suppressBike(token, bike);
+      setBikes(bikes.filter(b => b !== bike));
+      setIsModalOpenEditBike(false);
+    } catch (error) {
+      setHasError(true);
+    }
+  };
 
   return (
     <>

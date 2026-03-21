@@ -35,3 +35,25 @@
     -webkit-mask-image: none;
     mask-image: none;
 }
+
+.default-bike-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding-left: 5px;
+    padding-right: 5px;
+    width: 100%;
+    gap: 10px;
+    color: var(--text-main);
+}
+
+.default-bike-info p {
+    margin: 0;
+}
+
+.default-bike-icon {
+    width: 36px;
+    height: 36px;
+    color: var(--text-main);
+}

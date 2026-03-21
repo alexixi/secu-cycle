@@ -68,21 +68,33 @@ export default function BikeSelect({ selectedBike, onSelect }) {
         });
     }
 
+    const SingleBikeIcon = bikes.length === 1 ? bikes[0].icon : null;
+
     return (
         <div className="bike-select-container">
-            <h2>Choix du vélo</h2>
+            {bikes.length > 1 && <h2>Choix du vélo</h2>}
             <div ref={listRef} onScroll={checkScroll} data-scroll={scrollState} className='bike-select'>
-                {bikes.map((bike) => (
-                    <IconCard
-                        key={bike.id}
-                        id={bike.id}
-                        IconSVG={bike.icon}
-                        label={bike.name}
-                        LabelIcon={bike.electric ? <MdBatteryChargingFull /> : null}
-                        selected={selectedBike === bike.id}
-                        onClick={() => onSelect(bike.id)}
-                    />
-                ))}
+                {
+                    bikes.length === 1 ? (
+                        <div className='default-bike-info'>
+                            {SingleBikeIcon && <SingleBikeIcon className='default-bike-icon' />}
+                            <p><strong>{bikes[0].name}</strong> sélectionné</p>
+                            {onSelect(bikes[0].id)}
+                        </div>
+                    ) : (
+                        bikes.map((bike) => (
+                            <IconCard
+                                key={bike.id}
+                                id={bike.id}
+                                IconSVG={bike.icon}
+                                label={bike.name}
+                                LabelIcon={bike.electric ? <MdBatteryChargingFull /> : null}
+                                selected={selectedBike === bike.id}
+                                onClick={() => onSelect(bike.id)}
+                            />
+                        ))
+                    )
+                }
             </div>
         </div>
     );

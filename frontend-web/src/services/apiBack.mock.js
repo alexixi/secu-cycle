@@ -1,16 +1,9 @@
 // Simulation des requêtes vers le backend pour le développement frontend sans dépendance au backend
-let userProfile = {
-    id: 1,
-    first_name: "Henri",
-    last_name: "Dupond",
-    email: "henri.dupond@example.com",
-    birth_date: "1990-01-01",
-    sport_level: "intermédiaire",
-    home_address: "",
-    work_address: ""
-};
+let userProfile = {}
 
 let userBikes = [];
+
+let currentID = 0;
 
 export async function calculateItineraries(token, start, end, bikeType, maxDuration) {
     await new Promise(resolve => setTimeout(resolve, 250));
@@ -78,10 +71,12 @@ export async function login(email, password) {
 
 export async function register(firstName, lastName, birthdate, email, password) {
     await new Promise(resolve => setTimeout(resolve, 250));
-    userProfile.first_name = firstName;
-    userProfile.last_name = lastName;
-    userProfile.birth_date = birthdate;
-    userProfile.email = email;
+    userProfile = {
+        first_name: firstName,
+        last_name: lastName,
+        birth_date: birthdate,
+        email: email,
+    };
     localStorage.setItem("user", JSON.stringify(userProfile));
 }
 
@@ -93,6 +88,7 @@ export async function getUserProfile(token) {
 
 export async function changeProfileInfo(token, firstName, lastName, email, birthDate, password, level) {
     await new Promise(resolve => setTimeout(resolve, 250));
+    userProfile = JSON.parse(localStorage.getItem("user")) || userProfile;
     userProfile.first_name = firstName;
     userProfile.last_name = lastName;
     userProfile.birth_date = birthDate;
@@ -103,6 +99,7 @@ export async function changeProfileInfo(token, firstName, lastName, email, birth
 
 export async function changeAddress(token, homeAddress, workAddress) {
     await new Promise(resolve => setTimeout(resolve, 250));
+    userProfile = JSON.parse(localStorage.getItem("user")) || userProfile;
     userProfile.home_address = homeAddress;
     userProfile.work_address = workAddress;
     localStorage.setItem("user", JSON.stringify(userProfile));
@@ -110,19 +107,32 @@ export async function changeAddress(token, homeAddress, workAddress) {
 
 export async function getUserBikes(token) {
     await new Promise(resolve => setTimeout(resolve, 250));
+    userBikes = JSON.parse(localStorage.getItem("bikes")) || userBikes;
     return userBikes;
 }
 
 export async function addBike(token, name, type, isElectric) {
     await new Promise(resolve => setTimeout(resolve, 250));
-    userBikes.push({ id: userBikes.length + 1, name, type, isElectric });
-    localStorage.setItem("userBikes", JSON.stringify(userBikes));
+    userBikes = JSON.parse(localStorage.getItem("bikes")) || userBikes;
+    currentID = JSON.parse(localStorage.getItem("id")) || currentID;
+    userBikes.push({ id: ++currentID, name, type, isElectric });
+    localStorage.setItem("id", JSON.stringify(currentID));
+    localStorage.setItem("bikes", JSON.stringify(userBikes));
+}
+
+export async function editBike(token, bikeId, name, type, isElectric) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    userBikes = JSON.parse(localStorage.getItem("bikes")) || userBikes;
+    userBikes = userBikes.map(b => b.id === bikeId ? { id: bikeId, name, type, isElectric } : b);
+    localStorage.setItem("bikes", JSON.stringify(userBikes));
 }
 
 export async function suppressBike(token, bike) {
     await new Promise(resolve => setTimeout(resolve, 250));
+    userBikes = JSON.parse(localStorage.getItem("bikes")) || userBikes;
+    console.log("Suppression du vélo :", bike);
     userBikes = userBikes.filter(b => b.id !== bike.id);
-    localStorage.setItem("userBikes", JSON.stringify(userBikes));
+    localStorage.setItem("bikes", JSON.stringify(userBikes));
 }
 
 export async function changePassword(token, oldPassword, newPassword) {

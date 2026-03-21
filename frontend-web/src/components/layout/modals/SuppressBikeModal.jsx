@@ -9,35 +9,46 @@ import "../../ui/Form.css"
 export default function SuppressBikeModal({ isOpen, hasError, onClose, bikes, onConfirm }) {
     const [selectedIndexes, setSelectedIndexes] = useState([]);
 
-
     useEffect(() => {
+        if (!isOpen) return;
+
         const handleKeyDown = (e) => {
+            console.log(e.key);
             if (e.key === "Escape") {
+                onClose();
+            }
+            else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") {
+                e.preventDefault();
+
+                if (selectedIndexes.length === bikes.length) {
+                    setSelectedIndexes([]);
+                } else {
+                    setSelectedIndexes(bikes.map((_, index) => index));
+                }
+            }
+            else if ((e.key === "Delete" || e.key === "Backspace" || e.key === "Enter") && selectedIndexes.length > 0) {
+                e.preventDefault();
+                onConfirm(selectedIndexes);
+                setSelectedIndexes([]);
+            }
+        };
+
+        const handleOverlayClick = (e) => {
+            if (e.target.classList.contains("modal-overlay")) {
                 onClose();
             }
         };
 
-        if (isOpen) {
-            document.addEventListener("keydown", handleKeyDown);
-            document.addEventListener("click", (e) => {
-                if (e.target.classList.contains("modal-overlay")) {
-                    onClose();
-                }
-            });
-            document.body.style.overflow = "hidden";
-        }
+        document.addEventListener("keydown", handleKeyDown);
+        document.addEventListener("click", handleOverlayClick);
+        document.body.style.overflow = "hidden";
 
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
-            document.removeEventListener("click", (e) => {
-                if (e.target.classList.contains("modal-overlay")) {
-                    onClose();
-                }
-            });
+            document.removeEventListener("click", handleOverlayClick);
             document.body.style.overflow = "auto";
         };
-    }, [isOpen, onClose]);
-
+    }, [isOpen, onClose, bikes, selectedIndexes, onConfirm]);
     if (!isOpen) return null;
 
     const handleCheckboxChange = (index) => {
