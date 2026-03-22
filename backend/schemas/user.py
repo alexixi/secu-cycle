@@ -26,3 +26,10 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    birth_date: Optional[date] = None
+    sport_level: Optional[str] = None
+    home_address: Optional[str] = None
+    work_address: Optional[str] = None

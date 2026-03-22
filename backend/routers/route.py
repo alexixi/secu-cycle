@@ -1,13 +1,53 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+import osmnx as ox
 from typing import List
 from database import get_db
 from schemas.route import RouteCreate, RouteRead
 from models.route import Route
 from dependencies import get_current_user
 from graph.routing import get_optimal_routes
+from models.bike import Bike
+from models.history import UserHistory
 
 router = APIRouter(prefix="/routes", tags=["Routes"])
+
+
+
+VITESSE_PAR_AMENAGEMENT = {
+    "none":          (18, 21),  # Aucune infrastructure
+    "opposite":      (16, 18),  # Contresens
+    "shared":        (17, 18),  # Voie partagée piétons/vélos
+    "shared_busway": (20, 23),  # Voie bus+vélo
+    "lane":          (20, 23),  # Bande cyclable
+    "track":         (19, 21),  # Piste cyclable séparée
+}
+VITESSE_DEFAUT = (18, 21)  # fallback si tag inconnu
+
+
+def _vitesse_segment(cycleway_tag: str, is_electric: bool) -> float:
+    vitesses = VITESSE_PAR_AMENAGEMENT.get(cycleway_tag, VITESSE_DEFAUT)
+    return vitesses[1] if is_electric else vitesses[0]
+
+
+def _calculer_vitesse_moyenne(G, route_nodes: list, is_electric: bool) -> float:
+    vitesses = []
+    for i in range(len(route_nodes) - 1):
+        u, v = route_nodes[i], route_nodes[i + 1]
+        edge_data = G.get_edge_data(u, v)
+        if edge_data:
+            data = edge_data[0] if 0 in edge_data else edge_data
+            cycleway = data.get("cycleway", "none")
+            if isinstance(cycleway, list):
+                cycleway = cycleway[0]
+            vitesses.append(_vitesse_segment(cycleway, is_electric))
+
+    if not vitesses:
+        return VITESSE_DEFAUT[1 if is_electric else 0]
+
+    vitesse_kmh = sum(vitesses) / len(vitesses)
+    return vitesse_kmh / 60 
+
 
 
 @router.post("/", response_model=RouteRead)
@@ -30,31 +70,73 @@ def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends
     return route
 
 @router.post("/route")
-async def compute_route(request: Request, data: dict):
+async def compute_route(request: Request, data: dict, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     G = request.app.state.G
     if G is None:
         raise HTTPException(status_code=500, detail="Graphe non chargé")
 
     try:
-        # Coordonnées obligatoires
         start = (data["start_lat"], data["start_lon"])
         end = (data["end_lat"], data["end_lon"])
-
-        # Paramètres optionnels
-        temps_max_min = data.get("temps_max_min")  # None si pas fourni
-        iterations = data.get("iterations", 6)    # 6 par défaut
-
+    except KeyError as e:
+        raise HTTPException(status_code=422, detail=f"Champ manquant : {e}")
+    
+    is_electric = False
+    if current_user:
+        bike_id = data.get("bike_id")
+        if bike_id:
+            bike = db.query(Bike).filter(
+                Bike.id == bike_id,
+                Bike.user_id == current_user.id
+            ).first()
+            if bike:
+                is_electric = bike.is_electric
+    vitesse_m_min = VITESSE_DEFAUT[1 if is_electric else 0] / 60
+    try:
         result = get_optimal_routes(
             G,
             start_coords=start,
             end_coords=end,
-            temps_max_min=temps_max_min,
-            iterations=iterations
+            temps_max_min=data.get("temps_max_min"),
+            iterations=data.get("iterations", 6),
+            vitesse_m_min=vitesse_m_min
         )
-        return result
-
-    except KeyError as e:
-        raise HTTPException(status_code=422, detail=f"Missing required field: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+    if not result.get("success"):
+        raise HTTPException(status_code=404, detail=result.get("error", "Calcul échoué."))
+    for route_info in result.get("routes", []):
+        coords = route_info["path"]
+        nodes = list(ox.distance.nearest_nodes(
+            G,
+            [p[1] for p in coords],
+            [p[0] for p in coords]
+        ))
+        vitesse_segment = _calculer_vitesse_moyenne(G, nodes, is_electric)
+        route_info["duration"] = route_info["distance"] * 1000 / vitesse_segment
+
+    if current_user:
+        start_address = data.get("start_address", f"{start[0]}, {start[1]}")
+        end_address = data.get("end_address", f"{end[0]}, {end[1]}")
+
+        for route_info in result.get("routes", []):
+            db_route = Route(
+                user_id=current_user.id,
+                start_address=start_address,
+                end_address=end_address,
+                route_type=route_info["id"],
+                distance_km=route_info["distance"],
+                duration_min=route_info["duration"],
+            )
+            db.add(db_route)
+            db.flush()
+            db.add(UserHistory(
+                user_id=current_user.id,
+                route_id=db_route.id,
+                action_type="trajet",
+            ))
+
+        db.commit()
+
+    return result

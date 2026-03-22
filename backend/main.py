@@ -3,6 +3,8 @@ from routers import user
 from database import Base, engine
 from routers import route
 from routers import history
+from routers import bike 
+from routers import report  
 from graph.graph_manager import create_graph
 from contextlib import asynccontextmanager
 #from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +27,8 @@ app = FastAPI(title="Bike Safe API", lifespan=lifespan)
 app.include_router(user.router)
 app.include_router(route.router)
 app.include_router(history.router)
+app.include_router(bike.router)
+app.include_router(report.router)
 ##### Si le frontend n'est pas hébergé au meme endroit #########
 """ app.add_middleware(
     CORSMiddleware,

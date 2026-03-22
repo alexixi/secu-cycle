@@ -4,13 +4,14 @@ from typing import List
 from database import get_db
 from models.bike import Bike
 from schemas.bike import BikeCreate, BikeRead
+from dependencies import get_current_user
 
 router = APIRouter(prefix="/bikes", tags=["Bikes"])
 
-@router.post("/{user_id}", response_model=BikeRead)
-def add_bike(user_id: int, bike: BikeCreate, db: Session = Depends(get_db)):
+@router.post("/", response_model=BikeRead)
+def add_bike(bike: BikeCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     db_bike = Bike(
-        user_id=user_id,
+        user_id=current_user.id, 
         type=bike.type,
         is_electric=bike.is_electric
     )
@@ -19,15 +20,24 @@ def add_bike(user_id: int, bike: BikeCreate, db: Session = Depends(get_db)):
     db.refresh(db_bike)
     return db_bike
 
-# Récupérer tous les vélos d'un utilisateur
-@router.get("/{user_id}", response_model=List[BikeRead])
-def get_user_bikes(user_id: int, db: Session = Depends(get_db)):
-    return db.query(Bike).filter(Bike.user_id == user_id).all()
 
-# Récupérer un vélo par son ID
-@router.get("/{user_id}/{bike_id}", response_model=BikeRead)
-def get_bike(user_id: int, bike_id: int, db: Session = Depends(get_db)):
-    bike = db.query(Bike).filter(Bike.id == bike_id, Bike.user_id == user_id).first()
+@router.get("/", response_model=List[BikeRead])
+def get_user_bikes(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    return db.query(Bike).filter(Bike.user_id == current_user.id).all()
+
+
+@router.get("/{bike_id}", response_model=BikeRead)
+def get_bike(bike_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    bike = db.query(Bike).filter(Bike.id == bike_id, Bike.user_id == current_user.id).first()
     if not bike:
         raise HTTPException(status_code=404, detail="Vélo introuvable")
     return bike
+
+
+@router.delete("/{bike_id}", status_code=204)
+def delete_bike(bike_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    bike = db.query(Bike).filter(Bike.id == bike_id, Bike.user_id == current_user.id).first()
+    if not bike:
+        raise HTTPException(status_code=404, detail="Vélo introuvable")
+    db.delete(bike)
+    db.commit()

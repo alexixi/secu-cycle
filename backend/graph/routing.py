@@ -120,11 +120,12 @@ def calculate_route_distance(G, route):
                 distance += float(edge_data.get('length', 0))
     return distance/1000
 
-def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iterations=6):
+def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iterations=6, vitesse_m_min=None):
     """
     Calcule et renvoie le trajet le plus rapide, le plus sécurisé,
     et (optionnellement) le meilleur compromis respectant une contrainte de temps.
     """
+    _vitesse = vitesse_m_min if vitesse_m_min is not None else VITESSE_M_MIN
     try:
         start_node = ox.distance.nearest_nodes(G, start_coords[1], start_coords[0])
         end_node = ox.distance.nearest_nodes(G, end_coords[1], end_coords[0])
@@ -133,14 +134,14 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
         G = calculate_weights(G, alpha=1.0)
         route_fast = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_fast = calculate_route_distance(G, route_fast)
-        temps_fast = dist_fast / VITESSE_M_MIN
+        temps_fast = dist_fast / _vitesse
         coords_fast = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in route_fast]
 
         # --- 2. TRAJET LE PLUS SÉCURISÉ (Alpha = 0.0) ---
         G = calculate_weights(G, alpha=0.0)
         route_safe = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_safe = calculate_route_distance(G, route_safe)
-        temps_safe = dist_safe / VITESSE_M_MIN
+        temps_safe = dist_safe / _vitesse
         coords_safe = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in route_safe]
         # Construction du dictionnaire de base
         result = {
@@ -196,7 +197,7 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
                     G = calculate_weights(G, alpha=alpha_mid)
                     route_mid = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
                     dist_mid = calculate_route_distance(G, route_mid)
-                    temps_mid = dist_mid / VITESSE_M_MIN
+                    temps_mid = dist_mid / _vitesse
 
                     if temps_mid <= temps_max_min:
                         best_path = route_mid
