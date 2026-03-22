@@ -1,17 +1,19 @@
-export async function calculateItineraries(token, start, end, bikeType, maxDuration) {
+export async function calculateItineraries(token, start, end, bikeId, maxDuration) {
     try {
+        const headers = { "Content-Type": "application/json" };
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+
         const response = await fetch("/api/routes/route", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
+            headers: headers,
             body: JSON.stringify({
                 start_lat: start.lat,
                 start_lon: start.lon,
                 end_lat: end.lat,
                 end_lon: end.lon,
-                bike_type: bikeType,
+                bike_id: bikeId,    
                 temps_max_min: maxDuration
             })
         });
@@ -63,9 +65,9 @@ export async function register(firstName, lastName, birthdate, email, password) 
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                first_name: firstName,
-                last_name: lastName,
-                birth_date: birthdate,
+                first_name: firstName || null,
+                last_name: lastName || null,
+                birth_date: birthdate || null,
                 email: email,
                 password: password,
             })

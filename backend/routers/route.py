@@ -5,7 +5,7 @@ from typing import List
 from database import get_db
 from schemas.route import RouteCreate, RouteRead
 from models.route import Route
-from dependencies import get_current_user
+from dependencies import get_current_user, get_current_user_optional
 from graph.routing import get_optimal_routes
 from models.bike import Bike
 from models.history import UserHistory
@@ -70,7 +70,7 @@ def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends
     return route
 
 @router.post("/route")
-async def compute_route(request: Request, data: dict, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+async def compute_route(request: Request, data: dict, db: Session = Depends(get_db), current_user=Depends(get_current_user_optional)):
     G = request.app.state.G
     if G is None:
         raise HTTPException(status_code=500, detail="Graphe non chargé")
@@ -82,16 +82,17 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
         raise HTTPException(status_code=422, detail=f"Champ manquant : {e}")
     
     is_electric = False
+    vitesse_m_min = VITESSE_DEFAUT[0] / 60  
     if current_user:
         bike_id = data.get("bike_id")
-        if bike_id:
+        if bike_id and str(bike_id).lstrip('-').isdigit():  
             bike = db.query(Bike).filter(
-                Bike.id == bike_id,
+                Bike.id == int(bike_id),
                 Bike.user_id == current_user.id
             ).first()
             if bike:
                 is_electric = bike.is_electric
-    vitesse_m_min = VITESSE_DEFAUT[1 if is_electric else 0] / 60
+        vitesse_m_min = VITESSE_DEFAUT[1 if is_electric else 0] / 60
     try:
         result = get_optimal_routes(
             G,
@@ -102,6 +103,8 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
             vitesse_m_min=vitesse_m_min
         )
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
     if not result.get("success"):
@@ -114,7 +117,7 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
             [p[0] for p in coords]
         ))
         vitesse_segment = _calculer_vitesse_moyenne(G, nodes, is_electric)
-        route_info["duration"] = route_info["distance"] * 1000 / vitesse_segment
+        route_info["duration"] = route_info["distance"] / vitesse_segment
 
     if current_user:
         start_address = data.get("start_address", f"{start[0]}, {start[1]}")

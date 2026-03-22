@@ -29,3 +29,14 @@ def get_current_user(
         raise HTTPException(status_code=404, detail="User not found")
 
     return user
+
+
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="users/login", auto_error=False)
+
+def get_current_user_optional(
+    token: str = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db)
+):
+    if not token:
+        return None
+    return get_current_user(token=token, db=db)
