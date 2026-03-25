@@ -1,9 +1,12 @@
-export async function calculateItineraries(start, end, bikeType, maxDuration) {
+const BASE_API_URL = "localhost:8000"
+
+export async function calculateItineraries(token, start, end, bikeType, maxDuration) {
     try {
-        const response = await fetch("/api/itineraries", {
+        const response = await fetch(`${BASE_API_URL}/routes/route`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
                 start_lat: start.lat,
@@ -11,7 +14,7 @@ export async function calculateItineraries(start, end, bikeType, maxDuration) {
                 end_lat: end.lat,
                 end_lon: end.lon,
                 bike_type: bikeType,
-                max_duration: maxDuration
+                temps_max_min: maxDuration
             })
         });
 
@@ -21,7 +24,7 @@ export async function calculateItineraries(start, end, bikeType, maxDuration) {
         }
 
         const data = await response.json();
-        return data.itineraries;
+        return data.routes;
 
     } catch (error) {
         console.error("Erreur de la récupération des itinéraires : ", error);
