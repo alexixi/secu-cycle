@@ -8,8 +8,8 @@ import SuppressBikeModal from "../components/layout/modals/SuppressBikeModal";
 import AddBikeModal from "../components/layout/modals/AddBikeModal"
 import EditBikeModal from "../components/layout/modals/EditBikeModal"
 import IconCard from '../components/ui/IconCard';
-import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike } from "../services/apiBack.mock";
-import { getUserProfile, getUserBikes } from "../services/apiBack.mock";
+import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike } from "../services/apiBack";
+import { getUserProfile, getUserBikes } from "../services/apiBack";
 import { useAuth } from "../context/AuthContext";
 
 import IconBikeStandard from '../assets/bikes/standard.svg?react';
@@ -41,7 +41,6 @@ export default function ProfilePage() {
   const [homeAddress, setHomeAddress] = useState(user?.home_address || "");
   const [workAddress, setWorkAddress] = useState(user?.work_address || "");
   const [bikes, setBikes] = useState(userBikes || []);
-  const [password, setPassword] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -105,6 +104,7 @@ export default function ProfilePage() {
       const response_bikes = await getUserBikes(token);
       updateBikes(response_bikes);
       setIsModalOpen(false);
+      setHasError(false);
     } catch (error) {
       setHasError(true);
     }
@@ -118,7 +118,6 @@ export default function ProfilePage() {
         updatedData.lastName,
         updatedData.email,
         updatedData.birthDate,
-        updatedData.password,
         updatedData.level
       );
 
@@ -131,6 +130,7 @@ export default function ProfilePage() {
       });
 
       setIsModalOpenInfo(false);
+      setHasError(false);
     } catch (error) {
       setHasError(true);
     }
@@ -157,8 +157,11 @@ export default function ProfilePage() {
       for (const bike of bikesToProcess) {
         await suppressBike(token, bike);
       }
-      setBikes(bikes.filter((_, i) => !indexesToDelete.includes(i)));
+      const response_bikes = await getUserBikes(token);
+      updateBikes(response_bikes);
+      setBikes(response_bikes);
       setIsModalOpenSuppress(false);
+      setHasError(false);
     } catch (error) {
       setHasError(true);
     }
@@ -167,9 +170,11 @@ export default function ProfilePage() {
   const handleSubmitEditBike = async (updatedBike) => {
     try {
       await editBike(token, updatedBike.id, updatedBike.name, updatedBike.type, updatedBike.isElectric);
-      const updatedBikes = bikes.map(b => b === selectedBike ? updatedBike : b);
-      setBikes(updatedBikes);
+      const response_bikes = await getUserBikes(token);
+      updateBikes(response_bikes);
+      setBikes(response_bikes);
       setIsModalOpenEditBike(false);
+      setHasError(false);
     } catch (error) {
       setHasError(true);
     }
@@ -177,14 +182,18 @@ export default function ProfilePage() {
 
   const handleEditClick = (bike) => {
     setSelectedBike(bike);
+    setHasError(false);
     setIsModalOpenEditBike(true);
   };
 
   const handleDeleteSingleBike = async (bike) => {
     try {
       await suppressBike(token, bike);
-      setBikes(bikes.filter(b => b !== bike));
+      const response_bikes = await getUserBikes(token);
+      updateBikes(response_bikes);
+      setBikes(response_bikes);
       setIsModalOpenEditBike(false);
+      setHasError(false);
     } catch (error) {
       setHasError(true);
     }
@@ -258,7 +267,7 @@ export default function ProfilePage() {
         hasError={hasError}
         onClose={() => setIsModalOpenInfo(false) || setHasError(false)}
         onConfirm={handleSubmitInfo}
-        userData={{ firstName, lastName, email, birthDate, level, password }}
+        userData={{ firstName, lastName, email, birthDate, level }}
       />
 
       <EditAddressModal

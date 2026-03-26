@@ -1,40 +1,62 @@
+export async function apiFetch(url, options = {}, token = null) {
+    const headers = {
+        "Content-Type": "application/json",
+        ...options.headers,
+    };
+
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, { ...options, headers });
+
+    if (!response.ok) {
+        const errorData = await response.text();
+        if (response.status === 401 && !url.toString().includes("/login") && errorData.includes("token")) {
+            console.warn("Token expiré ! Déconnexion forcée.");
+            window.dispatchEvent(new Event("force-logout"));
+            throw new Error("Session expirée");
+        }
+        const apiError = new Error(errorData || "Erreur lors de la requête API");
+        apiError.status = response.status;
+        apiError.statusText = response.statusText;
+        throw apiError;
+    }
+    if (response.status === 204) {
+        return { success: true };
+    }
+    const data = await response.json();
+    return data;
+}
+
 export async function calculateItineraries(token, start, end, bikeId, maxDuration) {
     try {
-        const headers = { "Content-Type": "application/json" };
-        if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
+
+        let trueBikeId = bikeId;
+        if (Number.isInteger(trueBikeId)) {
+            trueBikeId = null;
         }
 
-        const response = await fetch("/api/routes/route", {
+        const data = await apiFetch("/api/routes/route", {
             method: "POST",
-            headers: headers,
             body: JSON.stringify({
                 start_lat: start.lat,
                 start_lon: start.lon,
                 end_lat: end.lat,
                 end_lon: end.lon,
-                bike_id: bikeId,    
+                bike_id: trueBikeId,
                 temps_max_min: maxDuration
             })
-        });
-
-        if (!response.ok) {
-            console.error("Erreur HTTP API Itinéraires : ", response.status, response.statusText);
-            return null;
-        }
-
-        const data = await response.json();
+        }, token);
         return data.routes;
-
     } catch (error) {
-        console.error("Erreur de la récupération des itinéraires : ", error);
-        return null;
+        throw error;
     }
 }
 
 export async function login(email, password) {
     try {
-        const response = await fetch("/api/users/login", {
+        const data = await apiFetch("/api/users/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
@@ -43,14 +65,7 @@ export async function login(email, password) {
                 username: email,
                 password: password
             })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(errorData.detail || "Erreur lors de la connexion");
-        }
-
-        const data = await response.json();
+        }, null);
         return data;
     } catch (error) {
         throw error;
@@ -59,11 +74,8 @@ export async function login(email, password) {
 
 export async function register(firstName, lastName, birthdate, email, password) {
     try {
-        const response = await fetch("/api/users/", {
+        const data = await apiFetch("/api/users/", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
             body: JSON.stringify({
                 first_name: firstName || null,
                 last_name: lastName || null,
@@ -71,15 +83,8 @@ export async function register(firstName, lastName, birthdate, email, password) 
                 email: email,
                 password: password,
             })
-        });
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(errorData.detail || "Erreur lors de la création du compte");
-        }
-
-        const data = await response.json();
+        }, null);
         return data;
-
     } catch (error) {
         throw error;
     }
@@ -88,22 +93,8 @@ export async function register(firstName, lastName, birthdate, email, password) 
 
 export async function getUserProfile(token) {
     try {
-        const response = await fetch("/api/users/me", {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(errorData.detail || "Erreur lors de la récupération du profil");
-        }
-
-        const data = await response.json();
+        const data = await apiFetch("/api/users/me", { method: "GET" }, token);
         return data;
-
     } catch (error) {
         throw error;
     }
@@ -111,12 +102,8 @@ export async function getUserProfile(token) {
 
 export async function changeProfileInfo(token, firstName, lastName, email, birthDate, password, level) {
     try {
-        const response = await fetch("/api/users/me", {
-            method: "PUT",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
+        const data = await apiFetch("/api/users/me", {
+            method: "PATCH",
             body: JSON.stringify({
                 first_name: firstName,
                 last_name: lastName,
@@ -124,26 +111,31 @@ export async function changeProfileInfo(token, firstName, lastName, email, birth
                 birth_date: birthDate,
                 password: password,
                 sport_level: level
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(errorData.detail || "Erreur lors de la modification du profil");
-        }
-
-        const data = await response.json();
+            }),
+        }, token);
         return data;
-
     } catch (error) {
         throw error;
     }
 }
 
+export async function changePassword(token, oldPassword, newPassword) {
+    const url = new URL("/api/users/me/password", window.location.origin);
+    url.searchParams.append("old_password", oldPassword);
+    url.searchParams.append("new_password", newPassword);
+    try {
+        const data = await apiFetch(url, { method: "PATCH" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
 export async function changeAddress(token, homeAddress, workAddress) {
     try {
-        const response = await fetch("/api/users/me", {
-            method: "PUT",
+        const data = await apiFetch("/api/users/me", {
+            method: "PATCH",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
@@ -152,16 +144,17 @@ export async function changeAddress(token, homeAddress, workAddress) {
                 home_address: homeAddress,
                 work_address: workAddress
             })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(errorData.detail || "Erreur lors de la modification des adresses");
-        }
-
-        const data = await response.json();
+        }, token);
         return data;
+    } catch (error) {
+        throw error;
+    }
+}
 
+export async function getUserBikes(token) {
+    try {
+        const data = await apiFetch("/api/bikes/", { method: "GET" }, token);
+        return data;
     } catch (error) {
         throw error;
     }
@@ -169,8 +162,24 @@ export async function changeAddress(token, homeAddress, workAddress) {
 
 export async function addBike(token, name, type, isElectric) {
     try {
-        const response = await fetch("/api/bikes/", {
+        const data = await apiFetch("/api/bikes/", {
             method: "POST",
+            body: JSON.stringify({
+                name: name,
+                type: type,
+                is_electric: isElectric
+            })
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function editBike(token, bikeId, name, type, isElectric) {
+    try {
+        const data = await apiFetch(`/api/bikes/${bikeId}`, {
+            method: "PATCH",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
@@ -180,16 +189,8 @@ export async function addBike(token, name, type, isElectric) {
                 type: type,
                 is_electric: isElectric
             })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(errorData.detail || "Erreur lors de l'ajout du vélo");
-        }
-
-        const data = await response.json();
+        }, token);
         return data;
-
     } catch (error) {
         throw error;
     }
@@ -197,22 +198,16 @@ export async function addBike(token, name, type, isElectric) {
 
 export async function suppressBike(token, bike) {
     try {
-        const response = await fetch(`/api/bikes/${bike.id}`, {
+        const data = await apiFetch(`/api/bikes/${bike.id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(errorData.detail || "Erreur lors de la suppression du vélo");
-        }
-
-        return response.json();
-
+        }, token);
+        return data;
     } catch (error) {
         throw error;
     }
 }
+

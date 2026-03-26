@@ -66,7 +66,7 @@ const Header = ({ page }) => {
             {isProfileMenuOpen && user && (
                 <div className="dropdown profile-dropdown">
                     <a className="dropdown-item" href="/profil"><FaUser /> Mon Profil</a>
-                    <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setisProfileMenuOpen(false); navigate("/"); }}><LuLogOut /> Se déconnecter</button>
+                    <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setisProfileMenuOpen(false); }}><LuLogOut /> Se déconnecter</button>
                 </div>
             )}
 
@@ -92,7 +92,7 @@ const Header = ({ page }) => {
                     {user ? (
                         <>
                             <a className="dropdown-item" href="/profil"><FaUser /> Mon Profil</a>
-                            <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setIsMobileMenuOpen(false); navigate("/"); }}><LuLogOut /> Se déconnecter</button>
+                            <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setIsMobileMenuOpen(false); }}><LuLogOut /> Se déconnecter</button>
                         </>
                     ) : (
                         <>

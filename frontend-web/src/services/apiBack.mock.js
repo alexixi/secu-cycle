@@ -5,7 +5,7 @@ let userBikes = [];
 
 let currentID = 0;
 
-export async function calculateItineraries(token, start, end, bikeType, maxDuration) {
+export async function calculateItineraries(token, start, end, bikeId, maxDuration) {
     await new Promise(resolve => setTimeout(resolve, 250));
 
     const dLat = end.lat - start.lat;
@@ -97,6 +97,11 @@ export async function changeProfileInfo(token, firstName, lastName, email, birth
     localStorage.setItem("user", JSON.stringify(userProfile));
 }
 
+export async function changePassword(token, oldPassword, newPassword) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+}
+
+
 export async function changeAddress(token, homeAddress, workAddress) {
     await new Promise(resolve => setTimeout(resolve, 250));
     userProfile = JSON.parse(localStorage.getItem("user")) || userProfile;
@@ -133,8 +138,4 @@ export async function suppressBike(token, bike) {
     console.log("Suppression du vélo :", bike);
     userBikes = userBikes.filter(b => b.id !== bike.id);
     localStorage.setItem("bikes", JSON.stringify(userBikes));
-}
-
-export async function changePassword(token, oldPassword, newPassword) {
-    await new Promise(resolve => setTimeout(resolve, 250));
 }

@@ -36,14 +36,20 @@ export default function ItinerairePage() {
 
         setIsLoading(true);
         setRoutePaths(null);
-        const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration);
-
-        if (itineraries && itineraries.length > 0) {
-            setErrorPath(false);
-            setRoutePaths(itineraries);
-        } else {
+        try {
+            const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration);
+            if (itineraries && itineraries.length > 0) {
+                setErrorPath(false);
+                setRoutePaths(itineraries);
+            } else {
+                setErrorPath(true);
+            }
+        } catch (error) {
             setErrorPath(true);
+            setIsLoading(false);
+            return;
         }
+
 
         setIsLoading(false);
     };

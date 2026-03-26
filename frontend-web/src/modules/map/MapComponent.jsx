@@ -2,6 +2,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, Tooltip } fro
 import { renderToString } from 'react-dom/server';
 import { MdDirectionsBike } from "react-icons/md";
 import { FaFlagCheckered } from "react-icons/fa";
+import { IoMdPin } from "react-icons/io";
 import { useEffect } from 'react';
 import './MapComponent.css';
 
@@ -26,18 +27,18 @@ const MapController = ({ center, bounds }) => {
 export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire }) {
 
     const startIconHtml = renderToString(
-        <MdDirectionsBike size={32} color="#3d46f6" style={{ filter: "drop-shadow(2px 4px 8px rgba(255, 255, 255, 0.9))" }} />
+        <IoMdPin size={32} color="#3d46f6" style={{ filter: "drop-shadow(2px 4px 8px rgba(255, 255, 255, 0.9))" }} />
     );
 
     const endIconHtml = renderToString(
-        <FaFlagCheckered size={32} color="#3d46f6" style={{ filter: "drop-shadow(2px 4px 8px rgba(255, 255, 255, 0.9))" }} />
+        <IoMdPin size={32} color="#3d46f6" style={{ filter: "drop-shadow(2px 4px 8px rgba(255, 255, 255, 0.9))" }} />
     );
 
     const startIcon = L.divIcon({
         html: startIconHtml,
         className: '',
         iconSize: [32, 32],
-        iconAnchor: [16, 25],
+        iconAnchor: [16, 32],
         popupAnchor: [0, -32]
     });
 
@@ -45,8 +46,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         html: endIconHtml,
         className: '',
         iconSize: [32, 32],
-        iconAnchor: [5, 32],
-        popupAnchor: [6, -32]
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
     });
 
     return (

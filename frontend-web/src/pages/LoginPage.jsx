@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/layout/Header";
 import LinkButton from "../components/ui/LinkButton";
 import Button from "../components/ui/Button";
 import PasswordInput from "../components/ui/PasswordInput";
-import { useNavigate } from "react-router-dom";
-import { login, getUserProfile } from "../services/apiBack";
+import { useNavigate, useLocation } from "react-router-dom";
+import { login, getUserProfile, getUserBikes } from "../services/apiBack";
 import { useAuth } from "../context/AuthContext";
 import { LuLogIn } from "react-icons/lu";
 import { FaPersonCirclePlus } from "react-icons/fa6";
@@ -18,7 +18,16 @@ export default function Login() {
     const [emailError, setEmailError] = useState(false);
     const [hasError, setHasError] = useState(false);
 
-    const { loginAuth, updateUser } = useAuth();
+    const location = useLocation();
+    const [errorMessage, setErrorMessage] = useState(location.state?.message || "");
+
+    useEffect(() => {
+        if (location.state?.message) {
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
+
+    const { loginAuth, updateUser, updateBikes } = useAuth();
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
@@ -27,6 +36,8 @@ export default function Login() {
             loginAuth(response_login.access_token);
             const response_user = await getUserProfile(response_login.access_token);
             updateUser(response_user);
+            const userBikes = await getUserBikes(response_login.access_token);
+            updateBikes(userBikes);
             navigate("/profil");
         } catch (error) {
             setHasError(true);
@@ -37,6 +48,12 @@ export default function Login() {
         <>
             <Header page="login" />
             <div className="page-form-container">
+                {errorMessage && (
+                    <div className="info-box">
+                        <p>{errorMessage}</p>
+                        <button className="button" onClick={() => setErrorMessage("")}>OK</button>
+                    </div>
+                )}
                 <div className="form-container">
                     <form className="form" onSubmit={handleSubmit}>
                         <h2>Connexion</h2>
@@ -76,12 +93,12 @@ export default function Login() {
 
                             <div className={"input-group" + (hasError ? " input-error" : "")}>
                                 <label htmlFor="password">Mot de passe</label>
-                                <PasswordInput 
-                                    value={password} 
+                                <PasswordInput
+                                    value={password}
                                     onChange={(e) => {
-                                            setPassword(e.target.value);
-                                            setHasError(false);
-                                        }}>
+                                        setPassword(e.target.value);
+                                        setHasError(false);
+                                    }}>
                                 </PasswordInput>
                             </div>
                             {hasError && (

@@ -7,15 +7,14 @@ import "../../ui/Input.css"
 import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 
-export default function EditPasswordModal({ isOpen, onClose, onConfirm }) {
+export default function EditPasswordModal({ isOpen, onClose, onConfirm, oldPasswordError, generalError }) {
     const [formData, setFormData] = useState({
         oldPassword: "",
         newPassword: "",
         confirmPassword: ""
     });
 
-    const [errorMessage, setErrorMessage] = useState("");
-    const hasError = errorMessage.length > 0;
+    const [newPasswordError, setNewPasswordError] = useState(false);
 
 
     useEffect(() => {
@@ -51,16 +50,16 @@ export default function EditPasswordModal({ isOpen, onClose, onConfirm }) {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        if (errorMessage) setErrorMessage("");
+        setNewPasswordError(false);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (formData.newPassword !== formData.confirmPassword) {
-            setErrorMessage("Les nouveaux mots de passe doivent être les mêmes.");
+            setNewPasswordError(true);
             return;
         }
-        setErrorMessage("");
+        setNewPasswordError(false);
         onConfirm(formData);
     };
 
@@ -74,25 +73,30 @@ export default function EditPasswordModal({ isOpen, onClose, onConfirm }) {
 
                         <div className="input-group">
                             <label>Mot de passe actuel</label>
-                            <PasswordInput value={formData.oldPassword} onChange={handleChange} name="oldPassword" autoFocus>
-                            </PasswordInput>
+                            <PasswordInput value={formData.oldPassword} onChange={handleChange} name="oldPassword" autoFocus />
+                            {oldPasswordError &&
+                                <p className="error-text">Ancien mot de passe incorrect.</p>
+                            }
                         </div>
 
-                        <div className={"input-group" + (hasError ? " input-error" : "")}>
+                        <div className={"input-group" + (newPasswordError ? " input-error" : "")}>
                             <label>Nouveau mot de passe</label>
-                            <PasswordInput value={formData.newPassword} onChange={handleChange} name="newPassword">
-                            </PasswordInput>
+                            <PasswordInput value={formData.newPassword} onChange={handleChange} name="newPassword" />
                         </div>
 
-                        <div className={"input-group" + (hasError ? " input-error" : "")}>
+                        <div className={"input-group" + (newPasswordError ? " input-error" : "")}>
                             <label>Confirmation du nouveau mot de passe</label>
-                            <PasswordInput value={formData.confirmPassword} onChange={handleChange} name="confirmPassword">
-                            </PasswordInput>
+                            <PasswordInput value={formData.confirmPassword} onChange={handleChange} name="confirmPassword" />
                         </div>
 
                     </div>
 
-                    {hasError && <p className="error-text">{errorMessage}</p>}
+                    {newPasswordError &&
+                        <p className="error-text">Les nouveaux mots de passe doivent être les mêmes.</p>
+                    }
+                    {generalError &&
+                        <p className="error-text">Une erreur est survenue. Veuillez réessayer.</p>
+                    }
 
                     <div className="modal-actions">
                         <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>

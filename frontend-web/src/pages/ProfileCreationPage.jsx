@@ -7,7 +7,7 @@ import "../components/ui/Input.css"
 import { useAuth } from "../context/AuthContext";
 import { FaPersonCirclePlus } from "react-icons/fa6";
 import { ImSad2 } from "react-icons/im";
-import { register, login, getUserProfile } from "../services/apiBack";
+import { register, login, getUserProfile, getUserBikes } from "../services/apiBack";
 import { useNavigate } from "react-router-dom";
 import { LuLogIn } from "react-icons/lu";
 import confetti from "canvas-confetti"
@@ -23,13 +23,11 @@ export default function ProfileCreationPage() {
     const [password2, setPassword2] = useState("");
     const [hasError, setHasError] = useState(false);
     const [isValidated, setIsValidated] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-    const [showPassword2, setShowPassword2] = useState(false);
-    const [emailSyntaxError, setemailSyntaxError] = useState(false);
+    const [emailSyntaxError, setEmailSyntaxError] = useState(false);
     const [emailAlreadyUsedError, setEmailAlreadyUsedError] = useState(false);
     const [generalError, setGeneralError] = useState(false);
 
-    const { loginAuth, updateUser } = useAuth();
+    const { loginAuth, updateUser, updateBikes } = useAuth();
 
 
     const handleSubmit = async (e) => {
@@ -43,17 +41,24 @@ export default function ProfileCreationPage() {
         try {
             await register(firstName, lastName, birthDate, email, password);
             triggerConfetti();
-            try {
-                const response_login = await login(email, password);
-                loginAuth(response_login.access_token);
-                const response_user = await getUserProfile(response_login.access_token);
-                updateUser(response_user);
-                navigate("/profil");
-            } catch (error) {
-                navigate("/login");
-            }
         } catch (error) {
-            setGeneralError(true);
+            if (error.status === 409) {
+                setEmailAlreadyUsedError(true);
+            } else {
+                setGeneralError(true);
+            }
+            return;
+        }
+        try {
+            const response_login = await login(email, password);
+            loginAuth(response_login.access_token);
+            const response_user = await getUserProfile(response_login.access_token);
+            updateUser(response_user);
+            const userBikes = await getUserBikes(response_login.access_token);
+            updateBikes(userBikes);
+            navigate("/profil");
+        } catch (error) {
+            navigate("/login");
         }
     };
 
@@ -153,14 +158,14 @@ export default function ProfileCreationPage() {
                                 type="email"
                                 id="email"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value) || setemailSyntaxError(false) || setEmailAlreadyUsedError(false) || setGeneralError(false)}
+                                onChange={(e) => setEmail(e.target.value) || setEmailSyntaxError(false) || setEmailAlreadyUsedError(false) || setGeneralError(false)}
                                 onBlur={(e) => {
                                     if (!e.target.value) {
-                                        setemailSyntaxError(false);
+                                        setEmailSyntaxError(false);
                                     } else if (!e.target.value.includes("@") || !e.target.value.includes(".")) {
-                                        setemailSyntaxError(true);
+                                        setEmailSyntaxError(true);
                                     } else {
-                                        setemailSyntaxError(false);
+                                        setEmailSyntaxError(false);
                                     }
                                 }}
                                 placeholder="exemple@gmail.com"

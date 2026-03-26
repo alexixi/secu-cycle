@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useContext } from 'react';
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
@@ -6,6 +7,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
     const [userBikes, setUserBikes] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -53,7 +55,32 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setToken(null);
         setUserBikes([]);
+        navigate("/login");
     };
+
+    useEffect(() => {
+        const handleForceLogout = () => {
+            console.log("Session expired, logging out...");
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('bikes');
+            setUser(null);
+            setToken(null);
+            setUserBikes([]);
+            navigate("/login", {
+                state: {
+                    sessionExpired: true,
+                    message: "Votre session a expiré pour des raisons de sécurité. Veuillez vous reconnecter."
+                }
+            });
+        };
+
+        window.addEventListener("force-logout", handleForceLogout);
+
+        return () => {
+            window.removeEventListener("force-logout", handleForceLogout);
+        };
+    }, []);
 
     return (
         <AuthContext.Provider value={{ user, token, userBikes, loginAuth, logoutAuth, updateUser, updateBikes }}>

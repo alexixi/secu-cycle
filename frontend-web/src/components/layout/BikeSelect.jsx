@@ -68,6 +68,12 @@ export default function BikeSelect({ selectedBike, onSelect }) {
         });
     }
 
+    useEffect(() => {
+        if (bikes.length === 1 && selectedBike !== bikes[0].id) {
+            onSelect(bikes[0].id);
+        }
+    }, [bikes.length, selectedBike, onSelect]);
+
     const SingleBikeIcon = bikes.length === 1 ? bikes[0].icon : null;
 
     return (
@@ -79,7 +85,6 @@ export default function BikeSelect({ selectedBike, onSelect }) {
                         <div className='default-bike-info'>
                             {SingleBikeIcon && <SingleBikeIcon className='default-bike-icon' />}
                             <p><strong>{bikes[0].name}</strong> sélectionné</p>
-                            {onSelect(bikes[0].id)}
                         </div>
                     ) : (
                         bikes.map((bike) => (

@@ -4,7 +4,7 @@ import Button from "../../ui/Button";
 import IconButton from "../../ui/IconButton";
 import { FaUserEdit, FaPen } from "react-icons/fa";
 import EditPasswordModal from "./EditPasswordModal"
-import { changePassword } from "../../../services/apiBack.mock";
+import { changePassword } from "../../../services/apiBack";
 
 import "../../ui/Input.css"
 import "../../ui/PopUp.css"
@@ -12,13 +12,14 @@ import "../../ui/Form.css"
 
 export default function EditProfileModal({ isOpen, hasError, onClose, userData, onConfirm }) {
     const { token } = useAuth();
+    const [passwordError, setPasswordError] = useState(false);
+    const [generalError, setGeneralError] = useState(false);
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
         email: "",
         birthDate: "",
         level: "intermediaire",
-        password: ""
     });
 
     const [isModalOpenPassword, setIsModalOpenPassword] = useState(false);
@@ -75,10 +76,18 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
         try {
             await changePassword(token, passwordData.oldPassword, passwordData.newPassword);
             setIsModalOpenPassword(false);
+            setPasswordError(false);
+            setGeneralError(false);
         } catch (error) {
-            console.error("Erreur lors du changement de mot de passe", error);
+            if (error.status === 401 && error.message === "Ancien mot de passe incorrect.") {
+                setPasswordError(true);
+                setGeneralError(false);
+            } else {
+                console.error("Error changing password:", error);
+                setGeneralError(true);
+                setPasswordError(false);
+            }
         }
-
     };
 
     return (
@@ -168,6 +177,8 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                 isOpen={isModalOpenPassword}
                 onClose={() => setIsModalOpenPassword(false)}
                 onConfirm={handleSubmitPassword}
+                passwordError={passwordError}
+                generalError={generalError}
             />
         </div>
     )
