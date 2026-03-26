@@ -82,8 +82,8 @@ export default function SuppressBikeModal({ isOpen, hasError, onClose, bikes, on
                                     onChange={() => handleCheckboxChange(index)}
                                 />
                                 <label htmlFor={`bike-${index}`}>
-                                    <strong>{bike.name || bike.type.toUpperCase()}</strong>
-                                    {bike.isElectric === "1" || bike.isElectric === true ? " (Électrique)" : ""}
+                                    <strong>{bike.name || bike.type?.toUpperCase() || "Vélo"}</strong>
+                                    {bike.is_electric ? " (Électrique)" : ""}
                                 </label>
                             </div>
                         ))}

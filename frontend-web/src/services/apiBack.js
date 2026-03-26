@@ -31,22 +31,25 @@ export async function apiFetch(url, options = {}, token = null) {
 
 export async function calculateItineraries(token, start, end, bikeId, maxDuration) {
     try {
+        const body = {
+            start_lat: start.lat,
+            start_lon: start.lon,
+            end_lat: end.lat,
+            end_lon: end.lon,
+            temps_max_min: maxDuration
+        };
 
-        let trueBikeId = bikeId;
-        if (Number.isInteger(trueBikeId)) {
-            trueBikeId = null;
+        if (Number.isInteger(bikeId)) {
+            body.bike_id = bikeId;
+        } else if (typeof bikeId === "string" && bikeId.startsWith("default-")) {
+            const parts = bikeId.split("-");
+            body.bike_type = parts[1];
+            body.is_electric = parts[2] === "electric";
         }
 
         const data = await apiFetch("/api/routes/route", {
             method: "POST",
-            body: JSON.stringify({
-                start_lat: start.lat,
-                start_lon: start.lon,
-                end_lat: end.lat,
-                end_lon: end.lon,
-                bike_id: trueBikeId,
-                temps_max_min: maxDuration
-            })
+            body: JSON.stringify(body)
         }, token);
         return data.routes;
     } catch (error) {
@@ -100,18 +103,19 @@ export async function getUserProfile(token) {
     }
 }
 
-export async function changeProfileInfo(token, firstName, lastName, email, birthDate, password, level) {
+export async function changeProfileInfo(token, firstName, lastName, email, birthDate, level) {
     try {
-        const data = await apiFetch("/api/users/me", {
-            method: "PATCH",
-            body: JSON.stringify({
+        const payload = Object.fromEntries(
+            Object.entries({
                 first_name: firstName,
                 last_name: lastName,
-                email: email,
                 birth_date: birthDate,
-                password: password,
-                sport_level: level
-            }),
+                sport_level: level,
+            }).filter(([, v]) => v !== undefined && v !== null && v !== "")
+        );
+        const data = await apiFetch("/api/users/me", {
+            method: "PATCH",
+            body: JSON.stringify(payload),
         }, token);
         return data;
     } catch (error) {

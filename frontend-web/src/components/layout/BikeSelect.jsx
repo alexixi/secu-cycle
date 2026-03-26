@@ -55,16 +55,17 @@ export default function BikeSelect({ selectedBike, onSelect }) {
 
         bikes = userBikes.map(bike => {
             let icon;
-            if (bike.type.toLowerCase() === "ville") {
-                icon = bike.electric ? IconBikeStandardElectric : IconBikeStandard;
-            } else if (bike.type.toLowerCase() === "vtt") {
-                icon = bike.electric ? IconBikeVTT_Electric : IconBikeVTT;
-            } else if (bike.type.toLowerCase() === "route") {
+            const bikeType = bike.type?.toLowerCase();
+            if (bikeType === "ville") {
+                icon = bike.is_electric ? IconBikeStandardElectric : IconBikeStandard;
+            } else if (bikeType === "vtt") {
+                icon = bike.is_electric ? IconBikeVTT_Electric : IconBikeVTT;
+            } else if (bikeType === "route") {
                 icon = IconBikeRoute;
             } else {
                 icon = IconBikeStandard;
             }
-            return { id: bike.id, type: bike.type, electric: bike.electric, name: bike.name, icon: icon };
+            return { id: bike.id, type: bike.type, is_electric: bike.is_electric, name: bike.name, icon: icon };
         });
     }
 
@@ -93,7 +94,7 @@ export default function BikeSelect({ selectedBike, onSelect }) {
                                 id={bike.id}
                                 IconSVG={bike.icon}
                                 label={bike.name}
-                                LabelIcon={bike.electric ? <MdBatteryChargingFull /> : null}
+                                LabelIcon={bike.is_electric ? <MdBatteryChargingFull /> : null}
                                 selected={selectedBike === bike.id}
                                 onClick={() => onSelect(bike.id)}
                             />

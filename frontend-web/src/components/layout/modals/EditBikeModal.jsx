@@ -20,7 +20,7 @@ export default function EditBikeModal({ isOpen, onClose, onConfirm, onDelete, ha
     if (bikeToEdit) {
       setBikeName(bikeToEdit.name || "");
       setBikeType(bikeToEdit.type || "ville");
-      setBikeIsElectric(bikeToEdit.isElectric === true || bikeToEdit.isElectric === "1");
+      setBikeIsElectric(bikeToEdit.is_electric === true);
     }
   }, [bikeToEdit, isOpen]);
 
@@ -70,7 +70,7 @@ export default function EditBikeModal({ isOpen, onClose, onConfirm, onDelete, ha
       ...bikeToEdit,
       name: bikeName,
       type: bikeType,
-      isElectric: bikeIsElectric
+      is_electric: bikeIsElectric
     });
     setBikeName("");
     setBikeType(bikeType);

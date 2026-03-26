@@ -56,7 +56,7 @@ export default function ProfilePage() {
   }, [user, userBikes]);
 
   const handleBike = (bike, index) => {
-    const isElec = String(bike.isElectric) === "1" || bike.isElectric === true;
+    const isElec = bike.is_electric === true;
     const type = bike.type?.toLowerCase();
     const nameLabel = bike.name || (type === "vtt" ? "VTT" : type === "route" ? "Route" : "Ville");
 
@@ -122,6 +122,7 @@ export default function ProfilePage() {
       );
 
       updateUser({
+        ...user,
         first_name: updatedData.firstName,
         last_name: updatedData.lastName,
         email: updatedData.email,
@@ -138,11 +139,12 @@ export default function ProfilePage() {
 
   const handleSubmitAddress = async (updatedHomeAddress, updatedWorkAddress) => {
     try {
-      setHomeAddress(updatedHomeAddress);
-      setWorkAddress(updatedWorkAddress);
       await changeAddress(token, updatedHomeAddress, updatedWorkAddress);
-      const response = await getUserProfile(token);
-      updateUser(response);
+      updateUser({
+        ...user,
+        home_address: updatedHomeAddress,
+        work_address: updatedWorkAddress
+      });
       setIsModalOpenAddress(false);
     } catch (error) {
       console.error("Error updating addresses:", error);
@@ -169,7 +171,7 @@ export default function ProfilePage() {
 
   const handleSubmitEditBike = async (updatedBike) => {
     try {
-      await editBike(token, updatedBike.id, updatedBike.name, updatedBike.type, updatedBike.isElectric);
+      await editBike(token, updatedBike.id, updatedBike.name, updatedBike.type, updatedBike.is_electric);
       const response_bikes = await getUserBikes(token);
       updateBikes(response_bikes);
       setBikes(response_bikes);
