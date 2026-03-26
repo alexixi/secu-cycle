@@ -4,17 +4,23 @@
     padding: 0;
     cursor: pointer;
     background: none;
-    transition: all 0.25s ease;
+    transition: all 0.2s ease;
     color: var(--text-main);
 }
 
 .icon-button:hover {
+    color: var(--primary-hover);
+}
+
+.icon-button:active {
     color: var(--primary);
-    filter: drop-shadow(0 0 8px var(--primary));
+    transform: scale(0.95);
 }
 
 .icon-button:focus {
     outline: none;
+}
+
+.icon-button:focus-visible {
     color: var(--primary);
-    filter: drop-shadow(0 0 5px var(--primary));
 }

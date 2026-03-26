@@ -22,6 +22,10 @@
     outline: 4px auto -webkit-focus-ring-color;
 }
 
+.button:active {
+    transform: scale(0.95);
+}
+
 .button:disabled {
     opacity: 0.4;
     cursor: not-allowed;
@@ -41,4 +45,17 @@
 
 .button.active:hover {
     background-color: var(--primary-hover);
+}
+
+.danger-button {
+    background-color: var(--error-bg);
+}
+
+.danger-button:hover {
+    background-color: var(--error-bg);
+    border-color: var(--error);
+}
+
+.danger-button:active {
+    background-color: var(--error);
 }

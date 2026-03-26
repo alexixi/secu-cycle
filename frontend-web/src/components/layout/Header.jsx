@@ -24,7 +24,6 @@ const ProfileButton = ({ className, onClick }) => {
 
 const Header = ({ page }) => {
     const { user, logoutAuth } = useAuth();
-
     const [isProfileMenuOpen, setisProfileMenuOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
@@ -44,17 +43,19 @@ const Header = ({ page }) => {
 
     return (
         <header>
-            <a id="header-logo-title" href="/">
+            <span id="header-logo-title" onClick={() => navigate("/")}>
                 <Logo id="header-logo" />
                 <div id="header-title">Sécu'Cycle</div>
-            </a>
+            </span>
             <nav className='media-large'>
                 <LinkButton to="/" className={isPage(page, "home")}>Accueil</LinkButton>
                 <LinkButton to="/itineraire" className={isPage(page, "itineraire")}>Itinéraire</LinkButton>
             </nav>
             <div className='header-user-section media-large'>
                 {user
-                    ? <div className="user-connected">{user.first_name}</div>
+                    ? <div className="user-connected" onClick={() => navigate("/profil")}>
+                        {user.first_name}
+                      </div>
                     : <LinkButton to="/login" className={isPage(page, "login")}>Connexion</LinkButton>
                 }
                 <ProfileButton
@@ -65,15 +66,23 @@ const Header = ({ page }) => {
 
             {isProfileMenuOpen && user && (
                 <div className="dropdown profile-dropdown">
-                    <a className="dropdown-item" href="/profil"><FaUser /> Mon Profil</a>
-                    <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setisProfileMenuOpen(false); }}><LuLogOut /> Se déconnecter</button>
+                    <button className="dropdown-item" onClick={() => navigate("/profil")}>
+                        <FaUser /> Mon Profil
+                    </button>
+                    <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setisProfileMenuOpen(false); }}>
+                        <LuLogOut /> Se déconnecter
+                    </button>
                 </div>
             )}
 
             {isProfileMenuOpen && !user && (
                 <div className="dropdown profile-dropdown">
-                    <a className="dropdown-item" href="/login"><LuLogIn /> Se connecter</a>
-                    <a className="dropdown-item" href="/signin"><FaPersonCirclePlus /> Créer un compte</a>
+                    <button className="dropdown-item" onClick={() => navigate("/login")}>
+                        <LuLogIn /> Se connecter
+                    </button>
+                    <button className="dropdown-item" onClick={() => navigate("/signin")}>
+                        <FaPersonCirclePlus /> Créer un compte
+                    </button>
                 </div>
             )}
 
@@ -86,18 +95,30 @@ const Header = ({ page }) => {
 
             {isMobileMenuOpen && (
                 <div className="dropdown mobile-dropdown media-small">
-                    <a className="dropdown-item" href="/"><FaHome /> Accueil</a>
-                    <a className="dropdown-item" href="/itineraire"><PiPathBold /> Itinéraires</a>
+                    <button className="dropdown-item" onClick={() => navigate("/")}>
+                        <FaHome /> Accueil
+                    </button>
+                    <button className="dropdown-item" onClick={() => navigate("/itineraire")}>
+                        <PiPathBold /> Itinéraires
+                    </button>
                     <hr className="dropdown-divider" />
                     {user ? (
                         <>
-                            <a className="dropdown-item" href="/profil"><FaUser /> Mon Profil</a>
-                            <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setIsMobileMenuOpen(false); }}><LuLogOut /> Se déconnecter</button>
+                            <button className="dropdown-item" onClick={() => navigate("/profil")}>
+                                <FaUser /> Mon Profil
+                            </button>
+                            <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setIsMobileMenuOpen(false); }}>
+                                <LuLogOut /> Se déconnecter
+                            </button>
                         </>
                     ) : (
                         <>
-                            <a className="dropdown-item" href="/login"><LuLogIn /> Se connecter</a>
-                            <a className="dropdown-item" href="/signin"><FaPersonCirclePlus /> Créer un compte</a>
+                            <button className="dropdown-item" onClick={() => navigate("/login")}>
+                                <LuLogIn /> Se connecter
+                            </button>
+                            <button className="dropdown-item" onClick={() => navigate("/signin")}>
+                                <FaPersonCirclePlus /> Créer un compte
+                            </button>
                         </>
                     )}
                 </div>

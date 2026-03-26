@@ -60,7 +60,7 @@ export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm 
 
     return (
         <div className="modal-overlay">
-            <div className="modal-content form-container">
+            <div className="modal-content">
                 <h2>Modifier mes adresses</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="input-container">
@@ -90,8 +90,8 @@ export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm 
                         {hasError && <p className="error-text">Une erreur est survenue. Veuillez réessayer.</p>}
                     </div>
                     <div className="modal-actions">
-                        <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
-                        <Button type="submit" className="btn-add">Modifier <MdEditLocationAlt size={13} /></Button>
+                        <Button type="button" onClick={onClose}>Annuler</Button>
+                        <Button type="submit">Modifier <MdEditLocationAlt size={13} /></Button>
                     </div>
                 </form>
             </div>

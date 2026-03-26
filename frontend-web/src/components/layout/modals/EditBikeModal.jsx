@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { FaPen } from "react-icons/fa";
+import { FaPen, FaTrash } from "react-icons/fa";
 import Button from "../../ui/Button";
-import IconButton from "../../ui/IconButton";
 import { MdDelete } from "react-icons/md";
 
 
@@ -96,7 +95,7 @@ export default function EditBikeModal({ isOpen, onClose, onConfirm, onDelete, ha
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content form-container">
+      <div className="modal-content">
         <h2>Modifier un vélo</h2>
         <form onSubmit={handleSubmit}>
           <div className="input-container">
@@ -145,11 +144,10 @@ export default function EditBikeModal({ isOpen, onClose, onConfirm, onDelete, ha
             {hasError && <p className="error-text">Une erreur est survenue. Veuillez réessayer.</p>}
           </div>
 
-          <IconButton type="button" className="button-suppress-bike" onClick={() => onDelete(bikeToEdit)} >Supprimer le vélo <MdDelete size={20} /></IconButton>
-
           <div className="modal-actions">
-            <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
-            <Button type="submit" className="btn-add">Modifier <FaPen size={13} /></Button>
+            <Button type="button" onClick={onClose}>Annuler</Button>
+            <Button type="button" className="danger-button" onClick={() => onDelete(bikeToEdit)} >Supprimer <FaTrash size={13} /></Button>
+            <Button type="submit">Modifier <FaPen size={13} /></Button>
           </div>
         </form>
 

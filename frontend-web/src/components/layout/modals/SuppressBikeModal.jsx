@@ -65,7 +65,7 @@ export default function SuppressBikeModal({ isOpen, hasError, onClose, bikes, on
 
     return (
         <div className="modal-overlay">
-            <div className="modal-content form-container">
+            <div className="modal-content">
                 <h2>Supprimer mes vélos</h2>
                 <form onSubmit={handleSubmit}>
 
@@ -92,8 +92,8 @@ export default function SuppressBikeModal({ isOpen, hasError, onClose, bikes, on
                     </div>
 
                     <div className="modal-actions">
-                        <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
-                        <Button type="submit" className="btn-add">Confirmer <IoCheckmark size={13} /></Button>
+                        <Button type="button" onClick={onClose}>Annuler</Button>
+                        <Button type="submit" className="danger-button">Confirmer <IoCheckmark size={13} /></Button>
                     </div>
                 </form>
             </div>

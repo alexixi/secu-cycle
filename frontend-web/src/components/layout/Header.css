@@ -34,6 +34,8 @@ header #header-logo-title {
     justify-content: center;
     flex-wrap: nowrap;
     gap: 10px;
+    cursor: pointer;
+    transition: color 0.2s ease;
 }
 
 header #header-logo-title:hover {
@@ -58,6 +60,17 @@ header .header-user-section {
     position: relative;
 }
 
+header .header-user-section .user-connected {
+    color: var(--text-main);
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+header .header-user-section .user-connected:hover {
+    color: var(--primary-hover);
+}
+
 header #profile-button {
     width: 40px;
     height: 40px;
@@ -75,6 +88,22 @@ header #profile-button:hover {
     border-color: var(--primary);
 }
 
+header #profile-button:active {
+    background-color: var(--primary-hover);
+    color: var(--text-main);
+    transform: scale(0.9);
+}
+
+header #profile-button.active {
+    background-color: var(--primary);
+    color: var(--text-inverse);
+}
+
+header #profile-button.active:active {
+    background-color: var(--primary-hover);
+    color: var(--text-inverse);
+}
+
 @media (max-width: 700px) {
     header nav.media-large {
         display: none;
@@ -88,11 +117,6 @@ header #profile-button:hover {
         display: block;
     }
 
-}
-
-header #profile-button.active {
-    background-color: var(--primary);
-    color: var(--text-inverse);
 }
 
 .mobile-menu-button {

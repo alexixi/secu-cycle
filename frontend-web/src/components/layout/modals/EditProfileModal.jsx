@@ -92,7 +92,7 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
 
     return (
         <div className="modal-overlay">
-            <div className="modal-content form-container">
+            <div className="modal-content">
                 <h2>Modifier mon profil</h2>
                 <form onSubmit={handleSubmit}>
 
@@ -167,8 +167,8 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                     <IconButton type="button" className="button-change-password" onClick={() => setIsModalOpenPassword(true)} >Modifier le mot de passe <FaPen size={13} /></IconButton>
 
                     <div className="modal-actions">
-                        <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
-                        <Button type="submit" className="btn-add">Modifier <FaUserEdit size={13} /></Button>
+                        <Button type="button" onClick={onClose}>Annuler</Button>
+                        <Button type="submit">Modifier <FaUserEdit size={13} /></Button>
                     </div>
                 </form>
             </div>

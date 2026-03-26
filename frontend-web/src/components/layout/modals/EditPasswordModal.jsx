@@ -65,7 +65,7 @@ export default function EditPasswordModal({ isOpen, onClose, onConfirm, oldPassw
 
     return (
         <div className="modal-overlay">
-            <div className="modal-content form-container">
+            <div className="modal-content">
                 <h2>Modifier mon mot de passe</h2>
                 <form onSubmit={handleSubmit}>
 
@@ -99,8 +99,8 @@ export default function EditPasswordModal({ isOpen, onClose, onConfirm, oldPassw
                     }
 
                     <div className="modal-actions">
-                        <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
-                        <Button type="submit" className="btn-add">Confirmer <FaPen size={13} /></Button>
+                        <Button type="button" onClick={onClose}>Annuler</Button>
+                        <Button type="submit">Confirmer <FaPen size={13} /></Button>
                     </div>
                 </form>
             </div>

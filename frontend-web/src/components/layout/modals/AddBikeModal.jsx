@@ -91,7 +91,7 @@ export default function AddBikeModal({ isOpen, hasError, onClose, onConfirm }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content form-container">
+      <div className="modal-content">
         <h2>Ajouter un vélo</h2>
         <form onSubmit={handleSubmit}>
           <div className="input-container">
@@ -143,8 +143,8 @@ export default function AddBikeModal({ isOpen, hasError, onClose, onConfirm }) {
           </div>
 
           <div className="modal-actions">
-            <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
-            <Button type="submit" className="btn-add">Ajouter <AiFillPlusCircle size={13} /></Button>
+            <Button type="button" onClick={onClose}>Annuler</Button>
+            <Button type="submit">Ajouter <AiFillPlusCircle size={13} /></Button>
           </div>
         </form>
 
