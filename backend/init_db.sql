@@ -18,6 +18,7 @@ CREATE TABLE users (
 CREATE TABLE bikes (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(100),
     type VARCHAR(50), -- VTT, route, urbain
     is_electric BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -8,6 +8,7 @@ class Bike(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
 
+    name = Column(String(100))
     type = Column(String(50))
     is_electric = Column(Boolean, default=False)
     created_at = Column(TIMESTAMP, server_default=func.now())

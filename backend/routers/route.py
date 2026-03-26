@@ -15,22 +15,32 @@ router = APIRouter(prefix="/routes", tags=["Routes"])
 
 
 VITESSE_PAR_AMENAGEMENT = {
-    "none":          (18, 21),  # Aucune infrastructure
-    "opposite":      (16, 18),  # Contresens
-    "shared":        (17, 18),  # Voie partagée piétons/vélos
-    "shared_busway": (20, 23),  # Voie bus+vélo
-    "lane":          (20, 23),  # Bande cyclable
-    "track":         (19, 21),  # Piste cyclable séparée
+    #                  (standard, électrique, vtt,  route)
+    "none":          (    18,        21,       14,   22  ),  # Aucune infrastructure
+    "opposite":      (    16,        18,       13,   19  ),  # Contresens
+    "shared":        (    17,        18,       13,   20  ),  # Voie partagée piétons/vélos
+    "shared_busway": (    20,        23,       15,   23  ),  # Voie bus+vélo
+    "lane":          (    20,        23,       15,   25  ),  # Bande cyclable
+    "track":         (    19,        21,       16,   24  ),  # Piste cyclable séparée
 }
-VITESSE_DEFAUT = (18, 21)  # fallback si tag inconnu
+VITESSE_DEFAUT = (18, 21, 14, 22)  # fallback si tag inconnu
+
+BIKE_TYPE_INDEX = {
+    "standard": 0,
+    "ville":    0,
+    "vtt":      2,
+    "route":    3,
+}
 
 
-def _vitesse_segment(cycleway_tag: str, is_electric: bool) -> float:
+def _vitesse_segment(cycleway_tag: str, bike_type: str, is_electric: bool) -> float:
     vitesses = VITESSE_PAR_AMENAGEMENT.get(cycleway_tag, VITESSE_DEFAUT)
-    return vitesses[1] if is_electric else vitesses[0]
+    if is_electric:
+        return vitesses[1]
+    return vitesses[BIKE_TYPE_INDEX.get(bike_type.lower() if bike_type else "standard", 0)]
 
 
-def _calculer_vitesse_moyenne(G, route_nodes: list, is_electric: bool) -> float:
+def _calculer_vitesse_moyenne(G, route_nodes: list, bike_type: str, is_electric: bool) -> float:
     vitesses = []
     for i in range(len(route_nodes) - 1):
         u, v = route_nodes[i], route_nodes[i + 1]
@@ -40,13 +50,14 @@ def _calculer_vitesse_moyenne(G, route_nodes: list, is_electric: bool) -> float:
             cycleway = data.get("cycleway", "none")
             if isinstance(cycleway, list):
                 cycleway = cycleway[0]
-            vitesses.append(_vitesse_segment(cycleway, is_electric))
+            vitesses.append(_vitesse_segment(cycleway, bike_type, is_electric))
 
     if not vitesses:
-        return VITESSE_DEFAUT[1 if is_electric else 0]
+        idx = 1 if is_electric else BIKE_TYPE_INDEX.get(bike_type.lower() if bike_type else "standard", 0)
+        return VITESSE_DEFAUT[idx] / 60
 
     vitesse_kmh = sum(vitesses) / len(vitesses)
-    return vitesse_kmh / 60 
+    return vitesse_kmh / 60
 
 
 
@@ -81,18 +92,22 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
     except KeyError as e:
         raise HTTPException(status_code=422, detail=f"Champ manquant : {e}")
     
-    is_electric = False
-    vitesse_m_min = VITESSE_DEFAUT[0] / 60  
+    is_electric = bool(data.get("is_electric", False))
+    bike_type = data.get("bike_type", "standard") or "standard"
+
     if current_user:
         bike_id = data.get("bike_id")
-        if bike_id and str(bike_id).lstrip('-').isdigit():  
+        if bike_id and str(bike_id).lstrip('-').isdigit():
             bike = db.query(Bike).filter(
                 Bike.id == int(bike_id),
                 Bike.user_id == current_user.id
             ).first()
             if bike:
                 is_electric = bike.is_electric
-        vitesse_m_min = VITESSE_DEFAUT[1 if is_electric else 0] / 60
+                bike_type = bike.type or "standard"
+
+    idx = 1 if is_electric else BIKE_TYPE_INDEX.get(bike_type.lower(), 0)
+    vitesse_m_min = VITESSE_DEFAUT[idx] / 60
     try:
         result = get_optimal_routes(
             G,
@@ -116,7 +131,7 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
             [p[1] for p in coords],
             [p[0] for p in coords]
         ))
-        vitesse_segment = _calculer_vitesse_moyenne(G, nodes, is_electric)
+        vitesse_segment = _calculer_vitesse_moyenne(G, nodes, bike_type, is_electric)
         route_info["duration"] = route_info["distance"] / vitesse_segment
 
     if current_user:
