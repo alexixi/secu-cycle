@@ -1,6 +1,7 @@
 import osmnx as ox
 import networkx as nx
 from graph.config import SCORE_HIGHWAY, SCORE_CYCLEWAY, VITESSE_M_MIN
+from graph.statistique import calculate_route_elevation
 
 def _get_speed_score(vmax):
     if vmax <= 20: return 10
@@ -127,6 +128,7 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
     """
     _vitesse = vitesse_m_min if vitesse_m_min is not None else VITESSE_M_MIN
     try:
+        print("feur")
         start_node = ox.distance.nearest_nodes(G, start_coords[1], start_coords[0])
         end_node = ox.distance.nearest_nodes(G, end_coords[1], end_coords[0])
 
@@ -135,15 +137,16 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
         route_fast = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_fast = calculate_route_distance(G, route_fast)
         temps_fast = dist_fast / _vitesse
-        coords_fast = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in route_fast]
+        coords_fast = [[G.nodes[node]['y'], G.nodes[node]['x'], G.nodes[node]["elevation"]] for node in route_fast]
+        height_difference_fast = calculate_route_elevation(G, route_fast)
 
         # --- 2. TRAJET LE PLUS SÉCURISÉ (Alpha = 0.0) ---
         G = calculate_weights(G, alpha=0.0)
         route_safe = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_safe = calculate_route_distance(G, route_safe)
         temps_safe = dist_safe / _vitesse
-        coords_safe = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in route_safe]
-        # Construction du dictionnaire de base
+        coords_safe = [[G.nodes[node]['y'], G.nodes[node]['x'], G.nodes[node]["elevation"]] for node in route_safe]
+        height_difference_safe = calculate_route_elevation(G, route_safe)
         result = {
             "success": True,
             "routes": [
@@ -152,14 +155,16 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
                     "name": "Rapide",
                     "path": coords_fast,
                     "distance": dist_fast,
-                    "duration": temps_fast
+                    "duration": temps_fast,
+                    "height difference": height_difference_fast
                 },
                 {
                     "id": "safe",
                     "name": "Sécurisé",
                     "path": coords_safe,
                     "distance": dist_safe,
-                    "duration": temps_safe
+                    "duration": temps_safe,
+                    "height difference": height_difference_safe
                 }
             ]
         }
@@ -180,7 +185,8 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
                         "path": coords_safe,
                         "distance": dist_safe,
                         "duration": temps_safe,
-                        "alpha_final": 0
+                        "alpha_final": 0,
+                        "height difference": height_difference_safe
                     })
 
             # Cas C : Recherche du meilleur compromis (Dichotomie)
@@ -208,14 +214,17 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
                     else:
                         alpha_low = alpha_mid
 
-                coords_best = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in best_path]
+                coords_best = [[G.nodes[node]['y'], G.nodes[node]['x'], G.nodes[node]["elevation"]] for node in best_path]
+                height_difference_best = calculate_route_elevation(G, best_path)
+
                 result["routes"].append({
                         "id": "compromise",
                         "name": "Compromis",
                         "path": coords_best,
                         "distance": best_dist,
                         "duration": best_temps,
-                        "alpha_final": best_alpha
+                        "alpha_final": best_alpha,
+                        "height difference": height_difference_best
                     })
 
         return result

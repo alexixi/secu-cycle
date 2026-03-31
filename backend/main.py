@@ -5,7 +5,7 @@ from routers import route
 from routers import history
 from routers import bike 
 from routers import report  
-from graph.graph_manager import create_graph
+from graph.graph_manager import create_graph, load_graph_with_ign
 from contextlib import asynccontextmanager
 #from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,7 +15,7 @@ Base.metadata.create_all(bind=engine)
 async def lifespan(app: FastAPI):
     print("Chargement du graphe...")
     
-    app.state.G = create_graph("victoire_campus.graphml")
+    app.state.G = load_graph_with_ign("victoire_campus.graphml", "ign_bordeaux_cache.json")
 
     print("Graphe chargé")
     yield

@@ -117,6 +117,7 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
             iterations=data.get("iterations", 6),
             vitesse_m_min=vitesse_m_min
         )
+        print(result)
     except Exception as e:
         import traceback
         traceback.print_exc()

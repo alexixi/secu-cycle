@@ -1,4 +1,4 @@
-from routing import _parse_maxspeed
+import math 
 
 def calculer_statistiques_osm(G):
     """
@@ -71,6 +71,7 @@ def calculer_statistiques_osm(G):
 
 def analyser_qualite_trajet(G, route, nom_trajet="Trajet"):
     """Analyse les types de routes et vitesses empruntés par un itinéraire."""
+    from routing import _parse_maxspeed
     vitesses = []
     scores = []
     
@@ -96,3 +97,40 @@ def analyser_qualite_trajet(G, route, nom_trajet="Trajet"):
     print(f" - Note de sécurité moyenne : {score_moyen:.2f}/10")
     print(f" - Vitesse moyenne des axes empruntés : {vitesse_moyenne_axes:.1f} km/h")
     print(f" - % du trajet en zone apaisée (<= 30 km/h) : {pct_zone30:.1f} %")
+
+def calculate_route_elevation(G, route, window_size=7, threshold=0.15):
+    """
+    Calcule le dénivelé en appliquant d'abord un lissage (Moyenne Mobile)
+    pour effacer le "bruit" du radar (arbres, toits, erreurs de 1m).
+    """
+    altitudes = []
+    for node in route:
+        alt = G.nodes[node].get('elevation', 0.0)
+        if not math.isnan(alt):
+            altitudes.append(alt)
+        else:
+            altitudes.append(altitudes[-1] if altitudes else 0.0)
+
+    if len(altitudes) < 2:
+        return 0.0, 0.0
+
+    altitudes_lissees = []
+    for i in range(len(altitudes)):
+        debut = max(0, i - window_size // 2)
+        fin = min(len(altitudes), i + window_size // 2 + 1)
+        
+        moyenne = sum(altitudes[debut:fin]) / (fin - debut)
+        altitudes_lissees.append(moyenne)
+
+    elevation_gain = 0.0
+    elevation_loss = 0.0
+
+    for i in range(len(altitudes_lissees) - 1):
+        diff = altitudes_lissees[i+1] - altitudes_lissees[i]
+
+        if diff > threshold:
+            elevation_gain += diff
+        elif diff < -threshold:
+            elevation_loss += abs(diff)
+
+    return round(elevation_gain, 1), round(elevation_loss, 1)
