@@ -22,7 +22,10 @@ export default function MapComponent({
         if (selectedItineraire && itineraires) {
             const activeRoute = itineraires.find(it => it.id === selectedItineraire);
             if (activeRoute?.path) {
-                activeRoute.path.forEach(p => points.push({ latitude: p[0], longitude: p[1] }));
+                activeRoute.path.forEach(p => points.push({
+                    latitude: parseFloat(p.lat),
+                    longitude: parseFloat(p.lon)
+                }));
             }
         }
 
@@ -34,11 +37,11 @@ export default function MapComponent({
             }, 1000);
         } else if (points.length >= 2) {
             mapRef.current.fitToCoordinates(points, {
-                edgePadding: { top: 200, right: 50, bottom: 50, left: 50 },
+                edgePadding: { top: 280, right: 50, bottom: 50, left: 50 },
                 animated: true,
             });
         }
-    }, [start, end, selectedItineraire]);
+    }, [start, end, selectedItineraire, itineraires]);
 
     return (
         <View style={styles.container}>
@@ -53,21 +56,23 @@ export default function MapComponent({
                     longitudeDelta: 0.0421,
                 }}
             >
-                {start?.lat && (
+                {start && start.lat && start.lon && (
                     <Marker
-                        key={`start-${start.lat}`}
+                        key={`marker-start-${start.lat}-${start.lon}-${start.name}`}
                         coordinate={{ latitude: parseFloat(start.lat), longitude: parseFloat(start.lon) }}
-                        anchor={{ x: 0.5, y: 0.5 }}
+                        anchor={{ x: 0.37, y: 0.34 }}
+                        zIndex={20}
                     >
                         <MaterialCommunityIcons name="circle-slice-8" size={20} color="#3d46f6" />
                     </Marker>
                 )}
 
-                {end?.lat && (
+                {end && end.lat && end.lon && (
                     <Marker
-                        key={`end-${end.lat}`}
+                        key={`marker-end-${end.lat}-${end.lon}-${end.name}`}
                         coordinate={{ latitude: parseFloat(end.lat), longitude: parseFloat(end.lon) }}
-                        anchor={{ x: 0.5, y: 0.5 }}
+                        anchor={{ x: 0.37, y: 0.34 }}
+                        zIndex={20}
                     >
                         <MaterialCommunityIcons name="circle-slice-8" size={20} color="#EF4444" />
                     </Marker>
@@ -75,10 +80,9 @@ export default function MapComponent({
 
                 {itineraires && itineraires.map((itineraire) => {
                     const isSelected = selectedItineraire === itineraire.id;
-
                     const coords = itineraire.path.map(p => ({
-                        latitude: p[0],
-                        longitude: p[1]
+                        latitude: parseFloat(p.lat),
+                        longitude: parseFloat(p.lon)
                     }));
 
                     return (
@@ -87,7 +91,6 @@ export default function MapComponent({
                             coordinates={coords}
                             strokeColor={isSelected ? "#3d46f6" : "#A0AEC0"}
                             strokeWidth={isSelected ? 6 : 4}
-                            lineDashPattern={isSelected ? null : [5, 5]}
                             tappable={true}
                             onPress={() => setSelectedItineraire(itineraire.id)}
                             zIndex={isSelected ? 10 : 1}

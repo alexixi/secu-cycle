@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import MapComponent from '../../components/MapComponent';
 import SearchContainer from '../../components/SearchContainer';
@@ -16,6 +16,14 @@ export default function Index() {
   const [errorPath, setErrorPath] = useState(false);
 
   const { token } = useAuth();
+
+  useEffect(() => {
+    if (!startPoint || !endPoint) {
+      setRoutePaths(null);
+      setSelectedItineraire(null);
+      setErrorPath(false);
+    }
+  }, [startPoint, endPoint]);
 
   const handleCalculate = async () => {
     if (!startPoint?.lat || !startPoint?.lon || !endPoint?.lat || !endPoint?.lon) {

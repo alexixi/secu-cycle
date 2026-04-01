@@ -6,11 +6,11 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 export default function SearchContainer({ onStartSelect, onEndSelect, start, end, onCalculate }) {
 
   const swapLocations = () => {
-    const oldStart = start;
-    const oldEnd = end;
-
-    onStartSelect(oldEnd);
-    onEndSelect(oldStart);
+    if (!start || !end) return;
+    const newStart = { ...end };
+    const newEnd = { ...start };
+    onStartSelect(newStart);
+    onEndSelect(newEnd);
   };
 
   const isReady = start?.lat && end?.lat;

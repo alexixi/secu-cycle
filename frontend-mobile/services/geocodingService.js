@@ -1,21 +1,15 @@
 const API_URL = "https://api-adresse.data.gouv.fr/search/";
 
 export const searchAddressAutocomplete = async (query) => {
-    if (!query) return [];
+    if (!query || query.trim().length < 3) return [];
 
-    query = query.trim();
-    if (query.length < 3) return [];
-
-    const params = new URLSearchParams({
-        q: query,
-        limit: "5",
-        autocomplete: "1",
-        lat: "44.8378",
-        lon: "-0.5795"
-    });
+    const url = `${API_URL}?q=${encodeURIComponent(query)}&limit=5&autocomplete=1&lat=44.8378&lon=-0.5795`;
 
     try {
-        const response = await fetch(`${API_URL}?${params}`);
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
 
         if (!response.ok) {
             console.error("Erreur HTTP API BAN : ", response.status, response.statusText);
