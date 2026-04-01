@@ -122,6 +122,12 @@ export default function ProfilePage() {
                 </View>
 
                 <View style={styles.buttonsContainer}>
+                    <OutlineButton
+                        title="Modifier mon profil"
+                        iconName="create-outline"
+                        onPress={() => router.push("/editprofil")}
+                    />
+
                     <DangerButton
                         title="Se déconnecter"
                         iconName="log-out-outline"
