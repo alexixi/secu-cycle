@@ -18,6 +18,9 @@
 
     --error: #ff4d4d;
     --error-bg: rgb(from var(--error) r g b / 10%);
+
+    --green-color: #249d40;
+    --red-color: #a5212e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -37,6 +40,9 @@
 
         --border-light: #32344a;
         --border-strong: #41445e;
+
+        --green-color: #62b174;
+        --red-color: #e86572;
     }
 }
 

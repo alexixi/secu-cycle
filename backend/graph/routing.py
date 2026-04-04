@@ -156,7 +156,7 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
                     "path": coords_fast,
                     "distance": dist_fast,
                     "duration": temps_fast,
-                    "height difference": height_difference_fast
+                    "height_difference": height_difference_fast
                 },
                 {
                     "id": "safe",
@@ -164,7 +164,7 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
                     "path": coords_safe,
                     "distance": dist_safe,
                     "duration": temps_safe,
-                    "height difference": height_difference_safe
+                    "height_difference": height_difference_safe
                 }
             ]
         }
@@ -186,7 +186,7 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
                         "distance": dist_safe,
                         "duration": temps_safe,
                         "alpha_final": 0,
-                        "height difference": height_difference_safe
+                        "height_difference": height_difference_safe
                     })
 
             # Cas C : Recherche du meilleur compromis (Dichotomie)
@@ -224,7 +224,7 @@ def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iteratio
                         "distance": best_dist,
                         "duration": best_temps,
                         "alpha_final": best_alpha,
-                        "height difference": height_difference_best
+                        "height_difference": height_difference_best
                     })
 
         return result

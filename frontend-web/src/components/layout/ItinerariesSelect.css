@@ -20,21 +20,25 @@
 }
 
 .path {
-    height: 4em;
+    min-height: 4em;
     background-color: var(--bg-surface);
     border-radius: 10px;
     border: 2px solid transparent;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    padding: 12px;
     cursor: pointer;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    transition: all 0.3s ease;
 }
 
 .path:hover {
     background-color: var(--bg-surface-hover);
     border-color: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+.path-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .path.path-selected {
@@ -52,12 +56,30 @@
 }
 
 .path-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 15px;
+    row-gap: 8px;
+    justify-items: start;
 }
 
 .path-info span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 0.9em;
     color: var(--text-main);
+}
+
+.path-info span.color-green {
+    color: var(--green-color);
+}
+
+.path-info span.color-red {
+    color: var(--red-color);
+}
+
+.path-elevation {
+    width: 100%;
+    height: 45px;
 }
