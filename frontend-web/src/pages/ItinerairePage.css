@@ -11,11 +11,6 @@
     position: relative;
 }
 
-.map-container .leaflet-container {
-    height: 100%;
-    width: 100%;
-}
-
 @media (max-width: 600px) {
     .main-page-itineraire {
         flex-direction: column-reverse;

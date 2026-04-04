@@ -5,6 +5,7 @@ import Button from "../components/ui/Button";
 import PasswordInput from "../components/ui/PasswordInput";
 import { useNavigate, useLocation } from "react-router-dom";
 import { login, getUserProfile, getUserBikes } from "../services/apiBack";
+import { getUserHistoric } from "../services/apiBack.mock";
 import { useAuth } from "../context/AuthContext";
 import { LuLogIn } from "react-icons/lu";
 import { FaPersonCirclePlus } from "react-icons/fa6";
@@ -27,7 +28,7 @@ export default function Login() {
         }
     }, [location]);
 
-    const { loginAuth, updateUser, updateBikes } = useAuth();
+    const { loginAuth, updateUser, updateBikes, updateHistoric } = useAuth();
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
@@ -38,8 +39,12 @@ export default function Login() {
             updateUser(response_user);
             const userBikes = await getUserBikes(response_login.access_token);
             updateBikes(userBikes);
+            const response_historic = await getUserHistoric(response_login.access_token);
+            console.log("Historic data:", response_historic);
+            updateHistoric(response_historic);
             navigate("/profil");
         } catch (error) {
+            console.error("Login error:", error);
             setHasError(true);
         }
     };

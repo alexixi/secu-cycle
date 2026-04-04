@@ -13,7 +13,7 @@
 
 @media (hover: hover) {
     .icon-card:hover {
-        background-color: var(--bg-main);
+        background-color: var(--bg-surface-hover);
         border-color: var(--primary-hover);
         transform: translateY(-3px);
     }

@@ -215,3 +215,11 @@ export async function suppressBike(token, bike) {
     }
 }
 
+export async function getUserHistoric(token) {
+    try {
+        const data = await apiFetch("/api/history/", { method: "GET" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}

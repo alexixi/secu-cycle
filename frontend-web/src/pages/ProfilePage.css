@@ -18,8 +18,14 @@
   width: 45%;
   text-align: left;
   padding-left: 20px;
+  padding-right: 20px;
   padding-bottom: 30px;
+  transition: all 0.3s ease;
+  max-height: 40em;
+}
 
+.profile-section:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .content{
@@ -92,4 +98,43 @@
 
 .group-checkbox-container .form-group-checkbox{
   margin-left: 1em;
+}
+
+.historic-list {
+  padding: 10px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 35em;
+  overflow: auto;
+}
+
+.historic-entry {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+  padding: 10px 25px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.historic-entry:hover {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--primary-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.historic-address h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin:5px 0;
+  font-size: 1em;
+  font-weight: normal;
 }

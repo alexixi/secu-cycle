@@ -139,3 +139,87 @@ export async function suppressBike(token, bike) {
     userBikes = userBikes.filter(b => b.id !== bike.id);
     localStorage.setItem("bikes", JSON.stringify(userBikes));
 }
+
+export async function getUserHistoric(token) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    return [
+        {
+            "route_id": 0,
+            "action_type": "string",
+            "id": 1,
+            "user_id": 0,
+            "created_at": "2026-04-04T14:20:39.484Z",
+            "route": {
+                "start_coordinates": {
+                    "lat": 44.8378,
+                    "lon": -0.5795
+                },
+                "end_coordinates": {
+                    "lat": 44.8526,
+                    "lon": -0.5669
+                },
+                "start_address": "Avenue de Collegno 33400 Talence",
+                "end_address": "12 Rue du Commandant Arnould 33000, Bordeaux",
+                "route_type": "safe",
+                "distance_km": 12.34,
+                "duration_min": 10.12,
+                "safety_score": 8.5,
+                "id": 0,
+                "user_id": 0,
+                "created_at": "2026-04-04T14:20:39.484Z"
+            }
+        },
+        {
+            "route_id": 0,
+            "action_type": "string",
+            "id": 2,
+            "user_id": 0,
+            "created_at": "2026-04-04T14:20:39.484Z",
+            "route": {
+                "start_coordinates": {
+                    "lat": 44.8378,
+                    "lon": -0.5795
+                },
+                "end_coordinates": {
+                    "lat": 44.8526,
+                    "lon": -0.5669
+                },
+                "start_address": "Avenue de Collegno 33400 Talence",
+                "end_address": "12 Rue du Commandant Arnould 33000, Bordeaux",
+                "route_type": "safe",
+                "distance_km": 12.34,
+                "duration_min": 10.12,
+                "safety_score": 8.5,
+                "id": 0,
+                "user_id": 0,
+                "created_at": "2026-04-04T14:20:39.484Z"
+            }
+        },
+        {
+            "route_id": 0,
+            "action_type": "string",
+            "id": 3,
+            "user_id": 0,
+            "created_at": "2026-04-04T14:20:39.484Z",
+            "route": {
+                "start_coordinates": {
+                    "lat": 44.8378,
+                    "lon": -0.5795
+                },
+                "end_coordinates": {
+                    "lat": 44.8526,
+                    "lon": -0.5669
+                },
+                "start_address": "Avenue de Collegno 33400 Talence",
+                "end_address": "12 Rue du Commandant Arnould 33000, Bordeaux",
+                "route_type": "safe",
+                "distance_km": 12.34,
+                "duration_min": 10.12,
+                "safety_score": 8.5,
+                "id": 0,
+                "user_id": 0,
+                "created_at": "2026-04-04T14:20:39.484Z"
+            }
+        }
+    ]
+}

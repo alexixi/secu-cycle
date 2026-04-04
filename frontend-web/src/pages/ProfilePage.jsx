@@ -1,17 +1,28 @@
 import "./ProfilePage.css"
+
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike, getUserBikes } from "../services/apiBack";
+
 import Header from "../components/layout/Header";
 import IconButton from "../components/ui/IconButton";
+import IconCard from '../components/ui/IconCard';
+
 import EditAddressModal from "../components/layout/modals/EditAddressModal";
 import EditProfileModal from "../components/layout/modals/EditProfileModal";
 import SuppressBikeModal from "../components/layout/modals/SuppressBikeModal";
 import AddBikeModal from "../components/layout/modals/AddBikeModal"
 import EditBikeModal from "../components/layout/modals/EditBikeModal"
-import IconCard from '../components/ui/IconCard';
-import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike } from "../services/apiBack";
-import { getUserProfile, getUserBikes } from "../services/apiBack";
-import { useAuth } from "../context/AuthContext";
+import HistoricModal from "../components/layout/modals/HistoricModal";
 
+// Icons
+import { PiPathBold } from "react-icons/pi";
+import { MdOutlineTimer, MdDirectionsBike } from "react-icons/md";
+import { FaFlagCheckered } from "react-icons/fa";
+import { MdOutlineWork, MdEditLocationAlt } from "react-icons/md";
+import { MdBatteryChargingFull, MdDelete } from "react-icons/md";
+
+// Bike icons
 import IconBikeStandard from '../assets/bikes/standard.svg?react';
 import IconBikeStandardElectric from '../assets/bikes/standard-electric.svg?react';
 import IconBikeVTT from '../assets/bikes/vtt.svg?react';
@@ -19,19 +30,19 @@ import IconBikeVTT_Electric from '../assets/bikes/vtt-electric.svg?react';
 import IconBikeRoute from '../assets/bikes/route.svg?react';
 import { AiFillPlusCircle } from "react-icons/ai";
 import { FaHome, FaUserEdit } from "react-icons/fa";
-import { MdOutlineWork, MdEditLocationAlt } from "react-icons/md";
-import { MdBatteryChargingFull, MdDelete } from "react-icons/md";
 
 export default function ProfilePage() {
-  const { user, updateUser, token, userBikes, updateBikes } = useAuth();
+  const { user, updateUser, token, userBikes, updateBikes, historic, updateHistoric } = useAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalOpenInfo, setIsModalOpenInfo] = useState(false);
   const [isModalOpenAddress, setIsModalOpenAddress] = useState(false);
   const [isModalOpenSuppress, setIsModalOpenSuppress] = useState(false);
-  const [hasError, setHasError] = useState(false);
   const [isModalOpenEditBike, setIsModalOpenEditBike] = useState(false);
+  const [isModalOpenHistoric, setIsModalOpenHistoric] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const [selectedBike, setSelectedBike] = useState(null);
+  const [selectedHistoricEntry, setSelectedHistoricEntry] = useState(null);
 
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
@@ -250,8 +261,36 @@ export default function ProfilePage() {
           </div>
 
           <div className="profile-section">
-            <h2>Historique</h2>
+            <div className="section-title">
+              <h2>Historique</h2>
+              {historic.length > 0 && (
+                <IconButton className="button-suppress-bike" onClick={() => console.log("Supprimer l'historique")}>
+                  Supprimer l'historique <MdDelete size={20} />
+                </IconButton>
+              )}
+            </div>
             <div className="historic">
+              {historic.length === 0 ? (
+                <p>Aucun trajet enregistré pour le moment.</p>
+              ) : (
+                <div className="historic-list">
+                  {historic.map((entry, index) => (
+                    <div className="historic-entry" key={index} onClick={() => {
+                      setSelectedHistoricEntry(entry);
+                      setIsModalOpenHistoric(true);
+                    }}>
+                      <div className="historic-address">
+                        <h3><MdDirectionsBike size={24} /> 66 Avenue Phénix Haut Brion, Pessac</h3>
+                        <h3><FaFlagCheckered size={24} /> 71 Rue du Quai Bourgeois, Bordeaux</h3>
+                      </div>
+                      <div className="path-info">
+                        <span><PiPathBold /> {entry.route.distance_km.toFixed(2)} km</span>
+                        <span><MdOutlineTimer /> {Math.round(entry.route.duration_min)} min</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -303,6 +342,11 @@ export default function ProfilePage() {
         onDelete={handleDeleteSingleBike}
       />
 
+      <HistoricModal
+        isOpen={isModalOpenHistoric}
+        onClose={() => setIsModalOpenHistoric(false)}
+        entry={selectedHistoricEntry}
+      />
     </>
   )
 }

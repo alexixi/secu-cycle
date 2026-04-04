@@ -7,12 +7,14 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
     const [userBikes, setUserBikes] = useState([]);
+    const [historic, setHistoric] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         const storedToken = localStorage.getItem('access_token');
         const storedBikes = localStorage.getItem('bikes');
+        const storedHistoric = localStorage.getItem('historic');
         if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
             setUser(JSON.parse(storedUser));
         } else {
@@ -31,6 +33,12 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('bikes');
             setUserBikes([]);
         }
+        if (storedHistoric && storedHistoric !== "undefined" && storedHistoric !== "null") {
+            setHistoric(JSON.parse(storedHistoric));
+        } else {
+            localStorage.removeItem('historic');
+            setHistoric([]);
+        }
     }, []);
 
     const updateUser = (userData) => {
@@ -41,6 +49,11 @@ export const AuthProvider = ({ children }) => {
     const updateBikes = (bikesData) => {
         setUserBikes(bikesData);
         localStorage.setItem('bikes', JSON.stringify(bikesData));
+    }
+
+    const updateHistoric = (historicData) => {
+        setHistoric(historicData);
+        localStorage.setItem('historic', JSON.stringify(historicData));
     }
 
     const loginAuth = (token) => {
@@ -55,6 +68,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setToken(null);
         setUserBikes([]);
+        setHistoric([]);
         navigate("/login");
     };
 
@@ -64,9 +78,11 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('access_token');
             localStorage.removeItem('user');
             localStorage.removeItem('bikes');
+            localStorage.removeItem('historic');
             setUser(null);
             setToken(null);
             setUserBikes([]);
+            setHistoric([]);
             navigate("/login", {
                 state: {
                     sessionExpired: true,
@@ -83,7 +99,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, token, userBikes, loginAuth, logoutAuth, updateUser, updateBikes }}>
+        <AuthContext.Provider value={{ user, token, userBikes, historic, loginAuth, logoutAuth, updateUser, updateBikes, updateHistoric }}>
             {children}
         </AuthContext.Provider>
     );
