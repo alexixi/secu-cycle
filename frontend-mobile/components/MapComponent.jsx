@@ -8,12 +8,14 @@ export default function MapComponent({
     end,
     itineraires,
     selectedItineraire,
-    setSelectedItineraire
+    setSelectedItineraire,
+    currentPosition,
+    isNavigating
 }) {
     const mapRef = useRef(null);
 
     useEffect(() => {
-        if (!mapRef.current) return;
+        if (!mapRef.current || !isNavigating) return;
 
         const points = [];
         if (start?.lat && start?.lon) points.push({ latitude: parseFloat(start.lat), longitude: parseFloat(start.lon) });
@@ -41,7 +43,22 @@ export default function MapComponent({
                 animated: true,
             });
         }
-    }, [start, end, selectedItineraire, itineraires]);
+    }, [start, end, selectedItineraire, itineraires, isNavigating]);
+
+    useEffect(() => {
+        if (!isNavigating || !currentPosition || !mapRef.current) return;
+
+        mapRef.current.animateCamera({
+            center: {
+                latitude: currentPosition.lat,
+                longitude: currentPosition.lon,
+            },
+            pitch: 60,
+            heading: currentPosition.heading ?? 0,
+            altitude: 400,
+            zoom: 18,
+        }, { duration: 600 });
+    }, [currentPosition, isNavigating]);
 
     return (
         <View style={styles.container}>
@@ -97,6 +114,20 @@ export default function MapComponent({
                         />
                     );
                 })}
+                {currentPosition && (
+                    <Marker
+                        coordinate={{
+                            latitude: currentPosition.lat,
+                            longitude: currentPosition.lon,
+                        }}
+                        anchor={{ x: 0.5, y: 0.5 }}
+                        flat={true}
+                        rotation={currentPosition.heading ?? 0}
+                        zIndex={30}
+                    >
+                        <MaterialCommunityIcons name="navigation" size={28} color="#3d46f6" />
+                    </Marker>
+                )}
             </MapView>
         </View>
     );

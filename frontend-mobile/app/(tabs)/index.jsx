@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text} from 'react-native';
 import MapComponent from '../../components/MapComponent';
 import SearchContainer from '../../components/SearchContainer';
 import { calculateItineraries } from "../../services/apiBack.mock";
 import { useAuth } from "../../context/AuthContext";
+import useGuidance from '../../hooks/useGuidance';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import GuidancePanel from '../../components/GuidancePanel';
 
 export default function Index() {
   const [startPoint, setStartPoint] = useState(null);
@@ -14,16 +17,31 @@ export default function Index() {
   const [selectedBike, setSelectedBike] = useState('classic');
   const [maxDuration, setMaxDuration] = useState(null);
   const [errorPath, setErrorPath] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const { token } = useAuth();
+
+  const { currentPosition, guidanceState } = useGuidance(
+        routePaths,
+        selectedItineraire,
+        isNavigating
+    );
 
   useEffect(() => {
     if (!startPoint || !endPoint) {
       setRoutePaths(null);
       setSelectedItineraire(null);
       setErrorPath(false);
+      setIsNavigating(false);
     }
   }, [startPoint, endPoint]);
+
+  useEffect(() => {
+        if (guidanceState?.hasArrived) {
+            // On laisse GuidancePanel afficher "Arrivé" quelques secondes
+            // puis on stoppe — le bouton Terminer dans GuidancePanel appelle handleStopNavigation
+        }
+    }, [guidanceState?.hasArrived]);
 
   const handleCalculate = async () => {
     if (!startPoint?.lat || !startPoint?.lon || !endPoint?.lat || !endPoint?.lon) {
@@ -35,6 +53,7 @@ export default function Index() {
     setRoutePaths(null);
     setSelectedItineraire(null);
     setErrorPath(false);
+    setIsNavigating(false);
 
     try {
       const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration);
@@ -54,6 +73,15 @@ export default function Index() {
     }
   };
 
+  const handleStartNavigation = () => {
+        if (!selectedItineraire) return;
+        setIsNavigating(true);
+    };
+
+    const handleStopNavigation = () => {
+        setIsNavigating(false);
+    };
+
   return (
     <View style={styles.container}>
       <MapComponent
@@ -62,23 +90,45 @@ export default function Index() {
         itineraires={routePaths}
         selectedItineraire={selectedItineraire}
         setSelectedItineraire={setSelectedItineraire}
+        currentPosition={currentPosition}
+        isNavigating={isNavigating}
       />
 
-      <View style={styles.absoluteSearch}>
-        <SearchContainer
-          onStartSelect={setStartPoint}
-          onEndSelect={setEndPoint}
-          start={startPoint}
-          end={endPoint}
-          onCalculate={handleCalculate}
-        />
+      {isNavigating && (
+          <GuidancePanel
+              guidanceState={guidanceState}
+              onStop={handleStopNavigation}
+          />
+      )}
+      
+      {!isNavigating && (
+        <View style={styles.absoluteSearch}>
+          <SearchContainer
+            onStartSelect={setStartPoint}
+            onEndSelect={setEndPoint}
+            start={startPoint}
+            end={endPoint}
+            onCalculate={handleCalculate}
+          />
 
-        {isLoading && (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#3d46f6" />
-          </View>
-        )}
-      </View>
+          {isLoading && (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#3d46f6" />
+            </View>
+          )}
+        </View>
+      )}
+
+      {selectedItineraire && !isNavigating && !isLoading && (
+        <TouchableOpacity
+            style={styles.startButton}
+            onPress={handleStartNavigation}
+            activeOpacity={0.85} >
+            <MaterialCommunityIcons name="navigation" size={20} color="#fff" />
+            <Text style={styles.startButtonText}>Démarrer</Text>
+        </TouchableOpacity>
+      )}
+
     </View>
   );
 }
@@ -101,5 +151,28 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     borderRadius: 20,
     alignSelf: 'center',
-  }
+  },
+  startButton: {
+        position: 'absolute',
+        bottom: 40,
+        alignSelf: 'center',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#3d46f6',
+        paddingHorizontal: 28,
+        paddingVertical: 14,
+        borderRadius: 30,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 8,
+        zIndex: 10,
+    },
+    startButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
+    },
 });
