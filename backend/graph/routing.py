@@ -36,11 +36,10 @@ def _parse_maxspeed(vmax, h_type):
     # Infrastructures dédiées aux vélos ou hors route
     elif h_type in ['cycleway', 'path', 'track']:
         return 25
-    # Zones piétonnes (les vélos y roulent au pas)
+    # Zones piétonnes
     elif h_type in ['footway', 'pedestrian']:
         return 10
 
-    # Valeur par défaut de sécurité
     return 30
 
 def _get_lit_score(lit, h_type):
@@ -48,7 +47,6 @@ def _get_lit_score(lit, h_type):
     Retourne le score d'éclairage ou l'impute de manière probabiliste
     selon le type de route si la donnée est manquante.
     """
-    # 1. Donnée explicite
     if lit == 'yes':
         return 1.0
     elif lit == 'no':
@@ -64,16 +62,22 @@ def _get_lit_score(lit, h_type):
     elif h_type in ['path', 'track', 'footway']:
         return 0.2
 
-    # Doute raisonnable
     return 0.5
 
-def calculate_weights(G, alpha=0.5):
-    """Calcule les poids de sécurité et hybrides pour le routage."""
+def calculate_weights(G, alpha=0.5, beta=0.5):
+    """
+    Calcule les poids de sécurité, de distance et de dénivelé pour le routage.
+    
+    alpha : Équilibre entre l'effort physique (alpha) et la sécurité (1 - alpha).
+    beta  : Équilibre entre la distance (1 - beta) et la pente (beta) dans l'effort.
+    """
     s_min, s_max = float('inf'), float('-inf')
     l_min, l_max = float('inf'), float('-inf')
+    e_min, e_max = float('inf'), float('-inf')  
 
     # Passe 1 : Calculs de base
     for u, v, k, data in G.edges(keys=True, data=True):
+        # --- 1. SÉCURITÉ ---
         h_type = data.get('highway', 'unclassified')
         if isinstance(h_type, list): h_type = h_type[0]
         n_highway = SCORE_HIGHWAY.get(h_type, 1)
@@ -87,24 +91,38 @@ def calculate_weights(G, alpha=0.5):
         n_vitesse = _get_speed_score(vmax)
 
         score = (n_highway * 0.15) + (n_cycleway * 0.2) + (n_vitesse * 0.35) + (n_lit * 0.3)
-        length = float(data.get('length', 1))
-
-        # On stocke le score pur pour information
         data['safety_score'] = score
+
+        # --- 2. DISTANCE ---
+        length = float(data.get('length', 1.0))
+
+        # --- 3. DÉNIVELÉ (On cible uniquement les montées) ---
+        try:
+            denivele = float(data.get('elevation_diff', 0.0))
+            denivele_positif = max(0.0, denivele) 
+        except (TypeError, ValueError):
+            denivele_positif = 0.0
+            
+        data['elev_cost'] = denivele_positif
 
         s_min, s_max = min(s_min, score), max(s_max, score)
         l_min, l_max = min(l_min, length), max(l_max, length)
+        e_min, e_max = min(e_min, denivele_positif), max(e_max, denivele_positif)
 
-    # Passe 2 : Normalisation et poids hybride
     s_range = (s_max - s_min) if s_max != s_min else 1
     l_range = (l_max - l_min) if l_max != l_min else 1
+    e_range = (e_max - e_min) if e_max != e_min else 1
 
     for u, v, k, data in G.edges(keys=True, data=True):
         norm_dist = (float(data['length']) - l_min) / l_range
-        # Inverse le score : 0 = très sûr (score max), 1 = dangereux (score min)
-        norm_risque = (s_max - data['safety_score']) / s_range
+        norm_risque = (s_max - data['safety_score']) / s_range # 1 = dangereux, 0 = sûr
+        norm_elev = (data['elev_cost'] - e_min) / e_range
 
-        data['hybrid_weight'] = (alpha * norm_dist) + ((1 - alpha) * norm_risque)
+        # Si beta = 0, on s'en fiche du dénivelé. Si beta = 1, on ne regarde que le dénivelé.
+        norm_effort = ((1 - beta) * norm_dist) + (beta * norm_elev)
+
+        # 3. Poids hybride final
+        data['hybrid_weight'] = (alpha * norm_effort) + ((1 - alpha) * norm_risque)
 
     return G
 
