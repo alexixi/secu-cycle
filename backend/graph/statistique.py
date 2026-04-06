@@ -1,4 +1,5 @@
 import math 
+from graph.config import SPEED_BY_INFRASTRUCTURE, DEFAULT_SPEED, BIKE_TYPE_INDEX, LEVEL_MULTIPLIER
 
 def calculer_statistiques_osm(G):
     """
@@ -10,7 +11,6 @@ def calculer_statistiques_osm(G):
     compteur_maxspeed = 0
     compteur_surface = 0
     
-    # Dictionnaire pour stocker le comptage de chaque type de route
     highway_counts = {}
 
     for u, v, k, data in G.edges(keys=True, data=True):
@@ -26,21 +26,16 @@ def calculer_statistiques_osm(G):
         if 'surface' in data:
             compteur_surface += 1
 
-        # --- NOUVEAU : Comptage des types de routes ---
         h_type = data.get('highway', 'unknown')
-        # OSMnx renvoie parfois une liste si plusieurs tags fusionnent
         if isinstance(h_type, list):
             h_type = h_type[0]
             
-        # On ajoute +1 au compteur de ce type de route
         highway_counts[h_type] = highway_counts.get(h_type, 0) + 1
 
-    # Calcul des pourcentages globaux
     pct_lit = (compteur_lit / total_edges) * 100 if total_edges > 0 else 0
     pct_maxspeed = (compteur_maxspeed / total_edges) * 100 if total_edges > 0 else 0
     pct_surface = (compteur_surface / total_edges) * 100 if total_edges > 0 else 0
 
-    # --- AFFICHAGE ---
     print("\n" + "="*50)
     print("STATISTIQUES DES DONNÉES BRUTES OSM")
     print("="*50)
@@ -52,12 +47,10 @@ def calculer_statistiques_osm(G):
     print("RÉPARTITION DES TYPES DE ROUTES (HIGHWAY)")
     print("-" * 50)
     
-    # On trie le dictionnaire par valeur décroissante pour un bel affichage
     highways_tries = sorted(highway_counts.items(), key=lambda x: x[1], reverse=True)
     
     for h_type, count in highways_tries:
         pct = (count / total_edges) * 100
-        # Le <15 permet d'aligner le texte proprement sur 15 caractères
         print(f" - {h_type:<15} : {count:>5} segments ({pct:.1f}%)")
         
     print("="*50 + "\n")
@@ -81,7 +74,6 @@ def analyser_qualite_trajet(G, route, nom_trajet="Trajet"):
         if edge_data:
             data = edge_data[0] if isinstance(edge_data, dict) and 0 in edge_data else edge_data
             
-            # On récupère la vitesse (imputée ou réelle)
             h_type = data.get('highway', 'unknown')
             if isinstance(h_type, list): h_type = h_type[0]
             vmax = _parse_maxspeed(data.get('maxspeed', None), h_type)
@@ -134,3 +126,42 @@ def calculate_route_elevation(G, route, window_size=7, threshold=0.15):
             elevation_loss += abs(diff)
 
     return round(elevation_gain, 1), round(elevation_loss, 1)
+
+
+def calculate_exact_travel_time(G, route_nodes, bike_type, is_electric, cyclist_level):
+    total_time_min = 0.0
+    
+    idx = 1 if is_electric else BIKE_TYPE_INDEX.get(bike_type.lower(), 0)
+    multiplier = 1.0 if is_electric else LEVEL_MULTIPLIER.get(cyclist_level.lower(), 1.0)
+    for i in range(len(route_nodes) - 1):
+        u, v = route_nodes[i], route_nodes[i + 1]
+        edge_data = G.get_edge_data(u, v)
+        
+        if edge_data:
+            data = edge_data[0] if 0 in edge_data else edge_data
+            
+            length_m = float(data.get('length', 1.0))
+            cycleway = data.get("cycleway", "none")
+            if isinstance(cycleway, list):
+                cycleway = cycleway[0]
+                
+            speeds = SPEED_BY_INFRASTRUCTURE.get(cycleway, DEFAULT_SPEED)
+            speed_kmh = speeds[idx] * multiplier
+            speed_m_min = (speed_kmh * 1000) / 60
+            
+            total_time_min += (length_m / speed_m_min)
+
+    return total_time_min
+
+def calculate_route_distance(G, route):
+    """Calcule la distance réelle d'un itinéraire."""
+    distance = 0
+    for i in range(len(route) - 1):
+        u, v = route[i], route[i + 1]
+        edge_data = G.get_edge_data(u, v)
+        if edge_data:
+            if isinstance(edge_data, dict) and 0 in edge_data:
+                distance += float(edge_data[0].get('length', 0))
+            else:
+                distance += float(edge_data.get('length', 0))
+    return distance/1000

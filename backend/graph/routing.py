@@ -1,7 +1,8 @@
 import osmnx as ox
 import networkx as nx
-from graph.config import SCORE_HIGHWAY, SCORE_CYCLEWAY, VITESSE_M_MIN
-from graph.statistique import calculate_route_elevation
+from graph.config import SCORE_HIGHWAY, SCORE_CYCLEWAY, ELEVATION_WEIGHT_BY_LEVEL
+from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance
+from graph.elevation import verifier_altitudes
 
 def _get_speed_score(vmax):
     if vmax <= 20: return 10
@@ -75,9 +76,7 @@ def calculate_weights(G, alpha=0.5, beta=0.5):
     l_min, l_max = float('inf'), float('-inf')
     e_min, e_max = float('inf'), float('-inf')  
 
-    # Passe 1 : Calculs de base
     for u, v, k, data in G.edges(keys=True, data=True):
-        # --- 1. SÉCURITÉ ---
         h_type = data.get('highway', 'unclassified')
         if isinstance(h_type, list): h_type = h_type[0]
         n_highway = SCORE_HIGHWAY.get(h_type, 1)
@@ -88,26 +87,32 @@ def calculate_weights(G, alpha=0.5, beta=0.5):
 
         n_lit = _get_lit_score(data.get('lit', 'unknown'), h_type)
         vmax = _parse_maxspeed(data.get('maxspeed', 30), h_type)
-        n_vitesse = _get_speed_score(vmax)
+        n_speed = _get_speed_score(vmax)
 
-        score = (n_highway * 0.15) + (n_cycleway * 0.2) + (n_vitesse * 0.35) + (n_lit * 0.3)
+        score = (n_highway * 0.15) + (n_cycleway * 0.2) + (n_speed * 0.35) + (n_lit * 0.3)
         data['safety_score'] = score
 
-        # --- 2. DISTANCE ---
         length = float(data.get('length', 1.0))
 
-        # --- 3. DÉNIVELÉ (On cible uniquement les montées) ---
         try:
-            denivele = float(data.get('elevation_diff', 0.0))
-            denivele_positif = max(0.0, denivele) 
-        except (TypeError, ValueError):
-            denivele_positif = 0.0
+            if 'grade' in data:
+                grade = float(data['grade'])
+            else:
+                elev_diff = float(data.get('elevation_diff', 0.0))
+                grade = elev_diff / length if length > 0 else 0.0
+                
+            positive_grade = max(0.0, grade)
+            grade_percent = positive_grade * 100
             
-        data['elev_cost'] = denivele_positif
+            elev_cost = length * (grade_percent ** 2)
+        except (TypeError, ValueError):
+            elev_cost = 0.0
+            
+        data['elev_cost'] = elev_cost
 
         s_min, s_max = min(s_min, score), max(s_max, score)
         l_min, l_max = min(l_min, length), max(l_max, length)
-        e_min, e_max = min(e_min, denivele_positif), max(e_max, denivele_positif)
+        e_min, e_max = min(e_min, elev_cost), max(e_max, elev_cost)
 
     s_range = (s_max - s_min) if s_max != s_min else 1
     l_range = (l_max - l_min) if l_max != l_min else 1
@@ -115,135 +120,119 @@ def calculate_weights(G, alpha=0.5, beta=0.5):
 
     for u, v, k, data in G.edges(keys=True, data=True):
         norm_dist = (float(data['length']) - l_min) / l_range
-        norm_risque = (s_max - data['safety_score']) / s_range # 1 = dangereux, 0 = sûr
+        norm_risk = (s_max - data['safety_score']) / s_range 
         norm_elev = (data['elev_cost'] - e_min) / e_range
 
-        # Si beta = 0, on s'en fiche du dénivelé. Si beta = 1, on ne regarde que le dénivelé.
         norm_effort = ((1 - beta) * norm_dist) + (beta * norm_elev)
-
-        # 3. Poids hybride final
-        data['hybrid_weight'] = (alpha * norm_effort) + ((1 - alpha) * norm_risque)
+        data['hybrid_weight'] = (alpha * norm_effort) + ((1 - alpha) * norm_risk)
 
     return G
 
-def calculate_route_distance(G, route):
-    """Calcule la distance réelle d'un itinéraire."""
-    distance = 0
-    for i in range(len(route) - 1):
-        u, v = route[i], route[i + 1]
-        edge_data = G.get_edge_data(u, v)
-        if edge_data:
-            if isinstance(edge_data, dict) and 0 in edge_data:
-                distance += float(edge_data[0].get('length', 0))
-            else:
-                distance += float(edge_data.get('length', 0))
-    return distance/1000
 
-def get_optimal_routes(G, start_coords, end_coords, temps_max_min=None, iterations=6, vitesse_m_min=None):
-    """
-    Calcule et renvoie le trajet le plus rapide, le plus sécurisé,
-    et (optionnellement) le meilleur compromis respectant une contrainte de temps.
-    """
-    _vitesse = vitesse_m_min if vitesse_m_min is not None else VITESSE_M_MIN
+def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_electric=False, cyclist_level="intermediaire", max_time_min=None, iterations=6):
     try:
-        print("feur")
         start_node = ox.distance.nearest_nodes(G, start_coords[1], start_coords[0])
         end_node = ox.distance.nearest_nodes(G, end_coords[1], end_coords[0])
 
-        # --- 1. TRAJET LE PLUS RAPIDE (Alpha = 1.0) ---
-        G = calculate_weights(G, alpha=1.0)
+        if is_electric:
+            beta_elev = 0.0
+        else:
+            beta_elev = ELEVATION_WEIGHT_BY_LEVEL.get(cyclist_level.lower(), 0.4)
+        print(beta_elev)
+        # 1. FAST ROUTE
+        G = calculate_weights(G, alpha=1.0, beta=beta_elev)
         route_fast = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_fast = calculate_route_distance(G, route_fast)
-        temps_fast = dist_fast / _vitesse
-        coords_fast = [[G.nodes[node]['y'], G.nodes[node]['x'], G.nodes[node]["elevation"]] for node in route_fast]
-        height_difference_fast = calculate_route_elevation(G, route_fast)
+        duration_fast = calculate_exact_travel_time(G, route_fast, bike_type, is_electric, cyclist_level)
+        path_fast = [[G.nodes[n]['y'], G.nodes[n]['x'], G.nodes[n].get("elevation", 0.0)] for n in route_fast]
+        elev_fast = calculate_route_elevation(G, route_fast)
 
-        # --- 2. TRAJET LE PLUS SÉCURISÉ (Alpha = 0.0) ---
-        G = calculate_weights(G, alpha=0.0)
+        # 2. SAFE ROUTE
+        G = calculate_weights(G, alpha=0.0, beta=beta_elev)
         route_safe = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_safe = calculate_route_distance(G, route_safe)
-        temps_safe = dist_safe / _vitesse
-        coords_safe = [[G.nodes[node]['y'], G.nodes[node]['x'], G.nodes[node]["elevation"]] for node in route_safe]
-        height_difference_safe = calculate_route_elevation(G, route_safe)
+        duration_safe = calculate_exact_travel_time(G, route_safe, bike_type, is_electric, cyclist_level)
+        path_safe = [[G.nodes[n]['y'], G.nodes[n]['x'], G.nodes[n].get("elevation", 0.0)] for n in route_safe]
+        elev_safe = calculate_route_elevation(G, route_safe)
+        noeuds_sans_altitude = 0
+
         result = {
             "success": True,
             "routes": [
                 {
                     "id": "fast",
                     "name": "Rapide",
-                    "path": coords_fast,
+                    "path": path_fast,
                     "distance": dist_fast,
-                    "duration": temps_fast,
-                    "height_difference": height_difference_fast
+                    "duration": duration_fast,
+                    "height_difference": elev_fast
                 },
                 {
                     "id": "safe",
                     "name": "Sécurisé",
-                    "path": coords_safe,
+                    "path": path_safe,
                     "distance": dist_safe,
-                    "duration": temps_safe,
-                    "height_difference": height_difference_safe
+                    "duration": duration_safe,
+                    "height_difference": elev_safe
                 }
             ]
         }
 
-        # --- 3. TRAJET SOUS CONTRAINTE DE TEMPS (Optionnel) ---
-        if temps_max_min is not None:
-            temps_max_min = float(temps_max_min)
-            # Cas A : Même le trajet le plus rapide est trop long
-            if temps_fast > temps_max_min:
-                result["bounded_route"] = None
+        # 3. COMPROMISE ROUTE (Time Constrained)
+        if max_time_min is not None:
+            max_time_min = float(max_time_min)
+            
+            if duration_fast > max_time_min:
                 result["bounded_error"] = "time_limit_too_low"
 
-            # Cas B : Le trajet le plus sûr respecte déjà la contrainte
-            elif temps_safe <= temps_max_min:
+            elif duration_safe <= max_time_min:
                 result["routes"].append({
-                        "id": "compromise",
-                        "name": "Compromis",
-                        "path": coords_safe,
-                        "distance": dist_safe,
-                        "duration": temps_safe,
-                        "alpha_final": 0,
-                        "height_difference": height_difference_safe
-                    })
+                    "id": "compromise",
+                    "name": "Compromis",
+                    "path": path_safe,
+                    "distance": dist_safe,
+                    "duration": duration_safe,
+                    "alpha_final": 0.0,
+                    "height_difference": elev_safe
+                })
 
-            # Cas C : Recherche du meilleur compromis (Dichotomie)
             else:
                 alpha_low = 0.0
                 alpha_high = 1.0
-                best_path = route_fast
-                best_temps = temps_fast
+                best_route = route_fast
+                best_duration = duration_fast
                 best_dist = dist_fast
                 best_alpha = 1.0
 
                 for _ in range(iterations):
                     alpha_mid = (alpha_low + alpha_high) / 2.0
-                    G = calculate_weights(G, alpha=alpha_mid)
+                    G = calculate_weights(G, alpha=alpha_mid, beta=beta_elev)
                     route_mid = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
+                    
                     dist_mid = calculate_route_distance(G, route_mid)
-                    temps_mid = dist_mid / _vitesse
+                    duration_mid = calculate_exact_travel_time(G, route_mid, bike_type, is_electric, cyclist_level)
 
-                    if temps_mid <= temps_max_min:
-                        best_path = route_mid
-                        best_temps = temps_mid
+                    if duration_mid <= max_time_min:
+                        best_route = route_mid
+                        best_duration = duration_mid
                         best_dist = dist_mid
                         best_alpha = alpha_mid
                         alpha_high = alpha_mid
                     else:
                         alpha_low = alpha_mid
 
-                coords_best = [[G.nodes[node]['y'], G.nodes[node]['x'], G.nodes[node]["elevation"]] for node in best_path]
-                height_difference_best = calculate_route_elevation(G, best_path)
+                path_best = [[G.nodes[n]['y'], G.nodes[n]['x'], G.nodes[n].get("elevation", 0.0)] for n in best_route]
+                elev_best = calculate_route_elevation(G, best_route)
 
                 result["routes"].append({
-                        "id": "compromise",
-                        "name": "Compromis",
-                        "path": coords_best,
-                        "distance": best_dist,
-                        "duration": best_temps,
-                        "alpha_final": best_alpha,
-                        "height_difference": height_difference_best
-                    })
+                    "id": "compromise",
+                    "name": "Compromis",
+                    "path": path_best,
+                    "distance": best_dist,
+                    "duration": best_duration,
+                    "alpha_final": best_alpha,
+                    "height_difference": elev_best
+                })
 
         return result
 

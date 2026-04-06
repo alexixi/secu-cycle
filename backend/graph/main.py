@@ -8,7 +8,6 @@ import osmnx as ox
 from graph_manager import create_graph, load_graph_with_ign
 from routing import get_optimal_routes, calculate_route_distance, _parse_maxspeed
 from statistique import calculer_statistiques_osm, analyser_qualite_trajet, calculate_route_elevation
-from config import VITESSE_M_MIN
 from elevation import verifier_altitudes
 
 
@@ -26,7 +25,7 @@ def main():
     print(f"\nRecherche des itinéraires (Contrainte : {limite_temps} min max)...")
     start = time.perf_counter()
     
-    resultats = get_optimal_routes(G, home_location, work_location, temps_max_min=limite_temps)
+    resultats = get_optimal_routes(G, home_location, work_location, max_time_min=limite_temps)
     
     end = time.perf_counter()
     print(f"Calculs terminés en {end - start:.2f} secondes !\n")
