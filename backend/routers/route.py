@@ -97,6 +97,9 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
                 route_type=route_info["id"],
                 distance_km=route_info["distance"],
                 duration_min=route_info["duration"],
+                path=route_info.get("path"),
+                bike_type=bike_type,
+                is_electric=str(is_electric),
             )
             db.add(db_route)
             db.flush()

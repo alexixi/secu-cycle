@@ -1,11 +1,11 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Any
 
 class RouteBase(BaseModel):
     start_address: str
     end_address: str
-    route_type: str 
+    route_type: str
     distance_km: Optional[float] = None
     duration_min: Optional[float] = None
     safety_score: Optional[float] = None
@@ -16,6 +16,9 @@ class RouteCreate(RouteBase):
 class RouteRead(RouteBase):
     id: int
     user_id: Optional[int] = None
+    path: Optional[List[Any]] = None
+    bike_type: Optional[str] = None
+    is_electric: Optional[str] = None
     created_at: datetime
 
     class Config:

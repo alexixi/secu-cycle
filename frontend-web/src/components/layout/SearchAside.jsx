@@ -5,13 +5,13 @@ import AdressInput from "../ui/AdressInput";
 import BikeSelect from "./BikeSelect";
 import ItinerariesSelect from "./ItinerariesSelect";
 import "../ui/Input.css";
-import { MdDirectionsBike } from "react-icons/md";
+import { MdDirectionsBike, MdOutlineReportProblem } from "react-icons/md";
 import { FaFlagCheckered } from "react-icons/fa";
 import { PiPathBold } from "react-icons/pi";
 import { FaRegClock } from "react-icons/fa6";
 
 
-export default function SearchAside({ startAdress, endAdress, onStartSelect, onEndSelect, onSearchClick, onSwap, maxTime, onMaxTimeChange, maxDuration, onMaxDurationChange, selectedBike, onBikeSelect, itineraires, selectedItineraire, setSelectedItineraire, errorPath, isReady }) {
+export default function SearchAside({ startAdress, endAdress, onStartSelect, onEndSelect, onSearchClick, onSwap, maxTime, onMaxTimeChange, maxDuration, onMaxDurationChange, selectedBike, onBikeSelect, itineraires, selectedItineraire, setSelectedItineraire, errorPath, isReady, isReportMode, onToggleReportMode, canReport }) {
     return (
         <aside className="search-aside">
             <div className="adress-input-wrapper">
@@ -36,6 +36,16 @@ export default function SearchAside({ startAdress, endAdress, onStartSelect, onE
             <ItinerariesSelect itineraires={itineraires} selectedItineraire={selectedItineraire} setSelectedItineraire={setSelectedItineraire} />
             <Button id="search-button" onClick={onSearchClick} disabled={!isReady}><PiPathBold /> Calculer les itinéraires</Button>
             {errorPath && <div className="error-text">Une erreur est survenue lors de la recherche de l'itinéraire.</div>}
+            {canReport && (
+                <Button
+                    id="report-button"
+                    onClick={onToggleReportMode}
+                    className={isReportMode ? "report-button-active" : "report-button"}
+                >
+                    <MdOutlineReportProblem size={18} />
+                    {isReportMode ? "Cliquez sur la carte..." : "Ajouter un signalement"}
+                </Button>
+            )}
         </aside>
     );
 }

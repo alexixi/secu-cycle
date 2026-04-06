@@ -29,14 +29,16 @@ export async function apiFetch(url, options = {}, token = null) {
     return data;
 }
 
-export async function calculateItineraries(token, start, end, bikeId, maxDuration) {
+export async function calculateItineraries(token, start, end, bikeId, maxDuration, startAddress, endAddress) {
     try {
         const body = {
             start_lat: start.lat,
             start_lon: start.lon,
             end_lat: end.lat,
             end_lon: end.lon,
-            temps_max_min: maxDuration
+            temps_max_min: maxDuration,
+            start_address: startAddress || `${start.lat}, ${start.lon}`,
+            end_address: endAddress || `${end.lat}, ${end.lon}`,
         };
 
         if (Number.isInteger(bikeId)) {
@@ -218,6 +220,59 @@ export async function suppressBike(token, bike) {
 export async function getUserHistoric(token) {
     try {
         const data = await apiFetch("/api/history/", { method: "GET" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function deleteAllHistoric(token) {
+    try {
+        const data = await apiFetch("/api/history/", { method: "DELETE" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function deleteHistoricEntry(token, historyId) {
+    try {
+        const data = await apiFetch(`/api/history/${historyId}`, { method: "DELETE" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function deleteReport(token, reportId) {
+    try {
+        const data = await apiFetch(`/api/reports/${reportId}`, { method: "DELETE" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getReports() {
+    try {
+        const data = await apiFetch("/api/reports/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function createReport(token, reportType, description, latitude, longitude) {
+    try {
+        const data = await apiFetch("/api/reports/", {
+            method: "POST",
+            body: JSON.stringify({
+                report_type: reportType,
+                report_description: description || null,
+                latitude,
+                longitude,
+            }),
+        }, token);
         return data;
     } catch (error) {
         throw error;

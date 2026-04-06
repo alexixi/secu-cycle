@@ -1,10 +1,26 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, Tooltip, useMapEvents } from 'react-leaflet';
 import { renderToString } from 'react-dom/server';
 import { MdDirectionsBike } from "react-icons/md";
 import { FaFlagCheckered } from "react-icons/fa";
 import { IoMdPin } from "react-icons/io";
 import { useEffect } from 'react';
 import './MapComponent.css';
+
+const REPORT_ICONS = {
+    accident: "🚨",
+    travaux: "🚧",
+    danger: "⚠️",
+    obstacle: "🪨",
+};
+
+const MapClickHandler = ({ onMapClick }) => {
+    useMapEvents({
+        click(e) {
+            if (onMapClick) onMapClick({ lat: e.latlng.lat, lon: e.latlng.lng });
+        },
+    });
+    return null;
+};
 
 const MapController = ({ center, bounds }) => {
     const map = useMap();
@@ -24,7 +40,7 @@ const MapController = ({ center, bounds }) => {
     return null;
 };
 
-export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire }) {
+export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport }) {
 
     const startIconHtml = renderToString(
         <IoMdPin size={32} color="#3d46f6" style={{ filter: "drop-shadow(2px 4px 8px rgba(255, 255, 255, 0.9))" }} />
@@ -51,7 +67,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     });
 
     return (
-        <MapContainer center={start ? start : [44.8378, -0.5795]} zoom={13} scrollWheelZoom={true} className="map-container">
+        <MapContainer center={start ? [start.lat, start.lon] : [44.8378, -0.5795]} zoom={13} scrollWheelZoom={true} className="map-container">
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -82,6 +98,33 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             {pointilles && pointilles.map((path, index) => (
                 <Polyline key={index} positions={path} color="blue" dashArray="10,10" />
             ))}
+            <MapClickHandler onMapClick={onMapClick} />
+            {reports && reports.map((report) => {
+                const emoji = REPORT_ICONS[report.report_type] || "📍";
+                const icon = L.divIcon({
+                    html: `<span style="font-size:24px;line-height:1">${emoji}</span>`,
+                    className: '',
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 28],
+                    popupAnchor: [0, -28],
+                });
+                return (
+                    <Marker key={report.id} position={[report.latitude, report.longitude]} icon={icon}>
+                        <Popup>
+                            <strong>{emoji} {report.report_type}</strong>
+                            {report.report_description && <><br />{report.report_description}</>}
+                            {onDeleteReport && (
+                                <><br /><button
+                                    onClick={() => onDeleteReport(report.id)}
+                                    style={{ marginTop: "6px", color: "red", background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "0.85em" }}
+                                >
+                                     Supprimer
+                                </button></>
+                            )}
+                        </Popup>
+                    </Marker>
+                );
+            })}
             {itineraires && itineraires.length > 0 && itineraires.map((itineraire, index) => {
                 const isSelected = selectedItineraire === itineraire.id;
 

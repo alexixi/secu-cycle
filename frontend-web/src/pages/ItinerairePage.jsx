@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import Header from "../components/layout/Header";
 import MapComponent from "../modules/map/MapComponent";
 import SearchAside from "../components/layout/SearchAside";
-import { calculateItineraries } from "../services/apiBack";
+import ReportModal from "../components/layout/modals/ReportModal";
+import { calculateItineraries, getReports, createReport, deleteReport } from "../services/apiBack";
 import "./ItinerairePage.css";
 
 export default function ItinerairePage() {
@@ -16,8 +17,16 @@ export default function ItinerairePage() {
     const [maxTime, setMaxTime] = useState(null);
     const [maxDuration, setMaxDuration] = useState(null);
     const [errorPath, setErrorPath] = useState(false);
+    const [reports, setReports] = useState([]);
+    const [reportCoords, setReportCoords] = useState(null);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [isReportMode, setIsReportMode] = useState(false);
 
     const { token } = useAuth();
+
+    useEffect(() => {
+        getReports().then(setReports).catch(console.error);
+    }, []);
 
     const handleStartSelect = (coords) => {
         setRoutePaths(null);
@@ -37,7 +46,7 @@ export default function ItinerairePage() {
         setIsLoading(true);
         setRoutePaths(null);
         try {
-            const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration);
+            const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint.name, endPoint.name);
             if (itineraries && itineraries.length > 0) {
                 setErrorPath(false);
                 setRoutePaths(itineraries);
@@ -52,6 +61,32 @@ export default function ItinerairePage() {
 
 
         setIsLoading(false);
+    };
+
+    const handleMapClick = (coords) => {
+        if (!token || !isReportMode) return;
+        setReportCoords(coords);
+        setIsReportModalOpen(true);
+    };
+
+    const handleDeleteReport = async (reportId) => {
+        try {
+            await deleteReport(token, reportId);
+            setReports(prev => prev.filter(r => r.id !== reportId));
+        } catch (error) {
+            console.error("Erreur suppression signalement:", error);
+        }
+    };
+
+    const handleReportSubmit = async ({ reportType, description, lat, lon }) => {
+        try {
+            const newReport = await createReport(token, reportType, description, lat, lon);
+            setReports(prev => [...prev, newReport]);
+            setIsReportModalOpen(false);
+            setIsReportMode(false);
+        } catch (error) {
+            console.error("Erreur signalement:", error);
+        }
     };
 
     const handleSwap = () => {
@@ -113,6 +148,9 @@ export default function ItinerairePage() {
                     setSelectedItineraire={setSelectedItineraire}
                     errorPath={errorPath}
                     isReady={startPoint && endPoint && selectedBike && !isLoading}
+                    isReportMode={isReportMode}
+                    onToggleReportMode={() => token && setIsReportMode(prev => !prev)}
+                    canReport={!!token}
                 />
                 <MapComponent
                     start={startPoint}
@@ -121,8 +159,17 @@ export default function ItinerairePage() {
                     itineraires={routePaths}
                     selectedItineraire={selectedItineraire}
                     setSelectedItineraire={setSelectedItineraire}
+                    reports={reports}
+                    onMapClick={handleMapClick}
+                    onDeleteReport={token ? handleDeleteReport : null}
                 />
             </div>
+            <ReportModal
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                onConfirm={handleReportSubmit}
+                coords={reportCoords}
+            />
         </>
     )
 }

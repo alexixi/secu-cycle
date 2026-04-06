@@ -27,6 +27,21 @@ def get_my_history(db: Session = Depends(get_db), current_user=Depends(get_curre
         .all()
     )
 
+@router.delete("/", status_code=204)
+def delete_all_history(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    db.query(UserHistory).filter(UserHistory.user_id == current_user.id).delete()
+    db.commit()
+
+
+@router.delete("/{history_id}", status_code=204)
+def delete_history_entry(history_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    entry = db.query(UserHistory).filter(UserHistory.id == history_id, UserHistory.user_id == current_user.id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entrée d'historique introuvable")
+    db.delete(entry)
+    db.commit()
+
+
 # Récupérer une entrée d'historique par son ID
 @router.get("/{history_id}", response_model=UserHistoryRead)
 def get_history_entry(history_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):

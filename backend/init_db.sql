@@ -34,6 +34,9 @@ CREATE TABLE routes (
     distance_km FLOAT,
     duration_min FLOAT,
     safety_score FLOAT,
+    path JSONB,
+    bike_type VARCHAR(50),
+    is_electric VARCHAR(5),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

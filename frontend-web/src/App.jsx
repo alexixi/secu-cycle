@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import ProfileCreationPage from './pages/ProfileCreationPage';
 import AdminPage from './pages/AdminPage';
 import ErrorPage from './pages/ErrorPage';
+import ProtectedRoute from './components/layout/ProtectedRoute';
 import './App.css';
 
 function App() {
@@ -16,13 +17,21 @@ function App() {
 
         <Route path="/itineraire" element={<ItinerairePage />} />
 
-        <Route path="/profil" element={<ProfilePage />} />
+        <Route path="/profil" element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        } />
 
         <Route path="/login" element={<LoginPage />} />
 
         <Route path="/signin" element={<ProfileCreationPage />} />
 
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <AdminPage />
+          </ProtectedRoute>
+        } />
 
         <Route path="*" element={<ErrorPage />} />
 

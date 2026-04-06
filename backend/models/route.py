@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text, JSON
 from sqlalchemy.sql import func
 from database import Base
 
@@ -9,8 +9,11 @@ class Route(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     start_address = Column(Text, nullable=False)
     end_address = Column(Text, nullable=False)
-    route_type = Column(String(50)) 
+    route_type = Column(String(50))
     distance_km = Column(Float)
     duration_min = Column(Float)
     safety_score = Column(Float)
+    path = Column(JSON, nullable=True)
+    bike_type = Column(String(50), nullable=True)
+    is_electric = Column(String(5), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

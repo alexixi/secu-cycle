@@ -2,7 +2,7 @@ import "./ProfilePage.css"
 
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike, getUserBikes } from "../services/apiBack";
+import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike, getUserBikes, getUserHistoric, deleteHistoricEntry, deleteAllHistoric } from "../services/apiBack";
 
 import Header from "../components/layout/Header";
 import IconButton from "../components/ui/IconButton";
@@ -43,6 +43,7 @@ export default function ProfilePage() {
   const [hasError, setHasError] = useState(false);
   const [selectedBike, setSelectedBike] = useState(null);
   const [selectedHistoricEntry, setSelectedHistoricEntry] = useState(null);
+  const [confirmDeleteHistoric, setConfirmDeleteHistoric] = useState(false);
 
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
@@ -65,6 +66,12 @@ export default function ProfilePage() {
       setBikes(userBikes || []);
     }
   }, [user, userBikes]);
+
+  useEffect(() => {
+    if (token) {
+      getUserHistoric(token).then(updateHistoric).catch(console.error);
+    }
+  }, [token]);
 
   const handleBike = (bike, index) => {
     const isElec = bike.is_electric === true;
@@ -193,6 +200,32 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteAllHistoric = async () => {
+    if (!confirmDeleteHistoric) {
+      setConfirmDeleteHistoric(true);
+      return;
+    }
+    try {
+      await deleteAllHistoric(token);
+      updateHistoric([]);
+      setConfirmDeleteHistoric(false);
+    } catch (error) {
+      console.error("Erreur suppression historique:", error);
+      setConfirmDeleteHistoric(false);
+    }
+  };
+
+  const handleDeleteHistoricEntry = async (entryId) => {
+    try {
+      await deleteHistoricEntry(token, entryId);
+      updateHistoric(historic.filter(e => e.id !== entryId));
+      setIsModalOpenHistoric(false);
+      setSelectedHistoricEntry(null);
+    } catch (error) {
+      console.error("Erreur suppression historique:", error);
+    }
+  };
+
   const handleEditClick = (bike) => {
     setSelectedBike(bike);
     setHasError(false);
@@ -264,9 +297,21 @@ export default function ProfilePage() {
             <div className="section-title">
               <h2>Historique</h2>
               {historic.length > 0 && (
-                <IconButton className="button-suppress-bike" onClick={() => console.log("Supprimer l'historique")}>
-                  Supprimer l'historique <MdDelete size={20} />
-                </IconButton>
+                confirmDeleteHistoric ? (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.9em", color: "var(--text-secondary)" }}>Confirmer ?</span>
+                    <IconButton className="button-suppress-bike" onClick={handleDeleteAllHistoric}>
+                      Oui <MdDelete size={16} />
+                    </IconButton>
+                    <IconButton className="button-address" onClick={() => setConfirmDeleteHistoric(false)}>
+                      Non
+                    </IconButton>
+                  </div>
+                ) : (
+                  <IconButton className="button-suppress-bike" onClick={handleDeleteAllHistoric}>
+                    Supprimer l'historique <MdDelete size={20} />
+                  </IconButton>
+                )
               )}
             </div>
             <div className="historic">
@@ -280,8 +325,8 @@ export default function ProfilePage() {
                       setIsModalOpenHistoric(true);
                     }}>
                       <div className="historic-address">
-                        <h3><MdDirectionsBike size={24} /> 66 Avenue Phénix Haut Brion, Pessac</h3>
-                        <h3><FaFlagCheckered size={24} /> 71 Rue du Quai Bourgeois, Bordeaux</h3>
+                        <h3><MdDirectionsBike size={24} /> {entry.route?.start_address}</h3>
+                        <h3><FaFlagCheckered size={24} /> {entry.route?.end_address}</h3>
                       </div>
                       <div className="path-info">
                         <span><PiPathBold /> {entry.route.distance_km.toFixed(2)} km</span>
@@ -297,6 +342,51 @@ export default function ProfilePage() {
           <div className="profile-section">
             <h2>Statistiques</h2>
             <div className="statistic">
+              {(() => {
+                const trajets = historic.filter(e => e.route);
+                const totalTrajets = trajets.length;
+                const totalDist = trajets.reduce((s, e) => s + (e.route.distance_km || 0), 0);
+                const totalTime = trajets.reduce((s, e) => s + (e.route.duration_min || 0), 0);
+                const avgDist = totalTrajets > 0 ? totalDist / totalTrajets : 0;
+                const typeCount = trajets.reduce((acc, e) => {
+                  const t = e.route.route_type;
+                  acc[t] = (acc[t] || 0) + 1;
+                  return acc;
+                }, {});
+                const typeLabels = { fast: "Rapide", safe: "Sécurisé", compromise: "Compromis" };
+                const prefType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
+
+                if (totalTrajets === 0) return <p style={{ paddingLeft: "3%", color: "var(--text-secondary)" }}>Aucun trajet enregistré pour le moment.</p>;
+
+                return (
+                  <div className="stats-grid">
+                    <div className="stat-card">
+                      <span className="stat-value">{totalTrajets}</span>
+                      <span className="stat-label">Trajets effectués</span>
+                    </div>
+                    <div className="stat-card">
+                      <span className="stat-value">{totalDist.toFixed(1)} km</span>
+                      <span className="stat-label">Distance totale</span>
+                    </div>
+                    <div className="stat-card">
+                      <span className="stat-value">
+                        {Math.floor(totalTime / 60) > 0 ? `${Math.floor(totalTime / 60)}h ` : ""}{Math.round(totalTime % 60)}min
+                      </span>
+                      <span className="stat-label">Temps total</span>
+                    </div>
+                    <div className="stat-card">
+                      <span className="stat-value">{avgDist.toFixed(1)} km</span>
+                      <span className="stat-label">Distance moyenne</span>
+                    </div>
+                    {prefType && (
+                      <div className="stat-card">
+                        <span className="stat-value">{typeLabels[prefType[0]] || prefType[0]}</span>
+                        <span className="stat-label">Type préféré</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -342,11 +432,14 @@ export default function ProfilePage() {
         onDelete={handleDeleteSingleBike}
       />
 
-      <HistoricModal
-        isOpen={isModalOpenHistoric}
-        onClose={() => setIsModalOpenHistoric(false)}
-        entry={selectedHistoricEntry}
-      />
+      {selectedHistoricEntry && (
+        <HistoricModal
+          isOpen={isModalOpenHistoric}
+          onClose={() => setIsModalOpenHistoric(false)}
+          entry={selectedHistoricEntry}
+          onDelete={handleDeleteHistoricEntry}
+        />
+      )}
     </>
   )
 }
