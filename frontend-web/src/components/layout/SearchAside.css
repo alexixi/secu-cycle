@@ -1,7 +1,7 @@
 .search-aside {
     width: 35%;
-    max-width: 350px;
-    min-width: 250px;
+    max-width: 360px;
+    min-width: 320px;
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -47,7 +47,7 @@
 }
 
 .report-button {
-    width: 100%;
+    /* width: 100%; */
     background-color: var(--bg-tertiary);
     color: var(--text-primary);
     border: 2px dashed var(--border-strong);
@@ -79,7 +79,7 @@
     50% { opacity: 0.75; }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
     .search-aside {
         width: 100%;
         max-width: none;

@@ -1,22 +1,23 @@
-.leaflet-container {
-    height: 100%;
-    width: 100%;
+.maplibregl-popup-content {
+    padding: 0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    border: 2px solid var(--primary);
+    overflow: hidden;
 }
 
-.leaflet-tooltip.custom-map-tooltip {
-    padding: 0;
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    font-family: inherit;
-    overflow: hidden;
-    transition: all 0.3s ease;
+.maplibregl-popup-close-button {
+    font-size: 1.2rem;
+    padding: 2px 6px;
+    color: var(--text-main);
 }
 
 .itineraire-tooltip {
     padding: 10px 15px;
     text-align: center;
     font-size: 1.1em;
+    background-color: var(--bg-surface);
+    color: var(--text-main);
 }
 
 .itineraire-tooltip strong {
@@ -30,23 +31,100 @@
     opacity: 0.9;
 }
 
-.tooltip-standard {
+.report-popup {
+    padding: 15px 25px 15px 15px;
     background-color: var(--bg-surface);
     color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 160px;
+    max-width: 250px;
 }
 
-.leaflet-tooltip-top.tooltip-standard::before {
-    border-top-color: var(--bg-surface);
+.report-popup-title {
+    margin: 0;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.tooltip-selected {
-    background-color: var(--primary);
-    color: var(--text-main);
+.report-popup-desc {
+    margin: 0;
+    font-size: 1em;
+    opacity: 0.9;
+}
+
+.map-layer-control {
+    position: absolute;
+    bottom: 35px;
+    left: 15px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.map-style-menu {
+    background-color: var(--bg-surface);
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+    border: 2px solid var(--border-strong);
+    animation: slideUp 0.3s ease forwards;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.map-style-menu-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
     font-weight: bold;
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+    color: var(--text-secondary);
+    margin-bottom: 6px;
 }
 
-.leaflet-tooltip-top.tooltip-selected::before {
-    border-top-color: var(--primary);
+.map-style-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    background: none;
+    border: 2px solid transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+.map-style-item:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-hover);
+    border-color: var(--primary);
+}
+
+.map-style-item.active {
+    background-color: var(--primary);
+    color: var(--text-inverse);
+    font-weight: bold;
+}
+
+.map-layer-toggle {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
