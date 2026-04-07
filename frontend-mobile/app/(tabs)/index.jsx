@@ -24,7 +24,8 @@ export default function Index() {
   const { currentPosition, guidanceState } = useGuidance(
         routePaths,
         selectedItineraire,
-        isNavigating
+        isNavigating,
+        handleStopNavigation,
     );
 
   useEffect(() => {
@@ -37,13 +38,16 @@ export default function Index() {
   }, [startPoint, endPoint]);
 
   useEffect(() => {
-        if (guidanceState?.hasArrived) {
-            // On laisse GuidancePanel afficher "Arrivé" quelques secondes
-            // puis on stoppe — le bouton Terminer dans GuidancePanel appelle handleStopNavigation
-        }
-    }, [guidanceState?.hasArrived]);
+    if (!guidanceState?.hasArrived) return;
+    
+    const timer = setTimeout(() => {
+        handleStopNavigation();
+    }, 3000); // laisse 3s pour afficher "Vous êtes arrivé"
 
-  const handleCalculate = async () => {
+    return () => clearTimeout(timer); // cleanup si le composant unmount avant
+}, [guidanceState?.hasArrived]);
+
+  const handleCalculate = React.useCallback(async () => {
     if (!startPoint?.lat || !startPoint?.lon || !endPoint?.lat || !endPoint?.lon) {
       console.log("Coordonnées manquantes pour le calcul");
       return;
@@ -71,7 +75,7 @@ export default function Index() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [startPoint, endPoint, selectedBike, maxDuration, token]);
 
   const handleStartNavigation = () => {
         if (!selectedItineraire) return;
@@ -81,6 +85,9 @@ export default function Index() {
     const handleStopNavigation = () => {
         setIsNavigating(false);
     };
+    const handleSelectItineraire = React.useCallback((id) => {
+        setSelectedItineraire(id);
+    }, []);
 
   return (
     <View style={styles.container}>
@@ -89,7 +96,7 @@ export default function Index() {
         end={endPoint}
         itineraires={routePaths}
         selectedItineraire={selectedItineraire}
-        setSelectedItineraire={setSelectedItineraire}
+        setSelectedItineraire={handleSelectItineraire}
         currentPosition={currentPosition}
         isNavigating={isNavigating}
       />
@@ -117,6 +124,15 @@ export default function Index() {
             </View>
           )}
         </View>
+      )}
+      {isNavigating && (
+        <TouchableOpacity
+            style={styles.emergencyStop}
+            onPress={handleStopNavigation}
+        >
+            <MaterialCommunityIcons name="close" size={20} color="#fff" />
+            <Text style={styles.emergencyStopText}>Arrêter</Text>
+        </TouchableOpacity>
       )}
 
       {selectedItineraire && !isNavigating && !isLoading && (
@@ -173,6 +189,29 @@ const styles = StyleSheet.create({
     startButtonText: {
         color: '#fff',
         fontSize: 16,
+        fontWeight: '700',
+    },
+    emergencyStop: {
+        position: 'absolute',
+        bottom: 40,
+        alignSelf: 'center',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: '#EF4444',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 30,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 8,
+        zIndex: 200,
+    },
+    emergencyStopText: {
+        color: '#fff',
+        fontSize: 15,
         fontWeight: '700',
     },
 });

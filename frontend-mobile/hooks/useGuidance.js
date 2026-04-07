@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { startTracking, stopTracking } from '../services/locationService';
 import { getGuidanceState } from '../services/guidanceEngine';
 
-export default function useGuidance(itineraires, selectedItineraire, isNavigating) {
+export default function useGuidance(itineraires, selectedItineraire, isNavigating, onError) {
     const [currentPosition, setCurrentPosition] = useState(null);
     const [guidanceState, setGuidanceState] = useState(null);
 
@@ -24,6 +24,7 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
             }
         }).catch((err) => {
             console.error('Erreur GPS :', err.message);
+            onError?.();
         });
 
         return () => stopTracking();
