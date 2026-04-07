@@ -79,7 +79,7 @@ export default function HistoricModal({ isOpen, onClose, onDelete, entry }) {
 
     return (
         <div className="modal-overlay">
-            <div className="modal-content">
+            <div className="modal-content big-modal">
                 <div className="modal-main">
                     <div className="modal-path-info">
                         <div className="modal-path-info-address">

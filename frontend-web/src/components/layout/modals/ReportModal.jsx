@@ -26,6 +26,10 @@ export default function ReportModal({ isOpen, onClose, onConfirm, coords }) {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === "Escape") onClose();
+            else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                onConfirm({ reportType, description, lat: coords.lat, lon: coords.lon });
+            }
         };
         const handleClickOutside = (e) => {
             if (e.target.classList.contains("modal-overlay")) onClose();

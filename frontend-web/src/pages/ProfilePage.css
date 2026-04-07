@@ -170,3 +170,23 @@
   font-size: 1em;
   font-weight: normal;
 }
+
+@media (max-width: 800px) {
+  .profile-section {
+    width: 90%;
+  }
+
+  .profile-page h1{
+    text-align: center;
+    width: 100%;
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+
+  .button-modification{
+    justify-content: center;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
