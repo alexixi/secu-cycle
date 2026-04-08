@@ -33,7 +33,15 @@ LEVEL_MULTIPLIER = {
 }
 
 ELEVATION_WEIGHT_BY_LEVEL = {
-    "debutant": 0.8,
-    "intermediaire": 0.5,
-    "sportif": 0.1
+    "debutant": 0,
+    "intermediaire": 00,
+    "sportif": 0
+}
+
+REPORT_PENALTIES = {
+    'accident': 20.0, 
+    'danger': 10.0,   
+    'travaux': 8.0,   
+    'Obstacle': 6.0,   
+    'default': 5.0 
 }

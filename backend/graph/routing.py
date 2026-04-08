@@ -1,7 +1,7 @@
 import osmnx as ox
 import networkx as nx
-from graph.config import SCORE_HIGHWAY, SCORE_CYCLEWAY, ELEVATION_WEIGHT_BY_LEVEL
-from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance
+from graph.config import SCORE_HIGHWAY, SCORE_CYCLEWAY, ELEVATION_WEIGHT_BY_LEVEL, REPORT_PENALTIES
+from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score
 from graph.elevation import verifier_altitudes
 
 def _get_speed_score(vmax):
@@ -65,13 +65,17 @@ def _get_lit_score(lit, h_type):
 
     return 0.5
 
-def calculate_weights(G, alpha=0.5, beta=0.5):
+def calculate_weights(G, alpha=0.5, beta=0.5, reported_edges=None):
     """
     Calcule les poids de sécurité, de distance et de dénivelé pour le routage.
     
     alpha : Équilibre entre l'effort physique (alpha) et la sécurité (1 - alpha).
     beta  : Équilibre entre la distance (1 - beta) et la pente (beta) dans l'effort.
+    reported_edges : Set contenant les arêtes (u, v) signalées par les utilisateurs.
     """
+    if reported_edges is None:
+        reported_edges = {}
+
     s_min, s_max = float('inf'), float('-inf')
     l_min, l_max = float('inf'), float('-inf')
     e_min, e_max = float('inf'), float('-inf')  
@@ -124,12 +128,37 @@ def calculate_weights(G, alpha=0.5, beta=0.5):
         norm_elev = (data['elev_cost'] - e_min) / e_range
 
         norm_effort = ((1 - beta) * norm_dist) + (beta * norm_elev)
-        data['hybrid_weight'] = (alpha * norm_effort) + ((1 - alpha) * norm_risk)
+        base_weight = (alpha * norm_effort) + ((1 - alpha) * norm_risk)
+
+        report_type = reported_edges.get((u, v)) or reported_edges.get((v, u))
+
+        if report_type:
+            if report_type == 'accident':
+                data['hybrid_weight'] = base_weight + REPORT_PENALTIES['accident']
+                
+            elif report_type == 'danger':
+                malus = REPORT_PENALTIES['danger'] * (1.0 - alpha)
+                data['hybrid_weight'] = base_weight + malus
+                
+            elif report_type == 'travaux':
+                malus = (REPORT_PENALTIES['travaux'] * 0.5) + (REPORT_PENALTIES['travaux'] * 0.5 * (1.0 - alpha))
+                data['hybrid_weight'] = base_weight + malus
+                
+            elif report_type == 'travaux':
+                malus = (REPORT_PENALTIES['travaux'] * 0.5) + (REPORT_PENALTIES['travaux'] * 0.5 * (1.0 - alpha))
+                data['hybrid_weight'] = base_weight + malus
+                
+            else:
+                data['hybrid_weight'] = base_weight + REPORT_PENALTIES.get('default', 5.0)
+        else:
+            data['hybrid_weight'] = max(0.001, base_weight)
 
     return G
 
+def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_electric=False, cyclist_level="intermediaire", max_time_min=None, iterations=6, reported_edges=None):
+    if reported_edges is None:
+        reported_edges = set()
 
-def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_electric=False, cyclist_level="intermediaire", max_time_min=None, iterations=6):
     try:
         start_node = ox.distance.nearest_nodes(G, start_coords[1], start_coords[0])
         end_node = ox.distance.nearest_nodes(G, end_coords[1], end_coords[0])
@@ -138,23 +167,26 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
             beta_elev = 0.0
         else:
             beta_elev = ELEVATION_WEIGHT_BY_LEVEL.get(cyclist_level.lower(), 0.4)
+            
         print(beta_elev)
-        # 1. FAST ROUTE
-        G = calculate_weights(G, alpha=1.0, beta=beta_elev)
+        
+        # 1. FAST ROUTE (Transmission des signalements)
+        G = calculate_weights(G, alpha=1.0, beta=beta_elev, reported_edges=reported_edges)
         route_fast = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_fast = calculate_route_distance(G, route_fast)
         duration_fast = calculate_exact_travel_time(G, route_fast, bike_type, is_electric, cyclist_level)
         path_fast = [[G.nodes[n]['y'], G.nodes[n]['x'], G.nodes[n].get("elevation", 0.0)] for n in route_fast]
         elev_fast = calculate_route_elevation(G, route_fast)
+        fast_score = get_route_safety_score(G, route_fast)
 
-        # 2. SAFE ROUTE
-        G = calculate_weights(G, alpha=0.0, beta=beta_elev)
+        # 2. SAFE ROUTE (Transmission des signalements)
+        G = calculate_weights(G, alpha=0.0, beta=beta_elev, reported_edges=reported_edges)
         route_safe = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
         dist_safe = calculate_route_distance(G, route_safe)
         duration_safe = calculate_exact_travel_time(G, route_safe, bike_type, is_electric, cyclist_level)
         path_safe = [[G.nodes[n]['y'], G.nodes[n]['x'], G.nodes[n].get("elevation", 0.0)] for n in route_safe]
         elev_safe = calculate_route_elevation(G, route_safe)
-        noeuds_sans_altitude = 0
+        safe_score = get_route_safety_score(G, route_safe)
 
         result = {
             "success": True,
@@ -165,7 +197,8 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
                     "path": path_fast,
                     "distance": dist_fast,
                     "duration": duration_fast,
-                    "height_difference": elev_fast
+                    "height_difference": elev_fast,
+                    "score": fast_score
                 },
                 {
                     "id": "safe",
@@ -173,7 +206,8 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
                     "path": path_safe,
                     "distance": dist_safe,
                     "duration": duration_safe,
-                    "height_difference": elev_safe
+                    "height_difference": elev_safe,
+                    "score": safe_score
                 }
             ]
         }
@@ -193,7 +227,8 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
                     "distance": dist_safe,
                     "duration": duration_safe,
                     "alpha_final": 0.0,
-                    "height_difference": elev_safe
+                    "height_difference": elev_safe,
+                    "score": safe_score
                 })
 
             else:
@@ -206,7 +241,8 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
 
                 for _ in range(iterations):
                     alpha_mid = (alpha_low + alpha_high) / 2.0
-                    G = calculate_weights(G, alpha=alpha_mid, beta=beta_elev)
+                    # Transmission des signalements dans la boucle dichotomique
+                    G = calculate_weights(G, alpha=alpha_mid, beta=beta_elev, reported_edges=reported_edges)
                     route_mid = nx.shortest_path(G, start_node, end_node, weight='hybrid_weight')
                     
                     dist_mid = calculate_route_distance(G, route_mid)
@@ -223,6 +259,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
 
                 path_best = [[G.nodes[n]['y'], G.nodes[n]['x'], G.nodes[n].get("elevation", 0.0)] for n in best_route]
                 elev_best = calculate_route_elevation(G, best_route)
+                best_score = get_route_safety_score(G, best_route)
 
                 result["routes"].append({
                     "id": "compromise",
@@ -231,7 +268,8 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
                     "distance": best_dist,
                     "duration": best_duration,
                     "alpha_final": best_alpha,
-                    "height_difference": elev_best
+                    "height_difference": elev_best,
+                    "score": best_score
                 })
 
         return result

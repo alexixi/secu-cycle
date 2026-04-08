@@ -9,6 +9,8 @@ from dependencies import get_current_user, get_current_user_optional
 from graph.routing import get_optimal_routes
 from models.bike import Bike
 from models.history import UserHistory
+from models.report import Report
+from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/routes", tags=["Routes"])
 
@@ -59,6 +61,32 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
                 is_electric = bike.is_electric
                 bike_type = bike.type or "standard"
 
+    limite_temps = datetime.now() - timedelta(hours=48)
+    recent_reports = db.query(Report).filter(Report.created_at >= limite_temps).all()
+    
+    reported_edges = {}
+
+    if recent_reports:
+        lons = [r.longitude for r in recent_reports]
+        lats = [r.latitude for r in recent_reports]
+        nearest_edges = ox.distance.nearest_edges(G, X=lons, Y=lats)
+        
+        for i, (u, v, k) in enumerate(nearest_edges):
+            r_type = recent_reports[i].report_type.lower()
+            
+            edges_to_penalize = [(u, v), (v, u)]
+            
+            if G.has_node(u):
+                for neighbor in G.successors(u):
+                    edges_to_penalize.extend([(u, neighbor), (neighbor, u)])
+            if G.has_node(v):
+                for neighbor in G.successors(v):
+                    edges_to_penalize.extend([(v, neighbor), (neighbor, v)])
+                    
+            for edge in edges_to_penalize:
+                if reported_edges.get(edge) != "accident":
+                    reported_edges[edge] = r_type
+
     try:
         result = get_optimal_routes(
             G,
@@ -68,7 +96,8 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
             is_electric=is_electric,      
             cyclist_level=cyclist_level,  
             max_time_min=data.get("temps_max_min"),
-            iterations=data.get("iterations", 6)
+            iterations=data.get("iterations", 6),
+            reported_edges=reported_edges
         )
     except Exception as e:
         import traceback

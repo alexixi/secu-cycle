@@ -165,3 +165,24 @@ def calculate_route_distance(G, route):
             else:
                 distance += float(edge_data.get('length', 0))
     return distance/1000
+
+def get_route_safety_score(G, route):
+    """Calcule et renvoie la note de sécurité moyenne d'un itinéraire (sur 10)."""
+    scores = []
+    
+    for i in range(len(route) - 1):
+        u, v = route[i], route[i + 1]
+        edge_data = G.get_edge_data(u, v)
+        
+        if edge_data:
+            data = edge_data[0] if isinstance(edge_data, dict) and 0 in edge_data else edge_data
+            
+            score_brut = float(data.get('safety_score', 0.0))
+            scores.append(score_brut)
+
+    if not scores:
+        return 0.0
+
+    score_moyen = sum(scores) / len(scores)
+    
+    return round(score_moyen, 2)
