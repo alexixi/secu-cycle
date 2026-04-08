@@ -1,3 +1,7 @@
+.little-map .maplibregl-map {
+    border-radius: 12px;
+}
+
 .maplibregl-popup-content {
     padding: 0 !important;
     border-radius: 8px !important;
@@ -58,12 +62,12 @@
 
 .map-layer-control {
     position: absolute;
-    bottom: 35px;
-    left: 15px;
+    bottom: 45px;
+    right: 15px;
     z-index: 10;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-end;
     gap: 10px;
 }
 
@@ -81,8 +85,15 @@
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .map-style-menu-title {
@@ -127,4 +138,42 @@
     justify-content: center;
     gap: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.map-report-control {
+    position: absolute;
+    bottom: 45px;
+    left: 15px;
+    z-index: 10;
+}
+
+.report-button {
+    border: 2px dashed var(--border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.report-button-active {
+    background-color: var(--primary);
+    color: white;
+    border: 2px solid var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.75;
+    }
 }

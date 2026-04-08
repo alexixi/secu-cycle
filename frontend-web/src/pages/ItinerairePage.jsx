@@ -148,10 +148,7 @@ export default function ItinerairePage() {
                     setSelectedItineraire={setSelectedItineraire}
                     errorPath={errorPath}
                     isReady={startPoint && endPoint && selectedBike && !isLoading}
-                    isReportMode={isReportMode}
-                    onToggleReportMode={() => token && setIsReportMode(prev => !prev)}
-                    canReport={!!token}
-                />
+                    />
                 <MapComponent
                     start={startPoint}
                     end={endPoint}
@@ -162,6 +159,10 @@ export default function ItinerairePage() {
                     reports={reports}
                     onMapClick={handleMapClick}
                     onDeleteReport={token ? handleDeleteReport : null}
+                    isReportMode={isReportMode}
+                    onToggleReportMode={() => token && setIsReportMode(prev => !prev)}
+                    canReport={!!token}
+                    littleMap={false}
                 />
             </div>
             <ReportModal

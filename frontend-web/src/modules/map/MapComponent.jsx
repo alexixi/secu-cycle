@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button';
 
 import { IoMdPin } from "react-icons/io";
 import { FaLayerGroup } from "react-icons/fa";
+import { MdOutlineReportProblem } from "react-icons/md";
 import './MapComponent.css';
 
 const REPORT_ICONS = {
@@ -14,13 +15,13 @@ const REPORT_ICONS = {
     obstacle: "🪨",
 };
 
-export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport }) {
+export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, isReportMode, onToggleReportMode, canReport, littleMap = false }) {
 
     const mapRef = useRef();
     const [hoverInfo, setHoverInfo] = useState(null);
     const [activeReport, setActiveReport] = useState(null);
     const [isMapSelectOpen, setIsMapSelectOpen] = useState(false);
-    const [selectedMapStyle, setSelectedMapStyle] = useState("topo-v2");
+    const [selectedMapStyle, setSelectedMapStyle] = useState("basic-v2");
 
     useEffect(() => {
         if (!mapRef.current) return;
@@ -73,17 +74,30 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         { id: "dataviz-dark", label: "Sombre", icon: "🌙" },
         { id: "outdoor-v2", label: "Outdoor", icon: "🚴" },
         { id: "openstreetmap", label: "Détaillée", icon: "🗺️" },
-        { id: "basic-v2", label: "Simpliste", icon: "🍃" },
         { id: "streets-v2", label: "Rues", icon: "🛣️" },
-        { id: "hybrid", label: "Satellite", icon: "🛰️" },
         { id: "topo-v2", label: "Relief", icon: "⛰️" },
+        { id: "hybrid", label: "Satellite", icon: "🛰️" },
+        { id: "basic-v2", label: "Basic", icon: "🍃" },
     ];
 
     const mapTilerKey = import.meta.env.VITE_MAPTILER_KEY;
     const currentMapStyle = `https://api.maptiler.com/maps/${selectedMapStyle}/style.json?key=${mapTilerKey}`;
 
     return (
-        <div className="map-container">
+        <div className={`map-container ${littleMap ? 'little-map' : ''}`}>
+            {!littleMap && canReport && (
+                <div className="map-report-control">
+                    <Button
+                        id="report-button"
+                        onClick={onToggleReportMode}
+                        className={isReportMode ? "report-button-active" : "report-button"}
+                    >
+                        <MdOutlineReportProblem size={18} />
+                        {isReportMode ? "Cliquez sur la carte..." : "Ajouter un signalement"}
+                    </Button>
+                </div>
+            )}
+
             <div className="map-layer-control">
                 {isMapSelectOpen && (
                     <div className="map-style-menu">
@@ -110,7 +124,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     onClick={() => setIsMapSelectOpen(!isMapSelectOpen)}
                     title="Changer le fond de carte"
                 >
-                    <FaLayerGroup /> Calques
+                    <FaLayerGroup size={18} />
+                    {littleMap ? "" : "Calques"}
                 </Button>
             </div>
             <Map

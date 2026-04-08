@@ -101,6 +101,8 @@ export default function HistoricModal({ isOpen, onClose, onDelete, entry }) {
                             itineraires={itineraires}
                             selectedItineraire="hist"
                             setSelectedItineraire={() => {}}
+                            reports={[]}
+                            littleMap={true}
                         />
                     </div>
                 </div>
