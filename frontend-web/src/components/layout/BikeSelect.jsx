@@ -94,7 +94,7 @@ export default function BikeSelect({ selectedBike, onSelect }) {
                                 id={bike.id}
                                 IconSVG={bike.icon}
                                 label={bike.name}
-                                LabelIcon={bike.is_electric ? <MdBatteryChargingFull /> : null}
+                                LabelIcon={bike.electric ? <MdBatteryChargingFull /> : null}
                                 selected={selectedBike === bike.id}
                                 onClick={() => onSelect(bike.id)}
                             />
