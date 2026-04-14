@@ -1,6 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Map, Camera, Marker, GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
+import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function MapComponent({
@@ -29,11 +29,11 @@ export default function MapComponent({
     const cameraSettings = useMemo(() => {
         if (isNavigating && currentPosition) {
             return {
-                centerCoordinate: [currentPosition.lon, currentPosition.lat],
+                center: [currentPosition.lon, currentPosition.lat],
                 pitch: 60,
-                heading: currentPosition.heading ?? 0,
-                zoomLevel: 18,
-                animationDuration: 600,
+                bearing: currentPosition.heading ?? 0,
+                zoom: 18,
+                duration: 600,
             };
         }
 
@@ -48,21 +48,35 @@ export default function MapComponent({
         }
 
         if (points.length === 1) {
-            return { centerCoordinate: points[0], zoomLevel: 14, animationDuration: 1000 };
+            return {
+                center: points[0],
+                zoom: 14,
+                duration: 1000,
+            };
         } else if (points.length >= 2) {
             const lons = points.map(p => p[0]);
             const lats = points.map(p => p[1]);
             return {
-                bounds: {
-                    ne: [Math.max(...lons), Math.max(...lats)],
-                    sw: [Math.min(...lons), Math.min(...lats)],
-                    paddingTop: 280, paddingRight: 50, paddingBottom: 50, paddingLeft: 50,
+                bounds: [
+                    Math.min(...lons),
+                    Math.min(...lats),
+                    Math.max(...lons),
+                    Math.max(...lats),
+                ],
+                padding: {
+                    top: 250,
+                    right: 50,
+                    bottom: 50,
+                    left: 50,
                 },
-                animationDuration: 1000,
+                duration: 1000,
             };
         }
 
-        return { centerCoordinate: [-0.5795, 44.8378], zoomLevel: 12 };
+        return {
+            center: [-0.5795, 44.8378],
+            zoom: 12,
+        };
     }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition]);
 
     const onRoutePress = (event) => {
@@ -82,26 +96,27 @@ export default function MapComponent({
                 <Camera ref={cameraRef} {...cameraSettings} />
 
                 {start?.lat && (
-                    <Marker id="start" coordinate={[parseFloat(start.lon), parseFloat(start.lat)]} anchor={{ x: 0.5, y: 0.5 }}>
+                    <ViewAnnotation id="start" lngLat={[parseFloat(start.lon), parseFloat(start.lat)]} anchor="center">
                         <MaterialCommunityIcons name="circle-slice-8" size={20} color="#3d46f6" />
-                    </Marker>
+                    </ViewAnnotation>
                 )}
+
                 {end?.lat && (
-                    <Marker id="end" coordinate={[parseFloat(end.lon), parseFloat(end.lat)]} anchor={{ x: 0.5, y: 0.5 }}>
+                    <ViewAnnotation id="end" lngLat={[parseFloat(end.lon), parseFloat(end.lat)]} anchor="center">
                         <MaterialCommunityIcons name="circle-slice-8" size={20} color="#EF4444" />
-                    </Marker>
+                    </ViewAnnotation>
                 )}
 
                 {currentPosition && (
-                    <Marker
+                    <ViewAnnotation
                         id="current"
-                        coordinate={[currentPosition.lon, currentPosition.lat]}
-                        anchor={{ x: 0.5, y: 0.5 }}
+                        lngLat={[currentPosition.lon, currentPosition.lat]}
+                        anchor="center"
                     >
                         <View style={{ transform: [{ rotate: `${currentPosition.heading ?? 0}deg` }] }}>
                             <MaterialCommunityIcons name="navigation" size={28} color="#3d46f6" />
                         </View>
-                    </Marker>
+                    </ViewAnnotation>
                 )}
 
                 {routesGeoJSON && (
