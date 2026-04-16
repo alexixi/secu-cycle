@@ -80,9 +80,10 @@ export default function MapComponent({
     }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition]);
 
     const onRoutePress = (event) => {
-        if (event.features && event.features.length > 0) {
-            setSelectedItineraire(event.features[0].properties.id);
-        }
+        const native = event?.nativeEvent || {};
+        const features = native?.features || [];
+        const id = features?.[0]?.properties?.id;
+        if (id) { setSelectedItineraire(id); }
     };
 
     return (
@@ -128,14 +129,18 @@ export default function MapComponent({
                         <Layer
                             id="inactive-routes"
                             type="line"
-                            filter={['!=', 'isSelected', true]}
-                            paint={{ lineColor: '#A0AEC0', lineWidth: 4, lineJoin: 'round', lineCap: 'round' }}
+                            filter={['!=', ['get', 'isSelected'], true]}
+                            paint={{ lineColor: '#A0AEC0', lineWidth: 4 }}
+                            layout={{ lineJoin: 'round', lineCap: 'round' }}
+                            hitbox={{ width: 44, height: 44 }}
                         />
                         <Layer
                             id="active-route"
                             type="line"
-                            filter={['==', 'isSelected', true]}
-                            paint={{ lineColor: '#3d46f6', lineWidth: 6, lineJoin: 'round', lineCap: 'round' }}
+                            filter={['==', ['get', 'isSelected'], true]}
+                            paint={{ lineColor: '#3d46f6', lineWidth: 6 }}
+                            layout={{ lineJoin: 'round', lineCap: 'round' }}
+                            hitbox={{ width: 44, height: 44 }}
                         />
                     </GeoJSONSource>
                 )}
