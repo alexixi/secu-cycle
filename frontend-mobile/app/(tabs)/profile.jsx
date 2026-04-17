@@ -19,14 +19,7 @@ export default function ProfilePage() {
     console.log("Vélos dans ProfilePage :", userBikes);
 
     const [hasError, setHasError] = useState(false);
-
-    const [firstName, setFirstName] = useState(user?.first_name || "");
-    const [lastName, setLastName] = useState(user?.last_name || "");
-    const [email, setEmail] = useState(user?.email || "");
-    const [birthDate, setBirthdate] = useState(user?.birth_date || "");
-    const [level, setLevel] = useState(user?.sport_level || "");
     const [bikes, setBikes] = useState(userBikes || []);
-    const [password, setPassword] = useState("");
     const [userHistoric, setHistoric] = useState([]);
     const [isModalOpenHistoric, setIsModalOpenHistoric] = useState(false);
     const [selectedHistoricEntry, setSelectedHistoricEntry] = useState(null);
@@ -113,9 +106,9 @@ export default function ProfilePage() {
             <View style={styles.container}>
                 <View style={styles.header}>
                     <Ionicons name="person-circle" size={100} color={colors.primary} />
-                    {firstName || lastName ? (
+                    {user.first_name || user.last_name ? (
                         <Text style={[typography.h1, { color: colors.textMain, marginTop: 10 }]}>
-                            {firstName} {lastName}
+                            {user.first_name} {user.last_name}
                         </Text>
                     ) :
                         <Text style={[typography.h1, { color: colors.textMain, marginTop: 10 }]}>
@@ -123,7 +116,7 @@ export default function ProfilePage() {
                         </Text>
                     }
                     <Text style={[typography.body, { color: colors.textSecondary }]}>
-                        {email}
+                        {user.email}
                     </Text>
                 </View>
 
