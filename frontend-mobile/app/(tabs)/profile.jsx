@@ -25,8 +25,6 @@ export default function ProfilePage() {
     const [email, setEmail] = useState(user?.email || "");
     const [birthDate, setBirthdate] = useState(user?.birth_date || "");
     const [level, setLevel] = useState(user?.sport_level || "");
-    const [homeAddress, setHomeAddress] = useState(user?.home_address || "");
-    const [workAddress, setWorkAddress] = useState(user?.work_address || "");
     const [bikes, setBikes] = useState(userBikes || []);
     const [password, setPassword] = useState("");
     const [userHistoric, setHistoric] = useState([]);
@@ -148,14 +146,14 @@ export default function ProfilePage() {
                                 <Ionicons name="home-outline" size={20} color={colors.textMain} />
                                 <Text style={{ color: colors.textMain }}>Domicile :</Text>
                             </View>
-                            <Text style={{ color: colors.textSecondary }}>{homeAddress}</Text>
+                            <Text style={{ color: colors.textSecondary }}>{user.home_address}</Text>
                         </View>
                         <View style={styles.addressRow}>
                             <View style={styles.adressTitleRow}>
                                 <FontAwesome name="suitcase" size={20} color={colors.textMain} />
                                 <Text style={{ color: colors.textMain }}>Travail :</Text>
                             </View>
-                            <Text style={{ color: colors.textSecondary }}>{workAddress}</Text>
+                            <Text style={{ color: colors.textSecondary }}>{user.work_address}</Text>
                         </View>
                     </View>
                 </View>
