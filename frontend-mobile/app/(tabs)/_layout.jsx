@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../hooks/useTheme'; // On réutilise tes belles couleurs !
+import { useTheme } from '../../hooks/useTheme';
 
 export default function TabLayout() {
   const { colors } = useTheme();

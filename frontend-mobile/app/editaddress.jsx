@@ -5,7 +5,7 @@ import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
-import { changeAddress } from '../services/apiBack.mock';
+import { changeAddress } from '../services/apiBack';
 import AdressInput from '../components/ui/AdressInput';
 
 export default function EditAddressPage() {

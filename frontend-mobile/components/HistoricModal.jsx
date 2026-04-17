@@ -114,11 +114,11 @@ const styles = StyleSheet.create({
     deleteButton: { backgroundColor: '#EF4444', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', padding: 15, borderRadius: 12, marginTop: 20, gap: 10 },
     deleteButtonText: { color: '#FFF', fontWeight: 'bold' },
     mapContainer: {
-        height: 250, // CRITIQUE : Donne une hauteur fixe
+        height: 250,
         width: '100%',
         borderRadius: 20,
-        overflow: 'hidden', // Pour que la carte respecte les bords arrondis
+        overflow: 'hidden',
         marginBottom: 20,
-        backgroundColor: '#f0f0f0', // Fond gris pendant le chargement
+        backgroundColor: '#f0f0f0',
     },
 });

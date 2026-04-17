@@ -45,15 +45,17 @@ export default function ProfilePage() {
     };
 
     useEffect(() => {
-        const loadData = async () => {
-            try {
-                const data = await getUserHistoric(token);
-                setHistoric(data);
-            } catch (error) {
-                console.error("Erreur chargement historique:", error);
-            }
-        };
-        loadData();
+        if (user){
+            const loadData = async () => {
+                try {
+                    const data = await getUserHistoric(token);
+                    setHistoric(data);
+                } catch (error) {
+                    console.error("Erreur chargement historique:", error);
+                }
+            };
+            loadData();
+        }
     }, [token]);
 
     const trajets = userHistoric.filter(e => e.route);
