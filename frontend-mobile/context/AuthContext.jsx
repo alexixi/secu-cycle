@@ -1,5 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DeviceEventEmitter } from 'react-native';
+import { useRouter } from 'expo-router';
 
 const AuthContext = createContext();
 
@@ -7,6 +9,8 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
     const [bikes, setBikes] = useState([]);
+
+    const router = useRouter();
 
     useEffect(() => {
         const loadStorageData = async () => {
@@ -23,6 +27,17 @@ export const AuthProvider = ({ children }) => {
             }
         };
         loadStorageData();
+    }, []);
+
+    useEffect(() => {
+        const subscription = DeviceEventEmitter.addListener('force-logout', async () => {
+            await logoutAuth();
+            router.replace('/login');
+        });
+
+        return () => {
+            subscription.remove();
+        };
     }, []);
 
     const updateUser = async (userData) => {
