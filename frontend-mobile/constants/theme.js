@@ -17,6 +17,9 @@ export const colors = {
 
         error: '#ff4d4d',
         errorBg: 'rgba(255, 77, 77, 0.10)',
+
+        activeRoute: '#3d46f6',
+        inactiveRoute: '#A0AEC0',
     },
     dark: {
         primary: '#646cff',
@@ -36,6 +39,9 @@ export const colors = {
 
         error: '#ff4d4d',
         errorBg: 'rgba(255, 77, 77, 0.10)',
+
+        activeRoute: '#3d46f6',
+        inactiveRoute: '#A0AEC0',
     }
 };
 

@@ -3,14 +3,6 @@ import Constants from 'expo-constants';
 
 let API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-if (!API_BASE_URL) {
-    console.warn("⚠️ EXPO_PUBLIC_API_URL n'est pas défini dans le fichier .env !");
-}
-
-if (!API_BASE_URL.startsWith('http')) {
-    console.warn("⚠️ EXPO_PUBLIC_API_URL ne commence pas par http !");
-}
-
 if (!process.env.EXPO_PUBLIC_API_PORT) {
     console.warn("⚠️ EXPO_PUBLIC_API_PORT n'est pas défini dans le fichier .env ! Utilisation de la valeur par défaut 8000");
 }
@@ -21,6 +13,10 @@ if (__DEV__ && Constants.expoConfig?.hostUri) {
     const IP_PC = Constants.expoConfig.hostUri.split(':')[0];
     API_BASE_URL = `http://${IP_PC}`
     console.log("🔌 Connecté automatiquement au backend sur :", API_BASE_URL);
+} else if (!API_BASE_URL) {
+    console.warn("⚠️ EXPO_PUBLIC_API_URL n'est pas défini dans le fichier .env !");
+} else if (!API_BASE_URL.startsWith('http')) {
+    console.warn("⚠️ EXPO_PUBLIC_API_URL ne commence pas par http !");
 }
 
 
