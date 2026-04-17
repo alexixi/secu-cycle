@@ -1,17 +1,20 @@
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState, useEffect } from 'react';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Button, DangerButton, OutlineButton } from '../../components/ui/Button';
+import HistoricModal from '../../components/HistoricModal';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
+import { getUserHistoric, deleteHistoricEntry } from '../../services/apiBack.mock';
 
 export default function ProfilePage() {
 
     const router = useRouter();
     const { colors, typography } = useTheme();
 
-    const { user, token, userBikes, logoutAuth, updateBikes } = useAuth();
+    const { user, updateUser, token, userBikes, updateBikes, historic, updateHistoric } = useAuth();
+
     console.log("Données utilisateur dans ProfilePage :", user);
     console.log("Vélos dans ProfilePage :", userBikes);
 
@@ -26,6 +29,50 @@ export default function ProfilePage() {
     const [workAddress, setWorkAddress] = useState(user?.work_address || "");
     const [bikes, setBikes] = useState(userBikes || []);
     const [password, setPassword] = useState("");
+    const [userHistoric, setHistoric] = useState([]);
+    const [isModalOpenHistoric, setIsModalOpenHistoric] = useState(false);
+    const [selectedHistoricEntry, setSelectedHistoricEntry] = useState(null);
+
+    const handleOpenHistoric = (entry) => {
+        setSelectedHistoricEntry(entry);
+        setIsModalOpenHistoric(true);
+    };
+
+    const handleDeleteHistoricEntry = (id) => {
+        deleteHistoricEntry(token, selectedHistoricEntry)
+        setIsModalOpenHistoric(false);
+    };
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const data = await getUserHistoric(token);
+                setHistoric(data);
+            } catch (error) {
+                console.error("Erreur chargement historique:", error);
+            }
+        };
+        loadData();
+    }, [token]);
+
+    const trajets = userHistoric.filter(e => e.route);
+    const totalTrajets = trajets.length;
+    const totalDist = trajets.reduce((s, e) => s + (e.route.distance_km || 0), 0);
+    const totalTime = trajets.reduce((s, e) => s + (e.route.duration_min || 0), 0);
+    const typeCount = trajets.reduce((acc, e) => {
+        const t = e.route.route_type;
+        acc[t] = (acc[t] || 0) + 1;
+        return acc;
+    }, {});
+    const typeLabels = { fast: "Rapide", safe: "Sécurisé", compromise: "Compromis" };
+    const prefType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
+
+    const statsData = [
+        { label: "Trajets effectués", value: totalTrajets, icon: "bicycle-outline", color: "#3d46f6" },
+        { label: "Distance totale", value: `${totalDist.toFixed(1)} km`, icon: "navigate-outline", color: "#10B981" },
+        { label: "Temps total", value: `${Math.floor(totalTime / 60)}h ${Math.round(totalTime % 60)}min`, icon: "time-outline", color: "#F59E0B" },
+        { label: "Type préféré", value: prefType ? typeLabels[prefType[0]] : `--`, icon: "heart-outline", color: "#EC4899" },
+    ];
 
     if (!user) {
         return (
@@ -121,6 +168,76 @@ export default function ProfilePage() {
                     </View>
                 </View>
 
+                <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
+                    <View style={styles.sectionTitleRow}>
+                        <Ionicons name="bar-chart-outline" size={24} color={colors.textMain} />
+                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes Statistiques</Text>
+                    </View>
+
+                    <View style={styles.statsGrid}>
+                        {statsData.map((stat, index) => (
+                            <View key={index} style={[styles.statCard, { borderColor: colors.borderLight }]}>
+                                <Ionicons name={stat.icon} size={20} color={stat.color} />
+                                <Text style={[styles.statValue, { color: colors.textMain }]}>
+                                    {stat.value}
+                                </Text>
+                                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                                    {stat.label}
+                                </Text>
+                            </View>
+                        ))}
+                    </View>
+                </View>
+
+                <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
+                    <View style={styles.sectionTitleRow}>
+                        <Ionicons name="time-outline" size={24} color={colors.textMain} />
+                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mon historique</Text>
+                    </View>
+
+                    <View style={styles.sectionContent}>
+                        {trajets && trajets.length > 0 ? (
+                            trajets.slice(0, 5).map((item) => (
+                                <TouchableOpacity
+                                    key={item.id}
+                                    style={[styles.historyItem, { borderBottomColor: colors.borderLight }]}
+                                    onPress={() => handleOpenHistoric(item)}
+                                >
+                                    <View style={styles.historyTextContainer}>
+                                        <Text style={[styles.historyDate, { color: colors.textSecondary }]}>
+                                            {new Date(item.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                        </Text>
+
+                                        <Text style={[styles.historyRoute, { color: colors.textMain }]} numberOfLines={1}>
+                                            {item.route.start_address.split(',')[0]}
+                                        </Text>
+                                        <Text style={[styles.historyRoute, { color: colors.textMain }]} numberOfLines={1}>
+                                            {item.route.end_address.split(',')[0]}
+                                        </Text>
+                                    </View>
+
+                                    <View style={styles.historyRight}>
+                                        <View style={{ alignItems: 'flex-end' }}>
+                                            <Text style={[styles.historyValue, { color: colors.textMain }]}>
+                                                {item.route.distance_km.toFixed(1)} km
+                                            </Text>
+                                            <Text style={[styles.historyDuration, { color: colors.textSecondary }]}>
+                                                {Math.round(item.route.duration_min)} min
+                                            </Text>
+                                        </View>
+                                        <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+                                    </View>
+                                </TouchableOpacity>
+                            ))
+                        ) : (
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="bicycle" size={40} color={colors.borderStrong} />
+                                <Text style={{ color: colors.textSecondary, marginTop: 10 }}>Aucun trajet pour le moment</Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
+
                 <View style={styles.buttonsContainer}>
                     <OutlineButton
                         title="Modifier mon profil"
@@ -137,6 +254,14 @@ export default function ProfilePage() {
                     />
                 </View>
             </View>
+
+            <HistoricModal
+                isOpen={isModalOpenHistoric}
+                onClose={() => setIsModalOpenHistoric(false)}
+                entry={selectedHistoricEntry}
+                onDelete={handleDeleteHistoricEntry}
+                colors={colors}
+            />
         </ScrollView>
     );
 }
@@ -194,4 +319,67 @@ const styles = StyleSheet.create({
         alignItems: 'left',
         gap: 3,
     },
+    statsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginTop: 5,
+    },
+    statCard: {
+        width: '48%',
+        padding: 15,
+        borderRadius: 12,
+        borderWidth: 1,
+        marginBottom: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    statValue: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginTop: 5,
+        textAlign: 'center',
+    },
+    statLabel: {
+        fontSize: 11,
+        textAlign: 'center',
+        marginTop: 2,
+    },
+    historyItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+    },
+    historyTextContainer: {
+        flex: 1,
+        paddingRight: 10,
+    },
+    historyDate: {
+        fontSize: 11,
+        textTransform: 'uppercase',
+        fontWeight: '600',
+        marginBottom: 2,
+    },
+    historyRoute: {
+        fontSize: 15,
+        fontWeight: '500',
+    },
+    historyRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    historyValue: {
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    historyDuration: {
+        fontSize: 12,
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        paddingVertical: 30,
+    }
 });

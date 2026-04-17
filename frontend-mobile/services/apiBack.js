@@ -219,3 +219,12 @@ export async function suppressBike(token, bike) {
         throw error;
     }
 }
+
+export async function deleteHistoricEntry(token, historyId) {
+    try {
+        const data = await apiFetch(`/api/history/${historyId}`, { method: "DELETE" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}

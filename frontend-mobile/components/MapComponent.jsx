@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
-    setSelectedItineraire, currentPosition, isNavigating
+    setSelectedItineraire, currentPosition, isNavigating, customPadding = { top: 250, right: 50, bottom: 50, left: 50 }
 }) {
     const cameraRef = useRef(null);
     const mapStyle = `https://api.maptiler.com/maps/basic-v2/style.json?key=${process.env.EXPO_PUBLIC_MAPTILER_KEY}`;
@@ -63,12 +63,7 @@ export default function MapComponent({
                     Math.max(...lons),
                     Math.max(...lats),
                 ],
-                padding: {
-                    top: 250,
-                    right: 50,
-                    bottom: 50,
-                    left: 50,
-                },
+                padding: customPadding,
                 duration: 1000,
             };
         }
