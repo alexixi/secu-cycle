@@ -21,6 +21,13 @@ export default function EditProfilePage() {
     const [birthDate, setBirthDate] = useState(user?.birth_date ? new Date(user.birth_date) : new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [level, setLevel] = useState(user?.sport_level || "intermediaire");
+
+    const levels = [
+        { label: 'Débutant', value: 'debutant' },
+        { label: 'Intermédiaire', value: 'intermediaire' },
+        { label: 'Expérimenté', value: 'experimente' }
+    ];
 
     const handleSave = async () => {
         setIsLoading(true);
@@ -40,7 +47,8 @@ export default function EditProfilePage() {
                 first_name: firstName,
                 last_name: lastName,
                 email: email,
-                birth_date: birthDate.toISOString().split('T')[0]
+                birth_date: birthDate.toISOString().split('T')[0],
+                sport_level: level
             });
 
             router.back();
@@ -116,6 +124,31 @@ export default function EditProfilePage() {
                     )}
                 </View>
 
+                <View style={styles.inputGroup}>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>Niveau sportif</Text>
+                    <View style={styles.levelContainer}>
+                        {levels.map((item) => (
+                            <TouchableOpacity
+                                key={item.value}
+                                style={[
+                                    styles.levelButton,
+                                    { borderColor: colors.borderStrong, backgroundColor: colors.bgSurface },
+                                    level === item.value && { backgroundColor: colors.primary, borderColor: colors.primary }
+                                ]}
+                                onPress={() => setLevel(item.value)}
+                            >
+                                <Text style={[
+                                    styles.levelButtonText,
+                                    { color: colors.textMain },
+                                    level === item.value && { color: '#FFF', fontWeight: 'bold' }
+                                ]}>
+                                    {item.label}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+
                 <View style={{ marginVertical: 20 }}>
                     <OutlineButton
                         title="Changer le mot de passe"
@@ -153,5 +186,22 @@ const styles = StyleSheet.create({
     inputGroup: { width: '100%', marginBottom: 20 },
     label: { fontSize: 14, fontWeight: 'bold', marginBottom: 8, marginLeft: 4 },
     input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, fontSize: 16 },
-    buttonWrapper: { marginTop: 30 }
+    buttonWrapper: { marginTop: 30 },
+    levelContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 10,
+        marginTop: 5,
+    },
+    levelButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    levelButtonText: {
+        fontSize: 13,
+    },
 });

@@ -39,7 +39,8 @@ export default function ProfilePage() {
     };
 
     const handleDeleteHistoricEntry = (id) => {
-        deleteHistoricEntry(token, selectedHistoricEntry)
+        deleteHistoricEntry(token, id);
+        setHistoric(userHistoric.filter(e => e.id !== id));
         setIsModalOpenHistoric(false);
     };
 
@@ -128,8 +129,16 @@ export default function ProfilePage() {
 
                 <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                     <View style={styles.sectionTitleRow}>
-                        <Ionicons name="location-outline" size={24} color={colors.textMain} />
-                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes adresses</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
+                            <Ionicons name="location-outline" size={24} color={colors.textMain} />
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes adresses</Text>
+                        </View>
+                        <TouchableOpacity
+                            onPress={() => router.push("/editaddress")}
+                            style={{ padding: 5 }}
+                        >
+                            <Ionicons name="create-outline" size={20} color={colors.textMain} />
+                        </TouchableOpacity>
                     </View>
                     <View style={styles.sectionContent}>
                         <View style={styles.addressRow}>
@@ -171,7 +180,7 @@ export default function ProfilePage() {
                 <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                     <View style={styles.sectionTitleRow}>
                         <Ionicons name="bar-chart-outline" size={24} color={colors.textMain} />
-                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes Statistiques</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes statistiques</Text>
                     </View>
 
                     <View style={styles.statsGrid}>
