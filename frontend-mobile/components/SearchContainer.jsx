@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Platform, TouchableOpacity, Text } from 'react-native';
 import AdressInput from './ui/AdressInput';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '../hooks/useTheme';
 
 export default function SearchContainer({ onStartSelect, onEndSelect, start, end, onCalculate }) {
+
+  const { colors, typography } = useTheme();
 
   const swapLocations = () => {
     if (!start || !end) return;
@@ -17,7 +20,7 @@ export default function SearchContainer({ onStartSelect, onEndSelect, start, end
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.bgMain }]}>
         <View style={styles.inputsColumn}>
 
           <View style={{ zIndex: 2, position: 'relative' }}>
@@ -25,12 +28,12 @@ export default function SearchContainer({ onStartSelect, onEndSelect, start, end
               placeholder="Départ"
               defaultValue={start?.name}
               onSelect={onStartSelect}
-              icon={<MaterialCommunityIcons name="bike" size={20} color="#3d46f6" />}
+              icon={<MaterialCommunityIcons name="bike" size={20} color={colors.primary} />}
             />
           </View>
 
           <View style={styles.separatorContainer}>
-            <View style={styles.line} />
+            <View style={[styles.line, { backgroundColor: colors.borderStrong }]} />
           </View>
 
           <View style={{ zIndex: 1, position: 'relative' }}>
@@ -38,7 +41,7 @@ export default function SearchContainer({ onStartSelect, onEndSelect, start, end
               placeholder="Destination"
               defaultValue={end?.name}
               onSelect={onEndSelect}
-              icon={<Ionicons name="location" size={20} color="#EF4444" />}
+              icon={<Ionicons name="location" size={20} color={colors.error} />}
             />
           </View>
 
@@ -47,12 +50,12 @@ export default function SearchContainer({ onStartSelect, onEndSelect, start, end
         </View>
 
         <TouchableOpacity style={styles.swapButton} onPress={swapLocations}>
-          <MaterialCommunityIcons name="swap-vertical" size={24} color="#000000" />
+          <MaterialCommunityIcons name="swap-vertical" size={24} color={colors.textMain} />
         </TouchableOpacity>
 
         {isReady ? (
           <TouchableOpacity
-            style={styles.calcButtonAbsolute}
+            style={[styles.calcButtonAbsolute, { backgroundColor: colors.primary }]}
             onPress={onCalculate}
           >
             <MaterialCommunityIcons name="directions" size={18} color="white" style={{ marginRight: 6 }} />
@@ -98,7 +101,6 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: '#F3F4F6',
     marginLeft: 35,
   },
   inputsColumn: {
@@ -118,7 +120,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 12,
     right: 12,
-    backgroundColor: '#3d46f6',
     flexDirection: 'row',
     paddingVertical: 6,
     paddingHorizontal: 12,

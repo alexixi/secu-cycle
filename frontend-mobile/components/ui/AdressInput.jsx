@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, TextInput, Text, TouchableOpacity, Keyboard } from 'react-native';
 import { searchAddressAutocomplete } from '../../services/geocodingService';
+import { useTheme } from '../../hooks/useTheme';
 
 export default function AdressInput({ placeholder, onSelect, icon, defaultValue }) {
   const [query, setQuery] = useState(defaultValue || "");
   const [suggestions, setSuggestions] = useState([]);
   const [showList, setShowList] = useState(false);
   const isTyping = React.useRef(false);
+
+  const { colors } = useTheme();
 
   useEffect(() => {
     if (defaultValue !== undefined && defaultValue !== query) {
@@ -45,12 +48,12 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue 
 
   return (
     <View style={styles.container}>
-      <View style={styles.inputRow}>
+      <View style={[styles.inputRow, { backgroundColor: colors.bgMain }]}>
         <View style={styles.iconContainer}>{icon}</View>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.bgMain, color: colors.textMain }]}
           placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textSecondary}
           value={query}
           onChangeText={(text) => {
             isTyping.current = true;
@@ -71,15 +74,15 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue 
       </View>
 
       {showList && suggestions.length > 0 && (
-        <View style={styles.suggestionList}>
+        <View style={[styles.suggestionList, { backgroundColor: colors.bgMain, borderColor: colors.borderStrong }]}>
           {suggestions.map((item, index) => (
             <TouchableOpacity
               key={item.id || index}
-              style={styles.suggestionItem}
+              style={[styles.suggestionItem, { backgroundColor: colors.bgMain, borderBottomColor: colors.borderStrong }]}
               onPress={() => handleSelect(item)}
             >
-              <Text style={styles.suggestionText} numberOfLines={1}>{item.name}</Text>
-              <Text style={styles.suggestionSubText} numberOfLines={1}>
+              <Text style={[styles.suggestionText, { color: colors.textMain }]} numberOfLines={1}>{item.name}</Text>
+              <Text style={[styles.suggestionSubText, { color: colors.textSecondary }]} numberOfLines={1}>
                 {item.postcode} {item.city}
               </Text>
             </TouchableOpacity>
@@ -98,7 +101,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: 45,
-    backgroundColor: 'white',
   },
   iconContainer: {
     width: 30,
@@ -107,7 +109,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
     paddingVertical: 8,
   },
   suggestionList: {
@@ -115,28 +116,22 @@ const styles = StyleSheet.create({
     top: 45,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
     zIndex: 1000,
     elevation: 5,
     overflow: 'visible',
   },
   suggestionItem: {
     padding: 12,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   suggestionText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1F2937',
   },
   suggestionSubText: {
     fontSize: 12,
-    color: '#6B7280',
     marginTop: 2,
   },
 });

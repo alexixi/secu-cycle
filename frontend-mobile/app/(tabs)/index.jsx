@@ -4,6 +4,7 @@ import MapComponent from '../../components/MapComponent';
 import SearchContainer from '../../components/SearchContainer';
 import { calculateItineraries } from "../../services/apiBack";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from '../../hooks/useTheme';
 import useGuidance from '../../hooks/useGuidance';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import GuidancePanel from '../../components/GuidancePanel';
@@ -20,6 +21,7 @@ export default function Index() {
     const [isNavigating, setIsNavigating] = useState(false);
 
     const { token } = useAuth();
+    const { colors, typography } = useTheme();
 
     const { currentPosition, guidanceState } = useGuidance(
         routePaths,
@@ -120,24 +122,24 @@ export default function Index() {
 
                     {isLoading && (
                         <View style={styles.loaderContainer}>
-                            <ActivityIndicator size="large" color="#3d46f6" />
+                            <ActivityIndicator size="large" color={colors.primary} />
                         </View>
                     )}
                 </View>
             )}
             {isNavigating && (
                 <TouchableOpacity
-                    style={styles.emergencyStop}
+                    style={[styles.emergencyStop, { backgroundColor: colors.error }]}
                     onPress={handleStopNavigation}
                 >
-                    <MaterialCommunityIcons name="close" size={20} color="#fff" />
-                    <Text style={styles.emergencyStopText}>Arrêter</Text>
+                    <MaterialCommunityIcons name="close" size={20} color={colors.textMain} />
+                    <Text style={[styles.emergencyStopText, { color: colors.textMain }]}>Arrêter</Text>
                 </TouchableOpacity>
             )}
 
             {selectedItineraire && !isNavigating && !isLoading && (
                 <TouchableOpacity
-                    style={styles.startButton}
+                    style={[styles.startButton, { backgroundColor: colors.primary }]}
                     onPress={handleStartNavigation}
                     activeOpacity={0.85} >
                     <MaterialCommunityIcons name="navigation" size={20} color="#fff" />
@@ -175,7 +177,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        backgroundColor: '#3d46f6',
         paddingHorizontal: 28,
         paddingVertical: 14,
         borderRadius: 30,
@@ -198,7 +199,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        backgroundColor: '#EF4444',
         paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 30,
@@ -210,7 +210,6 @@ const styles = StyleSheet.create({
         zIndex: 200,
     },
     emergencyStopText: {
-        color: '#fff',
         fontSize: 15,
         fontWeight: '700',
     },
