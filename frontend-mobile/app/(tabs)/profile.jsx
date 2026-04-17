@@ -6,14 +6,14 @@ import { Button, DangerButton, OutlineButton } from '../../components/ui/Button'
 import HistoricModal from '../../components/HistoricModal';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
-import { getUserHistoric, deleteHistoricEntry } from '../../services/apiBack.mock';
+import { getUserHistoric, deleteHistoricEntry } from '../../services/apiBack';
 
 export default function ProfilePage() {
 
     const router = useRouter();
     const { colors, typography } = useTheme();
 
-    const { user, updateUser, token, userBikes, updateBikes, historic, updateHistoric } = useAuth();
+    const { user, updateUser, token, userBikes, updateBikes, historic, updateHistoric, logoutAuth } = useAuth();
 
     console.log("Données utilisateur dans ProfilePage :", user);
     console.log("Vélos dans ProfilePage :", userBikes);

@@ -13,7 +13,7 @@ import EmailInput from "../components/ui/EmailInput";
 import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
-import { login as apiLogin, getUserProfile } from "../services/apiBack.mock";
+import { login as apiLogin, getUserProfile } from "../services/apiBack";
 
 export default function Login() {
     const [email, setEmail] = useState("");

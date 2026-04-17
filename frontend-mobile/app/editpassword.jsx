@@ -8,7 +8,7 @@ import { Button, OutlineButton } from "../components/ui/Button";
 import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
-import { changeProfileInfo } from "../services/apiBack.mock"; 
+import { changeProfileInfo } from "../services/apiBack";
 
 export default function ChangePasswordPage() {
     const router = useRouter();
@@ -19,7 +19,7 @@ export default function ChangePasswordPage() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [passwordError, setPasswordError] = useState(false);
-    
+
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -43,7 +43,7 @@ export default function ChangePasswordPage() {
     };
 
     return (
-        <KeyboardAwareScrollView 
+        <KeyboardAwareScrollView
             style={[styles.container, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContainer}
         >

@@ -1,83 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text} from 'react-native';
+import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
 import MapComponent from '../../components/MapComponent';
 import SearchContainer from '../../components/SearchContainer';
-import { calculateItineraries } from "../../services/apiBack.mock";
+import { calculateItineraries } from "../../services/apiBack";
 import { useAuth } from "../../context/AuthContext";
 import useGuidance from '../../hooks/useGuidance';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import GuidancePanel from '../../components/GuidancePanel';
 
 export default function Index() {
-  const [startPoint, setStartPoint] = useState(null);
-  const [endPoint, setEndPoint] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [routePaths, setRoutePaths] = useState(null);
-  const [selectedItineraire, setSelectedItineraire] = useState(null);
-  const [selectedBike, setSelectedBike] = useState('classic');
-  const [maxDuration, setMaxDuration] = useState(null);
-  const [errorPath, setErrorPath] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
+    const [startPoint, setStartPoint] = useState(null);
+    const [endPoint, setEndPoint] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [routePaths, setRoutePaths] = useState(null);
+    const [selectedItineraire, setSelectedItineraire] = useState(null);
+    const [selectedBike, setSelectedBike] = useState('classic');
+    const [maxDuration, setMaxDuration] = useState(null);
+    const [errorPath, setErrorPath] = useState(false);
+    const [isNavigating, setIsNavigating] = useState(false);
 
-  const { token } = useAuth();
+    const { token } = useAuth();
 
-  const { currentPosition, guidanceState } = useGuidance(
+    const { currentPosition, guidanceState } = useGuidance(
         routePaths,
         selectedItineraire,
         isNavigating,
         handleStopNavigation,
     );
 
-  useEffect(() => {
-    if (!startPoint || !endPoint) {
-      setRoutePaths(null);
-      setSelectedItineraire(null);
-      setErrorPath(false);
-      setIsNavigating(false);
-    }
-  }, [startPoint, endPoint]);
+    useEffect(() => {
+        if (!startPoint || !endPoint) {
+            setRoutePaths(null);
+            setSelectedItineraire(null);
+            setErrorPath(false);
+            setIsNavigating(false);
+        }
+    }, [startPoint, endPoint]);
 
-  useEffect(() => {
-    if (!guidanceState?.hasArrived) return;
-    
-    const timer = setTimeout(() => {
-        handleStopNavigation();
-    }, 3000); // laisse 3s pour afficher "Vous êtes arrivé"
+    useEffect(() => {
+        if (!guidanceState?.hasArrived) return;
 
-    return () => clearTimeout(timer); // cleanup si le composant unmount avant
-}, [guidanceState?.hasArrived]);
+        const timer = setTimeout(() => {
+            handleStopNavigation();
+        }, 3000); // laisse 3s pour afficher "Vous êtes arrivé"
 
-  const handleCalculate = React.useCallback(async () => {
-    if (!startPoint?.lat || !startPoint?.lon || !endPoint?.lat || !endPoint?.lon) {
-      console.log("Coordonnées manquantes pour le calcul");
-      return;
-    }
+        return () => clearTimeout(timer); // cleanup si le composant unmount avant
+    }, [guidanceState?.hasArrived]);
 
-    setIsLoading(true);
-    setRoutePaths(null);
-    setSelectedItineraire(null);
-    setErrorPath(false);
-    setIsNavigating(false);
+    const handleCalculate = React.useCallback(async () => {
+        if (!startPoint?.lat || !startPoint?.lon || !endPoint?.lat || !endPoint?.lon) {
+            console.log("Coordonnées manquantes pour le calcul");
+            return;
+        }
 
-    try {
-      const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration);
-
-      if (itineraries && itineraries.length > 0) {
+        setIsLoading(true);
+        setRoutePaths(null);
+        setSelectedItineraire(null);
         setErrorPath(false);
-        setRoutePaths(itineraries);
-        setSelectedItineraire(itineraries[0].id);
-      } else {
-        setErrorPath(true);
-      }
-    } catch (error) {
-      console.error("Erreur calcul itinéraire:", error);
-      setErrorPath(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [startPoint, endPoint, selectedBike, maxDuration, token]);
+        setIsNavigating(false);
 
-  const handleStartNavigation = () => {
+        try {
+            const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration);
+
+            if (itineraries && itineraries.length > 0) {
+                setErrorPath(false);
+                setRoutePaths(itineraries);
+                setSelectedItineraire(itineraries[0].id);
+            } else {
+                setErrorPath(true);
+            }
+        } catch (error) {
+            console.error("Erreur calcul itinéraire:", error);
+            setErrorPath(true);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [startPoint, endPoint, selectedBike, maxDuration, token]);
+
+    const handleStartNavigation = () => {
         if (!selectedItineraire) return;
         setIsNavigating(true);
     };
@@ -89,86 +89,86 @@ export default function Index() {
         setSelectedItineraire(id);
     }, []);
 
-  return (
-    <View style={styles.container}>
-      <MapComponent
-        start={startPoint}
-        end={endPoint}
-        itineraires={routePaths}
-        selectedItineraire={selectedItineraire}
-        setSelectedItineraire={handleSelectItineraire}
-        currentPosition={currentPosition}
-        isNavigating={isNavigating}
-      />
+    return (
+        <View style={styles.container}>
+            <MapComponent
+                start={startPoint}
+                end={endPoint}
+                itineraires={routePaths}
+                selectedItineraire={selectedItineraire}
+                setSelectedItineraire={handleSelectItineraire}
+                currentPosition={currentPosition}
+                isNavigating={isNavigating}
+            />
 
-      {isNavigating && (
-          <GuidancePanel
-              guidanceState={guidanceState}
-              onStop={handleStopNavigation}
-          />
-      )}
-      
-      {!isNavigating && (
-        <View style={styles.absoluteSearch}>
-          <SearchContainer
-            onStartSelect={setStartPoint}
-            onEndSelect={setEndPoint}
-            start={startPoint}
-            end={endPoint}
-            onCalculate={handleCalculate}
-          />
+            {isNavigating && (
+                <GuidancePanel
+                    guidanceState={guidanceState}
+                    onStop={handleStopNavigation}
+                />
+            )}
 
-          {isLoading && (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="large" color="#3d46f6" />
-            </View>
-          )}
+            {!isNavigating && (
+                <View style={styles.absoluteSearch}>
+                    <SearchContainer
+                        onStartSelect={setStartPoint}
+                        onEndSelect={setEndPoint}
+                        start={startPoint}
+                        end={endPoint}
+                        onCalculate={handleCalculate}
+                    />
+
+                    {isLoading && (
+                        <View style={styles.loaderContainer}>
+                            <ActivityIndicator size="large" color="#3d46f6" />
+                        </View>
+                    )}
+                </View>
+            )}
+            {isNavigating && (
+                <TouchableOpacity
+                    style={styles.emergencyStop}
+                    onPress={handleStopNavigation}
+                >
+                    <MaterialCommunityIcons name="close" size={20} color="#fff" />
+                    <Text style={styles.emergencyStopText}>Arrêter</Text>
+                </TouchableOpacity>
+            )}
+
+            {selectedItineraire && !isNavigating && !isLoading && (
+                <TouchableOpacity
+                    style={styles.startButton}
+                    onPress={handleStartNavigation}
+                    activeOpacity={0.85} >
+                    <MaterialCommunityIcons name="navigation" size={20} color="#fff" />
+                    <Text style={styles.startButtonText}>Démarrer</Text>
+                </TouchableOpacity>
+            )}
+
         </View>
-      )}
-      {isNavigating && (
-        <TouchableOpacity
-            style={styles.emergencyStop}
-            onPress={handleStopNavigation}
-        >
-            <MaterialCommunityIcons name="close" size={20} color="#fff" />
-            <Text style={styles.emergencyStopText}>Arrêter</Text>
-        </TouchableOpacity>
-      )}
-
-      {selectedItineraire && !isNavigating && !isLoading && (
-        <TouchableOpacity
-            style={styles.startButton}
-            onPress={handleStartNavigation}
-            activeOpacity={0.85} >
-            <MaterialCommunityIcons name="navigation" size={20} color="#fff" />
-            <Text style={styles.startButtonText}>Démarrer</Text>
-        </TouchableOpacity>
-      )}
-
-    </View>
-  );
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  absoluteSearch: {
-    position: 'absolute',
-    top: 60,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 15,
-    zIndex: 10,
-  },
-  loaderContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 20,
-    alignSelf: 'center',
-  },
-  startButton: {
+    container: {
+        flex: 1,
+    },
+    absoluteSearch: {
+        position: 'absolute',
+        top: 60,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 15,
+        zIndex: 10,
+    },
+    loaderContainer: {
+        marginTop: 20,
+        padding: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        borderRadius: 20,
+        alignSelf: 'center',
+    },
+    startButton: {
         position: 'absolute',
         bottom: 40,
         alignSelf: 'center',

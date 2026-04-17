@@ -17,7 +17,7 @@ import EmailInput from "../components/ui/EmailInput";
 import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
-import { login as apiLogin, getUserProfile, register } from "../services/apiBack.mock";
+import { login as apiLogin, getUserProfile, register } from "../services/apiBack";
 export default function RegisterScreen() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -48,7 +48,7 @@ export default function RegisterScreen() {
         setGeneralError(false);
 
         try {
-            await register(firstName, lastName, birthDate, email, password);
+            await register(firstName, lastName, birthDate.toISOString().split('T')[0], email, password);
 
             try {
                 const response_login = await apiLogin(email, password);

@@ -8,7 +8,11 @@ export default function MapComponent({
     setSelectedItineraire, currentPosition, isNavigating, customPadding = { top: 250, right: 50, bottom: 50, left: 50 }
 }) {
     const cameraRef = useRef(null);
-    const mapStyle = `https://api.maptiler.com/maps/basic-v2/style.json?key=${process.env.EXPO_PUBLIC_MAPTILER_KEY}`;
+    const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
+    if (!MAPTILER_KEY) {
+        console.warn("⚠️ EXPO_PUBLIC_MAPTILER_KEY n'est pas défini ! Assurez-vous de l'avoir dans votre .env");
+    }
+    const mapStyle = `https://api.maptiler.com/maps/basic-v2/style.json?key=${MAPTILER_KEY}`;
 
     const routesGeoJSON = useMemo(() => {
         if (!itineraires) return null;
@@ -20,7 +24,7 @@ export default function MapComponent({
                 properties: { id: it.id, isSelected: selectedItineraire === it.id },
                 geometry: {
                     type: 'LineString',
-                    coordinates: it.path.map(p => [parseFloat(p.lon), parseFloat(p.lat)])
+                    coordinates: it.path.map(p => [parseFloat(p[1]), parseFloat(p[0])])
                 }
             }))
         };
@@ -43,7 +47,7 @@ export default function MapComponent({
         if (selectedItineraire && itineraires) {
             const activeRoute = itineraires.find(it => it.id === selectedItineraire);
             if (activeRoute?.path) {
-                activeRoute.path.forEach(p => points.push([parseFloat(p.lon), parseFloat(p.lat)]));
+                activeRoute.path.forEach(p => points.push([parseFloat(p[1]), parseFloat(p[0])]));
             }
         }
 

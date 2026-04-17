@@ -8,7 +8,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Button, OutlineButton } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
-import { changeProfileInfo } from "../services/apiBack.mock";
+import { changeProfileInfo } from "../services/apiBack";
 
 export default function EditProfilePage() {
     const router = useRouter();

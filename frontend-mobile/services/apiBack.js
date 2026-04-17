@@ -252,15 +252,6 @@ export async function deleteAllHistoric(token) {
     }
 }
 
-export async function deleteHistoricEntry(token, historyId) {
-    try {
-        const data = await apiFetch(`/history/${historyId}`, { method: "DELETE" }, token);
-        return data;
-    } catch (error) {
-        throw error;
-    }
-}
-
 export async function deleteReport(token, reportId) {
     try {
         const data = await apiFetch(`/reports/${reportId}`, { method: "DELETE" }, token);
