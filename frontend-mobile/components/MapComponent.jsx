@@ -7,7 +7,7 @@ import { useTheme } from '../hooks/useTheme';
 
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
-    setSelectedItineraire, currentPosition, isNavigating, customPadding = { top: 250, right: 50, bottom: 50, left: 50 }
+    setSelectedItineraire, currentPosition, isNavigating, miniMap = false
 }) {
     const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
     if (!MAPTILER_KEY) {
@@ -100,7 +100,7 @@ export default function MapComponent({
                     Math.max(...lons),
                     Math.max(...lats),
                 ],
-                padding: customPadding,
+                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : { top: 250, right: 50, bottom: 50, left: 50 },
                 duration: 1000,
             };
         }
@@ -147,8 +147,12 @@ export default function MapComponent({
             <Map
                 style={styles.map}
                 mapStyle={`https://api.maptiler.com/maps/${activeStyleId}/style.json?key=${MAPTILER_KEY}`}
-                logoEnabled={false}
-                attributionEnabled={true}
+                logo={false}
+                attribution={true}
+                attributionPosition={{ bottom: 8, left: 8 }}
+                compass={!miniMap}
+                compassPosition={{ bottom: 80, right: 20 }}
+                compassHiddenFacingNorth={false}
             >
                 <Camera ref={cameraRef} {...cameraSettings} />
 

@@ -82,7 +82,7 @@ export default function HistoricModal({ isOpen, onClose, entry, onDelete, colors
                                 itineraires={itineraires}
                                 selectedItineraire="hist"
                                 isNavigating={false}
-                                customPadding={{ top: 40, right: 40, bottom: 40, left: 40 }}
+                                miniMap={true}
                             />
                         </View>
 
