@@ -101,6 +101,7 @@ export default function Index() {
                 setSelectedItineraire={handleSelectItineraire}
                 currentPosition={currentPosition}
                 isNavigating={isNavigating}
+                canReport={!!token}
                 miniMap={false}
             />
 
