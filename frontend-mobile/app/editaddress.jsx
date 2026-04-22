@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useRouter } from 'expo-router';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/Button';
+import { Button, OutlineButton } from '../components/ui/Button';
 import { changeAddress } from '../services/apiBack';
 import AdressInput from '../components/ui/AdressInput';
 
@@ -15,97 +16,116 @@ export default function EditAddressPage() {
 
     const [home, setHome] = useState(user?.home_address || "");
     const [work, setWork] = useState(user?.work_address || "");
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSave = async () => {
+        setIsLoading(true);
         try {
             await changeAddress(token, home, work);
             updateUser({ ...user, home_address: home, work_address: work });
             router.back();
         } catch (error) {
             console.error("Erreur sauvegarde adresses :", error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <KeyboardAvoidingView
+        <KeyboardAwareScrollView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={{ flex: 1, backgroundColor: colors.bgMain }}
+            style={[styles.container, { backgroundColor: colors.bgMain }]}
+            contentContainerStyle={styles.scrollContainer}
         >
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={styles.container}
-                keyboardShouldPersistTaps="handled"
-            >
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={colors.textMain} />
-                    </TouchableOpacity>
-                    <Text style={[typography.h2, { color: colors.textMain }]}>Mes adresses</Text>
-                </View>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <Ionicons name="arrow-back" size={28} color={colors.textMain} />
+            </TouchableOpacity>
 
-                <View style={[styles.card, { backgroundColor: colors.bgMain }]}>
+            <View style={styles.formContainer}>
+                <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Mes adresses</Text>
 
+                <View style={[styles.inputGroup, { zIndex: 2000 }]}>
                     <Text style={[styles.label, { color: colors.textSecondary }]}>Domicile</Text>
-                    <View style={[styles.inputWrapper, { borderColor: colors.borderLight, zIndex: 2000 }]}>
+                    <View style={[styles.inputWrapper, { backgroundColor: colors.bgSurface, borderColor: colors.borderStrong }]}>
                         <AdressInput
                             placeholder="Rechercher votre domicile..."
                             defaultValue={home}
                             onSelect={(address) => setHome(address ? address.name : "")}
-                            icon={<Ionicons name="home" size={20} color={colors.bgSecondary} />}
+                            icon={<Ionicons name="home" size={20} color={colors.textSecondary} />}
                         />
                     </View>
+                </View>
 
-                    <Text style={[styles.label, { color: colors.textSecondary, marginTop: 25 }]}>Travail</Text>
-                    <View style={[styles.inputWrapper, { borderColor: colors.borderLight, zIndex: 1000 }]}>
+                <View style={[styles.inputGroup, { zIndex: 1000 }]}>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>Travail</Text>
+                    <View style={[styles.inputWrapper, { backgroundColor: colors.bgSurface, borderColor: colors.borderStrong }]}>
                         <AdressInput
                             placeholder="Rechercher votre lieu de travail..."
                             defaultValue={work}
                             onSelect={(address) => setWork(address ? address.name : "")}
-                            icon={<FontAwesome name="suitcase" size={20} color={colors.bgSecondary} />}
+                            icon={<FontAwesome name="suitcase" size={20} color={colors.textSecondary} />}
                         />
                     </View>
-
                 </View>
 
-                <Button
-                    title="Enregistrer les modifications"
-                    onPress={handleSave}
-                    style={{ marginTop: 10 }}
-                />
-            </ScrollView>
-        </KeyboardAvoidingView>
+                <View style={styles.buttonWrapper}>
+                    <Button
+                        title="Enregistrer les modifications"
+                        iconName="checkmark-circle-outline"
+                        onPress={handleSave}
+                        isLoading={isLoading}
+                    />
+
+                    <View style={{ marginTop: 15 }}>
+                        <OutlineButton
+                            title="Annuler"
+                            onPress={() => router.back()}
+                        />
+                    </View>
+                </View>
+            </View>
+        </KeyboardAwareScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        padding: 20,
-        paddingTop: 60
+        flex: 1
     },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 30,
-        gap: 15
+    scrollContainer: {
+        flexGrow: 1,
+        padding: 20,
+        paddingBottom: 50
     },
     backButton: {
-        padding: 5
+        marginTop: 40,
+        marginBottom: 10
     },
-    card: {
-        padding: 20,
-        borderRadius: 20,
-        marginBottom: 25,
+    formContainer: {
+        width: '100%'
+    },
+    title: {
+        textAlign: 'center',
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 30
+    },
+    inputGroup: {
+        width: '100%',
+        marginBottom: 20
     },
     label: {
-        fontSize: 12,
-        marginBottom: 10,
-        fontWeight: '700',
-        letterSpacing: 0.5
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        marginLeft: 4
     },
     inputWrapper: {
         borderWidth: 1,
         borderRadius: 12,
-        backgroundColor: '#fdfdfd',
-        overflow: 'visible',
-    }
+        overflow: 'visible', // Important pour que la liste déroulante d'autocomplétion sorte du cadre
+    },
+    buttonWrapper: {
+        marginTop: 30
+    },
 });
