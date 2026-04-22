@@ -1,4 +1,8 @@
 import math 
+from datetime import datetime
+from astral import LocationInfo
+from astral.sun import sun
+import pytz
 from graph.config import SPEED_BY_INFRASTRUCTURE, DEFAULT_SPEED, BIKE_TYPE_INDEX, LEVEL_MULTIPLIER
 
 def calculer_statistiques_osm(G):
@@ -186,3 +190,54 @@ def get_route_safety_score(G, route):
     score_moyen = sum(scores) / len(scores)
     
     return round(score_moyen, 2)
+
+def extract_route_geometry(G, route_nodes):
+    """
+    Extrait les coordonnées exactes du trajet, y compris les courbes des routes.
+    Retourne une liste de [lat, lon, elevation].
+    """
+    path_coords = []
+    
+    for i in range(len(route_nodes) - 1):
+        u = route_nodes[i]
+        v = route_nodes[i + 1]
+        
+        elev_u = G.nodes[u].get("elevation", 0.0)
+        
+        edge_data = G.get_edge_data(u, v)[0]
+        
+        if 'geometry' in edge_data:
+            for lon, lat in edge_data['geometry'].coords:
+                path_coords.append([lat, lon, elev_u])
+        else:
+            path_coords.append([G.nodes[u]['y'], G.nodes[u]['x'], elev_u])
+
+    last_node = route_nodes[-1]
+    elev_last = G.nodes[last_node].get("elevation", 0.0)
+    path_coords.append([G.nodes[last_node]['y'], G.nodes[last_node]['x'], elev_last])
+    
+    return path_coords
+
+def get_bordeaux_lighting_condition(check_time=None):
+    """
+    Renvoie l'état de la luminosité et de l'éclairage public.
+    Retourne : (is_dark_outside, is_public_lighting_on)
+    """
+    tz = pytz.timezone('Europe/Paris')
+    if check_time is None:
+        check_time = datetime.now(tz)
+    elif check_time.tzinfo is None:
+        check_time = tz.localize(check_time)
+
+    bordeaux = LocationInfo("Bordeaux", "France", "Europe/Paris", 44.8378, -0.5792)
+    s = sun(bordeaux.observer, date=check_time.date(), tzinfo=bordeaux.timezone)
+    
+    is_dark_outside = check_time < s['sunrise'] or check_time > s['sunset']
+    
+    if not is_dark_outside:
+        return False, False 
+
+    if 1 <= check_time.hour < 5:
+        return True, False 
+        
+    return True, True

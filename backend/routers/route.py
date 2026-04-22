@@ -14,6 +14,41 @@ from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/routes", tags=["Routes"])
 
+@router.get("/debug/traffic")
+async def get_current_traffic(request: Request):
+    """
+    Renvoie la liste des rues actuellement embouteillées avec leur nom et coordonnées.
+    """
+    G = request.app.state.G
+    congested_segments = []
+    rues_bouchonnees_uniques = set()
+    
+    for u, v, k, data in G.edges(keys=True, data=True):
+        if data.get('traffic_jam'):
+            street_name = data.get('name', 'Rue sans nom')
+            if isinstance(street_name, list):
+                street_name = " / ".join(street_name)
+                
+            rues_bouchonnees_uniques.add(street_name)
+            
+            u_node = G.nodes[u]
+            v_node = G.nodes[v]
+            
+            congested_segments.append({
+                "street": street_name,
+                "coords": [
+                    [u_node['y'], u_node['x']], # [latitude, longitude]
+                    [v_node['y'], v_node['x']]
+                ]
+            })
+            
+    return {
+        "status": "success",
+        "total_segments_impactes": len(congested_segments),
+        "rues_principales_impactees": list(rues_bouchonnees_uniques),
+        "details": congested_segments
+    }
+
 @router.post("/", response_model=RouteRead)
 def create_route(route_data: RouteCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     new_route = Route(**route_data.dict(), user_id=current_user.id)
