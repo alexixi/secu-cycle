@@ -6,6 +6,7 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { getReports, createReport, deleteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import * as Haptics from 'expo-haptics';
 
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
@@ -135,6 +136,7 @@ export default function MapComponent({
     }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition]);
 
     const onRoutePress = (event) => {
+        Haptics.selectionAsync().catch(() => {});
         const native = event?.nativeEvent || {};
         const features = native?.features || [];
         const id = features?.[0]?.properties?.id;
@@ -184,6 +186,7 @@ export default function MapComponent({
             await deleteReport(token, reportId);
             setReports(prev => prev.filter(r => r.id !== reportId));
         } catch (error) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             console.error("Erreur suppression signalement:", error);
         }
     };
@@ -196,6 +199,7 @@ export default function MapComponent({
             setReportDescription("");
             closeReportMenu();
         } catch (error) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             console.error("Erreur signalement:", error);
         }
     };
@@ -263,13 +267,16 @@ export default function MapComponent({
                     </GeoJSONSource>
                 )}
 
-                {reports && reports.map((report) => (
+                {!miniMap && reports && reports.map((report) => (
                     <ViewAnnotation
                         key={report.id}
                         id={`report-${report.id}`}
                         lngLat={[parseFloat(report.longitude), parseFloat(report.latitude)]}
                         anchor="center"
-                        onPress={() => setActiveReport(report)}
+                        onPress={() => {
+                            setActiveReport(report);
+                            Haptics.selectionAsync();
+                        }}
                         hitbox={{ width: 44, height: 44 }}
                     >
                         <Text style={{ fontSize: 24 }}>
@@ -281,7 +288,10 @@ export default function MapComponent({
 
             <TouchableOpacity
                 style={[styles.layerButton, { backgroundColor: colors.bgSurface }]}
-                onPress={() => setLayerMenuVisible(true)}
+                onPress={() => {
+                    Haptics.selectionAsync();
+                    setLayerMenuVisible(true);
+                }}
             >
                 <MaterialCommunityIcons name="layers-outline" size={26} color={colors.textMain} />
             </TouchableOpacity>
@@ -314,6 +324,7 @@ export default function MapComponent({
                                 key={style.id}
                                 style={styles.layerOption}
                                 onPress={() => {
+                                    Haptics.selectionAsync();
                                     handleStyleChange(style.id);
                                     closeLayerMenu();
                                 }}
@@ -338,6 +349,7 @@ export default function MapComponent({
                     style={[styles.reportButton, { backgroundColor: colors.bgSurface }]}
                     onPress={() => {
                         if (!currentPosition) {
+                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
                             Alert.alert(
                                 "Position introuvable",
                                 "Veuillez patienter pendant la recherche de votre position GPS."
@@ -345,6 +357,7 @@ export default function MapComponent({
                             return;
                         }
                         setIsReportMenuVisible(true);
+                        Haptics.selectionAsync();
                     }}
                 >
                     <Ionicons name="warning-outline" size={26} color={colors.textMain} />
@@ -387,7 +400,10 @@ export default function MapComponent({
                                         { backgroundColor: colors.bgMain, borderColor: colors.borderLight },
                                         selectedReportType === type.id && { borderColor: colors.primary, backgroundColor: colors.primaryLight }
                                     ]}
-                                    onPress={() => setSelectedReportType(type.id)}
+                                    onPress={() => {
+                                        setSelectedReportType(type.id);
+                                        Haptics.selectionAsync();
+                                    }}
                                 >
                                     <Text style={styles.typeIcon}>{type.icon}</Text>
                                     <Text style={[typography.body, { fontSize: 14, color: selectedReportType === type.id ? colors.primary : colors.textMain }]}>
@@ -410,7 +426,15 @@ export default function MapComponent({
                         <TouchableOpacity
                             style={[styles.submitButton, { backgroundColor: selectedReportType ? colors.primary : colors.borderStrong }]}
                             disabled={!selectedReportType}
-                            onPress={() => handleReportSubmit({ reportType: selectedReportType, description: reportDescription, lat: currentPosition.lat, lon: currentPosition.lon })}
+                            onPress={() => {
+                                handleReportSubmit({
+                                    reportType: selectedReportType,
+                                    description: reportDescription,
+                                    lat: currentPosition.lat,
+                                    lon: currentPosition.lon
+                                });
+                                Haptics.selectionAsync();
+                            }}
                         >
                             <Text style={[typography.body, { color: '#FFF', fontWeight: 'bold' }]}>
                                 Envoyer le signalement
@@ -453,6 +477,7 @@ export default function MapComponent({
                             <TouchableOpacity
                                 style={[styles.submitButton, { backgroundColor: colors.error }]}
                                 onPress={() => {
+                                    Haptics.selectionAsync();
                                     handleDeleteReport(activeReport.id);
                                     setActiveReport(null);
                                 }}

@@ -1,9 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
+import * as Haptics from 'expo-haptics';
 
 export function Button({ title, iconName, onPress, isLoading, disabled }) {
     const { colors, typography } = useTheme();
+
+    const handlePress = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress();
+    };
 
     return (
         <TouchableOpacity
@@ -15,7 +21,7 @@ export function Button({ title, iconName, onPress, isLoading, disabled }) {
                     borderColor: disabled ? colors.borderStrong : colors.primary,
                 }
             ]}
-            onPress={!disabled && !isLoading && onPress}
+            onPress={!disabled && !isLoading && handlePress}
             disabled={disabled || isLoading}
         >
             {isLoading ? (
@@ -33,6 +39,11 @@ export function Button({ title, iconName, onPress, isLoading, disabled }) {
 export function DangerButton({ title, iconName, onPress, isLoading, disabled }) {
     const { colors, typography } = useTheme();
 
+    const handlePress = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        onPress();
+    };
+
     return (
         <TouchableOpacity
             style={[
@@ -43,7 +54,7 @@ export function DangerButton({ title, iconName, onPress, isLoading, disabled }) 
                     borderColor: disabled ? colors.borderStrong : colors.error,
                 }
             ]}
-            onPress={!disabled && !isLoading && onPress}
+            onPress={!disabled && !isLoading && handlePress}
             disabled={disabled || isLoading}
         >
             {isLoading ? (
@@ -61,6 +72,11 @@ export function DangerButton({ title, iconName, onPress, isLoading, disabled }) 
 export function OutlineButton({ title, iconName, onPress, isLoading, disabled }) {
     const { colors, typography } = useTheme();
 
+    const handlePress = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress();
+    };
+
     return (
         <TouchableOpacity
             style={[
@@ -71,7 +87,7 @@ export function OutlineButton({ title, iconName, onPress, isLoading, disabled })
                     opacity: disabled ? 0.6 : 1,
                 }
             ]}
-            onPress={onPress}
+            onPress={!disabled && !isLoading && handlePress}
             disabled={disabled || isLoading}
         >
             {isLoading ? (

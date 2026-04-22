@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './MapComponent';
+import * as Haptics from 'expo-haptics';
 
 const ROUTE_TYPE_LABELS = {
     fast: "Rapide",
@@ -122,6 +123,7 @@ export default function HistoricModal({ isOpen, onClose, entry, onDelete, colors
                     <TouchableOpacity
                         style={[styles.deleteButton, { backgroundColor: colors.error }]}
                         onPress={() => {
+                            Haptics.selectionAsync();
                             Animated.timing(slideAnim, {
                                 toValue: screenHeight,
                                 duration: 200,

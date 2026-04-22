@@ -3,6 +3,7 @@ import { StyleSheet, View, Platform, TouchableOpacity, Text } from 'react-native
 import AdressInput from './ui/AdressInput';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
+import * as Haptics from 'expo-haptics';
 
 export default function SearchContainer({ onStartSelect, onEndSelect, start, end, onCalculate }) {
 
@@ -40,7 +41,10 @@ export default function SearchContainer({ onStartSelect, onEndSelect, start, end
             <AdressInput
               placeholder="Destination"
               defaultValue={end?.name}
-              onSelect={onEndSelect}
+              onSelect={(end) => {
+                Haptics.selectionAsync();
+                onEndSelect(end);
+              }}
               icon={<Ionicons name="location" size={20} color={colors.error} />}
             />
           </View>
@@ -49,14 +53,23 @@ export default function SearchContainer({ onStartSelect, onEndSelect, start, end
 
         </View>
 
-        <TouchableOpacity style={styles.swapButton} onPress={swapLocations}>
+        <TouchableOpacity
+          style={styles.swapButton}
+          onPress={() => {
+            Haptics.selectionAsync();
+            swapLocations();
+          }}
+        >
           <MaterialCommunityIcons name="swap-vertical" size={24} color={colors.textMain} />
         </TouchableOpacity>
 
         {isReady ? (
           <TouchableOpacity
             style={[styles.calcButtonAbsolute, { backgroundColor: colors.primary }]}
-            onPress={onCalculate}
+            onPress={() => {
+              Haptics.selectionAsync();
+              onCalculate();
+            }}
           >
             <MaterialCommunityIcons name="directions" size={18} color="white" style={{ marginRight: 6 }} />
             <Text style={styles.calcButtonText}>Calculer</Text>
