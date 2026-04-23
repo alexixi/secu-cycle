@@ -45,6 +45,7 @@ export default function MapComponent({
     const [reportDescription, setReportDescription] = useState("");
     const [reports, setReports] = useState([]);
     const [activeReport, setActiveReport] = useState(null);
+    const [recenterTrigger, setRecenterTrigger] = useState(0);
 
     useEffect(() => {
         getReports().then(setReports).catch(console.error);
@@ -59,6 +60,26 @@ export default function MapComponent({
         };
         loadSavedStyle();
     }, []);
+
+    const handleRecenter = () => {
+        if (!currentPosition || !cameraRef.current) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            Alert.alert(
+                "Position introuvable",
+                "Veuillez patienter pendant la recherche de votre position GPS."
+            );
+            return;
+        }
+
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
+
+        cameraRef.current.flyTo({
+            center: [currentPosition.lon, currentPosition.lat],
+            zoom: 16,
+            duration: 1500,
+        });
+
+    };
 
     const handleStyleChange = async (id) => {
         setActiveStyleId(id);
@@ -128,15 +149,24 @@ export default function MapComponent({
                 easing: "fly",
             };
         }
-
+        if (currentPosition && !start?.lat && !end?.lat) {
+            return {
+                center: [currentPosition.lon, currentPosition.lat],
+                pitch: 0,
+                zoom: 15,
+                duration: 1000,
+                easing: "fly",
+            };
+        }
         return {
             center: [-0.5795, 44.8378],
+            pitch: 0,
             zoom: 12,
         };
-    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition]);
+    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger]);
 
     const onRoutePress = (event) => {
-        Haptics.selectionAsync().catch(() => {});
+        Haptics.selectionAsync().catch(() => { });
         const native = event?.nativeEvent || {};
         const features = native?.features || [];
         const id = features?.[0]?.properties?.id;
@@ -211,7 +241,7 @@ export default function MapComponent({
                 mapStyle={`https://api.maptiler.com/maps/${activeStyleId}/style.json?key=${MAPTILER_KEY}`}
                 logo={false}
                 attribution={true}
-                attributionPosition={{ bottom: 8, left: 8 }}
+                attributionPosition={{ bottom: 5, right: 5 }}
                 compass={!miniMap}
                 compassPosition={{ bottom: 80, right: 20 }}
                 compassHiddenFacingNorth={false}
@@ -286,8 +316,17 @@ export default function MapComponent({
                 ))}
             </Map>
 
+            {!miniMap && currentPosition && (
+                <TouchableOpacity
+                    style={[styles.mapButton, styles.recenterButton, { backgroundColor: colors.bgSurface }]}
+                    onPress={handleRecenter}
+                >
+                    <MaterialCommunityIcons name="crosshairs-gps" size={26} color={colors.textMain} />
+                </TouchableOpacity>
+            )}
+
             <TouchableOpacity
-                style={[styles.layerButton, { backgroundColor: colors.bgSurface }]}
+                style={[styles.mapButton, styles.layerButton, { backgroundColor: colors.bgSurface }]}
                 onPress={() => {
                     Haptics.selectionAsync();
                     setLayerMenuVisible(true);
@@ -346,7 +385,7 @@ export default function MapComponent({
 
             {canReport && !miniMap && currentPosition && (
                 <TouchableOpacity
-                    style={[styles.reportButton, { backgroundColor: colors.bgSurface }]}
+                    style={[styles.mapButton, styles.reportButton, { backgroundColor: colors.bgSurface }]}
                     onPress={() => {
                         if (!currentPosition) {
                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -497,10 +536,7 @@ export default function MapComponent({
 const styles = StyleSheet.create({
     container: { flex: 1 },
     map: { flex: 1 },
-    layerButton: {
-        position: 'absolute',
-        bottom: 20,
-        right: 20,
+    mapButton: {
         padding: 10,
         borderRadius: 50,
         elevation: 5,
@@ -508,6 +544,23 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    layerButton: {
+        position: 'absolute',
+        bottom: 20,
+        left: 20,
+    },
+    recenterButton: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+    },
+    reportButton: {
+        position: 'absolute',
+        bottom: 80,
+        left: 20,
     },
     modalOverlay: {
         flex: 1,
@@ -541,20 +594,6 @@ const styles = StyleSheet.create({
     },
     activeLayerText: {
         fontWeight: 'bold',
-    },
-    reportButton: {
-        position: 'absolute',
-        bottom: 20,
-        left: 20,
-        alignItems: 'center',
-        padding: 10,
-        borderRadius: 50,
-        zIndex: 99,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
     },
     reportOverlay: {
         flex: 1,

@@ -1,81 +1,157 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Platform, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, View, Platform, TouchableOpacity, Text, ScrollView } from 'react-native';
 import AdressInput from './ui/AdressInput';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import * as Haptics from 'expo-haptics';
+import { searchAddressAutocomplete } from '../services/geocodingService';
 
-export default function SearchContainer({ onStartSelect, onEndSelect, start, end, onCalculate }) {
-
+export default function SearchContainer({
+  onStartSelect, onEndSelect, start, end, onCalculate,
+  currentPosition, homeAddress, workAddress
+}) {
   const { colors, typography } = useTheme();
+  const [focusedField, setFocusedField] = useState(null); // 'start' | 'end' | null
 
   const swapLocations = () => {
     if (!start || !end) return;
-    const newStart = { ...end };
-    const newEnd = { ...start };
-    onStartSelect(newStart);
-    onEndSelect(newEnd);
+    onStartSelect({ ...end });
+    onEndSelect({ ...start });
   };
 
   const isReady = start?.lat && end?.lat;
+
+  const quickSuggestions = [
+    currentPosition && {
+      id: 'current',
+      icon: '📍',
+      label: 'Ma position',
+      point: {
+        lat: currentPosition.lat,
+        lon: currentPosition.lon,
+        name: 'Ma position actuelle',
+      }
+    },
+    homeAddress && {
+      id: 'home',
+      icon: '🏠',
+      label: 'Domicile',
+      address: homeAddress,
+    },
+    workAddress && {
+      id: 'work',
+      icon: '💼',
+      label: 'Travail',
+      address: workAddress,
+    },
+  ].filter(Boolean)
+    .filter(suggestion => {
+      const suggestionName = suggestion.point?.name || suggestion.address;
+      const isStartMatch = (start?._sourceId === suggestion.id) || (start?.name && start.name === suggestionName);
+      const isEndMatch = (end?._sourceId === suggestion.id) || (end?.name && end.name === suggestionName);
+      return !isStartMatch && !isEndMatch;
+    });
+
+  const handleQuickSuggestion = async (suggestion, field) => {
+    Haptics.selectionAsync().catch(() => { });
+    const select = field === 'start' ? onStartSelect : onEndSelect;
+
+    if (suggestion.id === 'current') {
+      select({ ...suggestion.point, _sourceId: 'current' });
+      setFocusedField(null);
+      return;
+    }
+
+    try {
+      const results = await searchAddressAutocomplete(suggestion.address);
+      if (results.length > 0) {
+        select({ ...results[0], _sourceId: suggestion.id });
+      }
+    } catch (e) {
+      console.error('Erreur géocodage suggestion rapide:', e);
+    }
+    setFocusedField(null);
+  };
+
+  const showSuggestions = focusedField && quickSuggestions.length > 0;
 
   return (
     <View style={styles.wrapper}>
       <View style={[styles.card, { backgroundColor: colors.bgMain }]}>
         <View style={styles.inputsColumn}>
-
           <View style={{ zIndex: 2, position: 'relative' }}>
             <AdressInput
               placeholder="Départ"
               defaultValue={start?.name}
               onSelect={onStartSelect}
               icon={<MaterialCommunityIcons name="bike" size={20} color={colors.primary} />}
+              onFocusChange={(focused) => focused && setFocusedField('start')}
             />
           </View>
-
           <View style={styles.separatorContainer}>
             <View style={[styles.line, { backgroundColor: colors.borderStrong }]} />
           </View>
-
           <View style={{ zIndex: 1, position: 'relative' }}>
             <AdressInput
               placeholder="Destination"
               defaultValue={end?.name}
-              onSelect={(end) => {
-                Haptics.selectionAsync();
-                onEndSelect(end);
+              onSelect={(val) => {
+                Haptics.selectionAsync().catch(() => { });
+                onEndSelect(val);
               }}
               icon={<Ionicons name="location" size={20} color={colors.error} />}
+              onFocusChange={(focused) => focused && setFocusedField('end')}
             />
           </View>
 
-          {isReady && <View style={{ height: 40 }} />}
+          {/* Chips de suggestions rapides */}
+          {showSuggestions && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.chipsRow}
+              keyboardShouldPersistTaps="always"
+            >
+              {quickSuggestions.map((suggestion) => (
+                <TouchableOpacity
+                  key={suggestion.id}
+                  style={[styles.chip, { backgroundColor: colors.bgSurface, borderColor: colors.borderLight }]}
+                  onPress={() => handleQuickSuggestion(suggestion, focusedField)}
+                >
+                  <Text style={styles.chipIcon}>{suggestion.icon}</Text>
+                  <Text style={[styles.chipLabel, { color: colors.textMain }]}>
+                    {suggestion.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
 
+          {isReady && <View style={{ height: 40 }} />}
         </View>
 
         <TouchableOpacity
           style={styles.swapButton}
           onPress={() => {
-            Haptics.selectionAsync();
+            Haptics.selectionAsync().catch(() => { });
             swapLocations();
           }}
         >
           <MaterialCommunityIcons name="swap-vertical" size={24} color={colors.textMain} />
         </TouchableOpacity>
 
-        {isReady ? (
+        {isReady && (
           <TouchableOpacity
             style={[styles.calcButtonAbsolute, { backgroundColor: colors.primary }]}
             onPress={() => {
-              Haptics.selectionAsync();
+              Haptics.selectionAsync().catch(() => { });
               onCalculate();
             }}
           >
             <MaterialCommunityIcons name="directions" size={18} color="white" style={{ marginRight: 6 }} />
             <Text style={styles.calcButtonText}>Calculer</Text>
           </TouchableOpacity>
-        ) : null}
-
+        )}
       </View>
     </View>
   );
@@ -89,7 +165,6 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
     borderRadius: 20,
     padding: 12,
     paddingBottom: 15,
@@ -101,9 +176,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.15,
         shadowRadius: 10,
       },
-      android: {
-        elevation: 8,
-      },
+      android: { elevation: 8 },
     }),
   },
   separatorContainer: {
@@ -124,11 +197,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 25,
   },
-  buttonRightContainer: {
-    alignItems: 'flex-end',
-    marginTop: 10,
-    width: '100%',
-  },
   calcButtonAbsolute: {
     position: 'absolute',
     bottom: 12,
@@ -148,5 +216,26 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 13,
-  }
+  },
+  chipsRow: {
+    marginTop: 8,
+    marginLeft: 35,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginRight: 8,
+  },
+  chipIcon: {
+    fontSize: 14,
+    marginRight: 5,
+  },
+  chipLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
 });

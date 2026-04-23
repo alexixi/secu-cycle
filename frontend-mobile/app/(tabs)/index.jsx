@@ -9,6 +9,7 @@ import useGuidance from '../../hooks/useGuidance';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import GuidancePanel from '../../components/GuidancePanel';
 import * as Haptics from 'expo-haptics';
+import * as Location from 'expo-location';
 
 export default function Index() {
     const [startPoint, setStartPoint] = useState(null);
@@ -20,9 +21,35 @@ export default function Index() {
     const [maxDuration, setMaxDuration] = useState(null);
     const [errorPath, setErrorPath] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
+    const [initialLocation, setInitialLocation] = useState(null);
 
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const { colors, typography } = useTheme();
+
+    useEffect(() => {
+        (async () => {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') return;
+
+            const lastKnown = await Location.getLastKnownPositionAsync();
+            if (lastKnown) {
+                setInitialLocation({
+                    lat: lastKnown.coords.latitude,
+                    lon: lastKnown.coords.longitude,
+                    heading: lastKnown.coords.heading || 0
+                });
+            }
+
+            const location = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.Balanced
+            });
+            setInitialLocation({
+                lat: location.coords.latitude,
+                lon: location.coords.longitude,
+                heading: location.coords.heading || 0
+            });
+        })();
+    }, []);
 
     const handleStartNavigation = () => {
         if (!selectedItineraire) {
@@ -106,8 +133,7 @@ export default function Index() {
                 itineraires={routePaths}
                 selectedItineraire={selectedItineraire}
                 setSelectedItineraire={handleSelectItineraire}
-                currentPosition={currentPosition}
-                isNavigating={isNavigating}
+                currentPosition={(isNavigating && currentPosition) ? currentPosition : initialLocation} isNavigating={isNavigating}
                 canReport={!!token}
                 miniMap={false}
             />
@@ -127,6 +153,9 @@ export default function Index() {
                         start={startPoint}
                         end={endPoint}
                         onCalculate={handleCalculate}
+                        currentPosition={initialLocation || currentPosition}
+                        homeAddress={user?.home_address}
+                        workAddress={user?.work_address}
                     />
 
                     {isLoading && (
@@ -140,7 +169,7 @@ export default function Index() {
                 <TouchableOpacity
                     style={[styles.emergencyStop, { backgroundColor: colors.error }]}
                     onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => { });
                         handleStopNavigation();
                     }}
                 >
@@ -153,7 +182,7 @@ export default function Index() {
                 <TouchableOpacity
                     style={[styles.startButton, { backgroundColor: colors.primary }]}
                     onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => { });
                         handleStartNavigation();
                     }}
                     activeOpacity={0.85} >

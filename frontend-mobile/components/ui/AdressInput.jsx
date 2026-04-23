@@ -3,7 +3,7 @@ import { StyleSheet, View, TextInput, Text, TouchableOpacity, Keyboard, Platform
 import { searchAddressAutocomplete } from '../../services/geocodingService';
 import { useTheme } from '../../hooks/useTheme';
 
-export default function AdressInput({ placeholder, onSelect, icon, defaultValue, variant = 'search', zIndex = 1000 }) {
+export default function AdressInput({ placeholder, onSelect, icon, defaultValue, variant = 'search', zIndex = 1000, onFocusChange }) {
   const [query, setQuery] = useState(defaultValue || "");
   const [suggestions, setSuggestions] = useState([]);
   const [showList, setShowList] = useState(false);
@@ -76,11 +76,13 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
             }
           }}
           onFocus={() => {
+            onFocusChange?.(true);
             if (query.length >= 3) {
               isTyping.current = true;
               setShowList(true);
             }
           }}
+          onBlur={() => onFocusChange?.(false)}
         />
       </View>
 
