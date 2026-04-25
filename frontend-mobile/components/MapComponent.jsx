@@ -7,6 +7,7 @@ import { getReports, createReport, deleteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import * as Haptics from 'expo-haptics';
+import * as Location from 'expo-location';
 
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
@@ -46,6 +47,40 @@ export default function MapComponent({
     const [reports, setReports] = useState([]);
     const [activeReport, setActiveReport] = useState(null);
     const [recenterTrigger, setRecenterTrigger] = useState(0);
+    const [compassHeading, setCompassHeading] = useState(0);
+    const lastHeadingRef = useRef(0);
+    const lastUpdateRef = useRef(0);
+    const headingKey = useMemo(() =>
+        Math.round(compassHeading / 5) * 5
+        , [compassHeading]);
+
+    useEffect(() => {
+        let subscription;
+
+        (async () => {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') return;
+
+            subscription = await Location.watchHeadingAsync((headingObj) => {
+                if (headingObj && headingObj.magHeading !== undefined) {
+                    const newHeading = Math.round(headingObj.magHeading);
+                    const diff = Math.abs(newHeading - lastHeadingRef.current);
+                    const now = Date.now();
+                    const timeElapsed = now - lastUpdateRef.current;
+                    if (timeElapsed >= 1000 && diff > 5 && diff < 355) {
+                        lastHeadingRef.current = newHeading;
+                        setCompassHeading(newHeading);
+                    }
+                }
+            });
+        })();
+
+        return () => {
+            if (subscription) {
+                subscription.remove();
+            }
+        };
+    }, []);
 
     useEffect(() => {
         getReports().then(setReports).catch(console.error);
@@ -110,7 +145,7 @@ export default function MapComponent({
             return {
                 center: [currentPosition.lon, currentPosition.lat],
                 pitch: 60,
-                bearing: currentPosition.heading ?? 0,
+                bearing: compassHeading || 0,
                 zoom: 18,
                 duration: 600,
                 easing: "fly",
@@ -250,23 +285,34 @@ export default function MapComponent({
 
                 {start?.lat && (
                     <ViewAnnotation id="start" lngLat={[parseFloat(start.lon), parseFloat(start.lat)]} anchor="center">
-                        <MaterialCommunityIcons name="circle-slice-8" size={20} color={colors.primary} />
+                        <View style={{ width: 30, height: 30, justifyContent: 'center', alignItems: 'center' }}>
+                            <MaterialCommunityIcons name="circle-slice-8" size={20} color={colors.primary} />
+                        </View>
                     </ViewAnnotation>
                 )}
 
                 {end?.lat && (
                     <ViewAnnotation id="end" lngLat={[parseFloat(end.lon), parseFloat(end.lat)]} anchor="center">
-                        <MaterialCommunityIcons name="circle-slice-8" size={20} color={colors.error} />
+                        <View style={{ width: 30, height: 30, justifyContent: 'center', alignItems: 'center' }}>
+                            <MaterialCommunityIcons name="circle-slice-8" size={20} color={colors.error} />
+                        </View>
                     </ViewAnnotation>
                 )}
 
                 {currentPosition && (
                     <ViewAnnotation
+                        key={`current-${headingKey}`}
                         id="current"
                         lngLat={[currentPosition.lon, currentPosition.lat]}
                         anchor="center"
                     >
-                        <View style={{ transform: [{ rotate: `${currentPosition.heading ?? 0}deg` }] }}>
+                        <View style={{
+                            width: 40,
+                            height: 40,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            transform: [{ rotate: `${compassHeading || 0}deg` }]
+                        }}>
                             <MaterialCommunityIcons name="navigation" size={28} color={colors.primary} />
                         </View>
                     </ViewAnnotation>
@@ -537,6 +583,8 @@ const styles = StyleSheet.create({
     container: { flex: 1 },
     map: { flex: 1 },
     mapButton: {
+        height: 50,
+        width: 50,
         padding: 10,
         borderRadius: 50,
         elevation: 5,
