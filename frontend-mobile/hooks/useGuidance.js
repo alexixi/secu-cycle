@@ -13,13 +13,13 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
             return;
         }
 
-        const activePath = itineraires?.find(it => it.id === selectedItineraire)?.path;
+        const activeRoute = itineraires?.find(it => it.id === selectedItineraire);
 
         startTracking((position) => {
             setCurrentPosition(position);
 
-            if (activePath) {
-                const state = getGuidanceState(position, activePath);
+            if (activeRoute) {
+                const state = getGuidanceState(position, activeRoute);
                 setGuidanceState(state);
             }
         }).catch((err) => {
@@ -28,7 +28,8 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
         });
 
         return () => stopTracking();
-    }, [isNavigating, selectedItineraire]);
+
+    }, [isNavigating, selectedItineraire, itineraires, onError]);
 
     return { currentPosition, guidanceState };
 }

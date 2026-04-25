@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useMemo, use } from 'react';
 import { StyleSheet, View, TouchableOpacity, Modal, Text, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer } from '@maplibre/maplibre-react-native';
+import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { getReports, createReport, deleteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
@@ -46,6 +46,7 @@ export default function MapComponent({
     const [reportDescription, setReportDescription] = useState("");
     const [reports, setReports] = useState([]);
     const [activeReport, setActiveReport] = useState(null);
+    const [mapHeight, setMapHeight] = useState(0);
     const [recenterTrigger, setRecenterTrigger] = useState(0);
     const [compassHeading, setCompassHeading] = useState(0);
     const lastHeadingRef = useRef(0);
@@ -142,13 +143,15 @@ export default function MapComponent({
 
     const cameraSettings = useMemo(() => {
         if (isNavigating && currentPosition) {
+            const screenHeight = Dimensions.get('window').height;
             return {
                 center: [currentPosition.lon, currentPosition.lat],
-                pitch: 60,
+                pitch: 45,
                 bearing: compassHeading || 0,
                 zoom: 18,
                 duration: 600,
                 easing: "fly",
+                padding: { top: mapHeight * 0.5, bottom: 0, left: 0, right: 0 }
             };
         }
 
@@ -198,7 +201,7 @@ export default function MapComponent({
             pitch: 0,
             zoom: 12,
         };
-    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger]);
+    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger, compassHeading, mapHeight]);
 
     const onRoutePress = (event) => {
         Haptics.selectionAsync().catch(() => { });
@@ -270,7 +273,7 @@ export default function MapComponent({
     };
 
     return (
-        <View style={styles.container}>
+        <View style={styles.container} onLayout={(e) => setMapHeight(e.nativeEvent.layout.height)}>
             <Map
                 style={styles.map}
                 mapStyle={`https://api.maptiler.com/maps/${activeStyleId}/style.json?key=${MAPTILER_KEY}`}
@@ -281,7 +284,12 @@ export default function MapComponent({
                 compassPosition={{ bottom: 80, right: 20 }}
                 compassHiddenFacingNorth={false}
             >
-                <Camera ref={cameraRef} {...cameraSettings} />
+                <Camera
+                    ref={cameraRef}
+                    followUserLocation={isNavigating}
+                    followUserMode={isNavigating ? "heading" : "none"}
+                    {...cameraSettings}
+                />
 
                 {start?.lat && (
                     <ViewAnnotation id="start" lngLat={[parseFloat(start.lon), parseFloat(start.lat)]} anchor="center">
@@ -299,23 +307,24 @@ export default function MapComponent({
                     </ViewAnnotation>
                 )}
 
-                {currentPosition && (
+                {isNavigating && currentPosition && (
                     <ViewAnnotation
-                        key={`current-${headingKey}`}
-                        id="current"
+                        id="nav-puck"
                         lngLat={[currentPosition.lon, currentPosition.lat]}
                         anchor="center"
+                        style={{ zIndex: 100 }}
                     >
-                        <View style={{
-                            width: 40,
-                            height: 40,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            transform: [{ rotate: `${compassHeading || 0}deg` }]
-                        }}>
-                            <MaterialCommunityIcons name="navigation" size={28} color={colors.primary} />
+                        <View style={styles.navPuck}>
+                            <MaterialCommunityIcons name="navigation" size={50} color={colors.primary} />
                         </View>
                     </ViewAnnotation>
+                )}
+
+                {!isNavigating && (
+                    <NativeUserLocation
+                        mode="heading"
+                        androidPreferredFramesPerSecond={30}
+                    />
                 )}
 
                 {routesGeoJSON && (
@@ -726,4 +735,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    navPuck: {
+        width: 60,
+        height: 60,
+        justifyContent: 'center',
+        alignItems: 'center',
+        transform: [
+            { rotateX: '55deg' }
+        ],
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 5,
+    }
 });
