@@ -23,7 +23,7 @@ export default function Index() {
     const [isNavigating, setIsNavigating] = useState(false);
     const [initialLocation, setInitialLocation] = useState(null);
 
-    const { token, user } = useAuth();
+    const { token, user, bikes } = useAuth();
     const { colors, typography } = useTheme();
 
     useEffect(() => {
@@ -156,6 +156,11 @@ export default function Index() {
                         currentPosition={initialLocation || currentPosition}
                         homeAddress={user?.home_address}
                         workAddress={user?.work_address}
+                        bikes={bikes}
+                        selectedBike={selectedBike}
+                        setSelectedBike={setSelectedBike}
+                        maxDuration={maxDuration}
+                        setMaxDuration={setMaxDuration}
                     />
 
                     {isLoading && (

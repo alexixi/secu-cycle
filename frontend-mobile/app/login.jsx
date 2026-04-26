@@ -39,7 +39,6 @@ export default function Login() {
             await updateUser(response_user);
 
             const response_bikes = await getUserBikes(response_login.access_token);
-            console.log("Response bikes:", response_bikes);
             await updateBikes(response_bikes);
 
             const response_historic = await getUserHistoric(response_login.access_token);

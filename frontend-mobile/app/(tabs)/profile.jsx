@@ -1,4 +1,4 @@
-import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
@@ -14,9 +14,6 @@ export default function ProfilePage() {
     const { colors, typography } = useTheme();
 
     const { user, updateUser, token, bikes, updateBikes, historic, updateHistoric, logoutAuth } = useAuth();
-
-    console.log("Données utilisateur dans ProfilePage :", user);
-    console.log("Vélos dans ProfilePage :", bikes);
 
     const [hasError, setHasError] = useState(false);
     const [userHistoric, setHistoric] = useState([]);
@@ -35,7 +32,7 @@ export default function ProfilePage() {
     };
 
     useEffect(() => {
-        if (user){
+        if (user) {
             const loadData = async () => {
                 try {
                     const data = await getUserHistoric(token);
@@ -154,19 +151,75 @@ export default function ProfilePage() {
                     <View style={styles.sectionTitleRow}>
                         <Ionicons name="bicycle-outline" size={24} color={colors.textMain} />
                         <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes vélos</Text>
+                        <TouchableOpacity
+                            onPress={() => router.push("/addbike")}
+                            style={{ padding: 5, marginLeft: 'auto' }}
+                        >
+                            <Ionicons name="add-outline" size={24} color={colors.textMain} />
+                        </TouchableOpacity>
                     </View>
-                    <View style={styles.sectionContent}>
-                        {bikes && bikes.length > 0 ? (
-                            bikes.map((bike, index) => (
-                                <View key={index} style={{ gap: 5 }}>
-                                    <Text style={{ color: colors.textMain, fontWeight: '500' }}>{bike.name}</Text>
-                                    <Text style={{ color: colors.textSecondary }}>{bike.type}</Text>
-                                </View>
-                            ))
-                        ) : (
-                            <Text style={{ color: colors.textSecondary }}>Vous n'avez pas encore ajouté de vélo.</Text>
-                        )}
-                    </View>
+
+                    {bikes && bikes.length > 0 ? (
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            {bikes.map((bike) => {
+                                let iconName = 'bicycle';
+                                const bikeType = bike.type?.toLowerCase();
+                                if (bikeType === "ville") iconName = bike.is_electric ? "bicycle-electric" : "bicycle";
+                                else if (bikeType === "vtt") iconName = bike.is_electric ? "bicycle-electric" : "bike";
+                                else if (bikeType === "route") iconName = "bike-fast";
+
+                                return (
+                                    <TouchableOpacity
+                                        key={bike.id}
+                                        style={[
+                                            styles.bikeCard,
+                                            { backgroundColor: colors.bgMain, borderColor: colors.borderLight }
+                                        ]}
+                                        onPress={() => console.log('ouvrir modal édition', bike)}
+                                    >
+                                        <MaterialCommunityIcons name={iconName} size={28} color={colors.primary} />
+                                        {bike.is_electric && (
+                                            <MaterialCommunityIcons
+                                                name="lightning-bolt"
+                                                size={14}
+                                                color={colors.primary}
+                                                style={{ position: 'absolute', top: 8, right: 8 }}
+                                            />
+                                        )}
+                                        <Text style={[styles.bikeName, { color: colors.textMain }]} numberOfLines={1}>
+                                            {bike.name}
+                                        </Text>
+                                        <Text style={[styles.bikeType, { color: colors.textSecondary }]}>
+                                            {bike.type}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+
+                            <TouchableOpacity
+                                style={[styles.bikeCard, styles.bikeCardAdd, { borderColor: colors.borderLight }]}
+                                onPress={() => router.push("/addbike")}
+                            >
+                                <Ionicons name="add-circle-outline" size={28} color={colors.textSecondary} />
+                                <Text style={[styles.bikeType, { color: colors.textSecondary, marginTop: 8 }]}>
+                                    Ajouter
+                                </Text>
+                            </TouchableOpacity>
+                        </ScrollView>
+                    ) : (
+                        <TouchableOpacity
+                            style={[styles.emptyBikeContainer, { borderColor: colors.borderLight }]}
+                            onPress={() => router.push("/addbike")}
+                        >
+                            <Ionicons name="bicycle-outline" size={40} color={colors.borderStrong} />
+                            <Text style={{ color: colors.textSecondary, marginTop: 10 }}>
+                                Aucun vélo enregistré
+                            </Text>
+                            <Text style={{ color: colors.primary, marginTop: 5, fontWeight: '600' }}>
+                                + Ajouter un vélo
+                            </Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
@@ -382,5 +435,37 @@ const styles = StyleSheet.create({
     emptyContainer: {
         alignItems: 'center',
         paddingVertical: 30,
-    }
+    },
+    bikeCard: {
+        width: 110,
+        padding: 15,
+        borderRadius: 16,
+        borderWidth: 1,
+        alignItems: 'center',
+        marginRight: 12,
+        position: 'relative',
+    },
+    bikeCardAdd: {
+        backgroundColor: 'transparent',
+        justifyContent: 'center',
+    },
+    bikeName: {
+        fontSize: 13,
+        fontWeight: '600',
+        marginTop: 8,
+        textAlign: 'center',
+    },
+    bikeType: {
+        fontSize: 11,
+        marginTop: 2,
+        textAlign: 'center',
+        textTransform: 'capitalize',
+    },
+    emptyBikeContainer: {
+        alignItems: 'center',
+        paddingVertical: 30,
+        borderWidth: 1,
+        borderRadius: 16,
+        borderStyle: 'dashed',
+    },
 });
