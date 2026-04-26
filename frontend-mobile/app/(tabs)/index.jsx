@@ -9,7 +9,6 @@ import useGuidance from '../../hooks/useGuidance';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import GuidancePanel from '../../components/GuidancePanel';
 import * as Haptics from 'expo-haptics';
-import * as Location from 'expo-location';
 
 export default function Index() {
     const [startPoint, setStartPoint] = useState(null);
@@ -21,35 +20,9 @@ export default function Index() {
     const [maxDuration, setMaxDuration] = useState(null);
     const [errorPath, setErrorPath] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
-    const [initialLocation, setInitialLocation] = useState(null);
 
     const { token, user, bikes } = useAuth();
     const { colors, typography } = useTheme();
-
-    useEffect(() => {
-        (async () => {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') return;
-
-            const lastKnown = await Location.getLastKnownPositionAsync();
-            if (lastKnown) {
-                setInitialLocation({
-                    lat: lastKnown.coords.latitude,
-                    lon: lastKnown.coords.longitude,
-                    heading: lastKnown.coords.heading || 0
-                });
-            }
-
-            const location = await Location.getCurrentPositionAsync({
-                accuracy: Location.Accuracy.Balanced
-            });
-            setInitialLocation({
-                lat: location.coords.latitude,
-                lon: location.coords.longitude,
-                heading: location.coords.heading || 0
-            });
-        })();
-    }, []);
 
     const handleStartNavigation = () => {
         if (!selectedItineraire) {
@@ -81,16 +54,6 @@ export default function Index() {
             setIsNavigating(false);
         }
     }, [startPoint, endPoint]);
-
-    useEffect(() => {
-        if (!guidanceState?.hasArrived) return;
-
-        const timer = setTimeout(() => {
-            handleStopNavigation();
-        }, 3000); // laisse 3s pour afficher "Vous êtes arrivé"
-
-        return () => clearTimeout(timer); // cleanup si le composant unmount avant
-    }, [guidanceState?.hasArrived]);
 
     const handleCalculate = React.useCallback(async () => {
         if (!startPoint?.lat || !startPoint?.lon || !endPoint?.lat || !endPoint?.lon) {
@@ -133,7 +96,8 @@ export default function Index() {
                 itineraires={routePaths}
                 selectedItineraire={selectedItineraire}
                 setSelectedItineraire={handleSelectItineraire}
-                currentPosition={(isNavigating && currentPosition) ? currentPosition : initialLocation} isNavigating={isNavigating}
+                currentPosition={currentPosition} 
+                isNavigating={isNavigating}
                 canReport={!!token}
                 miniMap={false}
             />

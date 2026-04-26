@@ -291,3 +291,22 @@ export async function deleteHistoricEntry(token, historyId) {
         throw error;
     }
 }
+
+export async function updateNavigation(lat, lon, stepIdx, routeNodes, maneuvers) {
+    try {
+        const data = await apiFetch("/navigation/update", {
+            method: "POST",
+            body: JSON.stringify({
+                lat,
+                lon,
+                step_idx: stepIdx,
+                route_nodes: routeNodes,
+                maneuvers,
+            }),
+        });
+        return data;
+    } catch (error) {
+        console.error("Erreur navigation update:", error);
+        return null;
+    }
+}

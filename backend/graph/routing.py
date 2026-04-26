@@ -155,6 +155,7 @@ def _compute_route_data(G, start_node, end_node, alpha, beta, bike_type, is_elec
     route_nodes = nx.astar_path(G, start_node, end_node, heuristic=dist_heuristic, weight='hybrid_weight')
     
     return {
+        "nodes": route_nodes, 
         "path": extract_route_geometry(G, route_nodes),
         "distance": calculate_route_distance(G, route_nodes),
         "duration": calculate_exact_travel_time(G, route_nodes, bike_type, is_electric, cyclist_level),

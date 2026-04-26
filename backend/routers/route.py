@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import osmnx as ox
 from typing import List
 from database import get_db
-from schemas.route import RouteCreate, RouteRead
+from schemas.route import RouteCreate, RouteRead, ComputeRoutesResponse
 from models.route import Route
 from dependencies import get_current_user, get_current_user_optional
 from graph.routing import get_optimal_routes
@@ -11,7 +11,7 @@ from models.bike import Bike
 from models.history import UserHistory
 from models.report import Report
 from datetime import datetime, timedelta
-
+from services.guidance import build_maneuvers
 router = APIRouter(prefix="/routes", tags=["Routes"])
 
 @router.get("/debug/traffic")
@@ -68,7 +68,7 @@ def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends
         raise HTTPException(status_code=404, detail="Route introuvable")
     return route
 
-@router.post("/route")
+@router.post("/route", response_model=ComputeRoutesResponse)
 async def compute_route(request: Request, data: dict, db: Session = Depends(get_db), current_user=Depends(get_current_user_optional)):
     G = request.app.state.G
     if G is None:
@@ -138,6 +138,7 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    
 
     if not result.get("success"):
         raise HTTPException(status_code=404, detail=result.get("error", "Calcul échoué."))
@@ -148,6 +149,9 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
             [p[1] for p in coords],
             [p[0] for p in coords]
         ))
+    
+    for route in result.get("routes", []):
+        route["maneuvers"] = build_maneuvers(route["nodes"], G)
 
     if current_user:
         start_address = data.get("start_address", f"{start[0]}, {start[1]}")

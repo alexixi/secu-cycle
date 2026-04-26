@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List, Any
+from schemas.navigation import ManeuverOut
 
 class RouteBase(BaseModel):
     start_address: str
@@ -23,3 +24,22 @@ class RouteRead(RouteBase):
 
     class Config:
         from_attributes = True
+        
+class ComputedRoute(BaseModel):
+    """Une route calculée par get_optimal_routes, jamais persistée telle quelle."""
+    id: str                          # "fast" | "safe" | "compromise"
+    name: str
+    path: List[Any]                  # liste de coordonnées GeoJSON
+    nodes: List[int]                 # route_nodes OSMnx, utile côté front pour /nav/update
+    distance: float
+    duration: float
+    height_difference: Any
+    score: float
+    maneuvers: List[ManeuverOut] = []
+
+class ComputeRoutesResponse(BaseModel):
+    """Réponse complète de ton endpoint POST /routes/compute."""
+    success: bool
+    routes: List[ComputedRoute] = []
+    bounded_error: Optional[str] = None
+    error: Optional[str] = None

@@ -1,6 +1,22 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+// Mapping turn_type → nom d'icône MaterialCommunityIcons
+const TURN_ICONS = {
+    depart:       'navigation',
+    continue:     'arrow-up',
+    slight_right: 'arrow-top-right',
+    turn_right:   'arrow-right',
+    sharp_right:  'arrow-right',
+    u_turn:       'u-turn-right',
+    sharp_left:   'arrow-left',
+    turn_left:    'arrow-left',
+    slight_left:  'arrow-top-left',
+    roundabout:   'rotate-right',
+    arrive:       'flag-checkered',
+};
 
 function formatDistance(meters) {
     if (meters === null || meters === undefined) return '';
@@ -13,7 +29,14 @@ export default function GuidancePanel({ guidanceState, onStop }) {
 
     if (!guidanceState) return null;
 
-    const { currentInstruction, distanceToNext, distanceToDestination, hasArrived, progress } = guidanceState;
+    const {
+        instruction,
+        nextInstruction,
+        distanceToNext,
+        hasArrived,
+        progress,
+        status,
+    } = guidanceState;
 
     if (hasArrived) {
         return (
@@ -27,38 +50,64 @@ export default function GuidancePanel({ guidanceState, onStop }) {
         );
     }
 
+    if (!instruction) return null;
+
+    const iconName = TURN_ICONS[instruction.turn_type] ?? 'arrow-up';
+    const nextIconName = nextInstruction
+        ? (TURN_ICONS[nextInstruction.turn_type] ?? 'arrow-up')
+        : null;
+
     return (
         <View style={[styles.container, { top: insets.top + 12 }]}>
-            {/* Bloc instruction principale */}
+
+            {/* Instruction principale */}
             <View style={styles.instructionRow}>
-                <View style={styles.iconContainer}>
+                <View style={[
+                    styles.iconContainer,
+                    status === 'off_route' && styles.iconContainerOffRoute
+                ]}>
                     <MaterialCommunityIcons
-                        name={currentInstruction.icon}
+                        name={status === 'off_route' ? 'map-marker-off' : iconName}
                         size={36}
                         color="#fff"
                     />
                 </View>
+
                 <View style={styles.textContainer}>
                     <Text style={styles.distanceToNext}>
-                        {formatDistance(distanceToNext)}
+                        {status === 'off_route'
+                            ? 'Recalcul...'
+                            : formatDistance(distanceToNext)
+                        }
                     </Text>
                     <Text style={styles.instructionText} numberOfLines={2}>
-                        {currentInstruction.text}
+                        {instruction.text}
                     </Text>
                 </View>
+
                 <TouchableOpacity onPress={onStop} style={styles.closeButton}>
                     <MaterialCommunityIcons name="close" size={20} color="#fff" />
                 </TouchableOpacity>
             </View>
 
-            {/* Barre de progression + distance restante */}
+            {/* Prochaine instruction */}
+            {nextInstruction && nextIconName && (
+                <View style={styles.nextRow}>
+                    <MaterialCommunityIcons name={nextIconName} size={16} color="rgba(255,255,255,0.7)" />
+                    <Text style={styles.nextText} numberOfLines={1}>
+                        Ensuite : {nextInstruction.text}
+                    </Text>
+                </View>
+            )}
+
+            {/* Barre de progression */}
             <View style={styles.footer}>
                 <View style={styles.progressBarBg}>
-                    <View style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%` }]} />
+                    <View style={[
+                        styles.progressBarFill,
+                        { width: `${Math.round((progress ?? 0) * 100)}%` }
+                    ]} />
                 </View>
-                <Text style={styles.distanceTotal}>
-                    {formatDistance(distanceToDestination)} restants
-                </Text>
             </View>
         </View>
     );
@@ -67,17 +116,17 @@ export default function GuidancePanel({ guidanceState, onStop }) {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        left: 16,
-        right: 16,
-        backgroundColor: '#3d46f6',
+        left: 12,
+        right: 12,
+        backgroundColor: '#1a1a2e',
         borderRadius: 16,
-        padding: 16,
+        padding: 12,
+        zIndex: 100,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 10,
-        zIndex: 100,
     },
     instructionRow: {
         flexDirection: 'row',
@@ -85,86 +134,85 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     iconContainer: {
-        width: 56,
-        height: 56,
+        width: 60,
+        height: 60,
         borderRadius: 12,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: '#3b5bdb',
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    iconContainerOffRoute: {
+        backgroundColor: '#e03131',
     },
     textContainer: {
         flex: 1,
     },
     distanceToNext: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 13,
-        fontWeight: '500',
-        marginBottom: 2,
-    },
-    instructionText: {
         color: '#fff',
-        fontSize: 18,
+        fontSize: 22,
         fontWeight: '700',
     },
-    closeButton: {
-        padding: 6,
-        borderRadius: 8,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+    instructionText: {
+        color: 'rgba(255,255,255,0.85)',
+        fontSize: 14,
+        marginTop: 2,
     },
-    footer: {
-        marginTop: 12,
+    closeButton: {
+        padding: 8,
+    },
+    nextRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        gap: 6,
+        marginTop: 10,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.1)',
+    },
+    nextText: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 13,
+        flex: 1,
+    },
+    footer: {
+        marginTop: 10,
     },
     progressBarBg: {
-        flex: 1,
         height: 4,
-        backgroundColor: 'rgba(255,255,255,0.3)',
+        backgroundColor: 'rgba(255,255,255,0.2)',
         borderRadius: 2,
         overflow: 'hidden',
     },
     progressBarFill: {
         height: '100%',
-        backgroundColor: '#fff',
+        backgroundColor: '#3b5bdb',
         borderRadius: 2,
-    },
-    distanceTotal: {
-        color: 'rgba(255,255,255,0.9)',
-        fontSize: 13,
-        fontWeight: '500',
     },
     arrivedContainer: {
         position: 'absolute',
-        left: 16,
-        right: 16,
-        backgroundColor: '#22c55e',
+        left: 12,
+        right: 12,
+        backgroundColor: '#2f9e44',
         borderRadius: 16,
         padding: 20,
         alignItems: 'center',
-        gap: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 10,
+        gap: 12,
         zIndex: 100,
     },
     arrivedText: {
         color: '#fff',
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: '700',
     },
     stopButton: {
-        marginTop: 8,
         backgroundColor: 'rgba(255,255,255,0.25)',
         paddingHorizontal: 24,
         paddingVertical: 10,
-        borderRadius: 10,
+        borderRadius: 20,
     },
     stopButtonText: {
         color: '#fff',
-        fontSize: 16,
         fontWeight: '600',
+        fontSize: 15,
     },
 });
