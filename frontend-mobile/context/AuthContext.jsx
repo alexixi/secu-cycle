@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
     const [bikes, setBikes] = useState([]);
-
+    const [historic, setHistoric] = useState([]);
     const router = useRouter();
 
     useEffect(() => {
@@ -18,10 +18,11 @@ export const AuthProvider = ({ children }) => {
                 const storedUser = await AsyncStorage.getItem('user');
                 const storedToken = await AsyncStorage.getItem('access_token');
                 const storedBikes = await AsyncStorage.getItem('bikes');
-
+                const storedHistoric = await AsyncStorage.getItem('historic');
                 if (storedUser) setUser(JSON.parse(storedUser));
                 if (storedToken) setToken(storedToken);
                 if (storedBikes) setBikes(JSON.parse(storedBikes));
+                if (storedHistoric) setHistoric(JSON.parse(storedHistoric));
             } catch (error) {
                 console.error("Erreur de chargement du stockage", error);
             }
@@ -46,8 +47,14 @@ export const AuthProvider = ({ children }) => {
     }
 
     const updateBikes = async (bikesData) => {
+        console.log("Updating bikes in context:", bikesData);
         setBikes(bikesData);
         await AsyncStorage.setItem('bikes', JSON.stringify(bikesData));
+    }
+
+    const updateHistoric = async (historicData) => {
+        setHistoric(historicData);
+        await AsyncStorage.setItem('historic', JSON.stringify(historicData));
     }
 
     const loginAuth = async (newToken) => {
@@ -59,13 +66,15 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setToken(null);
         setBikes([]);
+        setHistoric([]);
         await AsyncStorage.removeItem('access_token');
         await AsyncStorage.removeItem('user');
         await AsyncStorage.removeItem('bikes');
+        await AsyncStorage.removeItem('historic');
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, bikes, loginAuth, logoutAuth, updateUser, updateBikes }}>
+        <AuthContext.Provider value={{ user, token, bikes, historic, loginAuth, logoutAuth, updateUser, updateBikes, updateHistoric }}>
             {children}
         </AuthContext.Provider>
     );

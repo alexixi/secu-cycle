@@ -13,7 +13,8 @@ import EmailInput from "../components/ui/EmailInput";
 import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
-import { login as apiLogin, getUserProfile } from "../services/apiBack";
+import { login as apiLogin, getUserProfile, getUserBikes, getUserHistoric } from "../services/apiBack";
+import * as Haptics from 'expo-haptics';
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -23,7 +24,7 @@ export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
 
     const router = useRouter();
-    const { loginAuth, updateUser } = useAuth();
+    const { loginAuth, updateUser, updateBikes, updateHistoric } = useAuth();
     const { colors, typography } = useTheme();
 
     const handleSubmit = async () => {
@@ -37,8 +38,17 @@ export default function Login() {
             const response_user = await getUserProfile(response_login.access_token);
             await updateUser(response_user);
 
+            const response_bikes = await getUserBikes(response_login.access_token);
+            console.log("Response bikes:", response_bikes);
+            await updateBikes(response_bikes);
+
+            const response_historic = await getUserHistoric(response_login.access_token);
+            await updateHistoric(response_historic);
+
             router.replace("/(tabs)/profile");
         } catch (error) {
+            console.error("Login error:", error);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
             setHasError(true);
         } finally {
             setIsLoading(false);

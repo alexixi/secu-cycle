@@ -13,13 +13,12 @@ export default function ProfilePage() {
     const router = useRouter();
     const { colors, typography } = useTheme();
 
-    const { user, updateUser, token, userBikes, updateBikes, historic, updateHistoric, logoutAuth } = useAuth();
+    const { user, updateUser, token, bikes, updateBikes, historic, updateHistoric, logoutAuth } = useAuth();
 
     console.log("Données utilisateur dans ProfilePage :", user);
-    console.log("Vélos dans ProfilePage :", userBikes);
+    console.log("Vélos dans ProfilePage :", bikes);
 
     const [hasError, setHasError] = useState(false);
-    const [bikes, setBikes] = useState(userBikes || []);
     const [userHistoric, setHistoric] = useState([]);
     const [isModalOpenHistoric, setIsModalOpenHistoric] = useState(false);
     const [selectedHistoricEntry, setSelectedHistoricEntry] = useState(null);
@@ -157,7 +156,7 @@ export default function ProfilePage() {
                         <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes vélos</Text>
                     </View>
                     <View style={styles.sectionContent}>
-                        {bikes.length > 0 ? (
+                        {bikes && bikes.length > 0 ? (
                             bikes.map((bike, index) => (
                                 <View key={index} style={{ gap: 5 }}>
                                     <Text style={{ color: colors.textMain, fontWeight: '500' }}>{bike.name}</Text>
