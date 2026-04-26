@@ -96,7 +96,7 @@ export default function Index() {
                 itineraires={routePaths}
                 selectedItineraire={selectedItineraire}
                 setSelectedItineraire={handleSelectItineraire}
-                currentPosition={currentPosition} 
+                currentPosition={currentPosition}
                 isNavigating={isNavigating}
                 canReport={!!token}
                 miniMap={false}
@@ -117,7 +117,7 @@ export default function Index() {
                         start={startPoint}
                         end={endPoint}
                         onCalculate={handleCalculate}
-                        currentPosition={initialLocation || currentPosition}
+                        currentPosition={currentPosition}
                         homeAddress={user?.home_address}
                         workAddress={user?.work_address}
                         bikes={bikes}

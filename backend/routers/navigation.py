@@ -1,18 +1,17 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Request
 from schemas.navigation import (
     NavigationUpdateRequest,
     NavigationUpdateResponse,
 )
-from services.guidance import navigation_update
-from services.instruction_builder import build_instruction
-from graph_manager import get_graph
+from graph.guidance import navigation_update
+from graph.instruction_builder import build_instruction
 
 router = APIRouter(prefix="/navigation", tags=["navigation"])
 
 
 @router.post("/update", response_model=NavigationUpdateResponse)
-def update_navigation(req: NavigationUpdateRequest):
-    G = get_graph()
+def update_navigation(req: NavigationUpdateRequest, request: Request):
+    G = request.app.state.G
 
     maneuvers_as_dicts = [m.model_dump() for m in req.maneuvers]
 

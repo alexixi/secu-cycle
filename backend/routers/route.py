@@ -11,7 +11,7 @@ from models.bike import Bike
 from models.history import UserHistory
 from models.report import Report
 from datetime import datetime, timedelta
-from services.guidance import build_maneuvers
+from graph.guidance import build_maneuvers
 router = APIRouter(prefix="/routes", tags=["Routes"])
 
 @router.get("/debug/traffic")
@@ -22,18 +22,18 @@ async def get_current_traffic(request: Request):
     G = request.app.state.G
     congested_segments = []
     rues_bouchonnees_uniques = set()
-    
+
     for u, v, k, data in G.edges(keys=True, data=True):
         if data.get('traffic_jam'):
             street_name = data.get('name', 'Rue sans nom')
             if isinstance(street_name, list):
                 street_name = " / ".join(street_name)
-                
+
             rues_bouchonnees_uniques.add(street_name)
-            
+
             u_node = G.nodes[u]
             v_node = G.nodes[v]
-            
+
             congested_segments.append({
                 "street": street_name,
                 "coords": [
@@ -41,7 +41,7 @@ async def get_current_traffic(request: Request):
                     [v_node['y'], v_node['x']]
                 ]
             })
-            
+
     return {
         "status": "success",
         "total_segments_impactes": len(congested_segments),
@@ -79,11 +79,11 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
         end = (data["end_lat"], data["end_lon"])
     except KeyError as e:
         raise HTTPException(status_code=422, detail=f"Champ manquant : {e}")
-    
+
     is_electric = bool(data.get("is_electric", False))
     bike_type = data.get("bike_type", "standard") or "standard"
-    cyclist_level = "intermediaire" 
-    
+    cyclist_level = "intermediaire"
+
     if current_user:
         niveau_db = getattr(current_user, "sport_level", None)
         if niveau_db:
@@ -98,26 +98,26 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
 
     limite_temps = datetime.now() - timedelta(hours=48)
     recent_reports = db.query(Report).filter(Report.created_at >= limite_temps).all()
-    
+
     reported_edges = {}
 
     if recent_reports:
         lons = [r.longitude for r in recent_reports]
         lats = [r.latitude for r in recent_reports]
         nearest_edges = ox.distance.nearest_edges(G, X=lons, Y=lats)
-        
+
         for i, (u, v, k) in enumerate(nearest_edges):
             r_type = recent_reports[i].report_type.lower()
-            
+
             edges_to_penalize = [(u, v), (v, u)]
-            
+
             if G.has_node(u):
                 for neighbor in G.successors(u):
                     edges_to_penalize.extend([(u, neighbor), (neighbor, u)])
             if G.has_node(v):
                 for neighbor in G.successors(v):
                     edges_to_penalize.extend([(v, neighbor), (neighbor, v)])
-                    
+
             for edge in edges_to_penalize:
                 if reported_edges.get(edge) != "accident":
                     reported_edges[edge] = r_type
@@ -127,9 +127,9 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
             G,
             start_coords=start,
             end_coords=end,
-            bike_type=bike_type,          
-            is_electric=is_electric,      
-            cyclist_level=cyclist_level,  
+            bike_type=bike_type,
+            is_electric=is_electric,
+            cyclist_level=cyclist_level,
             max_time_min=data.get("temps_max_min"),
             iterations=data.get("iterations", 6),
             reported_edges=reported_edges
@@ -138,7 +138,7 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 
     if not result.get("success"):
         raise HTTPException(status_code=404, detail=result.get("error", "Calcul échoué."))
@@ -149,9 +149,16 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
             [p[1] for p in coords],
             [p[0] for p in coords]
         ))
-    
+
     for route in result.get("routes", []):
-        route["maneuvers"] = build_maneuvers(route["nodes"], G)
+            maneuvers = build_maneuvers(route["nodes"], G)
+
+            # Nettoyage : si OSMnx a renvoyé une liste pour le nom de la rue, on la fusionne en string
+            for m in maneuvers:
+                if isinstance(m.get("street_name"), list):
+                    m["street_name"] = " / ".join(m["street_name"])
+
+            route["maneuvers"] = maneuvers
 
     if current_user:
         start_address = data.get("start_address", f"{start[0]}, {start[1]}")

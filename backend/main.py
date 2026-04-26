@@ -4,9 +4,10 @@ from routers import user
 from database import Base, engine
 from routers import route
 from routers import history
-from routers import bike 
-from routers import report  
-from graph.graph_manager import create_graph, load_graph_with_ign, update_graph_with_traffic
+from routers import bike
+from routers import report
+from routers import navigation
+from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic
 from contextlib import asynccontextmanager
 #from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,7 +27,7 @@ Base.metadata.create_all(bind=engine)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Chargement du graphe...")
-    
+
     app.state.G = load_graph_with_ign("victoire_campus.graphml", "ign_bordeaux_cache.json")
 
     print("Chargement initial du trafic...")
@@ -37,25 +38,26 @@ async def lifespan(app: FastAPI):
 
     traffic_task = asyncio.create_task(periodic_traffic_update(app))
 
-    yield 
+    yield
 
     print("Shutdown serveur en cours...")
-    
+
     traffic_task.cancel()
     try:
         await traffic_task
     except asyncio.CancelledError:
         pass
-        
+
     print("Shutdown terminé")
 
-app = FastAPI(title="Bike Safe API", lifespan=lifespan)
+app = FastAPI(title="Sécu Cycle", lifespan=lifespan)
 
 app.include_router(user.router)
 app.include_router(route.router)
 app.include_router(history.router)
 app.include_router(bike.router)
 app.include_router(report.router)
+app.include_router(navigation.router)
 ##### Si le frontend n'est pas hébergé au meme endroit #########
 """ app.add_middleware(
     CORSMiddleware,
