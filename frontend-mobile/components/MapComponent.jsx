@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useMemo, use } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, Text, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, Text, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
@@ -21,15 +21,15 @@ export default function MapComponent({
 
     const { colors, typography } = useTheme();
     const { token } = useAuth();
+    const systemColorScheme = useColorScheme();
 
     const MAP_STYLES = [
-        { id: "dataviz-dark", label: "Sombre", icon: "🌙" },
-        { id: "outdoor-v2", label: "Outdoor", icon: "🚴" },
-        { id: "openstreetmap", label: "Détaillée", icon: "🗺️" },
-        { id: "streets-v2", label: "Rues", icon: "🛣️" },
-        { id: "topo-v2", label: "Relief", icon: "⛰️" },
-        { id: "hybrid", label: "Satellite", icon: "🛰️" },
-        { id: "basic-v2", label: "Basic", icon: "🍃" },
+        { id: "base", lightId: "base-v4", darkId: "base-v4-dark", label: "Basic", icon: "🍃" },
+        { id: "streets", lightId: "streets-v4", darkId: "streets-v4-dark", label: "Rues", icon: "🛣️" },
+        { id: "outdoor", lightId: "outdoor-v4", darkId: "outdoor-v4-dark", label: "Outdoor", icon: "🚴" },
+        { id: "topo", lightId: "topo-v4", darkId: "topo-v4-dark", label: "Relief", icon: "⛰️" },
+        { id: "hybrid", lightId: "hybrid-v4", darkId: "hybrid-v4", label: "Satellite", icon: "🛰️" },
+        { id: "openstreetmap", lightId: "openstreetmap", darkId: "openstreetmap", label: "Détaillée", icon: "🗺️" },
     ];
 
     const REPORT_TYPES = [
@@ -39,7 +39,8 @@ export default function MapComponent({
         { id: 'obstacle', label: 'Obstacle', icon: '🪨' },
     ];
 
-    const [activeStyleId, setActiveStyleId] = useState("basic-v2");
+    const [activeBaseStyle, setActiveBaseStyle] = useState("base");
+    const [mapThemeMode, setMapThemeMode] = useState("auto");
     const [isLayerMenuVisible, setLayerMenuVisible] = useState(false);
     const [isReportMenuVisible, setIsReportMenuVisible] = useState(false);
     const [selectedReportType, setSelectedReportType] = useState(null);
@@ -51,6 +52,14 @@ export default function MapComponent({
     const [compassHeading, setCompassHeading] = useState(0);
     const lastHeadingRef = useRef(0);
     const lastUpdateRef = useRef(0);
+
+    const mapStyleUrl = useMemo(() => {
+        const resolvedTheme = mapThemeMode === "auto" ? (systemColorScheme || "light") : mapThemeMode;
+        const styleConfig = MAP_STYLES.find(s => s.id === activeBaseStyle) || MAP_STYLES[0];
+        const styleIdToUse = resolvedTheme === "dark" ? styleConfig.darkId : styleConfig.lightId;
+        return `https://api.maptiler.com/maps/${styleIdToUse}/style.json?key=${MAPTILER_KEY}`;
+    }, [activeBaseStyle, mapThemeMode, systemColorScheme, MAPTILER_KEY]);
+
     const headingKey = useMemo(() =>
         Math.round(compassHeading / 5) * 5
         , [compassHeading]);
@@ -88,13 +97,13 @@ export default function MapComponent({
     }, []);
 
     useEffect(() => {
-        const loadSavedStyle = async () => {
-            const savedStyle = await AsyncStorage.getItem('userMapStyle');
-            if (savedStyle) {
-                setActiveStyleId(savedStyle);
-            }
+        const loadSavedPreferences = async () => {
+            const savedBase = await AsyncStorage.getItem('userMapBaseStyle');
+            const savedTheme = await AsyncStorage.getItem('userMapThemeMode');
+            if (savedBase) setActiveBaseStyle(savedBase);
+            if (savedTheme) setMapThemeMode(savedTheme);
         };
-        loadSavedStyle();
+        loadSavedPreferences();
     }, []);
 
     const handleRecenter = () => {
@@ -118,9 +127,14 @@ export default function MapComponent({
     };
 
     const handleStyleChange = async (id) => {
-        setActiveStyleId(id);
+        setActiveBaseStyle(id);
         setLayerMenuVisible(false);
-        await AsyncStorage.setItem('userMapStyle', id);
+        await AsyncStorage.setItem('userMapBaseStyle', id);
+    };
+
+    const handleThemeChange = async (theme) => {
+        setMapThemeMode(theme);
+        await AsyncStorage.setItem('userMapThemeMode', theme);
     };
 
     const routesGeoJSON = useMemo(() => {
@@ -171,6 +185,9 @@ export default function MapComponent({
                 zoom: 14,
                 duration: 1000,
                 easing: "fly",
+                pitch: 0,
+                bearing: 0,
+                padding: { top: 100, bottom: 0, left: 0, right: 0 }
             };
         } else if (points.length >= 2) {
             const lons = points.map(p => p[0]);
@@ -182,24 +199,29 @@ export default function MapComponent({
                     Math.max(...lons),
                     Math.max(...lats),
                 ],
-                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : { top: 250, right: 50, bottom: 50, left: 50 },
+                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : { top: 250, right: 80, bottom: 80, left: 80 },
                 duration: 1000,
                 easing: "fly",
+                pitch: 0,
+                bearing: 0,
             };
         }
         if (currentPosition && !start?.lat && !end?.lat) {
             return {
                 center: [currentPosition.lon, currentPosition.lat],
                 pitch: 0,
+                bearing: 0,
                 zoom: 15,
                 duration: 1000,
                 easing: "fly",
+                padding: { top: 100, bottom: 0, left: 0, right: 0 }
             };
         }
         return {
             center: [-0.5795, 44.8378],
             pitch: 0,
             zoom: 12,
+            bearing: 0,
         };
     }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger, compassHeading, mapHeight]);
 
@@ -276,7 +298,7 @@ export default function MapComponent({
         <View style={styles.container} onLayout={(e) => setMapHeight(e.nativeEvent.layout.height)}>
             <Map
                 style={styles.map}
-                mapStyle={`https://api.maptiler.com/maps/${activeStyleId}/style.json?key=${MAPTILER_KEY}`}
+                mapStyle={mapStyleUrl}
                 logo={false}
                 attribution={true}
                 attributionPosition={{ bottom: 5, right: 5 }}
@@ -394,25 +416,30 @@ export default function MapComponent({
                 visible={isLayerMenuVisible}
                 transparent={true}
                 animationType="fade"
-                onRequestClose={closeLayerMenu}
+                onRequestClose={() => closeMenu(setLayerMenuVisible)}
             >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={closeLayerMenu}
-                >
-                    <Animated.View
-                        style={[
-                            styles.modalContent,
-                            {
-                                transform: [{ translateY: slideAnim }],
-                                backgroundColor: colors.bgMain
-                            }
-                        ]}
-                    >
-                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>
-                            Fonds de carte
-                        </Text>
+                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => closeMenu(setLayerMenuVisible)}>
+                    <Animated.View style={[styles.modalContent, { transform: [{ translateY: slideAnim }], backgroundColor: colors.bgMain }]}>
+
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>Apparence</Text>
+
+                        <View style={[styles.themeSelector, { backgroundColor: colors.bgSurface }]}>
+                            <TouchableOpacity style={[styles.themeBtn, mapThemeMode === 'light' && [styles.themeBtnActive, { backgroundColor: colors.bgMain }]]} onPress={() => { Haptics.selectionAsync(); handleThemeChange('light'); }}>
+                                <Ionicons name="sunny" size={20} color={mapThemeMode === 'light' ? colors.primary : colors.textSecondary} />
+                                <Text style={[styles.themeBtnText, { color: mapThemeMode === 'light' ? colors.primary : colors.textSecondary }]}>Clair</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.themeBtn, mapThemeMode === 'auto' && [styles.themeBtnActive, { backgroundColor: colors.bgMain }]]} onPress={() => { Haptics.selectionAsync(); handleThemeChange('auto'); }}>
+                                <Ionicons name="settings-outline" size={20} color={mapThemeMode === 'auto' ? colors.primary : colors.textSecondary} />
+                                <Text style={[styles.themeBtnText, { color: mapThemeMode === 'auto' ? colors.primary : colors.textSecondary }]}>Auto</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.themeBtn, mapThemeMode === 'dark' && [styles.themeBtnActive, { backgroundColor: colors.bgMain }]]} onPress={() => { Haptics.selectionAsync(); handleThemeChange('dark'); }}>
+                                <Ionicons name="moon" size={20} color={mapThemeMode === 'dark' ? colors.primary : colors.textSecondary} />
+                                <Text style={[styles.themeBtnText, { color: mapThemeMode === 'dark' ? colors.primary : colors.textSecondary }]}>Sombre</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.divider} />
+
                         {MAP_STYLES.map((style) => (
                             <TouchableOpacity
                                 key={style.id}
@@ -420,16 +447,9 @@ export default function MapComponent({
                                 onPress={() => {
                                     Haptics.selectionAsync();
                                     handleStyleChange(style.id);
-                                    closeLayerMenu();
-                                }}
-                            >
+                                }}>
                                 <Text style={styles.layerEmoji}>{style.icon}</Text>
-                                <Text style={[
-                                    styles.layerText,
-                                    typography.body,
-                                    { color: colors.textSecondary },
-                                    activeStyleId === style.id && { color: colors.primary, fontWeight: 'bold' }
-                                ]}>
+                                <Text style={[styles.layerText, typography.body, { color: activeBaseStyle === style.id ? colors.primary : colors.textSecondary, fontWeight: activeBaseStyle === style.id ? 'bold' : 'normal' }]}>
                                     {style.label}
                                 </Text>
                             </TouchableOpacity>
@@ -635,6 +655,39 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 15,
+    },
+    themeSelector: {
+        flexDirection: 'row',
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: 20,
+        width: '100%',
+    },
+    themeBtn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        borderRadius: 8,
+        gap: 6,
+    },
+    themeBtnActive: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    themeBtnText: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    divider: {
+        height: 1,
+        width: '100%',
+        backgroundColor: 'rgba(0,0,0,0.1)',
+        marginBottom: 10,
     },
     layerOption: {
         flexDirection: 'row',
