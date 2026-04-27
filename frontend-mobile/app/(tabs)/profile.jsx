@@ -152,7 +152,7 @@ export default function ProfilePage() {
                         <Ionicons name="bicycle-outline" size={24} color={colors.textMain} />
                         <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes vélos</Text>
                         <TouchableOpacity
-                            onPress={() => router.push("/addbike")}
+                            onPress={() => router.push("/editbike")}
                             style={{ padding: 5, marginLeft: 'auto' }}
                         >
                             <Ionicons name="add-outline" size={24} color={colors.textMain} />
@@ -175,7 +175,7 @@ export default function ProfilePage() {
                                             styles.bikeCard,
                                             { backgroundColor: colors.bgMain, borderColor: colors.borderLight }
                                         ]}
-                                        onPress={() => console.log('ouvrir modal édition', bike)}
+                                        onPress={() => router.push({ pathname: "/editbike", params: { bikeId: bike.id, bikeName: bike.name, bikeType: bike.type, bikeElectric: bike.is_electric } })}
                                     >
                                         <MaterialCommunityIcons name={iconName} size={28} color={colors.primary} />
                                         {bike.is_electric && (
@@ -198,7 +198,7 @@ export default function ProfilePage() {
 
                             <TouchableOpacity
                                 style={[styles.bikeCard, styles.bikeCardAdd, { borderColor: colors.borderLight }]}
-                                onPress={() => router.push("/addbike")}
+                                onPress={() => router.push("/editbike")}
                             >
                                 <Ionicons name="add-circle-outline" size={28} color={colors.textSecondary} />
                                 <Text style={[styles.bikeType, { color: colors.textSecondary, marginTop: 8 }]}>
@@ -209,7 +209,7 @@ export default function ProfilePage() {
                     ) : (
                         <TouchableOpacity
                             style={[styles.emptyBikeContainer, { borderColor: colors.borderLight }]}
-                            onPress={() => router.push("/addbike")}
+                            onPress={() => router.push("/editbike")}
                         >
                             <Ionicons name="bicycle-outline" size={40} color={colors.borderStrong} />
                             <Text style={{ color: colors.textSecondary, marginTop: 10 }}>

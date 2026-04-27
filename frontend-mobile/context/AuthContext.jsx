@@ -47,7 +47,6 @@ export const AuthProvider = ({ children }) => {
     }
 
     const updateBikes = async (bikesData) => {
-        console.log("Updating bikes in context:", bikesData);
         setBikes(bikesData);
         await AsyncStorage.setItem('bikes', JSON.stringify(bikesData));
     }
