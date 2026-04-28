@@ -9,7 +9,8 @@ from routers import report
 from routers import navigation
 from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic
 from contextlib import asynccontextmanager
-#from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+import os
 
 
 async def periodic_traffic_update(app: FastAPI):
@@ -58,14 +59,18 @@ app.include_router(history.router)
 app.include_router(bike.router)
 app.include_router(report.router)
 app.include_router(navigation.router)
-##### Si le frontend n'est pas hébergé au meme endroit #########
-""" app.add_middleware(
+
+origins_str = os.getenv("CORS_ORIGINS", "")
+if origins_str:
+    origins = origins_str.split(",")
+else:
+    print("Warning: CORS_ORIGINS n'est pas défini dans les variables d'environnement. Utilisation des valeurs par défaut.", flush=True)
+    origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
+app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000" ### adresse du front
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-) """
-##################################################################
+)

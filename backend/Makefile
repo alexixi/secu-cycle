@@ -1,3 +1,5 @@
+API_CONTAINER = fastapi_api
+
 all: up
 
 up:
@@ -9,9 +11,19 @@ background:
 build:
 	docker compose up --build
 
+prod:
+	docker compose -f docker-compose.yml up -d --build
+
 stop:
 	docker compose down
 
-down: stop
+clean:
+	docker compose down -v
 
-.PHONY: all up build stop down background
+logs:
+	docker compose logs -f api
+
+shell:
+	docker compose exec api /bin/bash
+
+.PHONY: all up build prod stop clean logs shell

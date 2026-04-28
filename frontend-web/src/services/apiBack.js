@@ -8,7 +8,16 @@ export async function apiFetch(url, options = {}, token = null) {
         headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, { ...options, headers });
+    let API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    if (!API_BASE_URL) {
+        throw new Error("VITE_API_BASE_URL n'est pas défini dans les variables d'environnement");
+    }
+    const API_PORT = import.meta.env.VITE_API_PORT;
+    if (!API_PORT) {
+        throw new Error("VITE_API_PORT n'est pas défini dans les variables d'environnement");
+    }
+    const fullUrl = `${API_BASE_URL}:${API_PORT}${url}`
+    const response = await fetch(fullUrl, { ...options, headers });
 
     if (!response.ok) {
         const errorData = await response.text();
@@ -49,7 +58,7 @@ export async function calculateItineraries(token, start, end, bikeId, maxDuratio
             body.is_electric = parts[2] === "electric";
         }
 
-        const data = await apiFetch("/api/routes/route", {
+        const data = await apiFetch("/routes/route", {
             method: "POST",
             body: JSON.stringify(body)
         }, token);
@@ -61,7 +70,7 @@ export async function calculateItineraries(token, start, end, bikeId, maxDuratio
 
 export async function login(email, password) {
     try {
-        const data = await apiFetch("/api/users/login", {
+        const data = await apiFetch("/users/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded"
@@ -79,7 +88,7 @@ export async function login(email, password) {
 
 export async function register(firstName, lastName, birthdate, email, password) {
     try {
-        const data = await apiFetch("/api/users/", {
+        const data = await apiFetch("/users/", {
             method: "POST",
             body: JSON.stringify({
                 first_name: firstName || null,
@@ -98,7 +107,7 @@ export async function register(firstName, lastName, birthdate, email, password) 
 
 export async function getUserProfile(token) {
     try {
-        const data = await apiFetch("/api/users/me", { method: "GET" }, token);
+        const data = await apiFetch("/users/me", { method: "GET" }, token);
         return data;
     } catch (error) {
         throw error;
@@ -115,7 +124,7 @@ export async function changeProfileInfo(token, firstName, lastName, email, birth
                 sport_level: level,
             }).filter(([, v]) => v !== undefined && v !== null && v !== "")
         );
-        const data = await apiFetch("/api/users/me", {
+        const data = await apiFetch("/users/me", {
             method: "PATCH",
             body: JSON.stringify(payload),
         }, token);
@@ -126,7 +135,7 @@ export async function changeProfileInfo(token, firstName, lastName, email, birth
 }
 
 export async function changePassword(token, oldPassword, newPassword) {
-    const url = new URL("/api/users/me/password", window.location.origin);
+    const url = new URL("/users/me/password", window.location.origin);
     url.searchParams.append("old_password", oldPassword);
     url.searchParams.append("new_password", newPassword);
     try {
@@ -140,7 +149,7 @@ export async function changePassword(token, oldPassword, newPassword) {
 
 export async function changeAddress(token, homeAddress, workAddress) {
     try {
-        const data = await apiFetch("/api/users/me", {
+        const data = await apiFetch("/users/me", {
             method: "PATCH",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -159,7 +168,7 @@ export async function changeAddress(token, homeAddress, workAddress) {
 
 export async function getUserBikes(token) {
     try {
-        const data = await apiFetch("/api/bikes/", { method: "GET" }, token);
+        const data = await apiFetch("/bikes/", { method: "GET" }, token);
         return data;
     } catch (error) {
         throw error;
@@ -168,7 +177,7 @@ export async function getUserBikes(token) {
 
 export async function addBike(token, name, type, isElectric) {
     try {
-        const data = await apiFetch("/api/bikes/", {
+        const data = await apiFetch("/bikes/", {
             method: "POST",
             body: JSON.stringify({
                 name: name,
@@ -184,7 +193,7 @@ export async function addBike(token, name, type, isElectric) {
 
 export async function editBike(token, bikeId, name, type, isElectric) {
     try {
-        const data = await apiFetch(`/api/bikes/${bikeId}`, {
+        const data = await apiFetch(`/bikes/${bikeId}`, {
             method: "PATCH",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -204,7 +213,7 @@ export async function editBike(token, bikeId, name, type, isElectric) {
 
 export async function suppressBike(token, bike) {
     try {
-        const data = await apiFetch(`/api/bikes/${bike.id}`, {
+        const data = await apiFetch(`/bikes/${bike.id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -219,7 +228,7 @@ export async function suppressBike(token, bike) {
 
 export async function getUserHistoric(token) {
     try {
-        const data = await apiFetch("/api/history/", { method: "GET" }, token);
+        const data = await apiFetch("/history/", { method: "GET" }, token);
         return data;
     } catch (error) {
         throw error;
@@ -228,7 +237,7 @@ export async function getUserHistoric(token) {
 
 export async function deleteAllHistoric(token) {
     try {
-        const data = await apiFetch("/api/history/", { method: "DELETE" }, token);
+        const data = await apiFetch("/history/", { method: "DELETE" }, token);
         return data;
     } catch (error) {
         throw error;
@@ -237,7 +246,7 @@ export async function deleteAllHistoric(token) {
 
 export async function deleteHistoricEntry(token, historyId) {
     try {
-        const data = await apiFetch(`/api/history/${historyId}`, { method: "DELETE" }, token);
+        const data = await apiFetch(`/history/${historyId}`, { method: "DELETE" }, token);
         return data;
     } catch (error) {
         throw error;
@@ -246,7 +255,7 @@ export async function deleteHistoricEntry(token, historyId) {
 
 export async function deleteReport(token, reportId) {
     try {
-        const data = await apiFetch(`/api/reports/${reportId}`, { method: "DELETE" }, token);
+        const data = await apiFetch(`/reports/${reportId}`, { method: "DELETE" }, token);
         return data;
     } catch (error) {
         throw error;
@@ -255,7 +264,7 @@ export async function deleteReport(token, reportId) {
 
 export async function getReports() {
     try {
-        const data = await apiFetch("/api/reports/", { method: "GET" });
+        const data = await apiFetch("/reports/", { method: "GET" });
         return data;
     } catch (error) {
         throw error;
@@ -264,7 +273,7 @@ export async function getReports() {
 
 export async function createReport(token, reportType, description, latitude, longitude) {
     try {
-        const data = await apiFetch("/api/reports/", {
+        const data = await apiFetch("/reports/", {
             method: "POST",
             body: JSON.stringify({
                 report_type: reportType,

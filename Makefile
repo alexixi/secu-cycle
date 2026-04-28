@@ -31,4 +31,13 @@ install: web-install mobile-install
 stop:
 	$(MAKE) -C backend stop
 
-.PHONY: all api api-build api-stop api-background web web-install mobile mobile-install
+down: stop
+
+prod:
+	$(MAKE) -C backend prod
+	$(MAKE) -C frontend-web deploy
+	@echo "🚀 Déploiement du Frontend terminé avec succès !"
+
+deploy: prod
+
+.PHONY: all api api-build api-stop api-background web web-install mobile mobile-install appli install stop down prod deploy
