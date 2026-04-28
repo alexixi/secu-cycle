@@ -7,6 +7,7 @@ from routers import history
 from routers import bike
 from routers import report
 from routers import navigation
+from routers import traffic
 from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,6 +60,7 @@ app.include_router(history.router)
 app.include_router(bike.router)
 app.include_router(report.router)
 app.include_router(navigation.router)
+app.include_router(traffic.router)
 
 origins_str = os.getenv("CORS_ORIGINS", "")
 if origins_str:

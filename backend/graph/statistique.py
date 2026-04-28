@@ -1,8 +1,4 @@
-import math 
-from datetime import datetime
-from astral import LocationInfo
-from astral.sun import sun
-import pytz
+import math
 from graph.config import SPEED_BY_INFRASTRUCTURE, DEFAULT_SPEED, BIKE_TYPE_INDEX, LEVEL_MULTIPLIER
 
 def calculer_statistiques_osm(G):
@@ -14,13 +10,12 @@ def calculer_statistiques_osm(G):
     compteur_lit = 0
     compteur_maxspeed = 0
     compteur_surface = 0
-    
+
     highway_counts = {}
 
     for u, v, k, data in G.edges(keys=True, data=True):
         total_edges += 1
-        
-        # --- Stats de complétion ---
+
         if 'lit' in data and data['lit'] not in ['unknown', 'none', '']:
             compteur_lit += 1
             
@@ -191,53 +186,61 @@ def get_route_safety_score(G, route):
     
     return round(score_moyen, 2)
 
-def extract_route_geometry(G, route_nodes):
-    """
-    Extrait les coordonnées exactes du trajet, y compris les courbes des routes.
-    Retourne une liste de [lat, lon, elevation].
-    """
-    path_coords = []
-    
-    for i in range(len(route_nodes) - 1):
-        u = route_nodes[i]
-        v = route_nodes[i + 1]
-        
-        elev_u = G.nodes[u].get("elevation", 0.0)
-        
-        edge_data = G.get_edge_data(u, v)[0]
-        
-        if 'geometry' in edge_data:
-            for lon, lat in edge_data['geometry'].coords:
-                path_coords.append([lat, lon, elev_u])
-        else:
-            path_coords.append([G.nodes[u]['y'], G.nodes[u]['x'], elev_u])
+def calculate_infra_stats(G, route):
+    total_length = 0.0
+    cyclable_length = 0.0
+    low_speed_length = 0.0
+    lit_length = 0.0
 
-    last_node = route_nodes[-1]
-    elev_last = G.nodes[last_node].get("elevation", 0.0)
-    path_coords.append([G.nodes[last_node]['y'], G.nodes[last_node]['x'], elev_last])
-    
-    return path_coords
+    CYCLABLE_CYCLEWAYS = {'track', 'separate', 'lane', 'shared_busway'}
+    CYCLABLE_HIGHWAYS = {'cycleway', 'path'}
 
-def get_bordeaux_lighting_condition(check_time=None):
-    """
-    Renvoie l'état de la luminosité et de l'éclairage public.
-    Retourne : (is_dark_outside, is_public_lighting_on)
-    """
-    tz = pytz.timezone('Europe/Paris')
-    if check_time is None:
-        check_time = datetime.now(tz)
-    elif check_time.tzinfo is None:
-        check_time = tz.localize(check_time)
+    for i in range(len(route) - 1):
+        u, v = route[i], route[i + 1]
+        edge_data = G.get_edge_data(u, v)
+        if not edge_data:
+            continue
+        data = edge_data[0] if 0 in edge_data else edge_data
 
-    bordeaux = LocationInfo("Bordeaux", "France", "Europe/Paris", 44.8378, -0.5792)
-    s = sun(bordeaux.observer, date=check_time.date(), tzinfo=bordeaux.timezone)
-    
-    is_dark_outside = check_time < s['sunrise'] or check_time > s['sunset']
-    
-    if not is_dark_outside:
-        return False, False 
+        length = float(data.get('length', 0.0))
+        total_length += length
 
-    if 1 <= check_time.hour < 5:
-        return True, False 
-        
-    return True, True
+        cycleway = data.get('cycleway', 'none')
+        if isinstance(cycleway, list):
+            cycleway = cycleway[0]
+        h_type = data.get('highway', 'unclassified')
+        if isinstance(h_type, list):
+            h_type = h_type[0]
+
+        if cycleway in CYCLABLE_CYCLEWAYS or h_type in CYCLABLE_HIGHWAYS:
+            cyclable_length += length
+
+        try:
+            vmax_raw = data.get('maxspeed', None)
+            if vmax_raw and str(vmax_raw).lower() not in ('unknown', 'none', 'nan', ''):
+                if isinstance(vmax_raw, list):
+                    vmax_raw = vmax_raw[0]
+                vmax = int(str(vmax_raw).split()[0])
+            elif h_type in ('primary', 'primary_link', 'secondary', 'secondary_link'):
+                vmax = 50
+            else:
+                vmax = 30
+            if vmax <= 30:
+                low_speed_length += length
+        except (ValueError, AttributeError):
+            low_speed_length += length
+
+        lit = data.get('lit', 'unknown')
+        if lit == 'yes':
+            lit_length += length
+        elif lit not in ('no',) and h_type in ('residential', 'primary', 'secondary', 'tertiary', 'living_street', 'cycleway'):
+            lit_length += length * 0.85
+
+    if total_length == 0:
+        return {"pct_cyclable": 0.0, "pct_low_speed": 0.0, "pct_lit": 0.0}
+
+    return {
+        "pct_cyclable": round(cyclable_length / total_length * 100, 1),
+        "pct_low_speed": round(low_speed_length / total_length * 100, 1),
+        "pct_lit": round(lit_length / total_length * 100, 1),
+    }

@@ -13,5 +13,4 @@ argon2-cffi
 networkx
 osmnx
 scikit-learn
-astral
-pytz
+httpx

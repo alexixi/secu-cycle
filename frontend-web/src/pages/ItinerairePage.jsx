@@ -4,7 +4,7 @@ import Header from "../components/layout/Header";
 import MapComponent from "../modules/map/MapComponent";
 import SearchAside from "../components/layout/SearchAside";
 import ReportModal from "../components/layout/modals/ReportModal";
-import { calculateItineraries, getReports, createReport, deleteReport } from "../services/apiBack";
+import { calculateItineraries, getReports, createReport, deleteReport, saveHistory, getTraffic } from "../services/apiBack";
 import "./ItinerairePage.css";
 
 export default function ItinerairePage() {
@@ -21,12 +21,23 @@ export default function ItinerairePage() {
     const [reportCoords, setReportCoords] = useState(null);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [isReportMode, setIsReportMode] = useState(false);
+    const [trafficPoints, setTrafficPoints] = useState([]);
+    const [showTraffic, setShowTraffic] = useState(false);
 
     const { token } = useAuth();
 
     useEffect(() => {
         getReports().then(setReports).catch(console.error);
     }, []);
+
+    useEffect(() => {
+        if (!showTraffic) return;
+        getTraffic().then(setTrafficPoints).catch(console.error);
+        const interval = setInterval(() => {
+            getTraffic().then(setTrafficPoints).catch(console.error);
+        }, 120000);
+        return () => clearInterval(interval);
+    }, [showTraffic]);
 
     const handleStartSelect = (coords) => {
         setRoutePaths(null);
@@ -89,6 +100,17 @@ export default function ItinerairePage() {
         }
     };
 
+    const handleSelectItineraire = (id) => {
+        if (selectedItineraire === id) return;
+        setSelectedItineraire(id);
+        if (token && routePaths) {
+            const route = routePaths.find(r => r.id === id);
+            if (route?.db_id) {
+                saveHistory(token, route.db_id).catch(console.error);
+            }
+        }
+    };
+
     const handleSwap = () => {
         const temp = startPoint;
         setStartPoint(endPoint);
@@ -145,7 +167,7 @@ export default function ItinerairePage() {
                     onBikeSelect={setSelectedBike}
                     itineraires={routePaths}
                     selectedItineraire={selectedItineraire}
-                    setSelectedItineraire={setSelectedItineraire}
+                    setSelectedItineraire={handleSelectItineraire}
                     errorPath={errorPath}
                     isReady={startPoint && endPoint && selectedBike && !isLoading}
                     />
@@ -155,7 +177,10 @@ export default function ItinerairePage() {
                     pointilles={[startPoint && endPoint && !routePaths ? [startPoint, endPoint] : []]}
                     itineraires={routePaths}
                     selectedItineraire={selectedItineraire}
-                    setSelectedItineraire={setSelectedItineraire}
+                    setSelectedItineraire={handleSelectItineraire}
+                    trafficPoints={showTraffic ? trafficPoints : []}
+                    showTraffic={showTraffic}
+                    onToggleTraffic={() => setShowTraffic(prev => !prev)}
                     reports={reports}
                     onMapClick={handleMapClick}
                     onDeleteReport={token ? handleDeleteReport : null}
