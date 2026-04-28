@@ -3,22 +3,24 @@ import Constants from 'expo-constants';
 
 let API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-if (!process.env.EXPO_PUBLIC_API_PORT) {
-    console.warn("⚠️ EXPO_PUBLIC_API_PORT n'est pas défini dans le fichier .env ! Utilisation de la valeur par défaut 8000");
+if (__DEV__) {
+    if (Constants.expoConfig?.hostUri) {
+        const IP_PC = Constants.expoConfig.hostUri.split(':')[0];
+        API_BASE_URL = `http://${IP_PC}:8000`;
+        console.log("🔌 [DEV] Connecté automatiquement au backend sur :", API_BASE_URL);
+    } else {
+        API_BASE_URL = 'http://127.0.0.1:8000';
+        console.log("🔌 [DEV] Connecté au backend local :", API_BASE_URL);
+    }
+} else {
+    if (!API_BASE_URL) {
+        console.warn("⚠️ [PROD] EXPO_PUBLIC_API_URL n'est pas défini dans le fichier .env !");
+    } else if (!API_BASE_URL.startsWith('http')) {
+        console.warn("⚠️ [PROD] EXPO_PUBLIC_API_URL doit commencer par http:// ou https://");
+    } else {
+        console.log("🚀 [PROD] Connecté au serveur de production sur :", API_BASE_URL);
+    }
 }
-
-const API_PORT = process.env.EXPO_PUBLIC_API_PORT || 8000;
-
-if (__DEV__ && Constants.expoConfig?.hostUri) {
-    const IP_PC = Constants.expoConfig.hostUri.split(':')[0];
-    API_BASE_URL = `http://${IP_PC}`
-    console.log("🔌 Connecté automatiquement au backend sur :", API_BASE_URL);
-} else if (!API_BASE_URL) {
-    console.warn("⚠️ EXPO_PUBLIC_API_URL n'est pas défini dans le fichier .env !");
-} else if (!API_BASE_URL.startsWith('http')) {
-    console.warn("⚠️ EXPO_PUBLIC_API_URL ne commence pas par http !");
-}
-
 
 export async function apiFetch(endpoint, options = {}, token = null) {
     const headers = {
@@ -30,7 +32,7 @@ export async function apiFetch(endpoint, options = {}, token = null) {
         headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const url = `${API_BASE_URL}:${API_PORT}${endpoint}`;
+    const url = `${API_BASE_URL}${endpoint}`;
 
     const response = await fetch(url, { ...options, headers });
 

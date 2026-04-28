@@ -5,17 +5,17 @@ all: up
 up:
 	docker compose up
 
+down:
+	docker compose down
+
 background:
 	docker compose up -d
 
-build:
+build: down
 	docker compose up --build
 
-prod:
-	docker compose -f docker-compose.yml up -d --build
-
-stop:
-	docker compose down
+prod: down
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 clean:
 	docker compose down -v
@@ -26,4 +26,6 @@ logs:
 shell:
 	docker compose exec api /bin/bash
 
-.PHONY: all up build prod stop clean logs shell
+stop: down
+
+.PHONY: all up down build prod clean logs shell stop

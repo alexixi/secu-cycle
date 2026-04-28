@@ -12,11 +12,7 @@ export async function apiFetch(url, options = {}, token = null) {
     if (!API_BASE_URL) {
         throw new Error("VITE_API_BASE_URL n'est pas défini dans les variables d'environnement");
     }
-    const API_PORT = import.meta.env.VITE_API_PORT;
-    if (!API_PORT) {
-        throw new Error("VITE_API_PORT n'est pas défini dans les variables d'environnement");
-    }
-    const fullUrl = `${API_BASE_URL}:${API_PORT}${url}`
+    const fullUrl = `${API_BASE_URL}${url}`
     const response = await fetch(fullUrl, { ...options, headers });
 
     if (!response.ok) {
