@@ -1,0 +1,48 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+\usepackage{listings}
+\usepackage{amsmath}
+
+\title{Rapport de projet\\ - \\ Itinéraires cyclables alternatifs entre Victoire et Campus }
+\author{Alexis Gaudray Bouju - Matheline Chevalier - Khaoula Najmeddine \\ Angelo Tunney - Joan Dumarchat - Léia Daragnès}
+\date{Semestre 8 - 2025/2026}
+
+\graphicspath{./img/}
+
+\begin{document}
+\maketitle
+\newpage
+\renewcommand{\contentsname}{Table des matières}
+\tableofcontents
+\clearpage
+
+
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+\noindent Ce projet a été réalisé dans le cadre du Projet de Fin d'Année 2026 sous la supervision de Mohamed Mosbah, Zeineb El Khalfi et Royston Fernandes.
+
+\noindent Le travail décrit par ce rapport porte sur la création d'une application web et mobile proposant aux utilisateurs des itinéraires cyclables sécurisés, en se focalisant sur la zone géographique située entre la place de la Victoire et le Campus Universitaire de Talence/Pessac.
+\noindent
+
+\input{tex/presentation}
+\input{tex/graphes}
+\input{tex/backend}
+\input{tex/frontend}
+
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
+\noindent
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}
