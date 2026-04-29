@@ -78,57 +78,24 @@ def _apply_report_penalty(weight_base, report_type, alpha):
 def get_traffic_penalty(has_traffic, alpha):
     if not has_traffic: return 0.0
     return TRAFFIC_BASE_PENALTY + (TRAFFIC_SAFETY_FACTOR * (1.0 - alpha))
+
 def calculate_weights(G, alpha=0.5, beta=0.5, reported_edges=None):
     if reported_edges is None: reported_edges = {}
-    
-    # Étape 1 : Obtenir les notes sur 10 (ex: Voie verte = 10, Boulevard = 1)
     s_min, s_max = _compute_safety_scores(G)
+    s_range = (s_max - s_min) if s_max != s_min else 1
 
     for u, v, k, data in G.edges(keys=True, data=True):
         length = float(data.get('length', 1.0))
-        score_secu = data.get('safety_score', s_max)
+        norm_risk = (s_max - data['safety_score']) / s_range 
         
-        # ---------------------------------------------------------
-        # 1. CALCUL DES COMPOSANTS DU COÛT
-        # ---------------------------------------------------------
+        facteur_risque = (norm_risk ** 2) * DEFAULT_SAFETY_PENALTY * (1.0 - alpha)
+        facteur_effort = _compute_effort_factor(G, u, v, data, beta)
         
-        # LE DANGER : On inverse la note. 
-        # Une rue notée 10/10 a un niveau de danger de 1.
-        # Une rue notée 1/10 a un niveau de danger de 10.
-        niveau_danger = (11.0 - score_secu) 
-        cout_danger = length * niveau_danger
+        weight_base = length * (1.0 + facteur_risque + facteur_effort)
+        weight_base += get_traffic_penalty(data.get('traffic_jam', False), alpha)
         
-        # LA DISTANCE : Le coût de base brut
-        cout_distance = length
-        
-        # L'EFFORT : Plus la pente est forte, plus ça coûte cher
-        grade_pct = 0.0
-        try:
-            if 'grade' in data: 
-                grade_pct = float(data['grade']) * 100
-            else:
-                elev_diff = G.nodes[v].get('elevation', 0) - G.nodes[u].get('elevation', 0)
-                grade_pct = (elev_diff / length) * 100 if length > 0 else 0.0
-        except: pass
-        
-        niveau_effort = max(0.0, grade_pct)
-        cout_effort = length * niveau_effort
-        
-        weight_base = (alpha * cout_distance) + ((1.0 - alpha) * cout_danger) + (beta * cout_effort)
-        has_traffic = data.get('traffic_jam', False)
-        if has_traffic:
-            weight_base += (50.0 * (1.0 - alpha)) 
-
         report_type = reported_edges.get((u, v)) or reported_edges.get((v, u))
-        if report_type:
-            if report_type == 'accident':
-                weight_base += 5000.0 # Coût énorme, on bloque la rue
-            else:
-                weight_base += 500.0  # Coût moyen pour des travaux/danger
-
-        # On sauvegarde le coût abstrait final
-        data['hybrid_weight'] = weight_base
-
+        data['hybrid_weight'] = _apply_report_penalty(weight_base, report_type, alpha)
     return G
 
 def _compute_route_data(G, start_node, end_node, alpha, beta, bike_type, is_electric, cyclist_level, reported_edges):
