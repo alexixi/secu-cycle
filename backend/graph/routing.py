@@ -1,12 +1,7 @@
 import osmnx as ox
 import networkx as nx
-<<<<<<< HEAD
-from graph.config import SCORE_HIGHWAY, SCORE_CYCLEWAY, ELEVATION_WEIGHT_BY_LEVEL, REPORT_PENALTIES
-from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, calculate_infra_stats
-=======
 from graph.config import *
 from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_bordeaux_lighting_condition, calculate_infra_stats
->>>>>>> branche-joan
 from graph.elevation import verifier_altitudes
 
 def _get_speed_score(vmax):
