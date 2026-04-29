@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from schemas.navigation import ManeuverOut
 
 class RouteBase(BaseModel):
@@ -36,6 +36,7 @@ class ComputedRoute(BaseModel):
     height_difference: Any
     score: float
     maneuvers: List[ManeuverOut] = []
+    infra_stats: Optional[Dict[str, Any]] = None
 
 class ComputeRoutesResponse(BaseModel):
     """Réponse complète de ton endpoint POST /routes/compute."""
