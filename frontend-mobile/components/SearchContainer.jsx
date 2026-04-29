@@ -189,7 +189,6 @@ export default function SearchContainer({
                 ))}
               </ScrollView>
             )}
-            {(isReady || isExpanded) && <View style={{ height: 40 }} />}
           </View>
 
           <TouchableOpacity
@@ -303,10 +302,11 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   card: {
+    position: 'relative',
     borderRadius: 20,
     padding: 12,
     paddingBottom: 15,
-    position: 'relative',
+    minHeight: 160,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -340,7 +340,8 @@ const styles = StyleSheet.create({
   },
   chipsRow: {
     marginTop: 8,
-    marginLeft: 35,
+    marginLeft: 40,
+    marginBottom: 10,
   },
   chip: {
     flexDirection: 'row',
@@ -413,9 +414,10 @@ const styles = StyleSheet.create({
   },
   expandButtonAbsolute: {
     position: 'absolute',
-    bottom: 8,
-    left: 8,
-    padding: 8,
+    bottom: 12,
+    left: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     zIndex: 10,
   },
   calcButtonAbsolute: {

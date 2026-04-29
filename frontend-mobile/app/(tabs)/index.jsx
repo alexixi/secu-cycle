@@ -8,6 +8,7 @@ import { useTheme } from '../../hooks/useTheme';
 import useGuidance from '../../hooks/useGuidance';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import GuidancePanel from '../../components/GuidancePanel';
+import ItineraryPanel from '../../components/ItineraryPanel';
 import * as Haptics from 'expo-haptics';
 
 export default function Index() {
@@ -134,6 +135,15 @@ export default function Index() {
                     )}
                 </View>
             )}
+
+            {!isNavigating && (
+                <ItineraryPanel
+                    itineraires={routePaths}
+                    selectedItineraire={selectedItineraire}
+                    setSelectedItineraire={handleSelectItineraire}
+                />
+            )}
+
             {isNavigating && (
                 <TouchableOpacity
                     style={[styles.emergencyStop, { backgroundColor: colors.error }]}
@@ -185,7 +195,7 @@ const styles = StyleSheet.create({
     },
     startButton: {
         position: 'absolute',
-        bottom: 40,
+        bottom: 20,
         alignSelf: 'center',
         flexDirection: 'row',
         alignItems: 'center',
