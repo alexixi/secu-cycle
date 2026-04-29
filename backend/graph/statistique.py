@@ -205,6 +205,30 @@ def calculate_infra_stats(G, route):
         length = float(data.get('length', 0.0))
         total_length += length
 
+    if 1 <= check_time.hour < 5:
+        return True, False 
+        
+    return True, True
+
+def calculate_infra_stats(G, route):
+    total_length = 0.0
+    cyclable_length = 0.0
+    low_speed_length = 0.0
+    lit_length = 0.0
+
+    CYCLABLE_CYCLEWAYS = {'track', 'separate', 'lane', 'shared_busway'}
+    CYCLABLE_HIGHWAYS = {'cycleway', 'path'}
+
+    for i in range(len(route) - 1):
+        u, v = route[i], route[i + 1]
+        edge_data = G.get_edge_data(u, v)
+        if not edge_data:
+            continue
+        data = edge_data[0] if 0 in edge_data else edge_data
+
+        length = float(data.get('length', 0.0))
+        total_length += length
+
         cycleway = data.get('cycleway', 'none')
         if isinstance(cycleway, list):
             cycleway = cycleway[0]

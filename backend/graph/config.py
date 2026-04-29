@@ -64,8 +64,8 @@ LEVEL_MULTIPLIER = {
 }
 
 ELEVATION_WEIGHT_BY_LEVEL = {
-    "debutant": 0.6,
-    "intermediaire": 0.4,
+    "debutant": 0.8,
+    "intermediaire": 0.6,
     "experimente": 0.1
 }
 
