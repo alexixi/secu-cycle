@@ -1,27 +1,32 @@
 SCORE_HIGHWAY = {
     'cycleway': 10,
-    'pedestrian': 9,
+    'pedestrian': 10,
     'footway': 9,
-    'living_street': 8,
+    'living_street': 9,
     'residential': 8,
-    'path': 7,
+    'path': 8,
     'bridleway': 7,
-    'track': 6,
+    'track': 7,
     'service': 5,
     'unclassified': 4,
-    'tertiary': 3,
-    'tertiary_link': 3,
+    'tertiary': 4,
+    'tertiary_link': 4,
     'secondary': 2,
     'secondary_link': 2,
     'busway': 2,
-    'primary': 5,
-    'primary_link': 5,
-    'trunk': 5,
-    'trunk_link': 5
+    'primary': 1,
+    'primary_link': 1,
+    'trunk': 1,
+    'trunk_link': 1
 }
 
 SCORE_CYCLEWAY = {
-    'track': 5, 'separate': 5, 'shared_busway': 4, 'lane': 3, 'shared_lane': 2, 'none': 1
+    'track': 10, 
+    'separate': 10, 
+    'lane': 7, 
+    'shared_busway': 6, 
+    'shared_lane': 4, 
+    'none': 1
 }
 
 DEFAULT_MAXSPEED_BY_HIGHWAY = {
@@ -64,15 +69,20 @@ LEVEL_MULTIPLIER = {
 }
 
 ELEVATION_WEIGHT_BY_LEVEL = {
-    "debutant": 0.8,
-    "intermediaire": 0.6,
-    "experimente": 0.1
+    'debutant': 1.2,
+    'intermediaire': 0.7,
+    'experimente': 0.2
 }
 
 REPORT_PENALTIES = {
-    'accident': 20.0,
-    'danger': 10.0,
-    'travaux': 8.0,
-    'obstacle': 6.0,
-    'default': 5.0
+    'accident': 10.0,
+    'danger': 5.0,
+    'travaux': 3.0,
+    'obstacle': 2.0,
+    'default': 2.0
 }
+
+ELEVATION_DIVISOR = 30.0
+DEFAULT_SAFETY_PENALTY = 30.0
+TRAFFIC_BASE_PENALTY = 50.0       
+TRAFFIC_SAFETY_FACTOR = 250.0
