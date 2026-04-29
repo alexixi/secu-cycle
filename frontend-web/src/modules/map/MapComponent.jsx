@@ -5,8 +5,10 @@ import Button from '../../components/ui/Button';
 
 import { IoMdPin } from "react-icons/io";
 import { FaLayerGroup } from "react-icons/fa";
-import { MdOutlineReportProblem } from "react-icons/md";
+import { MdOutlineReportProblem, MdOutlineTraffic } from "react-icons/md";
 import './MapComponent.css';
+
+const TRAFFIC_COLORS = { green: "#22c55e", orange: "#f97316", red: "#ef4444", gray: "#9ca3af" };
 
 const REPORT_ICONS = {
     accident: "🚨",
@@ -15,11 +17,12 @@ const REPORT_ICONS = {
     obstacle: "🪨",
 };
 
-export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, isReportMode, onToggleReportMode, canReport, littleMap = false }) {
+export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, isReportMode, onToggleReportMode, canReport, trafficPoints = [], showTraffic = false, onToggleTraffic, littleMap = false }) {
 
     const mapRef = useRef();
     const [hoverInfo, setHoverInfo] = useState(null);
     const [activeReport, setActiveReport] = useState(null);
+    const [activeTraffic, setActiveTraffic] = useState(null);
     const [isMapSelectOpen, setIsMapSelectOpen] = useState(false);
     const [selectedMapStyle, setSelectedMapStyle] = useState("basic-v2");
 
@@ -94,6 +97,18 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     >
                         <MdOutlineReportProblem size={18} />
                         {isReportMode ? "Cliquez sur la carte..." : "Ajouter un signalement"}
+                    </Button>
+                </div>
+            )}
+
+            {!littleMap && onToggleTraffic && (
+                <div className="map-traffic-control">
+                    <Button
+                        onClick={onToggleTraffic}
+                        className={showTraffic ? "report-button-active" : "report-button"}
+                    >
+                        <MdOutlineTraffic size={18} />
+                        {showTraffic ? "Masquer le trafic" : "Trafic en temps réel"}
                     </Button>
                 </div>
             )}
@@ -201,6 +216,41 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                         </div>
                     </Marker>
                 ))}
+
+                {trafficPoints && trafficPoints.map((pt) => (
+                    <Marker key={`traffic-${pt.id}`} longitude={pt.lon} latitude={pt.lat} anchor="center">
+                        <div
+                            onClick={(e) => { e.stopPropagation(); setActiveTraffic(pt); }}
+                            style={{
+                                width: 14,
+                                height: 14,
+                                borderRadius: "50%",
+                                backgroundColor: TRAFFIC_COLORS[pt.level] || TRAFFIC_COLORS.gray,
+                                border: "2px solid white",
+                                boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
+                                cursor: "pointer",
+                            }}
+                        />
+                    </Marker>
+                ))}
+
+                {activeTraffic && (
+                    <Popup
+                        longitude={activeTraffic.lon}
+                        latitude={activeTraffic.lat}
+                        onClose={() => setActiveTraffic(null)}
+                        closeOnClick={false}
+                        anchor="bottom"
+                        offset={[0, -10]}
+                    >
+                        <div className="report-popup">
+                            <h4 className="report-popup-title">{activeTraffic.name || "Point de comptage"}</h4>
+                            {activeTraffic.speed != null && <p>🚗 Vitesse : <strong>{activeTraffic.speed} km/h</strong></p>}
+                            {activeTraffic.flow != null && <p>🚦 Débit : <strong>{activeTraffic.flow} véh/h</strong></p>}
+                            {activeTraffic.occupancy != null && <p>📊 Occupation : <strong>{activeTraffic.occupancy}%</strong></p>}
+                        </div>
+                    </Popup>
+                )}
 
                 {activeReport && (
                     <Popup

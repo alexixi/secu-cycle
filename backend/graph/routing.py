@@ -1,7 +1,7 @@
 import osmnx as ox
 import networkx as nx
 from graph.config import *
-from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_bordeaux_lighting_condition
+from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_bordeaux_lighting_condition, calculate_infra_stats
 from graph.elevation import verifier_altitudes
 
 def _get_speed_score(vmax):
@@ -154,13 +154,15 @@ def _compute_route_data(G, start_node, end_node, alpha, beta, bike_type, is_elec
 
     route_nodes = nx.astar_path(G, start_node, end_node, heuristic=dist_heuristic, weight='hybrid_weight')
     
+    infra_stat = calculate_infra_stats(G, route_nodes)
     return {
         "nodes": route_nodes, 
         "path": extract_route_geometry(G, route_nodes),
         "distance": calculate_route_distance(G, route_nodes),
         "duration": calculate_exact_travel_time(G, route_nodes, bike_type, is_electric, cyclist_level),
         "height_difference": calculate_route_elevation(G, route_nodes),
-        "score": get_route_safety_score(G, route_nodes)
+        "score": get_route_safety_score(G, route_nodes),
+        "infra_stats": infra_stat
     }
 
 def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_electric=False, cyclist_level="intermediaire", max_time_min=None, iterations=6, reported_edges=None):

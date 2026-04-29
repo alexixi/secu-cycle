@@ -64,15 +64,15 @@ LEVEL_MULTIPLIER = {
 }
 
 ELEVATION_WEIGHT_BY_LEVEL = {
-    "debutant": 10,
-    "intermediaire": 8,
-    "experimente": 0
+    "debutant": 0.8,
+    "intermediaire": 0.6,
+    "experimente": 0.1
 }
 
 REPORT_PENALTIES = {
-    'accident': 20.0, 
-    'danger': 10.0,   
-    'travaux': 8.0,   
-    'obstacle': 6.0,   
-    'default': 5.0 
+    'accident': 20.0,
+    'danger': 10.0,
+    'travaux': 8.0,
+    'obstacle': 6.0,
+    'default': 5.0
 }

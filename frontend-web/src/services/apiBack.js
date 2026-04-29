@@ -17,10 +17,15 @@ export async function apiFetch(url, options = {}, token = null) {
 
     if (!response.ok) {
         const errorData = await response.text();
-        if (response.status === 401 && !url.toString().includes("/login") && errorData.includes("token")) {
-            console.warn("Token expiré ! Déconnexion forcée.");
-            window.dispatchEvent(new Event("force-logout"));
-            throw new Error("Session expirée");
+        if (response.status === 401 && !url.toString().includes("/login")) {
+            if (localStorage.getItem("access_token")) {
+                localStorage.removeItem("access_token");
+                localStorage.removeItem("user");
+                localStorage.removeItem("bikes");
+                localStorage.removeItem("historic");
+                window.location.href = "/login";
+            }
+            throw new Error("Non autorisé");
         }
         const apiError = new Error(errorData || "Erreur lors de la requête API");
         apiError.status = response.status;
@@ -278,6 +283,27 @@ export async function createReport(token, reportType, description, latitude, lon
                 longitude,
             }),
         }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function saveHistory(token, routeId) {
+    try {
+        const data = await apiFetch("/history/", {
+            method: "POST",
+            body: JSON.stringify({ route_id: routeId, action_type: "trajet" })
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getTraffic() {
+    try {
+        const data = await apiFetch("/traffic/", { method: "GET" });
         return data;
     } catch (error) {
         throw error;

@@ -1,6 +1,19 @@
 \section{Frontend}
 \label{sec:frontend}
+\noindent Dans un premier temps, nous avons développé une application Web, présentée dans la Section \ref{sec:web}.
+Une fois que la première version du site était prête, nous avons développé une application mobile, présentée dans la Section \ref{sec:mobile},
+facilitant l'utilisation sur smartphone.
 
 \subsection{Site Web}
+\label{sec:web}
+\noindent L'application Web a été développée en utilisant React et Vite.\\
+
+\noindent La page principale de l'application est celle permettant la recherche d'itinéraire (Figure \ref{fig:recherche}).
+% TODO inserer le screen quand le traffic sera sur le depot
+La partie gauche de cette page contient le menu de recherche, permettant d'entrer les adresses de départ et d'arrivée du trajet, l'heure maximale d'arrivée ou la durée maximale de trajet, ainsi que le type de vélo utilisé.
+Les adresses sont autocomplétées grâce à l'utilisation de l'API Base Adresse Nationale (BAN \cite{BAN}), proposée par le gouvernement français.
+En appuyant sur le bouton "Calculer les itinéraires", l'utilisateur envoie la requête de recherche d'itinéraires à l'API.
+Les trajets proposés sont ensuite affichés sur la carte, et leur description apparait dans la partie gauche de l'écran.\\
 
 \subsection{Application mobile}
+\label{sec:mobile}
