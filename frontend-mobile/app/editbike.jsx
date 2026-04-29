@@ -78,6 +78,7 @@ export default function EditBikePage() {
                             await updateBikes(bikes.filter(b => b.id != bikeId));
                             router.back();
                         } catch (error) {
+                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
                             Alert.alert("Erreur", "Impossible de supprimer le vélo.");
                         }
                     }

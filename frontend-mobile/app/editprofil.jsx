@@ -10,6 +10,8 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
 import { changeProfileInfo } from "../services/apiBack";
 
+import * as Haptics from 'expo-haptics';
+
 export default function EditProfilePage() {
     const router = useRouter();
     const { colors, typography } = useTheme();
@@ -54,6 +56,7 @@ export default function EditProfilePage() {
             router.back();
         } catch (error) {
             console.error("Erreur modification:", error);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
         } finally {
             setIsLoading(false);
         }

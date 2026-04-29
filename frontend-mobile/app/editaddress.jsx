@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button, OutlineButton } from '../components/ui/Button';
 import { changeAddress } from '../services/apiBack';
 import AdressInput from '../components/ui/AdressInput';
+import * as Haptics from 'expo-haptics';
 
 export default function EditAddressPage() {
     const router = useRouter();
@@ -25,6 +26,7 @@ export default function EditAddressPage() {
             updateUser({ ...user, home_address: home, work_address: work });
             router.back();
         } catch (error) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
             console.error("Erreur sauvegarde adresses :", error);
         } finally {
             setIsLoading(false);

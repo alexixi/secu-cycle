@@ -1,6 +1,7 @@
 import { StyleSheet, Text, TextInput } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { useState } from "react";
+import * as Haptics from 'expo-haptics';
 
 export default function EmailInput({ email, setEmail, emailError, setEmailError, hasError, setHasError }) {
     const { colors } = useTheme();
@@ -28,6 +29,9 @@ export default function EmailInput({ email, setEmail, emailError, setEmailError,
     const handleBlur = () => {
         validateEmail(email);
         setShowEmailError(true);
+        if (emailError) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
+        }
     };
 
     return (

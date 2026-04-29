@@ -10,6 +10,8 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
 import { changeProfileInfo } from "../services/apiBack";
 
+import * as Haptics from 'expo-haptics';
+
 export default function ChangePasswordPage() {
     const router = useRouter();
     const { colors, typography } = useTheme();
@@ -26,6 +28,7 @@ export default function ChangePasswordPage() {
     const handleConfirm = async () => {
         if (newPassword !== confirmPassword) {
             setError("Les nouveaux mots de passe ne correspondent pas.");
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
             return;
         }
 
@@ -37,6 +40,7 @@ export default function ChangePasswordPage() {
             router.back();
         } catch (err) {
             setError("Une erreur est survenue lors de la modification.");
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
         } finally {
             setIsLoading(false);
         }

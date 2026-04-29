@@ -18,6 +18,7 @@ import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
 import { login as apiLogin, getUserProfile, register } from "../services/apiBack";
+import * as Haptics from 'expo-haptics';
 
 export default function RegisterScreen() {
     const [firstName, setFirstName] = useState("");
@@ -42,6 +43,7 @@ export default function RegisterScreen() {
     const handleSubmit = async () => {
         if (password !== password2) {
             setHasPasswordError(true);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
             return;
         }
 
@@ -63,8 +65,8 @@ export default function RegisterScreen() {
                 router.replace("/login");
             }
         } catch (error) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
             setGeneralError(true);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
         } finally {
             setIsLoading(false);
         }
@@ -74,6 +76,9 @@ export default function RegisterScreen() {
         setGeneralError(false);
         if (password && password2) {
             setHasPasswordError(password !== password2);
+            if (password !== password2) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
+            }
         }
     };
 
@@ -155,7 +160,7 @@ export default function RegisterScreen() {
                         <DateTimePicker
                             value={birthDate}
                             mode="date"
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            display="spinner"
                             maximumDate={new Date()}
                             onChange={onChangeDate}
                         />
