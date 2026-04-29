@@ -1,4 +1,8 @@
-import math
+import math 
+from datetime import datetime
+from astral import LocationInfo
+from astral.sun import sun
+import pytz
 from graph.config import SPEED_BY_INFRASTRUCTURE, DEFAULT_SPEED, BIKE_TYPE_INDEX, LEVEL_MULTIPLIER
 
 def calculer_statistiques_osm(G):
@@ -10,7 +14,7 @@ def calculer_statistiques_osm(G):
     compteur_lit = 0
     compteur_maxspeed = 0
     compteur_surface = 0
-
+    
     highway_counts = {}
 
     for u, v, k, data in G.edges(keys=True, data=True):

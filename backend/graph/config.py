@@ -33,7 +33,7 @@ DEFAULT_MAXSPEED_BY_HIGHWAY = {
 }
 
 DEFAULT_LIT_SCORE_BY_HIGHWAY = {
-    'residential': 0.9, 'primary': 0.9, 'secondary': 0.9, 'tertiary': 0.9,
+    'residential': 0.9, 'primary': 0.9, 'secondary': 0.9, 'tertiary': 0.9, 
     'living_street': 0.9, 'pedestrian': 0.9,
     'cycleway': 0.7,
     'path': 0.2, 'track': 0.2, 'footway': 0.2
