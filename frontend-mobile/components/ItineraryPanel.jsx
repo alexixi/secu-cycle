@@ -1,7 +1,8 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Modal, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import { useTheme } from '../hooks/useTheme';
+import { VictoryArea, VictoryChart, VictoryAxis, VictoryTooltip, VictoryVoronoiContainer } from 'victory-native';
 
 const ROUTE_LABELS = {
     fast: { label: "Rapide", icon: "lightning-bolt", color: "#F59E0B" },
@@ -14,9 +15,14 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
 
     const meta = ROUTE_LABELS[itineraire.id] ?? { label: itineraire.name, icon: "map-marker-path", color: colors.primary };
 
-    const elevationData = itineraire.path
-        ?.filter(p => p[2] !== undefined && p[2] !== null)
-        .map((p, i) => ({ x: i, y: parseFloat(p[2]) })) ?? [];
+    const elevationData = useMemo(() => {
+        const raw = itineraire.path
+            ?.filter(p => p[2] !== undefined && p[2] !== null)
+            .map((p, i) => ({ x: i, y: parseFloat(p[2]) })) ?? [];
+
+        const step = Math.max(1, Math.floor(raw.length / 100));
+        return raw.filter((_, i) => i % step === 0);
+    }, [itineraire.path]);
 
     const minEle = elevationData.length > 0 ? Math.min(...elevationData.map(d => d.y)) : 0;
     const maxEle = elevationData.length > 0 ? Math.max(...elevationData.map(d => d.y)) : 0;
@@ -101,6 +107,66 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                             </Text>
                         </View>
                     </View>
+
+                    {elevationData.length > 1 && (
+                        <View style={styles.chartSection}>
+                            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
+                                Profil altimétrique
+                            </Text>
+                            <VictoryChart
+                                width={screenWidth - 80}
+                                height={150}
+                                padding={{ top: 10, bottom: 30, left: 45, right: 10 }}
+                                containerComponent={
+                                    <VictoryVoronoiContainer
+                                        labels={({ datum }) => `${Math.round(datum.y)} m`}
+                                        labelComponent={
+                                            <VictoryTooltip
+                                                flyoutStyle={{
+                                                    fill: colors.bgSurface,
+                                                    stroke: colors.primary,
+                                                    strokeWidth: 1,
+                                                }}
+                                                style={{ fill: colors.textMain, fontSize: 11 }}
+                                            />
+                                        }
+                                    />
+                                }
+                            >
+                                <VictoryAxis
+                                    style={{
+                                        axis: { stroke: colors.borderLight },
+                                        tickLabels: { fill: colors.textSecondary, fontSize: 10 },
+                                        grid: { stroke: 'transparent' },
+                                    }}
+                                    tickFormat={() => ''}
+                                />
+                                <VictoryAxis
+                                    dependentAxis
+                                    style={{
+                                        axis: { stroke: colors.borderLight },
+                                        tickLabels: { fill: colors.textSecondary, fontSize: 10 },
+                                        grid: { stroke: colors.borderLight, strokeDasharray: '4,4' },
+                                    }}
+                                    tickFormat={(t) => `${Math.round(t)}m`}
+                                    tickCount={4}
+                                />
+                                <VictoryArea
+                                    data={elevationData}
+                                    style={{
+                                        data: {
+                                            fill: colors.primary,
+                                            fillOpacity: 0.2,
+                                            stroke: colors.primary,
+                                            strokeWidth: 2,
+                                        }
+                                    }}
+                                    interpolation="monotoneX"
+                                />
+                            </VictoryChart>
+                        </View>
+                    )}
+
 
                     {itineraire.infra_stats && (
                         <View style={styles.infraSection}>
@@ -378,6 +444,10 @@ const styles = StyleSheet.create({
     },
     elevationLabel: {
         fontSize: 11,
+    },
+    chartSection: {
+        alignItems: 'center',
+        marginHorizontal: -10,
     },
     sectionLabel: {
         fontSize: 13,
