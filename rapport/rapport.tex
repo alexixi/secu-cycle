@@ -10,16 +10,41 @@
 \usepackage{float}
 \usepackage[hidelinks]{hyperref}
 \usepackage{listings}
+\usepackage{fancyhdr}
 
-\title{Rapport de projet\\ - \\ Itinéraires cyclables alternatifs entre Victoire et Campus }
-\author{Alexis Gaudray Bouju - Matheline Chevalier - Khaoula Najmeddine \\ Angelo Tunney - Joan Dumarchat - Léia Daragnès}
-\date{Semestre 8 - 2025/2026}
-
-\graphicspath{./img/}
+\graphicspath{{img/}}
 
 \begin{document}
-\maketitle
+
+\renewcommand{\thepage}{}
+\begin{center}
+
+{\Large\bfseries ENSEIRB-MATMECA I2}\vskip2cm
+
+\rule{\textwidth}{1pt}\\\vskip-.45cm
+\rule{\textwidth}{2pt}\vskip.3cm
+
+{\LARGE\bfseries Rapport de projet}\vskip.15cm
+
+\rule{\textwidth}{1pt}\\\vskip-.45cm
+\rule{\textwidth}{2pt}\vskip1cm
+
+{\large Itinéraires cyclables alternatifs entre Victoire et Campus \vskip1.5cm
+
+Alexis Gaudray Bouju - Matheline Chevalier - Khaoula Najmeddine\\
+Angelo Tunney - Joan Dumarchat - Léia Daragnès \vskip1.5cm
+
+Semestre 8 - 2025/2026 \vskip3cm}
+
+\end{center}
+
+\hskip5cm\includegraphics[width=4in]{img/BordeauINP.png}
+
 \newpage
+
+\renewcommand{\footrulewidth}{1pt}
+\renewcommand{\headrulewidth}{1pt}
+
 \renewcommand{\contentsname}{Table des matières}
 \tableofcontents
 \clearpage

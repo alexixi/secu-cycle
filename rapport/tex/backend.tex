@@ -1,6 +1,80 @@
 \section{API et bases de données}
 \label{sec:backend}
 
+Cette section détaille la conception et l'implémentation du backend de l'application. Nous y présentons l'architecture technique, l'organisation des données ainsi que le fonctionnement de l'interface de programmation (API).
+
+\subsection{Architecture générale du backend}
+
+Le backend de l'application s'appuie sur \textbf{FastAPI}, un framework Python moderne et performant, particulièrement adapté au développement d'APIs REST. La persistance des données est assurée par \textbf{PostgreSQL}, interfacée via l'ORM \textbf{SQLAlchemy}. Ce choix permet une manipulation fluide de la base de données sous forme d'objets Python, renforçant ainsi la clarté et la maintenabilité du code. L'ensemble de l'infrastructure est containerisé à l'aide de \textbf{Docker}, garantissant une reproductibilité optimale de l'environnement de développement et de production.
+
+La structure du projet adopte une architecture modulaire en couches, facilitant l'évolution du système :
+\begin{itemize}
+    \item \texttt{models/} : Définition des entités et des tables via SQLAlchemy.
+    \item \texttt{schemas/} : Validation et typage des données entrantes et sortantes via Pydantic.
+    \item \texttt{routers/} : Définition des points d'accès (endpoints) de l'API.
+    \item \texttt{utils/} : Regroupement des fonctions transversales, telles que la sécurité et le hachage.
+\end{itemize}
+
 \subsection{Base de données}
 
-\subsection{API}
+La gestion des données constitue le cœur du système, permettant d'assurer la persistance des informations utilisateurs et des paramètres de navigation. Les paragraphes suivants décrivent la structure et l'organisation de ces informations au sein de la base de données relationnelle.
+
+\subsubsection{Modélisation des données}
+
+Afin de garantir l'intégrité et la cohérence du système, une modélisation rigoureuse a été adoptée. La base de données représente les entités fondamentales de l'application : les utilisateurs, leurs équipements, les itinéraires calculés, ainsi que l'historique de navigation et les signalements communautaires. Chaque entité correspond à une table PostgreSQL, synchronisée dynamiquement au démarrage du serveur.
+
+\subsubsection{Schéma relationnel}
+
+La cohérence globale du système repose sur des relations structurantes entre les différentes entités. Cette organisation permet une navigation fluide entre les données de l'utilisateur, ses équipements et ses trajets. Les liens principaux sont les suivants :
+\begin{itemize}
+    \item Un \textbf{utilisateur} peut posséder plusieurs \textbf{vélos} (relation 1-N).
+    \item Un \textbf{utilisateur} peut sauvegarder plusieurs \textbf{itinéraires} (relation 1-N).
+    \item Un \textbf{itinéraire} peut être associé à plusieurs entrées dans l'\textbf{historique} de navigation (relation 1-N).
+    \item Un \textbf{utilisateur} peut émettre plusieurs \textbf{signalements} de dangers (relation 1-N).
+\end{itemize}
+
+\subsubsection{Description des tables}
+
+L'implémentation physique de la base de données repose sur un ensemble de tables spécialisées dont voici les fonctions principales :
+
+\begin{itemize}
+    \item \textbf{Table \texttt{users}} : Centralise les données de profil, incluant les identifiants de connexion hachés et les informations personnelles.
+    \item \textbf{Table \texttt{bikes}} : Répertorie les caractéristiques techniques des vélos (type, assistance électrique) associés à chaque profil utilisateur.
+    \item \textbf{Table \texttt{routes}} : Archive les caractéristiques des trajets calculés, incluant les coordonnées, la distance, la durée estimée et l'indice de sécurité.
+    \item \textbf{Table \texttt{user\_history}} : Assure la traçabilité de l'activité utilisateur en liant chaque trajet effectué à un horodatage précis.
+    \item \textbf{Table \texttt{reports}} : Stocke les signalements géolocalisés émis par la communauté, tels que les accidents ou les zones de travaux.
+    \item \textbf{Tables \texttt{badges} et \texttt{user\_badges}} : Fournissent l'infrastructure nécessaire à l'intégration future de fonctionnalités de gamification.
+\end{itemize}
+
+\subsection{API REST}
+
+Le serveur agit comme le pivot central de l'application, facilitant la communication entre les interfaces clientes et la base de données. Cette sous-section expose les choix technologiques et les principes de sécurité retenus pour l'API.
+
+\subsubsection{Technologies utilisées}
+
+L'interface de programmation est développée avec \textbf{FastAPI}, qui offre l'avantage de générer automatiquement une documentation interactive via Swagger UI. La validation rigoureuse des données est confiée à \textbf{Pydantic}, assurant que chaque requête respecte le format attendu avant d'être traitée par la logique métier.
+
+La sécurité et la confidentialité des échanges reposent sur des standards éprouvés : \textbf{JWT} (JSON Web Token) pour la gestion des sessions authentifiées, et \textbf{Argon2} pour le hachage des mots de passe, garantissant une protection efficace contre les tentatives de compromission.
+
+\subsubsection{Authentification et sécurité}
+
+Au-delà du choix des outils, la robustesse du système dépend d'une gestion rigoureuse des accès. L'authentification s'appuie sur le standard \textbf{OAuth2 avec Bearer Token}. Lors de la connexion, un jeton JWT est délivré au client, lequel doit l'inclure dans l'en-tête de chaque requête vers une ressource protégée.
+
+Deux niveaux de privilèges ont été instaurés pour concilier accessibilité et sécurité :
+\begin{itemize}
+    \item \textbf{Accès authentifié} : Requis pour les actions sensibles telles que la modification du profil, la gestion des vélos, l'historique et les signalements.
+    \item \textbf{Accès public/optionnel} : Le calcul d'itinéraire est ouvert à tous, bien que l'enregistrement automatique du trajet ne soit effectif que pour les utilisateurs connectés.
+\end{itemize}
+
+\subsubsection{Endpoints principaux}
+
+Une fois l'identité de l'utilisateur validée et les échanges sécurisés, l'API propose un ensemble de points d'entrée organisés par ressources fonctionnelles :
+
+\begin{itemize}
+    \item \textbf{Utilisateurs (\texttt{/users})} : Gère l'ensemble du cycle de vie des comptes, de la phase d'inscription à la mise à jour des paramètres personnels.
+    \item \textbf{Vélos (\texttt{/bikes})} : Permet l'administration des équipements personnels. Un contrôle strict garantit qu'un utilisateur n'accède qu'à ses propres données.
+    \item \textbf{Itinéraires (\texttt{/routes})} : Fournit les services de calcul de trajets en fonction des coordonnées géographiques et des préférences de l'utilisateur (type de vélo, contraintes de sécurité).
+    \item \textbf{Historique (\texttt{/history})} : Offre une vue consolidée des trajets passés, permettant à l'utilisateur de consulter ses parcours précédents.
+    \item \textbf{Statistiques (\texttt{/stats})} : Regroupe les analyses de performances et d'activité, telles que les distances parcourues, la durée totale des trajets ainsi que le type de trajet le plus choisi (sécurisé ou rapide).
+    \item \textbf{Signalements (\texttt{/reports})} : Facilite la remontée d'informations terrain par les usagers. Si l'émission d'un signalement requiert une authentification, sa consultation reste publique pour favoriser la sécurité collective.
+\end{itemize}
