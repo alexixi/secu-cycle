@@ -289,18 +289,6 @@ export async function createReport(token, reportType, description, latitude, lon
     }
 }
 
-export async function saveHistory(token, routeId) {
-    try {
-        const data = await apiFetch("/history/", {
-            method: "POST",
-            body: JSON.stringify({ route_id: routeId, action_type: "trajet" })
-        }, token);
-        return data;
-    } catch (error) {
-        throw error;
-    }
-}
-
 export async function getTraffic() {
     try {
         const data = await apiFetch("/traffic/", { method: "GET" });

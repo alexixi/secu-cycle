@@ -70,7 +70,7 @@ export default function Index() {
         setIsNavigating(false);
 
         try {
-            const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration);
+            const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint?.name, endPoint?.name);
 
             if (itineraries && itineraries.length > 0) {
                 setErrorPath(false);

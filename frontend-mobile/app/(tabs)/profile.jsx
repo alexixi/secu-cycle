@@ -247,6 +247,14 @@ export default function ProfilePage() {
                     <View style={styles.sectionTitleRow}>
                         <Ionicons name="time-outline" size={24} color={colors.textMain} />
                         <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mon historique</Text>
+                        {trajets.length > 0 && (
+                            <TouchableOpacity
+                                onPress={() => router.push("/historic")}
+                                style={{ padding: 5, marginLeft: 'auto' }}
+                            >
+                                <Ionicons name="open-outline" size={20} color={colors.textMain} />
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     <View style={styles.sectionContent}>
@@ -263,10 +271,10 @@ export default function ProfilePage() {
                                         </Text>
 
                                         <Text style={[styles.historyRoute, { color: colors.textMain }]} numberOfLines={1}>
-                                            {item.route.start_address.split(',')[0]}
+                                            {item.route.start_address}
                                         </Text>
                                         <Text style={[styles.historyRoute, { color: colors.textMain }]} numberOfLines={1}>
-                                            {item.route.end_address.split(',')[0]}
+                                            {item.route.end_address}
                                         </Text>
                                     </View>
 

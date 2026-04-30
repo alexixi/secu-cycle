@@ -241,6 +241,16 @@ export async function getUserHistoric(token) {
     }
 }
 
+export async function deleteHistoricEntry(token, historyId) {
+    try {
+        const data = await apiFetch(`/history/${historyId}`, { method: "DELETE" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
 export async function deleteAllHistoric(token) {
     try {
         const data = await apiFetch("/history/", { method: "DELETE" }, token);
@@ -279,15 +289,6 @@ export async function createReport(token, reportType, description, latitude, lon
                 longitude,
             }),
         }, token);
-        return data;
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function deleteHistoricEntry(token, historyId) {
-    try {
-        const data = await apiFetch(`/history/${historyId}`, { method: "DELETE" }, token);
         return data;
     } catch (error) {
         throw error;
