@@ -152,6 +152,34 @@
     bottom: 95px;
     left: 15px;
     z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.traffic-legend {
+    background-color: var(--bg-surface);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.8em;
+    color: var(--text-main);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.traffic-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.traffic-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
 .report-button {

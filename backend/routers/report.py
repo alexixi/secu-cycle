@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime, timedelta
 from database import get_db
 from models.report import Report
 from schemas.report import ReportCreate, ReportRead
@@ -26,9 +27,18 @@ def create_report(
     db.refresh(db_report)
     return db_report
 
+REPORT_EXPIRY = {
+    "accident": timedelta(hours=2),
+    "danger":   timedelta(hours=4),
+    "obstacle": timedelta(hours=3),
+    "travaux":  timedelta(days=4),
+}
+
 @router.get("/", response_model=List[ReportRead])
 def get_all_reports(db: Session = Depends(get_db)):
-    return db.query(Report).order_by(Report.created_at.desc()).all()
+    now = datetime.utcnow()
+    reports = db.query(Report).order_by(Report.created_at.desc()).all()
+    return [r for r in reports if now - r.created_at < REPORT_EXPIRY.get(r.report_type, timedelta(hours=4))]
 
 @router.get("/me", response_model=List[ReportRead])
 def get_my_reports(

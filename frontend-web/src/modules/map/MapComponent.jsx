@@ -110,6 +110,14 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                         <MdOutlineTraffic size={18} />
                         {showTraffic ? "Masquer le trafic" : "Trafic en temps réel"}
                     </Button>
+                    {showTraffic && (
+                        <div className="traffic-legend">
+                            <span className="traffic-legend-item"><span className="traffic-dot" style={{backgroundColor:"#22c55e"}}/>Route fluide</span>
+                            <span className="traffic-legend-item"><span className="traffic-dot" style={{backgroundColor:"#f97316"}}/>Route ralentie</span>
+                            <span className="traffic-legend-item"><span className="traffic-dot" style={{backgroundColor:"#ef4444"}}/>Route bloquée</span>
+                            <span className="traffic-legend-item"><span className="traffic-dot" style={{backgroundColor:"#9ca3af"}}/>Inconnu</span>
+                        </div>
+                    )}
                 </div>
             )}
 
