@@ -20,7 +20,7 @@
 }
 
 .icon-card.selected {
-    background-color: var(--primary-light);
+    background-color: var(--primary-transparent);
     color: var(--text-main);
     border-color: var(--primary);
     transform: translateY(-3px);
@@ -43,7 +43,7 @@
     color: var(--text-main);
 }
 
-.icon-card-context{
+.icon-card-context {
     color: var(--text-secondary);
     font-size: 0.8em;
 }

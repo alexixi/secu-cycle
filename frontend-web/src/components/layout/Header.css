@@ -180,7 +180,7 @@ header #profile-button.active:active {
 }
 
 .dropdown-item:hover {
-    background-color: var(--primary-light);
+    background-color: var(--primary-transparent);
     color: var(--primary-hover);
 }
 
@@ -191,7 +191,7 @@ header #profile-button.active:active {
 
 .dropdown-item.logout-btn:hover {
     color: var(--primary-hover);
-    background-color: var(--primary-light);
+    background-color: var(--primary-transparent);
 }
 
 @keyframes fadeInDown {
