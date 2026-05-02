@@ -1,31 +1,31 @@
 \section{API et bases de données}
 \label{sec:backend}
 
-Cette section détaille la conception et l'implémentation du backend de l'application. Nous y présentons l'architecture technique, l'organisation des données ainsi que le fonctionnement de l'interface de programmation (API).
+Cette section décrit les choix techniques retenus pour le backend de l'application : l'architecture mise en place, la structure de la base de données et le fonctionnement de l'API.
 
 \subsection{Architecture générale du backend}
 
-Le backend de l'application s'appuie sur \textbf{FastAPI}, un framework Python moderne et performant, particulièrement adapté au développement d'APIs REST. La persistance des données est assurée par \textbf{PostgreSQL}, interfacée via l'ORM \textbf{SQLAlchemy}. Ce choix permet une manipulation fluide de la base de données sous forme d'objets Python, renforçant ainsi la clarté et la maintenabilité du code. L'ensemble de l'infrastructure est containerisé à l'aide de \textbf{Docker}, garantissant une reproductibilité optimale de l'environnement de développement et de production.
+Le backend est développé avec \textbf{FastAPI}, un framework Python moderne taillé pour la création d'API REST. Pour la persistance des données, nous avons choisi \textbf{PostgreSQL}, piloté via l'ORM \textbf{SQLAlchemy} qui nous permet de manipuler la base de données sous forme d'objets Python, ce qui simplifie considérablement la lecture et la maintenance du code. L'ensemble de l'infrastructure est containerisé avec \textbf{Docker}, ce qui nous garantit un environnement identique entre le développement et la production.
 
-La structure du projet adopte une architecture modulaire en couches, facilitant l'évolution du système :
+La structure du projet suit une architecture modulaire en couches :
 \begin{itemize}
     \item \texttt{models/} : Définition des entités et des tables via SQLAlchemy.
     \item \texttt{schemas/} : Validation et typage des données entrantes et sortantes via Pydantic.
     \item \texttt{routers/} : Définition des points d'accès (endpoints) de l'API.
-    \item \texttt{utils/} : Regroupement des fonctions transversales, telles que la sécurité et le hachage.
+    \item \texttt{utils/} : Fonctions transversales partagées, notamment la sécurité et le hachage.
 \end{itemize}
 
 \subsection{Base de données}
 
-La gestion des données constitue le cœur du système, permettant d'assurer la persistance des informations utilisateurs et des paramètres de navigation. Les paragraphes suivants décrivent la structure et l'organisation de ces informations au sein de la base de données relationnelle.
+La base de données est le socle du système : elle centralise les données des utilisateurs et assure la persistance de leur activité de navigation.
 
 \subsubsection{Modélisation des données}
 
-Afin de garantir l'intégrité et la cohérence du système, une modélisation rigoureuse a été adoptée. La base de données représente les entités fondamentales de l'application : les utilisateurs, leurs équipements, les itinéraires calculés, ainsi que l'historique de navigation et les signalements communautaires. Chaque entité correspond à une table PostgreSQL, synchronisée dynamiquement au démarrage du serveur.
+Nous avons modélisé les entités autour des besoins concrets de l'application : les comptes utilisateurs, leurs vélos, les itinéraires calculés, l'historique de navigation et les signalements communautaires. Chaque entité correspond à une table PostgreSQL, créée automatiquement au démarrage du serveur via SQLAlchemy.
 
 \subsubsection{Schéma relationnel}
 
-La cohérence globale du système repose sur des relations structurantes entre les différentes entités. Cette organisation permet une navigation fluide entre les données de l'utilisateur, ses équipements et ses trajets. Les liens principaux sont les suivants :
+Les entités sont liées entre elles par des relations qui reflètent la logique métier de l'application :
 \begin{itemize}
     \item Un \textbf{utilisateur} peut posséder plusieurs \textbf{vélos} (relation 1-N).
     \item Un \textbf{utilisateur} peut sauvegarder plusieurs \textbf{itinéraires} (relation 1-N).
@@ -35,46 +35,68 @@ La cohérence globale du système repose sur des relations structurantes entre l
 
 \subsubsection{Description des tables}
 
-L'implémentation physique de la base de données repose sur un ensemble de tables spécialisées dont voici les fonctions principales :
+Voici le rôle de chaque table dans la base de données :
 
 \begin{itemize}
-    \item \textbf{Table \texttt{users}} : Centralise les données de profil, incluant les identifiants de connexion hachés et les informations personnelles.
-    \item \textbf{Table \texttt{bikes}} : Répertorie les caractéristiques techniques des vélos (type, assistance électrique) associés à chaque profil utilisateur.
-    \item \textbf{Table \texttt{routes}} : Archive les caractéristiques des trajets calculés, incluant les coordonnées, la distance, la durée estimée et l'indice de sécurité.
-    \item \textbf{Table \texttt{user\_history}} : Assure la traçabilité de l'activité utilisateur en liant chaque trajet effectué à un horodatage précis.
-    \item \textbf{Table \texttt{reports}} : Stocke les signalements géolocalisés émis par la communauté, tels que les accidents ou les zones de travaux.
-    \item \textbf{Tables \texttt{badges} et \texttt{user\_badges}} : Fournissent l'infrastructure nécessaire à l'intégration future de fonctionnalités de gamification.
+    \item \textbf{Table \texttt{users}} : Stocke les données de profil, dont les identifiants de connexion hachés et les informations personnelles.
+    \item \textbf{Table \texttt{bikes}} : Contient les caractéristiques techniques des vélos (type, assistance électrique) rattachés à chaque utilisateur.
+    \item \textbf{Table \texttt{routes}} : Enregistre les trajets calculés avec leurs coordonnées, distance, durée estimée et indice de sécurité.
+    \item \textbf{Table \texttt{user\_history}} : Retrace l'activité de navigation en associant chaque trajet effectué à un horodatage.
+    \item \textbf{Table \texttt{reports}} : Conserve les signalements géolocalisés émis par la communauté (accidents, travaux, obstacles).
+    \item \textbf{Tables \texttt{badges} et \texttt{user\_badges}} : Posent les bases d'un système de gamification prévu pour une version ultérieure.
 \end{itemize}
+
+\subsection{Gestion du trafic en temps réel}
+
+L'un des aspects critiques de la sécurité cycliste est l'évitement des zones de forte congestion automobile. Un axe embouteillé n'est pas seulement synonyme de lenteur : il concentre stress, manœuvres imprévisibles et risques d'accident pour le cycliste. Notre système intègre donc une couche de données trafic en temps réel pour adapter les informations affichées aux conditions de circulation actuelles.
+
+\subsubsection{Source de données : l'API AVATAR du Cerema}
+
+Pour alimenter cette fonctionnalité, nous utilisons l'\textbf{API AVATAR du Cerema}, qui recense les points de comptage fixes déployés sur la métropole bordelaise — boucles électromagnétiques et radars. Pour chaque capteur, trois indicateurs sont disponibles : la vitesse moyenne ($v$, en km/h), le débit horaire ($q$, en véhicules/heure) et le taux d'occupation ($t$, en \%). Ces données sont récupérées par le backend et exposées aux clients via l'endpoint \texttt{/traffic/}.
+
+\subsubsection{Stratégie de mise à jour et gestion du cache}
+
+La liste des capteurs Cerema est géographiquement stable : les points de comptage ne changent pas d'emplacement d'une heure à l'autre. Nous la mettons donc en cache en mémoire avec une durée de vie (\textit{TTL}) d'une heure, ce qui évite de la récupérer inutilement à chaque requête. En revanche, les mesures de trafic elles-mêmes sont interrogées dynamiquement à chaque appel, en se limitant aux données des deux dernières heures. Cette fenêtre glissante garantit que les niveaux affichés reflètent la circulation du moment, sans remonter à des mesures obsolètes.
+
+\subsubsection{Calcul de l'indice de danger}
+
+À partir des mesures brutes de chaque capteur, nous calculons un score de danger $D$ selon la formule pondérée suivante :
+\begin{equation}
+    D = s_v \times 0{,}6 + s_q \times 0{,}4
+\end{equation}
+$s_v$ est le score de vitesse et $s_q$ le score de débit, tous deux normalisés entre 0 (aucun danger) et 1 (danger maximal). Les seuils sont les suivants : $s_v = 0$ si $v \geq 70$\,km/h et $s_v = 1$ si $v < 30$\,km/h ; $s_q = 0$ si $q < 200$\,véh./h et $s_q = 1$ si $q \geq 800$\,véh./h.
+
+Nous avons choisi de donner plus de poids à la vitesse (60\,\%) qu'au débit (40\,\%) pour une raison simple : du point de vue d'un cycliste, ce qui rend un axe dangereux, c'est avant tout la vitesse à laquelle les véhicules circulent. Un trafic dense mais lent reste gérable ; en revanche, des voitures rapides sur une voie sans aménagement cyclable exposent le cycliste à des risques bien plus sérieux. Le débit reste un indicateur utile pour détecter la saturation de la chaussée, mais il est secondaire face à l'effet de la vitesse. Le score final classe chaque point de comptage en trois niveaux : \textit{fluide} ($D < 0{,}35$, vert), \textit{dense} ($D < 0{,}65$, orange) ou \textit{critique} ($D \geq 0{,}65$, rouge). Faute de données suffisantes, le niveau reste \textit{indéterminé} (gris).
 
 \subsection{API REST}
 
-Le serveur agit comme le pivot central de l'application, facilitant la communication entre les interfaces clientes et la base de données. Cette sous-section expose les choix technologiques et les principes de sécurité retenus pour l'API.
+L'API constitue l'interface entre les clients (web et mobile) et la logique serveur. Elle est construite autour de FastAPI et expose un ensemble d'endpoints organisés par ressource.
 
 \subsubsection{Technologies utilisées}
 
-L'interface de programmation est développée avec \textbf{FastAPI}, qui offre l'avantage de générer automatiquement une documentation interactive via Swagger UI. La validation rigoureuse des données est confiée à \textbf{Pydantic}, assurant que chaque requête respecte le format attendu avant d'être traitée par la logique métier.
+FastAPI génère automatiquement une documentation interactive via Swagger UI, ce qui a facilité nos tests pendant le développement. La validation des données entrantes est assurée par \textbf{Pydantic} : chaque requête est vérifiée avant d'atteindre la logique métier, ce qui réduit les risques d'erreurs en cascade.
 
-La sécurité et la confidentialité des échanges reposent sur des standards éprouvés : \textbf{JWT} (JSON Web Token) pour la gestion des sessions authentifiées, et \textbf{Argon2} pour le hachage des mots de passe, garantissant une protection efficace contre les tentatives de compromission.
+Pour la sécurité des échanges, nous nous appuyons sur deux standards : \textbf{JWT} (JSON Web Token) pour la gestion des sessions, et \textbf{Argon2} pour le hachage des mots de passe, un algorithme reconnu pour sa résistance aux attaques par force brute.
 
 \subsubsection{Authentification et sécurité}
 
-Au-delà du choix des outils, la robustesse du système dépend d'une gestion rigoureuse des accès. L'authentification s'appuie sur le standard \textbf{OAuth2 avec Bearer Token}. Lors de la connexion, un jeton JWT est délivré au client, lequel doit l'inclure dans l'en-tête de chaque requête vers une ressource protégée.
+L'authentification repose sur le standard \textbf{OAuth2 avec Bearer Token}. À la connexion, le serveur délivre un jeton JWT que le client doit inclure dans l'en-tête de chaque requête protégée.
 
-Deux niveaux de privilèges ont été instaurés pour concilier accessibilité et sécurité :
+Nous distinguons deux niveaux d'accès :
 \begin{itemize}
-    \item \textbf{Accès authentifié} : Requis pour les actions sensibles telles que la modification du profil, la gestion des vélos, l'historique et les signalements.
-    \item \textbf{Accès public/optionnel} : Le calcul d'itinéraire est ouvert à tous, bien que l'enregistrement automatique du trajet ne soit effectif que pour les utilisateurs connectés.
+    \item \textbf{Accès authentifié} : obligatoire pour les actions sensibles — modification du profil, gestion des vélos, consultation de l'historique et émission de signalements.
+    \item \textbf{Accès public} : le calcul d'itinéraire est accessible sans connexion, mais la sauvegarde automatique du trajet ne s'active que pour les utilisateurs connectés.
 \end{itemize}
 
 \subsubsection{Endpoints principaux}
 
-Une fois l'identité de l'utilisateur validée et les échanges sécurisés, l'API propose un ensemble de points d'entrée organisés par ressources fonctionnelles :
+L'API expose les endpoints suivants, organisés par ressource :
 
 \begin{itemize}
-    \item \textbf{Utilisateurs (\texttt{/users})} : Gère l'ensemble du cycle de vie des comptes, de la phase d'inscription à la mise à jour des paramètres personnels.
-    \item \textbf{Vélos (\texttt{/bikes})} : Permet l'administration des équipements personnels. Un contrôle strict garantit qu'un utilisateur n'accède qu'à ses propres données.
-    \item \textbf{Itinéraires (\texttt{/routes})} : Fournit les services de calcul de trajets en fonction des coordonnées géographiques et des préférences de l'utilisateur (type de vélo, contraintes de sécurité).
-    \item \textbf{Historique (\texttt{/history})} : Offre une vue consolidée des trajets passés, permettant à l'utilisateur de consulter ses parcours précédents.
-    \item \textbf{Statistiques (\texttt{/stats})} : Regroupe les analyses de performances et d'activité, telles que les distances parcourues, la durée totale des trajets ainsi que le type de trajet le plus choisi (sécurisé ou rapide).
-    \item \textbf{Signalements (\texttt{/reports})} : Facilite la remontée d'informations terrain par les usagers. Si l'émission d'un signalement requiert une authentification, sa consultation reste publique pour favoriser la sécurité collective.
+    \item \textbf{\texttt{/users}} : Gestion du cycle de vie des comptes, de l'inscription à la mise à jour des informations personnelles.
+    \item \textbf{\texttt{/bikes}} : Administration des vélos de l'utilisateur, avec un contrôle strict garantissant qu'un utilisateur ne peut accéder qu'à ses propres équipements.
+    \item \textbf{\texttt{/routes}} : Calcul d'itinéraires à partir de coordonnées géographiques et des préférences de l'utilisateur (type de vélo, niveau de sécurité souhaité).
+    \item \textbf{\texttt{/history}} : Consultation des trajets passés de l'utilisateur connecté.
+    \item \textbf{\texttt{/stats}} : Synthèse de l'activité de l'utilisateur — distances parcourues, durée cumulée, répartition entre trajets rapides et sécurisés.
+    \item \textbf{\texttt{/reports}} : Remontée de signalements terrain par les usagers. La lecture est publique pour favoriser la sécurité collective ; l'écriture requiert une authentification.
 \end{itemize}
