@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Meta from "../components/Meta";
 import Header from "../components/layout/Header";
 import Button from "../components/ui/Button";
 import LinkButton from "../components/ui/LinkButton";
@@ -112,6 +113,7 @@ export default function ProfileCreationPage() {
 
     return (
         <>
+            <Meta title="Créer un compte | Sécu'Cycle" description="Rejoignez la communauté Sécu'Cycle et roulez en toute sécurité." />
             <Header page="signin" />
             <div className="page-form-container">
                 <div className="form-container">

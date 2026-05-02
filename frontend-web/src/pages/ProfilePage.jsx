@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike, getUserBikes, getUserHistoric, deleteHistoricEntry, deleteAllHistoric } from "../services/apiBack";
 
+import Meta from "../components/Meta";
 import Header from "../components/layout/Header";
 import IconButton from "../components/ui/IconButton";
 import IconCard from '../components/ui/IconCard';
@@ -247,6 +248,7 @@ export default function ProfilePage() {
 
   return (
     <>
+      <Meta title="Mon Profil | Sécu'Cycle" description="Gérez vos informations personnelles, vos adresses, vos vélos et votre historique de navigation." />
       <Header page="profil" />
       <div className="profile-page">
 
