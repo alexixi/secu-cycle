@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /profil
+Disallow: /admin
+Sitemap: https://secu-cycle.fr/sitemap.xml
