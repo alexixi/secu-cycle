@@ -84,7 +84,6 @@ def _detect_roundabout(G, route_nodes: list, i: int) -> Optional[tuple]:
         e2_data = e2.get(0, next(iter(e2.values()))) if e2 else {}
 
         if e2_data.get('junction') != 'roundabout':
-            exit_count += 1
             return (exit_count, j)
 
         node_edges = list(G.edges(v2, data=True))
@@ -224,6 +223,20 @@ def navigation_update(
 
     current_maneuver = maneuvers[current_step_idx]
     dist_to_next = haversine(user_lat, user_lon, current_maneuver['lat'], current_maneuver['lon'])
+
+    if current_step_idx == len(maneuvers) - 1 and dist_to_next < MANEUVER_TRIGGER_M:
+        return {
+            "status": "arrived",
+            "snap_distance_m": round(snap_dist, 1),
+            "snapped_lat": snapped_node['y'],
+            "snapped_lon": snapped_node['x'],
+            "current_step_idx": current_step_idx,
+            "distance_to_next_m": 0,
+            "current_maneuver": current_maneuver,
+            "next_maneuver": None,
+            "recalculate": False,
+        }
+
     next_maneuver = maneuvers[current_step_idx + 1] if current_step_idx + 1 < len(maneuvers) else None
 
     return {
