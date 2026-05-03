@@ -7,9 +7,9 @@ facilitant l'utilisation sur smartphone.
 
 \subsection{Site Web}
 \label{sec:web}
-\noindent L'application Web a été développée en utilisant React et Vite.\\
+\noindent L'application Web a été développée en utilisant React \cite{React} et Vite \cite{Vite}. Vite permet d'automatiser la création de l'architecture du projet, le serveur live de développement et la compilation en build production. \\
 
-\noindent Le site Web est composé d'une page d'accueil présentant le projet.
+\noindent Le site Web est composé d'une page d'accueil présentant le projet et invitant les utilisateurs à installer l'application mobile.
 Il y a aussi une page de connexion, nécessitant une adresse mail et un mot de passe.
 Si l'utilisateur n'a pas encore de compte, il peut en créer un via la page de création de compte.
 Il y a, de plus, une page consacrée à la recherche d'itinéraires (Section~\ref{sec:webrecherche}) et une page de profil utilisateur (Section~\ref{sec:webprofil}).
@@ -89,12 +89,17 @@ Lors d'un clic sur un trajet de celui-ci, une fenêtre modale s'ouvre, lui perme
     \label{fig:historic}
 \end{figure}
 
+\subsubsection{Référencement et SEO}
+\noindent Afin que le site puisse apparaitre dans les résultats de recherches, nous avons rendu accessible un fichier \texttt{robots.txt} autorisant l'indexation et un fichier \texttt{sitemap.xml} qui présente les différentes pages du site devant être indexés avec un poid d'importance et leur url. Nous avons également enregistré le site auprès de la Google Search Console \cite{GoogleSearchConsole} et de Bing Webmaster Tools \cite{BingWebmasterTools} pour demander une indexation explicitement et suivre les statistiques d'apparition du site dans les résultats de recherche. Combiner ces deux plateforme permet l'apparition dans la plupart des moteurs de recherches et également dans les résultats des modèle IA.
 
+\noindent Pour améliorer le score de ranking nous avons optimisé les temps de chargement et mis des balises \texttt{<meta>} dynamiques en fonctions des pages. Nous avons également essayé de suivre au maximum les bonnes pratiques de structuration de pages.
+
+\noindent Acutellement le référencement n'est qu'à son début et la page n'est pas encore bien indexée. En effet le nom de domaine vient d'être déposé et le site vient d'être mis en ligne, donc le score de pertinence de la page est encore bas. Pour faire augmenter la crédibilité du site auprès des moteurs de recherche il faudrait que des pages sérieuses et reconnus parlent de ce projet et contiennent un lien renvoyant sur le site.
 
 \subsection{Application mobile}
 \label{sec:mobile}
 
-\noindent L'application mobile a été développée en utilisant React Native, permettant de créer une application compatible à la fois avec Android et iOS. Nous avons utilisé le framework Expo pour faciliter le développement et le déploiement de l'application.\\
+\noindent L'application mobile a été développée en utilisant React Native \cite{ReactNative}, permettant de créer une application compatible à la fois avec Android et iOS. Nous avons utilisé le framework Expo \cite{Expo} pour faciliter le développement et le déploiement de l'application.\\
 
 \noindent L'application mobile propose les même fonctionnalitées que le site Web, mais de manière réarangées pour mieux correspondre à l'utilisation sur smartphone. L'application embarque également la navigation en temps réel avec instructions (Sous-section~\ref{sec:mobile-navigation}).
 
@@ -115,3 +120,8 @@ Lors d'un clic sur un trajet de celui-ci, une fenêtre modale s'ouvre, lui perme
 \label{sec:mobile-navigation}
 
 \noindent Le mode navigation est le point principal de l'application mobile et ce qui en fait sont réel intérêt par rapport au site. L'utilisateur peut rentrer dans le mode navigation une fois un itinéraire sélectionné. Une fois rentré dans le mode, l'interface s'épure en enlevant le panneau de recherche, la carte s'incline légèrement pour mieux montrer la route et un nouveau panneau apparaît. Ce nouveau panneau affiche les instructions de navigation en temps réel. Ces instructions sont mises à jour en temps réel en fonction de la position de l'utilisateur et sont calculées côté backend. L'avantage de faire de cette façon est que le backend a la connaissance complète de la route (intersection, rond-points, etc), le frontend lui ne voit qu'une ligne de trajet. Un icon indique le type d'action que doit faire l'utilisateur à la prochaine intersection (tourner, continuer tout droit, prendre une sortie de rond-point, etc). Pour faciliter la vie du cycliste, l'écran reste allumé tant qu'il est en mode navigation. Nous avons également implémenté le guidage vocal, qui utilise la librairie Text To Speech du téléphone. \\
+
+
+\subsubsection{Déploiment de l'application}
+\label{sec:mobile-deploiment}
+\noindent Pour le moment l'application n'est pas publiée sur les stores d'applications.
