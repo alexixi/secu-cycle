@@ -1,7 +1,7 @@
 \section{Frontend}
 \label{sec:frontend}
 \noindent Dans un premier temps, nous avons développé un site Web, présenté dans la Section~\ref{sec:web}.
-Une fois que la première version du site était prête, nous avons commencé le développement 
+Une fois que la première version du site était prête, nous avons commencé le développement
 d'une application mobile, présentée dans la Section~\ref{sec:mobile},
 facilitant l'utilisation sur smartphone.
 
@@ -93,3 +93,25 @@ Lors d'un clic sur un trajet de celui-ci, une fenêtre modale s'ouvre, lui perme
 
 \subsection{Application mobile}
 \label{sec:mobile}
+
+\noindent L'application mobile a été développée en utilisant React Native, permettant de créer une application compatible à la fois avec Android et iOS. Nous avons utilisé le framework Expo pour faciliter le développement et le déploiement de l'application.\\
+
+\noindent L'application mobile propose les même fonctionnalitées que le site Web, mais de manière réarangées pour mieux correspondre à l'utilisation sur smartphone. L'application embarque également la navigation en temps réel avec instructions (Sous-section~\ref{sec:mobile-navigation}).
+
+\subsubsection{Page de recherche d'itinéraires}
+\label{sec:mobile-recherche}
+
+\noindent La page de recherche d'itinéraires est la page principale de l'application mobile. Au démarrage de l'application, l'utilisateur est directement sur cette page pour pouvoir faire rapidement une recherche d'itinéraire.\\
+
+\noindent En haut de la page se trouve le bloc de recherche qui contient les champs d'adresses départ et arrivée. Un bouton flèche permet d'agrandir le bloc de recherche pour faire apparaitre la sélection du vélo et de la contrainte horraire. Les adresses sont autocomplétées comme sur le site web. La spécificité de l'application sur la recherche est la possibilité de partir de la position GPS acutelle.Dans la plupart des cas d'utilisations classiques sur mobile, l'utilisateur part de sa position pour se rendre quelque part, c'est donc important que ce choix soit facilement accessible.\\
+
+\noindent La carte occupe la totalité de l'écran ne arrière plan. Elle démarre sur la position de actuelle. L'utilisateur peut interagir avec la carte, la déplacer et zoomer. Un bouton permet de recentrer la vue sur la position. La vue se centre automatiquement sur le point qui vient d'être rentré comme adresse de départ ou d'arrivée et sur les deux une fois qu'ils sont rentrés.\\
+
+\noindent Lorsque les trajets sont calculés, ils s'affichent sur la carte. L'utilisateur peut cliquer sur un trajet pour le sélectionner. Un panneau sur le bas de l'écran apparait et permet également de sélectionner un itinéraire. Ces panneaux affichent le type d'itinéraire et quelques informations baisques. Pour voir tout le détails, un bouton permet d'ouvrir une fenêtre modale. Cela permet que les panneaux ne soit pas trop grand pour laisser de la place pour visualiser la carte\\
+
+\noindent Un bouton permet de changer le fond de carte comme sur le site. Le thème de la carte peut être clair ou sombre selon le choix de l'utilisateur et est par défaut calqué sur le thème du téléphone.\\
+
+\subsubsection{Navigation en temps réel}
+\label{sec:mobile-navigation}
+
+\noindent Le mode navigation est le point principal de l'application mobile et ce qui en fait sont réel intérêt par rapport au site. L'utilisateur peut rentrer dans le mode navigation une fois un itinéraire sélectionné. Une fois rentré dans le mode, l'interface s'épure en enlevant le panneau de recherche, la carte s'incline légèrement pour mieux montrer la route et un nouveau panneau apparaît. Ce nouveau panneau affiche les instructions de navigation en temps réel. Ces instructions sont mises à jour en temps réel en fonction de la position de l'utilisateur et sont calculées côté backend. L'avantage de faire de cette façon est que le backend a la connaissance complète de la route (intersection, rond-points, etc), le frontend lui ne voit qu'une ligne de trajet. Un icon indique le type d'action que doit faire l'utilisateur à la prochaine intersection (tourner, continuer tout droit, prendre une sortie de rond-point, etc). Pour faciliter la vie du cycliste, l'écran reste allumé tant qu'il est en mode navigation. Nous avons également implémenté le guidage vocal, qui utilise la librairie Text To Speech du téléphone. \\
