@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 // Mapping turn_type → nom d'icône MaterialCommunityIcons
 const TURN_ICONS = {
@@ -48,6 +49,18 @@ export default function GuidancePanel({ guidanceState, onStop }) {
             tts(guidanceState.instruction.text);
         }
     }, [guidanceState?.instruction?.text, guidanceState?.hasArrived]);
+
+    useEffect(() => {
+        if (guidanceState && !guidanceState.hasArrived) {
+            activateKeepAwakeAsync();
+        }
+        else {
+            deactivateKeepAwake();
+        }
+        return () => {
+            deactivateKeepAwake();
+        };
+    }, [guidanceState?.hasArrived]);
 
     if (!guidanceState) return null;
 
