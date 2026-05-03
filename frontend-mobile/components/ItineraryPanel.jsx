@@ -12,6 +12,30 @@ const ROUTE_LABELS = {
 
 function DetailModal({ itineraire, visible, onClose, colors, typography }) {
     if (!itineraire) return null;
+    const screenWidth = Dimensions.get('window').width;
+    const screenHeight = Dimensions.get('window').height;
+    const slideAnim = useRef(new Animated.Value(screenHeight)).current;
+
+    useEffect(() => {
+        if (visible) {
+            Animated.spring(slideAnim, {
+                toValue: 0,
+                useNativeDriver: true,
+                tension: 50,
+                friction: 7
+            }).start();
+        }
+    }, [visible]);
+
+    const handleClose = () => {
+        Animated.timing(slideAnim, {
+            toValue: screenHeight,
+            duration: 300,
+            useNativeDriver: true,
+        }).start(() => {
+            onClose();
+        });
+    };
 
     const meta = ROUTE_LABELS[itineraire.id] ?? { label: itineraire.name, icon: "map-marker-path", color: colors.primary };
 
@@ -26,23 +50,27 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
 
     const minEle = elevationData.length > 0 ? Math.min(...elevationData.map(d => d.y)) : 0;
     const maxEle = elevationData.length > 0 ? Math.max(...elevationData.map(d => d.y)) : 0;
-    const screenWidth = Dimensions.get('window').width;
 
     return (
         <Modal
             visible={visible}
             transparent
-            animationType="slide"
-            onRequestClose={onClose}
+            animationType="fade"
+            onRequestClose={handleClose}
         >
             <TouchableOpacity
                 style={styles.modalOverlay}
                 activeOpacity={1}
-                onPress={onClose}
+                onPress={handleClose}
             >
-                <TouchableOpacity
-                    activeOpacity={1}
-                    style={[styles.modalContent, { backgroundColor: colors.bgSurface }]}
+                <Animated.View
+                    style={[
+                        styles.modalContent,
+                        {
+                            backgroundColor: colors.bgSurface,
+                            transform: [{ translateY: slideAnim }]
+                        }
+                    ]}
                 >
                     <View style={styles.modalHeader}>
                         <View style={styles.modalTitleRow}>
@@ -53,7 +81,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                                 {meta.label}
                             </Text>
                         </View>
-                        <TouchableOpacity onPress={onClose}>
+                        <TouchableOpacity onPress={handleClose}>
                             <Ionicons name="close" size={26} color={colors.textSecondary} />
                         </TouchableOpacity>
                     </View>
@@ -204,9 +232,9 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                             </View>
                         </View>
                     )}
-                </TouchableOpacity>
+                </Animated.View>
             </TouchableOpacity>
-        </Modal>
+        </Modal >
     );
 }
 
