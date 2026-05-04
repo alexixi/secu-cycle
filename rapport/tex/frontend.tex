@@ -21,7 +21,7 @@ Il y a, de plus, une page consacrée à la recherche d'itinéraires (Section~\re
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{img/PageItineraire.png}
+    \includegraphics[width=\textwidth]{screenshots/site/PageItineraire.png}
     \caption{Capture d'écran de la page de recherche d'itinéraire.}
     \label{fig:webrecherche}
 \end{figure}
@@ -65,7 +65,7 @@ Il peut choisir entre une carte sombre, une carte avec le relief, les rues, la v
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{img/PageUtilisateur.png}
+    \includegraphics[width=\textwidth]{screenshots/site/PageUtilisateur.png}
     \caption{Capture d'écran de la page de profil de l'utilisateur.}
     \label{fig:webprofil}
 \end{figure}
@@ -85,7 +85,7 @@ Lors d'un clic sur un trajet de celui-ci, une fenêtre modale s'ouvre, lui perme
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{img/HistoricModal.png}
+    \includegraphics[width=\textwidth]{screenshots/site/HistoricModal.png}
     \caption{Capture d'écran de la fenêtre modale d'historique.}
     \label{fig:historic}
 \end{figure}
@@ -104,25 +104,63 @@ Combiner ces deux plateformes permet l'apparition dans la plupart des moteurs de
 
 \noindent L'application mobile a été développée en utilisant React Native \cite{ReactNative}, permettant de créer une application compatible à la fois avec Android et iOS. Nous avons utilisé le framework Expo \cite{Expo} pour faciliter le développement et le déploiement de l'application.\\
 
-\noindent L'application mobile propose les mêmes fonctionnalités que le site Web, mais de manière réarrangée pour mieux correspondre à l'utilisation sur smartphone. L'application embarque également la navigation en temps réel avec instructions (Sous-section~\ref{sec:mobile-navigation}).
+\noindent L'application mobile propose les mêmes fonctionnalités que le site web, mais de manière réarrangée pour mieux correspondre à l'utilisation sur smartphone. L'application embarque également la navigation en temps réel avec instructions détaillée dans la Sous-section~\ref{sec:mobile-navigation}.
+
+\noindent L'application est composée principalement d'une page de recherche d'itinéraires (page principale) et d'une page de profil utilisateur qui sont accessibles via un menu en bas de l'écran. Elle est également composée de pages annexes de formulaires comme la page de connexion, de création de compte, de modification de profil, d'ajout de vélo ou encore de détail de l'historique. Les pages principales de l'application sont présentés dans la Figure~\ref{fig:app_screens}.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.2\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{screenshots/application/apercu_itineraire}
+        \caption{Aperçu des itinéraires}
+        \label{fig:apercu_itineraire}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.2\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{screenshots/application/detail_itineraire}
+        \caption{Détail d'un itinéraire}
+        \label{fig:detail_itineraire}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.2\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{screenshots/application/navigation}
+        \caption{Navigation en temps réel}
+        \label{fig:navigation}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.2\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{screenshots/application/profile}
+        \caption{Page de profil utilisateur}
+        \label{fig:profil}
+    \end{subfigure}
+    \caption{Différentes vues de l'application mobile.}
+    \label{fig:app_screens}
+\end{figure}
 
 \subsubsection{Page de recherche d'itinéraires}
 \label{sec:mobile-recherche}
 
-\noindent La page de recherche d'itinéraires est la page principale de l'application mobile. Au démarrage de l'application, l'utilisateur est directement sur cette page pour pouvoir faire rapidement une recherche d'itinéraire.\\
+\noindent La page de recherche d'itinéraires est la page principale de l'application mobile. Elle est présentée dans la Sous-Figure~\ref{fig:apercu_itineraire}. Au démarrage de l'application, l'utilisateur est directement sur cette page pour pouvoir faire rapidement une recherche d'itinéraire.\\
 
 \noindent En haut de la page se trouve le bloc de recherche qui contient les champs d'adresses de départ et d'arrivée. Un bouton flèche permet d'agrandir le bloc de recherche pour faire apparaître la sélection du vélo et de la contrainte horraire. Les adresses sont autocomplétées comme sur le site Web. La spécificité de l'application sur la recherche est la possibilité de partir de la position GPS actuelle. Dans la plupart des cas d'utilisations classiques sur mobile, l'utilisateur part de sa position pour se rendre quelque part, il est donc important que ce choix soit facilement accessible.\\
 
 \noindent La carte occupe la totalité de l'écran en arrière plan. Elle démarre sur la position actuelle. L'utilisateur peut interagir avec la carte, la déplacer et zoomer. Un bouton permet de recentrer la vue sur la position. La vue se centre automatiquement sur le point qui vient d'être entré comme adresse de départ ou d'arrivée, ou sur les deux si les deux adresses sont complétées.\\
 
-\noindent Lorsque les trajets sont calculés, ils s'affichent sur la carte. L'utilisateur peut cliquer sur un trajet pour le sélectionner. Un panneau sur le bas de l'écran apparaît et permet également de sélectionner un itinéraire. Ces panneaux affichent le type d'itinéraire et quelques informations supplémentaires. Pour voir tout le détail de l'itinéraire, un bouton permet d'ouvrir une fenêtre modale. L'utilisation d'une modale permet que les panneaux ne soient pas trop grand, et l'utilisateur peut donc visualiser la carte en même temps que les détails de son itinéraire.\\
+\noindent Lorsque les trajets sont calculés, ils s'affichent sur la carte. C'est cet état qui est montré dans la Sous-Figure~\ref{fig:apercu_itineraire}. L'utilisateur peut cliquer sur un trajet pour le sélectionner. Un panneau sur le bas de l'écran apparaît et permet également de sélectionner un itinéraire. Ces panneaux affichent le type d'itinéraire et quelques informations supplémentaires. Pour voir tout le détail de l'itinéraire, un bouton permet d'ouvrir une fenêtre modale, montrée dans la Sous-Figure~\ref{fig:detail_itineraire}. L'utilisation d'une modale permet que les panneaux ne soient pas trop grand, et l'utilisateur peut donc visualiser la carte en même temps que les détails de son itinéraire.\\
 
 \noindent Un bouton permet de changer le fond de carte, comme sur le site. Le thème de la carte peut être clair ou sombre selon le choix de l'utilisateur et est par défaut calqué sur le thème du téléphone.\\
 
 \subsubsection{Navigation en temps réel}
 \label{sec:mobile-navigation}
 
-\noindent Le mode navigation est le point principal de l'application mobile et ce qui en fait son réel intérêt par rapport au site. L'utilisateur peut entrer dans le mode navigation une fois un itinéraire sélectionné. Une fois entré dans le mode, l'interface s'épure en enlevant le panneau de recherche, la carte s'incline légèrement pour mieux montrer la route et un nouveau panneau apparaît. Ce nouveau panneau affiche les instructions de navigation en temps réel. Ces instructions sont mises à jour en temps réel en fonction de la position de l'utilisateur et sont calculées côté backend. L'avantage de faire de cette façon est que le backend a la connaissance complète de la route (intersection, rond-points, etc), le frontend lui ne voit qu'une ligne de trajet. Une icone indique le type d'action que doit faire l'utilisateur à la prochaine intersection (tourner, continuer tout droit, prendre une sortie de rond-point, etc). Pour faciliter l'expérience du cycliste, l'écran du smartphone reste allumé tant qu'il est en mode navigation. Nous avons également implémenté le guidage vocal, qui utilise la librairie Text To Speech du téléphone.\\
+\noindent Le mode navigation est le point de différence principal de l'application mobile et ce qui en fait son réel intérêt par rapport au site. L'utilisateur peut entrer dans le mode navigation une fois un itinéraire sélectionné. Une fois entré dans le mode, l'interface s'épure en enlevant le panneau de recherche, la carte s'incline légèrement pour mieux montrer la route et un nouveau panneau apparaît. Cette interface est présentée dans la Sous-Figure~\ref{fig:navigation}.
+Ce nouveau panneau affiche les instructions de navigation en temps réel. Ces instructions sont mises à jour en temps réel en fonction de la position de l'utilisateur et sont calculées côté backend.
+L'avantage de faire de cette façon est que le backend a la connaissance complète de la route (intersection, rond-points, etc), le frontend lui ne voit qu'une ligne de trajet. Une icone indique le type d'action que doit faire l'utilisateur à la prochaine intersection (tourner, continuer tout droit, prendre une sortie de rond-point, etc).
+Pour faciliter l'expérience du cycliste, l'écran du smartphone reste allumé tant qu'il est en mode navigation. Nous avons également implémenté le guidage vocal, qui utilise la librairie Text To Speech du téléphone.\\
 
 
 \subsubsection{Déploiment de l'application}
