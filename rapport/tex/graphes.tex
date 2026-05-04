@@ -13,31 +13,93 @@ Pour représenter le réseau routier, nous utilisons la bibliothèque \textbf{OS
 
 L'originalité de notre approche réside dans la manipulation des poids de ce graphe. Contrairement à un GPS classique qui minimise la distance physique, notre système minimise une \textbf{distance perçue} (ou distance augmentée), calculée pour refléter le ressenti psychologique et physique d'un cycliste.
 
-\subsection{Calcul du score de sécurité}
+\subsection{Calcul de la distance perçu}
+La première partie importante pour nos calcul d'itinéraire est de prendre en compte certain paramètres pour déterminer si les routes sont sécurisés ou non pour faire ça on attribut des poids aux différents critères
+que l'on prends en compte et on calcul une valeur de deistance perçu avec pénalisants les
+
+\subsubsection{Calcul du score de sécurité}
 
 Chaque segment du graphe reçoit une note de sécurité S sur une échelle de 1 à 10. Cette note est le résultat d'une pondération multicritère :
 \begin{equation}
 S = (n_{highway} \times 0{,}25) + (n_{cycleway} \times 0{,}30) + (n_{speed} \times 0{,}45)
 \end{equation}
 \begin{itemize}
-\item \textbf{Vitesse ($n_{speed}$)} : Critère prépondérant (45\%), car la vitesse du trafic automobile est le premier facteur de stress et de dangerosité.
-\item \textbf{Aménagements ($n_{cycleway}$)} : Valorise la présence de pistes cyclables séparées ou de bandes peintes.
-\item \textbf{Type de voie ($n_{highway}$)} : Distingue les zones apaisées (zones 30, rues résidentielles) des axes structurants.
+    \item $n_{speed}$ (45\,\%) : La vitesse limite automobile est le critère prépondérant. Une route à 50\,km/h pénalise lourdement la moyenne, tandis qu'une zone 20\,km/h ou 30\,km/h la favorise.
+    \item $n_{cycleway}$ (30\,\%) : Évalue la protection cyclable (10/10 pour une piste séparée, 1/10 pour l'absence d'aménagement).
+    \item $n_{highway}$ (25\,\%) : Qualifie la typologie urbaine de la voie (rue résidentielle vs boulevard).
 \end{itemize}
 
-Nous avons intégré une logique de \textit{"Jokers d'infrastructure"} : si une voie est identifiée comme une piste cyclable isolée ou une voie verte, elle reçoit automatiquement la note maximale, neutralisant ainsi les malus liés à la vitesse des voies motorisées adjacentes. De nuit, le score intègre également l'état de l'éclairage public (15\% de la note) pour favoriser les axes sécurisants après le coucher du soleil.
+En conditions nocturnes, un quatrième critère entre en jeu : l'éclairage public ($n_{lit}$). 
+Les pondérations sont alors rééquilibrées pour accorder 15\,\% de la note à l'illumination du segment, sans pour autant sacrifier l'importance de l'infrastructure physique :
+\begin{equation}
+    S_{nuit} = (n_{highway} \times 0{,}20) + (n_{cycleway} \times 0{,}30) + (n_{speed} \times 0{,}35) + (n_{lit} \times 0{,}15)
+\end{equation}
+
+\subsubsection{Transformation en multiplicateur de risque ($M_{risque}$)}
+Une fois le score sur 10 obtenu, il doit être converti en une pénalité de distance. 
+L'algorithme calcule d'abord le risque normalisé ($R_{norm}$), qui est l'inverse du score (un score de 10/10 donne un risque de 0, un score de 1/10 donne un risque de 1).
+
+Ce risque est ensuite élevé au carré pour créer un \textbf{effet dissuasif exponentiel} : un danger critique sera puni beaucoup plus sévèrement qu'un danger modéré.
+\begin{equation}
+    M_{risque} = R_{norm}^2 \times P_{secu} \times (1 - \alpha)
+\end{equation}
+Où :
+\begin{itemize}
+    \item $P_{secu}$ est la constante de pénalité maximale (fixée à 15,0). Un segment perçu comme dangereux verra sa longueur multipliée par 15.
+    \item $\alpha \in [0, 1]$ est le profil choisi par l'utilisateur. Si l'utilisateur choisit le trajet Rapide ($\alpha = 1$), le multiplicateur s'annule complètement.
+\end{itemize}
+
+\subsubsection{Calcul du Facteur d'Effort ($M_{effort}$)}
+Le dénivelé positif constitue un autre frein majeur pour le cycliste musculaire. Le multiplicateur d'effort suit également une courbe quadratique pour dissuader fortement l'emprunt des pentes les plus raides, tout en ignorant les descentes :
+\begin{equation}
+    M_{effort} = \frac{\max(0, \%Pente)^2}{D_{elev}} \times \beta
+\end{equation}
+Où $D_{elev}$ est un diviseur adoucissant la courbe (fixé à 30,0) et $\beta$ est le coefficient d'assistance. Pour un vélo électrique, $\beta = 0$, ce qui annule toute pénalité liée au relief. Pour un cycliste musculaire débutant, $\beta$ peut s'élever jusqu'à 1,2.
+
+\subsubsection{Synthèse et Pénalités Dynamiques ($W$)}
+La distance perçue finale de l'arête ($W$), qui sera soumise à l'algorithme A*, est l'addition de la distance physique dilatée par les multiplicateurs, à laquelle s'ajoutent les coûts fixes des événements dynamiques (trafic et signalements) :
+\begin{equation}
+    W = \left[ D_{réelle} \times (1 + M_{risque} + M_{effort}) \right] + C_{trafic} + C_{signalements}
+\end{equation}
+Les coûts d'impédance dynamiques ($C_{trafic}$ et $C_{signalements}$) sont des mètres virtuels ajoutés de manière additive (ex: + 50 mètres pour un embouteillage, + 10\,000 mètres pour un accident bloquant). 
+Cette méthode additive garantit que le GPS cherchera à contourner le segment impacté sans gonfler proportionnellement sa longueur réelle.
+
+\subsubsection{Choix des poids}
+La plus part des choix choisis dans notre calcul viennent soit de données obtenus via des recherches faite en amont soit on était choisi par nous.
+Ces choix reposent en grande partie sur nos expérience de vie dans Bordeaux et d'observations faites sur les itinéraires obtenus.
+Nous n'avons pas pu tester la sécurité de chaque trajet et donc certain poids ne sont peut être pas bien choisis.
+Mais pour avoir un calcul et des poids rigoureux il faudrait s'appuyer sur un grand nombre de test en condition réelle que nous pouvions évidemment pas mettre en place pour des raisons de logistique.
+Si un jour cet application et ce site est voué et à être public on pourrait penser à récupérer les avis des utilisateurs sur la sécurités de leur trajet pour ajuster ces poids.
 
 \subsection{Algorithme de recherche d'itinéraire et distance perçue}
 
 Le calcul de l'itinéraire optimal repose sur l'algorithme \textbf{A* (A-Star)}, choisi pour son efficacité sur des graphes de grande taille. Le poids final de chaque arête (W), utilisé par l'algorithme pour trouver le chemin le moins "coûteux", suit la stratégie de la distance perçue :
 \begin{equation}
-W = D_{réelle} \times (1 + \text{Malus}{risque} + \text{Malus}{effort})
+W = D_{réelle} \times (1 + \text{Malus risque} + \text{Malus effort})
 \end{equation}
 
-Cette formule permet de "dilater" virtuellement les rues hostiles. Un boulevard dangereux de 100 mètres peut ainsi être perçu comme un segment de 600 mètres par l'algorithme, ce qui le force mathématiquement à chercher un détour par une rue plus calme, même si celle-ci est physiquement plus longue.
+Cette formule permet de pénaliser les rues jugées dangereuses. Un boulevard dangereux de 100 mètres peut ainsi être perçu comme un segment de 600 mètres par l'algorithme, ce qui le force mathématiquement à chercher un détour par une rue plus calme, même si celle-ci est physiquement plus longue.
 
 Deux paramètres fondamentaux permettent de personnaliser ce calcul :
 \begin{itemize}
-\item \textbf{Le facteur $\alpha$ (Sécurité)} : Définit le poids du risque. À $\alpha$=1, le système ignore le danger et cherche le trajet le plus rapide. À $\alpha$=0, il maximise la sécurité.
-\item \textbf{Le facteur  (Effort)} : Pondère l'impact du dénivelé. Ce paramètre est ajusté selon le profil de l'utilisateur (débutant, expérimenté) ou le type de vélo (électrique ou musculaire), permettant d'éviter les pentes raides pour les profils les moins sportifs.
+\item \textbf{Le facteur $\alpha$ (Sécurité)} : Définit le poids du risque. À $\alpha=1$, le système ignore le danger et cherche le trajet le plus rapide. À $\alpha=0$, il maximise la sécurité.
+\item \textbf{Le facteur $\beta$ (Effort)} : Pondère l'impact du dénivelé. Ce paramètre est ajusté selon le profil de l'utilisateur (débutant, expérimenté) ou le type de vélo (électrique ou non), permettant d'éviter les pentes raides pour les profils les moins sportifs.
+\end{itemize}
+
+\subsubsection{Génération multi-itinéraires}
+
+Afin d'offrir une véritable liberté de choix à l'utilisateur, le système génère systématiquement deux trajets extrêmes, et calcule dynamiquement un troisième trajet intermédiaire sous contrainte de temps. 
+Cette architecture repose sur la manipulation du paramètre $\alpha$.
+
+\begin{itemize}
+    \item \textbf{Le trajet Rapide (Optimisation de la distance) :} En fixant $\alpha = 1.0$, le facteur de pondération du risque devient nul.
+    La composante liée au danger est effacée. Le poids de chaque arête est réduit à sa distance physique. L'algorithme A* minimise alors la distance totale.
+    
+    \item \textbf{Le trajet Sécurisé (Maximisation de l'infrastructure) :} À l'inverse, avec $\alpha = 0.0$, l'algorithme n'évalue les segments qu'à travers le prisme de leur dangerosité. 
+    Il privilégie de manière absolue les voies sécurisés et les pistes cyclables séparées, garantissant le plus haut niveau de sécurité possible au prix d'un allongement du trajet.
+    
+    \item \textbf{Le trajet Compromis (Recherche par dichotomie) :} Si une contrainte de temps maximal est spécifiée par l'utilisateur, le système déclenche le calcul d'un troisième itinéraire. 
+    Ce calcul s'appuie sur un algorithme de recherche par dichotomie itérant sur la valeur de $\alpha$ (entre $0.0$ et $1.0$). 
+    À chaque itération, si la durée estimée excède la limite, la sécurité est légèrement dégradée au profit du temps, et inversement. 
+    En six itérations, l'algorithme converge vers le meilleur score de sécurité mathématiquement réalisable tout en garantissant le respect strict de la fenêtre temporelle.
 \end{itemize}
