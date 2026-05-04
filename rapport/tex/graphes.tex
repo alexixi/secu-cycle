@@ -1,6 +1,43 @@
 \section{Graphes et calcul d'itinéraires sécurisés}
 \label{sec:graphes}
 
+Cette partie détaille la conception de notre moteur de navigation, de l'acquisition des données à la sélection de l'itinéraire. Nous aborderons d'abord la modélisation du réseau via la théorie des graphes, puis la définition d'un score de sécurité multicritère, pour enfin expliquer comment l'algorithme A* utilise la notion de distance perçue pour privilégier le confort et la sécurité du cycliste.
+
+\subsection{Modélisation du réseau : le graphe urbain}
+
+Pour représenter le réseau routier, nous utilisons la bibliothèque \textbf{OSMnx}, qui permet d'extraire les données d'OpenStreetMap (OSM) sous forme d'un graphe orienté multi-couches. Dans cette structure :
+\begin{itemize}
+\item \textbf{Les nœuds} représentent les intersections et les points de passage.
+\item \textbf{Les arêtes} représentent les segments de rue, porteurs de métadonnées critiques (longueur, type de voie, présence d'aménagements cyclables, vitesse maximale, éclairage public).
+\end{itemize}
+
+L'originalité de notre approche réside dans la manipulation des poids de ce graphe. Contrairement à un GPS classique qui minimise la distance physique, notre système minimise une \textbf{distance perçue} (ou distance augmentée), calculée pour refléter le ressenti psychologique et physique d'un cycliste.
+
 \subsection{Calcul du score de sécurité}
 
-\subsection{Calcul des itinéraires sécurisés}
+Chaque segment du graphe reçoit une note de sécurité S sur une échelle de 1 à 10. Cette note est le résultat d'une pondération multicritère :
+\begin{equation}
+S = (n_{highway} \times 0{,}25) + (n_{cycleway} \times 0{,}30) + (n_{speed} \times 0{,}45)
+\end{equation}
+\begin{itemize}
+\item \textbf{Vitesse (nspeed​)} : Critère prépondérant (45\%), car la vitesse du trafic automobile est le premier facteur de stress et de dangerosité.
+\item \textbf{Aménagements (ncycleway​)} : Valorise la présence de pistes cyclables séparées ou de bandes peintes.
+\item \textbf{Type de voie (nhighway​)} : Distingue les zones apaisées (zones 30, rues résidentielles) des axes structurants.
+\end{itemize}
+
+Nous avons intégré une logique de \textit{"Jokers d'infrastructure"} : si une voie est identifiée comme une piste cyclable isolée ou une voie verte, elle reçoit automatiquement la note maximale, neutralisant ainsi les malus liés à la vitesse des voies motorisées adjacentes. De nuit, le score intègre également l'état de l'éclairage public (15\% de la note) pour favoriser les axes sécurisants après le coucher du soleil.
+
+\subsection{Algorithme de recherche d'itinéraire et distance perçue}
+
+Le calcul de l'itinéraire optimal repose sur l'algorithme \textbf{A* (A-Star)}, choisi pour son efficacité sur des graphes de grande taille. Le poids final de chaque arête (W), utilisé par l'algorithme pour trouver le chemin le moins "coûteux", suit la stratégie de la distance perçue :
+\begin{equation}
+W = D_{réelle} \times (1 + \text{Malus}{risque} + \text{Malus}{effort})
+\end{equation}
+
+Cette formule permet de "dilater" virtuellement les rues hostiles. Un boulevard dangereux de 100 mètres peut ainsi être perçu comme un segment de 600 mètres par l'algorithme, ce qui le force mathématiquement à chercher un détour par une rue plus calme, même si celle-ci est physiquement plus longue.
+
+Deux paramètres fondamentaux permettent de personnaliser ce calcul :
+\begin{itemize}
+\item \textbf{Le facteur α (Sécurité)} : Définit le poids du risque. À α=1, le système ignore le danger et cherche le trajet le plus rapide. À α=0, il maximise la sécurité.
+\item \textbf{Le facteur β (Effort)} : Pondère l'impact du dénivelé. Ce paramètre est ajusté selon le profil de l'utilisateur (débutant, expérimenté) ou le type de vélo (électrique ou musculaire), permettant d'éviter les pentes raides pour les profils les moins sportifs.
+\end{itemize}
