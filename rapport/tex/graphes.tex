@@ -20,9 +20,9 @@ Chaque segment du graphe reçoit une note de sécurité S sur une échelle de 1 
 S = (n_{highway} \times 0{,}25) + (n_{cycleway} \times 0{,}30) + (n_{speed} \times 0{,}45)
 \end{equation}
 \begin{itemize}
-\item \textbf{Vitesse (nspeed​)} : Critère prépondérant (45\%), car la vitesse du trafic automobile est le premier facteur de stress et de dangerosité.
-\item \textbf{Aménagements (ncycleway​)} : Valorise la présence de pistes cyclables séparées ou de bandes peintes.
-\item \textbf{Type de voie (nhighway​)} : Distingue les zones apaisées (zones 30, rues résidentielles) des axes structurants.
+\item \textbf{Vitesse ($n_{speed}$)} : Critère prépondérant (45\%), car la vitesse du trafic automobile est le premier facteur de stress et de dangerosité.
+\item \textbf{Aménagements ($n_{cycleway}$)} : Valorise la présence de pistes cyclables séparées ou de bandes peintes.
+\item \textbf{Type de voie ($n_{highway}$)} : Distingue les zones apaisées (zones 30, rues résidentielles) des axes structurants.
 \end{itemize}
 
 Nous avons intégré une logique de \textit{"Jokers d'infrastructure"} : si une voie est identifiée comme une piste cyclable isolée ou une voie verte, elle reçoit automatiquement la note maximale, neutralisant ainsi les malus liés à la vitesse des voies motorisées adjacentes. De nuit, le score intègre également l'état de l'éclairage public (15\% de la note) pour favoriser les axes sécurisants après le coucher du soleil.
@@ -38,6 +38,6 @@ Cette formule permet de "dilater" virtuellement les rues hostiles. Un boulevard 
 
 Deux paramètres fondamentaux permettent de personnaliser ce calcul :
 \begin{itemize}
-\item \textbf{Le facteur α (Sécurité)} : Définit le poids du risque. À α=1, le système ignore le danger et cherche le trajet le plus rapide. À α=0, il maximise la sécurité.
-\item \textbf{Le facteur β (Effort)} : Pondère l'impact du dénivelé. Ce paramètre est ajusté selon le profil de l'utilisateur (débutant, expérimenté) ou le type de vélo (électrique ou musculaire), permettant d'éviter les pentes raides pour les profils les moins sportifs.
+\item \textbf{Le facteur $\alpha$ (Sécurité)} : Définit le poids du risque. À $\alpha$=1, le système ignore le danger et cherche le trajet le plus rapide. À $\alpha$=0, il maximise la sécurité.
+\item \textbf{Le facteur  (Effort)} : Pondère l'impact du dénivelé. Ce paramètre est ajusté selon le profil de l'utilisateur (débutant, expérimenté) ou le type de vélo (électrique ou musculaire), permettant d'éviter les pentes raides pour les profils les moins sportifs.
 \end{itemize}
