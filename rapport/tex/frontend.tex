@@ -106,7 +106,9 @@ Combiner ces deux plateformes permet l'apparition dans la plupart des moteurs de
 
 \noindent L'application mobile propose les mêmes fonctionnalités que le site web, mais de manière réarrangée pour mieux correspondre à l'utilisation sur smartphone. L'application embarque également la navigation en temps réel avec instructions détaillée dans la Sous-section~\ref{sec:mobile-navigation}.
 
-\noindent L'application est composée principalement d'une page de recherche d'itinéraires (page principale) et d'une page de profil utilisateur qui sont accessibles via un menu en bas de l'écran. Elle est également composée de pages annexes de formulaires comme la page de connexion, de création de compte, de modification de profil, d'ajout de vélo ou encore de détail de l'historique. Les pages principales de l'application sont présentés dans la Figure~\ref{fig:app_screens}.
+\noindent Pour le moment l'application n'est pas publiée sur les stores d'applications.
+
+\noindent L'application est composée principalement d'une page de recherche d'itinéraires (page principale) et d'une page de profil utilisateur qui sont accessibles via un menu en bas de l'écran. Elle est également composée de pages annexes de formulaires comme la page de connexion, de création de compte, de modification de profil, d'ajout de vélo ou encore de détail de l'historique. Les pages principales de l'application sont présentées dans la Figure~\ref{fig:app_screens}.
 
 \begin{figure}[H]
     \centering
@@ -161,8 +163,3 @@ Combiner ces deux plateformes permet l'apparition dans la plupart des moteurs de
 Ce nouveau panneau affiche les instructions de navigation en temps réel. Ces instructions sont mises à jour en temps réel en fonction de la position de l'utilisateur et sont calculées côté backend.
 L'avantage de faire de cette façon est que le backend a la connaissance complète de la route (intersection, rond-points, etc), le frontend lui ne voit qu'une ligne de trajet. Une icone indique le type d'action que doit faire l'utilisateur à la prochaine intersection (tourner, continuer tout droit, prendre une sortie de rond-point, etc).
 Pour faciliter l'expérience du cycliste, l'écran du smartphone reste allumé tant qu'il est en mode navigation. Nous avons également implémenté le guidage vocal, qui utilise la librairie Text To Speech du téléphone.\\
-
-
-\subsubsection{Déploiment de l'application}
-\label{sec:mobile-deploiment}
-\noindent Pour le moment l'application n'est pas publiée sur les stores d'applications.
