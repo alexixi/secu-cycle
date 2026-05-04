@@ -21,18 +21,18 @@ que l'on prends en compte et on calcul une valeur de deistance perçu avec péna
 
 Chaque segment du graphe reçoit une note de sécurité S sur une échelle de 1 à 10. Cette note est le résultat d'une pondération multicritère :
 \begin{equation}
-S = (n_{highway} \times 0{,}25) + (n_{cycleway} \times 0{,}30) + (n_{speed} \times 0{,}45)
+S = (n_{highway} \times 0.25) + (n_{cycleway} \times 0.30) + (n_{speed} \times 0.45)
 \end{equation}
 \begin{itemize}
     \item $n_{speed}$ (45\,\%) : La vitesse limite automobile est le critère prépondérant. Une route à 50\,km/h pénalise lourdement la moyenne, tandis qu'une zone 20\,km/h ou 30\,km/h la favorise.
     \item $n_{cycleway}$ (30\,\%) : Évalue la protection cyclable (10/10 pour une piste séparée, 1/10 pour l'absence d'aménagement).
-    \item $n_{highway}$ (25\,\%) : Qualifie la typologie urbaine de la voie (rue résidentielle vs boulevard).
+    \item $n_{highway}$ (25\,\%) : Qualifie la typologie urbaine de la voie (rue résidentielle ou boulevard).
 \end{itemize}
 
 En conditions nocturnes, un quatrième critère entre en jeu : l'éclairage public ($n_{lit}$). 
 Les pondérations sont alors rééquilibrées pour accorder 15\,\% de la note à l'illumination du segment, sans pour autant sacrifier l'importance de l'infrastructure physique :
 \begin{equation}
-    S_{nuit} = (n_{highway} \times 0{,}20) + (n_{cycleway} \times 0{,}30) + (n_{speed} \times 0{,}35) + (n_{lit} \times 0{,}15)
+    S_{nuit} = (n_{highway} \times 0.20) + (n_{cycleway} \times 0.30) + (n_{speed} \times 0.35) + (n_{lit} \times 0.15)
 \end{equation}
 
 \subsubsection{Transformation en multiplicateur de risque ($M_{risque}$)}
