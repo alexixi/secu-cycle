@@ -49,9 +49,13 @@ export default function MapComponent({
     const [activeReport, setActiveReport] = useState(null);
     const [mapHeight, setMapHeight] = useState(0);
     const [recenterTrigger, setRecenterTrigger] = useState(0);
-    const [compassHeading, setCompassHeading] = useState(0);
-    const lastHeadingRef = useRef(0);
+    const [hasCenteredOnce, setHasCenteredOnce] = useState(false);
+    const SPEED_THRESHOLD = 1.5; const lastHeadingRef = useRef(0);
+    const bearingRef = useRef(0);
+    const isNavigatingRef = useRef(isNavigating);
     const lastUpdateRef = useRef(0);
+    const speedRef = useRef(0);
+    const navigationStartTimeRef = useRef(null);
 
     const mapStyleUrl = useMemo(() => {
         const resolvedTheme = mapThemeMode === "auto" ? (systemColorScheme || "light") : mapThemeMode;
@@ -60,37 +64,91 @@ export default function MapComponent({
         return `https://api.maptiler.com/maps/${styleIdToUse}/style.json?key=${MAPTILER_KEY}`;
     }, [activeBaseStyle, mapThemeMode, systemColorScheme, MAPTILER_KEY]);
 
-    const headingKey = useMemo(() =>
-        Math.round(compassHeading / 5) * 5
-        , [compassHeading]);
+    useEffect(() => {
+        isNavigatingRef.current = isNavigating;
+    }, [isNavigating]);
 
     useEffect(() => {
-        let subscription;
+        isNavigatingRef.current = isNavigating;
+        if (isNavigating) {
+            navigationStartTimeRef.current = Date.now();
+        }
+    }, [isNavigating]);
+
+    useEffect(() => {
+        let headingSubscription;
+        let locationSubscription;
 
         (async () => {
             const { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') return;
 
-            subscription = await Location.watchHeadingAsync((headingObj) => {
-                if (headingObj && headingObj.magHeading !== undefined) {
-                    const newHeading = Math.round(headingObj.magHeading);
-                    const diff = Math.abs(newHeading - lastHeadingRef.current);
-                    const now = Date.now();
-                    const timeElapsed = now - lastUpdateRef.current;
-                    if (timeElapsed >= 1000 && diff > 5 && diff < 355) {
-                        lastHeadingRef.current = newHeading;
-                        setCompassHeading(newHeading);
+            headingSubscription = await Location.watchHeadingAsync((headingObj) => {
+                if (!headingObj?.magHeading) return;
+                if (!isNavigatingRef.current) return;
+                if (speedRef.current >= SPEED_THRESHOLD) return;
+                const timeSinceStart = Date.now() - (navigationStartTimeRef.current || 0);
+                if (timeSinceStart < 800) return;
+
+                const newHeading = Math.round(headingObj.magHeading);
+                const diff = Math.abs(newHeading - lastHeadingRef.current);
+                const normalizedDiff = diff > 180 ? 360 - diff : diff;
+
+                if (normalizedDiff < 3) return;
+
+                lastHeadingRef.current = newHeading;
+                bearingRef.current = newHeading;
+
+                cameraRef.current?.easeTo({
+                    bearing: newHeading,
+                    duration: 200,
+                    easing: "linear",
+                });
+            });
+            locationSubscription = await Location.watchPositionAsync(
+                { accuracy: Location.Accuracy.Highest, timeInterval: 1000, distanceInterval: 2 },
+                (location) => {
+                    const speed = location.coords.speed || 0;
+                    const gpsHeading = location.coords.heading;
+                    speedRef.current = speed;
+
+                    if (speed >= SPEED_THRESHOLD && gpsHeading >= 0 && isNavigatingRef.current) {
+                        const timeSinceStart = Date.now() - (navigationStartTimeRef.current || 0);
+                        if (timeSinceStart < 800) return;
+                        const newBearing = Math.round(gpsHeading);
+                        const diff = Math.abs(newBearing - bearingRef.current);
+                        const normalizedDiff = diff > 180 ? 360 - diff : diff;
+
+                        if (normalizedDiff < 5) return;
+
+                        bearingRef.current = newBearing;
+                        cameraRef.current?.easeTo({
+                            bearing: newBearing,
+                            duration: 500,
+                            easing: "linear",
+                        });
                     }
                 }
-            });
+            );
         })();
 
         return () => {
-            if (subscription) {
-                subscription.remove();
-            }
+            if (headingSubscription) headingSubscription.remove();
+            if (locationSubscription) locationSubscription.remove();
         };
     }, []);
+
+    useEffect(() => {
+        if (currentPosition && !hasCenteredOnce && cameraRef.current) {
+            cameraRef.current.flyTo({
+                center: [currentPosition.lon, currentPosition.lat],
+                zoom: 15,
+                duration: 600,
+                padding: { top: 100, bottom: 0, left: 0, right: 0 }
+            });
+            setHasCenteredOnce(true);
+        }
+    }, [currentPosition, hasCenteredOnce]);
 
     useEffect(() => {
         getReports().then(setReports).catch(console.error);
@@ -161,7 +219,7 @@ export default function MapComponent({
             return {
                 center: [currentPosition.lon, currentPosition.lat],
                 pitch: 45,
-                bearing: compassHeading || 0,
+                bearing: bearingRef.current || 0,
                 zoom: 18,
                 duration: 600,
                 easing: "fly",
@@ -199,31 +257,24 @@ export default function MapComponent({
                     Math.max(...lons),
                     Math.max(...lats),
                 ],
-                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : { top: 250, right: 80, bottom: 80, left: 80 },
+                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : { top: 200, right: 80, bottom: (!itineraires ? 0 : 200), left: 80 },
                 duration: 1000,
                 easing: "fly",
                 pitch: 0,
                 bearing: 0,
             };
         }
-        if (currentPosition && !start?.lat && !end?.lat) {
+        if (!currentPosition && !hasCenteredOnce) {
             return {
-                center: [currentPosition.lon, currentPosition.lat],
+                center: [-0.5795, 44.8378],
+                zoom: 12,
                 pitch: 0,
                 bearing: 0,
-                zoom: 15,
-                duration: 1000,
-                easing: "fly",
-                padding: { top: 100, bottom: 0, left: 0, right: 0 }
+                animationDuration: 0
             };
         }
-        return {
-            center: [-0.5795, 44.8378],
-            pitch: 0,
-            zoom: 12,
-            bearing: 0,
-        };
-    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger, compassHeading, mapHeight]);
+        return {};
+    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger, mapHeight, hasCenteredOnce]);
 
     const onRoutePress = (event) => {
         Haptics.selectionAsync().catch(() => { });
@@ -308,8 +359,6 @@ export default function MapComponent({
             >
                 <Camera
                     ref={cameraRef}
-                    followUserLocation={isNavigating}
-                    followUserMode={isNavigating ? "heading" : "none"}
                     {...cameraSettings}
                 />
 
