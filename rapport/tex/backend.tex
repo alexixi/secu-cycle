@@ -5,7 +5,7 @@ Cette section décrit les choix techniques retenus pour le backend de l'applicat
 
 \subsection{Architecture générale du backend}
 
-Le backend est développé avec \textbf{FastAPI}, un framework Python moderne taillé pour la création d'API REST. Pour la persistance des données, nous avons choisi \textbf{PostgreSQL}, piloté via l'ORM \textbf{SQLAlchemy} qui nous permet de manipuler la base de données sous forme d'objets Python, ce qui simplifie considérablement la lecture et la maintenance du code. L'ensemble de l'infrastructure est containerisé avec \textbf{Docker}, ce qui nous garantit un environnement identique entre le développement et la production.
+Le backend est développé avec \textbf{FastAPI}, un framework Python conçu pour la création d'API REST. Pour la persistance des données, nous avons choisi \textbf{PostgreSQL}, piloté via l'ORM \textbf{SQLAlchemy} qui permet de manipuler la base de données sous forme d'objets Python, ce qui simplifie la lecture et la maintenance du code. L'ensemble de l'infrastructure est conteneurisé avec \textbf{Docker}, ce qui garantit un environnement identique entre le développement et la production.
 
 La structure du projet suit une architecture modulaire en couches :
 \begin{itemize}
@@ -17,7 +17,7 @@ La structure du projet suit une architecture modulaire en couches :
 
 \subsection{Base de données}
 
-La base de données est le socle du système : elle centralise les données des utilisateurs et assure la persistance de leur activité de navigation.
+La base de données centralise les données des utilisateurs et assure la persistance de leur activité de navigation.
 
 \subsubsection{Modélisation des données}
 
@@ -48,11 +48,11 @@ Voici le rôle de chaque table dans la base de données :
 
 \subsection{Gestion du trafic en temps réel}
 
-L'un des aspects critiques de la sécurité cycliste est l'évitement des zones de forte congestion automobile. Un axe embouteillé n'est pas seulement synonyme de lenteur : il concentre stress, manœuvres imprévisibles et risques d'accident pour le cycliste. Notre système intègre donc une couche de données trafic en temps réel pour adapter les informations affichées aux conditions de circulation actuelles.
+La sécurité d'un itinéraire cyclable dépend en partie des conditions de circulation au moment du trajet. Un axe embouteillé concentre des manœuvres imprévisibles et augmente le risque d'accident pour le cycliste. Notre système intègre donc une couche de données trafic en temps réel pour adapter les informations affichées aux conditions actuelles.
 
 \subsubsection{Source de données : l'API AVATAR du Cerema}
 
-Pour alimenter cette fonctionnalité, nous utilisons l'\textbf{API AVATAR du Cerema}, qui recense les points de comptage fixes déployés sur la métropole bordelaise — boucles électromagnétiques et radars. Pour chaque capteur, trois indicateurs sont disponibles : la vitesse moyenne ($v$, en km/h), le débit horaire ($q$, en véhicules/heure) et le taux d'occupation ($t$, en \%). Ces données sont récupérées par le backend et exposées aux clients via l'endpoint \texttt{/traffic/}.
+Pour alimenter cette fonctionnalité, nous utilisons l'\textbf{API AVATAR du Cerema}, qui recense les points de comptage fixes déployés sur la métropole bordelaise, par le biais de boucles électromagnétiques et de radars. Pour chaque capteur, deux indicateurs sont disponibles : la vitesse moyenne ($v$, en km/h) et le débit horaire ($q$, en véhicules/heure). Ces données sont récupérées par le backend et exposées aux clients via l'endpoint \texttt{/traffic/}.
 
 \subsubsection{Stratégie de mise à jour et gestion du cache}
 
@@ -64,9 +64,11 @@ La liste des capteurs Cerema est géographiquement stable : les points de compta
 \begin{equation}
     D = s_v \times 0{,}6 + s_q \times 0{,}4
 \end{equation}
-$s_v$ est le score de vitesse et $s_q$ le score de débit, tous deux normalisés entre 0 (aucun danger) et 1 (danger maximal). Les seuils sont les suivants : $s_v = 0$ si $v \geq 70$\,km/h et $s_v = 1$ si $v < 30$\,km/h ; $s_q = 0$ si $q < 200$\,véh./h et $s_q = 1$ si $q \geq 800$\,véh./h.
+$s_v$ est le score de vitesse et $s_q$ le score de débit, tous deux normalisés entre 0 (aucun danger) et 1 (danger maximal). Les seuils sont les suivants : $s_v = 0$ si $v \geq 70$\,km/h et $s_v = 1$ si $v < 30$\,km/h, avec une interpolation linéaire entre ces deux bornes ; $s_q = 0$ si $q < 200$\,véh./h et $s_q = 1$ si $q \geq 800$\,véh./h, avec une interpolation linéaire sur cet intervalle.
 
-Nous avons choisi de donner plus de poids à la vitesse (60\,\%) qu'au débit (40\,\%) pour une raison simple : du point de vue d'un cycliste, ce qui rend un axe dangereux, c'est avant tout la vitesse à laquelle les véhicules circulent. Un trafic dense mais lent reste gérable ; en revanche, des voitures rapides sur une voie sans aménagement cyclable exposent le cycliste à des risques bien plus sérieux. Le débit reste un indicateur utile pour détecter la saturation de la chaussée, mais il est secondaire face à l'effet de la vitesse. Le score final classe chaque point de comptage en trois niveaux : \textit{fluide} ($D < 0{,}35$, vert), \textit{dense} ($D < 0{,}65$, orange) ou \textit{critique} ($D \geq 0{,}65$, rouge). Faute de données suffisantes, le niveau reste \textit{indéterminé} (gris).
+Ces seuils ont été définis à partir des caractéristiques typiques des axes couverts par les capteurs AVATAR sur la métropole bordelaise, qui sont majoritairement des voies urbaines principales. Cette approche repose sur des valeurs absolues et ne tient pas compte de la vitesse maximale autorisée ni de la capacité théorique propre à chaque route. Une amélioration possible serait de normaliser $s_v$ par rapport à la limite de vitesse réglementaire de chaque tronçon, et $s_q$ par rapport à son taux de saturation ($q/C$, où $C$ est la capacité de la voie), ce qui pourrait être intégré dans une version ultérieure.
+
+Nous avons choisi de donner plus de poids à la vitesse (60\,\%) qu'au débit (40\,\%) car, du point de vue d'un cycliste, la vitesse des véhicules est le facteur de risque principal. Un trafic dense mais lent reste gérable ; des voitures rapides sur une voie sans aménagement cyclable exposent davantage le cycliste. Le score final classe chaque point de comptage en trois niveaux : \textit{fluide} ($D < 0{,}35$, vert), \textit{dense} ($D < 0{,}65$, orange) ou \textit{critique} ($D \geq 0{,}65$, rouge). Faute de données suffisantes, le niveau reste \textit{indéterminé} (gris).
 
 \subsection{API REST}
 
@@ -74,9 +76,9 @@ L'API constitue l'interface entre les clients (web et mobile) et la logique serv
 
 \subsubsection{Technologies utilisées}
 
-FastAPI génère automatiquement une documentation interactive via Swagger UI, ce qui a facilité nos tests pendant le développement. La validation des données entrantes est assurée par \textbf{Pydantic} : chaque requête est vérifiée avant d'atteindre la logique métier, ce qui réduit les risques d'erreurs en cascade.
+FastAPI génère automatiquement une documentation interactive via Swagger UI, ce qui a facilité nos tests pendant le développement. La validation des données entrantes est assurée par \textbf{Pydantic} : chaque requête est vérifiée avant d'atteindre la logique métier, ce qui limite les erreurs en cascade.
 
-Pour la sécurité des échanges, nous nous appuyons sur deux standards : \textbf{JWT} (JSON Web Token) pour la gestion des sessions, et \textbf{Argon2} pour le hachage des mots de passe, un algorithme reconnu pour sa résistance aux attaques par force brute.
+Pour la sécurité des échanges, nous utilisons \textbf{JWT} (JSON Web Token) pour la gestion des sessions, et \textbf{Argon2} pour le hachage des mots de passe, un algorithme reconnu pour sa résistance aux attaques par force brute.
 
 \subsubsection{Authentification et sécurité}
 
@@ -84,7 +86,7 @@ L'authentification repose sur le standard \textbf{OAuth2 avec Bearer Token}. À 
 
 Nous distinguons deux niveaux d'accès :
 \begin{itemize}
-    \item \textbf{Accès authentifié} : obligatoire pour les actions sensibles — modification du profil, gestion des vélos, consultation de l'historique et émission de signalements.
+    \item \textbf{Accès authentifié} : obligatoire pour les actions sensibles (modification du profil, gestion des vélos, consultation de l'historique et émission de signalements).
     \item \textbf{Accès public} : le calcul d'itinéraire est accessible sans connexion, mais la sauvegarde automatique du trajet ne s'active que pour les utilisateurs connectés.
 \end{itemize}
 
@@ -93,10 +95,10 @@ Nous distinguons deux niveaux d'accès :
 L'API expose les endpoints suivants, organisés par ressource :
 
 \begin{itemize}
-    \item \textbf{\texttt{/users}} : Gestion du cycle de vie des comptes, de l'inscription à la mise à jour des informations personnelles.
-    \item \textbf{\texttt{/bikes}} : Administration des vélos de l'utilisateur, avec un contrôle strict garantissant qu'un utilisateur ne peut accéder qu'à ses propres équipements.
+    \item \textbf{\texttt{/users}} : Gestion des comptes, de l'inscription à la mise à jour des informations personnelles.
+    \item \textbf{\texttt{/bikes}} : Gestion des vélos de l'utilisateur, avec un contrôle garantissant qu'un utilisateur ne peut accéder qu'à ses propres équipements.
     \item \textbf{\texttt{/routes}} : Calcul d'itinéraires à partir de coordonnées géographiques et des préférences de l'utilisateur (type de vélo, niveau de sécurité souhaité).
     \item \textbf{\texttt{/history}} : Consultation des trajets passés de l'utilisateur connecté.
-    \item \textbf{\texttt{/stats}} : Synthèse de l'activité de l'utilisateur — distances parcourues, durée cumulée, répartition entre trajets rapides et sécurisés.
-    \item \textbf{\texttt{/reports}} : Remontée de signalements terrain par les usagers. La lecture est publique pour favoriser la sécurité collective ; l'écriture requiert une authentification.
+    \item \textbf{\texttt{/stats}} : Synthèse de l'activité de l'utilisateur : distances parcourues, durée cumulée, répartition entre trajets rapides et sécurisés.
+    \item \textbf{\texttt{/reports}} : Remontée de signalements par les usagers. La lecture est publique ; l'écriture requiert une authentification.
 \end{itemize}
