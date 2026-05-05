@@ -11,7 +11,6 @@ const ROUTE_LABELS = {
 };
 
 function DetailModal({ itineraire, visible, onClose, colors, typography }) {
-    if (!itineraire) return null;
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
     const slideAnim = useRef(new Animated.Value(screenHeight)).current;
@@ -27,6 +26,24 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
         }
     }, [visible]);
 
+    const elevationData = useMemo(() => {
+        if (!itineraire?.path) return [];
+
+        const raw = itineraire.path
+            .filter(p => p[2] !== undefined && p[2] !== null)
+            .map((p, i) => ({ x: i, y: parseFloat(p[2]) }));
+
+        const step = Math.max(1, Math.floor(raw.length / 100));
+        return raw.filter((_, i) => i % step === 0);
+    }, [itineraire?.path]);
+
+    if (!itineraire) return null;
+
+    const meta = ROUTE_LABELS[itineraire.id] ?? { label: itineraire.name, icon: "map-marker-path", color: colors.primary };
+
+    const minEle = elevationData.length > 0 ? Math.min(...elevationData.map(d => d.y)) : 0;
+    const maxEle = elevationData.length > 0 ? Math.max(...elevationData.map(d => d.y)) : 0;
+
     const handleClose = () => {
         Animated.timing(slideAnim, {
             toValue: screenHeight,
@@ -36,20 +53,6 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
             onClose();
         });
     };
-
-    const meta = ROUTE_LABELS[itineraire.id] ?? { label: itineraire.name, icon: "map-marker-path", color: colors.primary };
-
-    const elevationData = useMemo(() => {
-        const raw = itineraire.path
-            ?.filter(p => p[2] !== undefined && p[2] !== null)
-            .map((p, i) => ({ x: i, y: parseFloat(p[2]) })) ?? [];
-
-        const step = Math.max(1, Math.floor(raw.length / 100));
-        return raw.filter((_, i) => i % step === 0);
-    }, [itineraire.path]);
-
-    const minEle = elevationData.length > 0 ? Math.min(...elevationData.map(d => d.y)) : 0;
-    const maxEle = elevationData.length > 0 ? Math.max(...elevationData.map(d => d.y)) : 0;
 
     return (
         <Modal
