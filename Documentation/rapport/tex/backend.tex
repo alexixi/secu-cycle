@@ -101,4 +101,5 @@ L'API expose les endpoints suivants, organisés par ressource :
     \item \textbf{\texttt{/history}} : Consultation des trajets passés de l'utilisateur connecté.
     \item \textbf{\texttt{/stats}} : Synthèse de l'activité de l'utilisateur : distances parcourues, durée cumulée, répartition entre trajets rapides et sécurisés.
     \item \textbf{\texttt{/reports}} : Remontée de signalements par les usagers. La lecture est publique ; l'écriture requiert une authentification.
+    \item \textbf{\texttt{/navigation}} : Gestion des instructions de navigation en temps réel calculer en fonction de la position actuel de l'utilisateur. En cas d'écart trop important par rapport au tracé prévu, le serveur renvoie \texttt{recalculate: true} afin que le client déclenche un nouveau calcul d'itinéraire.
 \end{itemize}
