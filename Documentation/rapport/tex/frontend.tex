@@ -1,23 +1,23 @@
 \section{Frontend}
 \label{sec:frontend}
-\noindent Dans un premier temps, nous avons développé un site Web, présenté dans la Section~\ref{sec:web}.
+\noindent Dans un premier temps, nous avons développé un site web, présenté dans la Section~\ref{sec:web}.
 Une fois que la première version du site était prête, nous avons commencé le développement
 d'une application mobile, présentée dans la Section~\ref{sec:mobile},
 facilitant l'utilisation sur smartphone.
 
-\subsection{Site Web}
+\subsection{Site web}
 \label{sec:web}
-\noindent Le site Web, disponible à l'adresse \textit{www.secu-cycle.fr}, a été développé en utilisant React \cite{React} et Vite \cite{Vite}.
+\noindent Le site web, disponible à l'adresse \textit{www.secu-cycle.fr}, a été développé en utilisant React~\cite{React} et Vite~\cite{Vite}.
 Vite permet d'automatiser la création de l'architecture du projet, le serveur live de développement et la compilation en build production.\\
 
-\noindent Le site Web est composé d'une page d'accueil présentant le projet et invitant les utilisateurs à installer l'application mobile.
+\noindent Le site web est composé d'une page d'accueil présentant le projet et invitant les utilisateurs à installer l'application mobile.
 Il y a aussi une page de connexion, nécessitant une adresse mail et un mot de passe.
 Si l'utilisateur n'a pas encore de compte, il peut en créer un via la page de création de compte.
 Il y a, de plus, une page consacrée à la recherche d'itinéraires (Section~\ref{sec:webrecherche}) et une page de profil utilisateur (Section~\ref{sec:webprofil}).
 
 \subsubsection{Page de recherche d'itinéraires}
 \label{sec:webrecherche}
-\noindent La page principale de l'application est celle permettant la recherche d'itinéraire (Figure~\ref{fig:webrecherche}).
+\noindent La page principale du site est celle permettant la recherche d'itinéraire (Figure~\ref{fig:webrecherche}).
 
 \begin{figure}[H]
     \centering
@@ -27,7 +27,7 @@ Il y a, de plus, une page consacrée à la recherche d'itinéraires (Section~\re
 \end{figure}
 
 \noindent La partie gauche de cette page contient le menu de recherche, permettant d'entrer les adresses de départ et d'arrivée du trajet, l'heure maximale d'arrivée ou la durée maximale de trajet, ainsi que le type de vélo utilisé.
-Les adresses sont autocomplétées grâce à l'utilisation de l'API Base Adresse Nationale (BAN \cite{BAN}), proposée par le gouvernement français.
+Les adresses sont autocomplétées grâce à l'utilisation de l'API Base Adresse Nationale (BAN~\cite{BAN}), proposée par le gouvernement français.
 En appuyant sur le bouton "Calculer les itinéraires", l'utilisateur envoie la requête de recherche d'itinéraires à l'API.
 Les trajets proposés sont ensuite affichés sur la carte, et leur description apparaît dans la partie gauche de l'écran.\\
 
@@ -47,7 +47,7 @@ Un clique sur le trajet provoque la sélection du trajet et l'apparition du desc
 \noindent Sur la carte se trouvent trois boutons principaux.
 
 \noindent Le bouton "Trafic en temps réel" déclenche l'apparition des points de trafic ainsi que de leur légende.
-Les données du trafic sont récupérées grâce à l'API Avatar \cite{Avatar} proposée par le Cerema.
+Les données du trafic sont récupérées grâce à l'API Avatar~\cite{Avatar} proposée par le Cerema.
 Ces données sont utilisées avec une heure et demie de décalage et sont actualisées toutes les cinq minutes.\\
 
 \noindent On trouve aussi sur la carte le bouton "Ajouter un signalement".
@@ -61,7 +61,7 @@ Il peut choisir entre une carte sombre, une carte avec le relief, les rues, la v
 
 \subsubsection{Page profil utilisateur}
 \label{sec:webprofil}
-\noindent La seconde page du site Web est la page présentant le profil de l'utilisateur (Figure~\ref{fig:webprofil}).
+\noindent La seconde page du site web est la page présentant le profil de l'utilisateur (Figure~\ref{fig:webprofil}).
 
 \begin{figure}[H]
     \centering
@@ -92,7 +92,7 @@ Lors d'un clic sur un trajet de celui-ci, une fenêtre modale s'ouvre, lui perme
 
 \subsubsection{Référencement et SEO}
 \noindent Afin que le site puisse apparaître dans les résultats de recherche, nous avons rendu accessible un fichier \texttt{robots.txt} autorisant l'indexation et un fichier \texttt{sitemap.xml} qui présente les différentes pages du site devant être indexées avec un poids d'importance et leur url.
-Nous avons également enregistré le site auprès de la Google Search Console \cite{GoogleSearchConsole} et de Bing Webmaster Tools \cite{BingWebmasterTools} pour demander une indexation explicitement et suivre les statistiques d'apparition du site dans les résultats de recherche.
+Nous avons également enregistré le site auprès de la Google Search Console~\cite{GoogleSearchConsole} et de Bing Webmaster Tools~\cite{BingWebmasterTools} pour demander une indexation explicitement et suivre les statistiques d'apparition du site dans les résultats de recherche.
 Combiner ces deux plateformes permet l'apparition dans la plupart des moteurs de recherches et également dans les résultats des modèles IA.
 
 \noindent Pour améliorer le score de ranking nous avons optimisé les temps de chargement et mis des balises \texttt{<meta>} dynamiques en fonction des pages. Nous avons également essayé de suivre au maximum les bonnes pratiques de structuration de pages.
@@ -102,9 +102,9 @@ Combiner ces deux plateformes permet l'apparition dans la plupart des moteurs de
 \subsection{Application mobile}
 \label{sec:mobile}
 
-\noindent L'application mobile a été développée en utilisant React Native \cite{ReactNative}, permettant de créer une application compatible à la fois avec Android et iOS. Nous avons utilisé le framework Expo \cite{Expo} pour faciliter le développement et le déploiement de l'application.\\
+\noindent L'application mobile a été développée en utilisant React Native~\cite{ReactNative}, permettant de créer une application compatible à la fois avec Android et iOS. Nous avons utilisé le framework Expo~\cite{Expo} pour faciliter le développement et le déploiement de l'application.\\
 
-\noindent L'application mobile propose les mêmes fonctionnalités que le site web, mais de manière réarrangée pour mieux correspondre à l'utilisation sur smartphone. L'application embarque également la navigation en temps réel avec instructions détaillée dans la Sous-section~\ref{sec:mobile-navigation}.
+\noindent L'application mobile propose les mêmes fonctionnalités que le site web, mais de manière réarrangée pour mieux correspondre à l'utilisation sur smartphone. L'application embarque également la navigation en temps réel avec instructions détaillée dans la Section~\ref{sec:mobile-navigation}.
 
 \noindent Pour le moment l'application n'est pas publiée sur les stores d'applications.
 
@@ -148,7 +148,7 @@ Combiner ces deux plateformes permet l'apparition dans la plupart des moteurs de
 
 \noindent La page de recherche d'itinéraires est la page principale de l'application mobile. Elle est présentée dans la Sous-Figure~\ref{fig:apercu_itineraire}. Au démarrage de l'application, l'utilisateur est directement sur cette page pour pouvoir faire rapidement une recherche d'itinéraire.\\
 
-\noindent En haut de la page se trouve le bloc de recherche qui contient les champs d'adresses de départ et d'arrivée. Un bouton flèche permet d'agrandir le bloc de recherche pour faire apparaître la sélection du vélo et de la contrainte horraire. Les adresses sont autocomplétées comme sur le site Web. La spécificité de l'application sur la recherche est la possibilité de partir de la position GPS actuelle. Dans la plupart des cas d'utilisations classiques sur mobile, l'utilisateur part de sa position pour se rendre quelque part, il est donc important que ce choix soit facilement accessible.\\
+\noindent En haut de la page se trouve le bloc de recherche qui contient les champs d'adresses de départ et d'arrivée. Un bouton flèche permet d'agrandir le bloc de recherche pour faire apparaître la sélection du vélo et de la contrainte horraire. Les adresses sont autocomplétées comme sur le site web. La spécificité de l'application sur la recherche est la possibilité de partir de la position GPS actuelle. Dans la plupart des cas d'utilisations classiques sur mobile, l'utilisateur part de sa position pour se rendre quelque part, il est donc important que ce choix soit facilement accessible.\\
 
 \noindent La carte occupe la totalité de l'écran en arrière plan. Elle démarre sur la position actuelle. L'utilisateur peut interagir avec la carte, la déplacer et zoomer. Un bouton permet de recentrer la vue sur la position. La vue se centre automatiquement sur le point qui vient d'être entré comme adresse de départ ou d'arrivée, ou sur les deux si les deux adresses sont complétées.\\
 
@@ -159,7 +159,9 @@ Combiner ces deux plateformes permet l'apparition dans la plupart des moteurs de
 \subsubsection{Navigation en temps réel}
 \label{sec:mobile-navigation}
 
-\noindent Le mode navigation est le point de différence principal de l'application mobile et ce qui en fait son réel intérêt par rapport au site. L'utilisateur peut entrer dans le mode navigation une fois un itinéraire sélectionné. Une fois entré dans le mode, l'interface s'épure en enlevant le panneau de recherche, la carte s'incline légèrement pour mieux montrer la route et un nouveau panneau apparaît. Cette interface est présentée dans la Sous-Figure~\ref{fig:navigation}.
-Ce nouveau panneau affiche les instructions de navigation en temps réel. Ces instructions sont mises à jour en temps réel en fonction de la position de l'utilisateur et sont calculées côté backend.
-L'avantage de faire de cette façon est que le backend a la connaissance complète de la route (intersection, rond-points, etc), le frontend lui ne voit qu'une ligne de trajet. Une icone indique le type d'action que doit faire l'utilisateur à la prochaine intersection (tourner, continuer tout droit, prendre une sortie de rond-point, etc).
-Pour faciliter l'expérience du cycliste, l'écran du smartphone reste allumé tant qu'il est en mode navigation. Nous avons également implémenté le guidage vocal, qui utilise la librairie Text To Speech du téléphone.\\
+\noindent Le mode navigation est le point de différence principal de l'application mobile et ce qui en fait son réel intérêt par rapport au site. L'utilisateur peut entrer dans le mode navigation une fois un itinéraire sélectionné. Une fois entré dans le mode, l'interface s'épure en enlevant le panneau de recherche, la carte s'incline légèrement pour mieux montrer la route et un nouveau panneau apparaît. Cette interface est présentée dans la Sous-Figure~\ref{fig:navigation}.\\
+
+\noindent Ce nouveau panneau affiche les instructions de navigation en temps réel. Ces instructions sont mises à jour en temps réel en fonction de la position de l'utilisateur et sont calculées côté backend.
+L'avantage de faire de cette façon est que le backend a la connaissance complète de la route (intersection, rond-points, etc), le frontend lui ne voit qu'une ligne de trajet. Une icone indique le type d'action que doit faire l'utilisateur à la prochaine intersection (tourner, continuer tout droit, prendre une sortie de rond-point, etc).\\
+
+\noindent Pour faciliter l'expérience du cycliste, l'écran du smartphone reste allumé tant qu'il est en mode navigation. Nous avons également implémenté le guidage vocal, qui utilise la librairie Text To Speech du téléphone.\\
