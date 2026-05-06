@@ -13,7 +13,32 @@ Vite permet d'automatiser la création de l'architecture du projet, le serveur l
 \noindent Le site web est composé d'une page d'accueil présentant le projet et invitant les utilisateurs à installer l'application mobile.
 Il y a aussi une page de connexion, nécessitant une adresse mail et un mot de passe.
 Si l'utilisateur n'a pas encore de compte, il peut en créer un via la page de création de compte.
-Il y a, de plus, une page consacrée à la recherche d'itinéraires (Section~\ref{sec:webrecherche}) et une page de profil utilisateur (Section~\ref{sec:webprofil}).
+Il y a, de plus, une page consacrée à la recherche d'itinéraires et une page de profil utilisateur détaillées dans la Section~\ref{sec:webrecherche} et la Section~\ref{sec:webprofil}.
+
+\subsubsection{Architecture}
+\noindent L'utilisation du framework React nous a permis de structurer le projet de manière modulaire, en créant des composants réutilisables pour les différentes parties de l'interface utilisateur.
+Cette décomposition en composant rend le site plus facilement maintenable et les changements de logique/design plus facile.
+Nos composants sont organisés dans différents sous-dossier en fonction de leur nature et de leur fonction. Ce découpage est montré dans la Figure~\ref{fig:archi_web}.\\
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{archi_web}
+    \caption{Architecture des composants du site.}
+    \label{fig:archi_web}
+\end{figure}
+
+\noindent Le dossier \texttt{src/} est le dossier principal du projet, contenant tous les fichiers source du site web. À sa racine se trouvent les fichiers \texttt{App.jsx} et \texttt{main.jsx}, qui sont les points d'entrée de l'application.\\
+
+\noindent \texttt{src/} est découpé en 6 sous-dossiers. Tout d'abord le dossier \texttt{assets}, qui contient les ressources statiques comme les images et les icônes. Ensuite le dossier \texttt{components/} qui contient les composants réutilisables à travers le site.
+Il se distinguent en \texttt{layout/} qui contient les gros composants de pages et les fenêtres modales, et en \texttt{ui/} qui sont les petits éléments d'intéraction tels que les boutons, les champs de formulaire, etc. Ces composants sont conçus pour être génériques et facilement intégrables dans différentes pages du site.\\
+
+\noindent Le dossier \texttt{pages/} contient quant à lui les différentes pages du site. Il y a donc un fichier par page sur le site. Ce sont des composants React qui sont chargé par React Routeur lorsque l'utilisateur demande une page spécifique.
+Ces pages utilisent les autres composants \texttt{components/} pour construire l'interface utilisateur.\\
+
+\noindent Les trois derniers dossiers qui composent \texttt{src/} contiennent moins de fichiers, on retrouve \texttt{context/} qui contient les contextes d'application, notemment le \texttt{AuthContext.jsx} qui gère la connexion et les informations de l'utilisateur.
+On retrouve aussi \texttt{modules/} qui contient des modules externes, c'est ici qu'est le composant de la carte.
+Enfin, nous retrouvons \texttt{services/} qui contient les fonctions de communication avec le backend.
+Ces fonctions sont utilisées pour gérer les requêtes au serveur, que ce soit pour récupérer des données ou pour envoyer des informations. Ce dossier contient aussi l'API bouchon qui nous permet de faire des tests indépendemment du backend.\\
 
 \subsubsection{Page de recherche d'itinéraires}
 \label{sec:webrecherche}
@@ -75,9 +100,10 @@ Un clic sur le bouton "Modifier mon compte" provoque l'ouverture d'une fenêtre 
 
 \noindent L'utilisateur a aussi accès à ses adresses de préférence, qui lui sont recommandées lors de la recherche d'itinéraire pour permettre une utilisation quotidienne rapide.
 Il peut modifier ses adresses via le bouton "Modifier mes adresses".
+Les champs d'adresse du formulaire sont autocomplétés grâce à l'API BAN, comme sur la page de recherche d'itinéraire.\\
 
-\noindent L'utilisateur peut aussi enregistrer ses vélos, attribuer à chacun un nom personnalisé, un type (Ville, VTT ou Route) et indiquer s'il est ou non électrique.
-Les vélos de l'utilisateur lui sont proposés lors de la recherche d'itinéraire.\\
+\noindent L'utilisateur peut aussi enregistrer ses vélos, attribuer à chacun un nom personnalisé, un type (Ville, VTT ou Route) et indiquer s'il est ou non électrique. Nous avons laissé volontairement la possibilité de renseigner le caractère électrique du vélo pour les trois types, car cela peut être utile pour certains utilisateurs, et les VTT électriques sont de plus en plus populaires.
+Les vélos de l'utilisateur lui sont proposés lors de la recherche d'itinéraire. Si il n'en a qu'un celui-ci sera utilisé par défaut.\\
 
 \noindent Sur la page de profil se trouve l'historique de l'utilisateur, ainsi que ses statistiques, directement calculées par rapport à l'historique.
 L'utilisateur a aussi le choix de modifier son historique.
@@ -95,9 +121,15 @@ Lors d'un clic sur un trajet de celui-ci, une fenêtre modale s'ouvre, lui perme
 Nous avons également enregistré le site auprès de la Google Search Console~\cite{GoogleSearchConsole} et de Bing Webmaster Tools~\cite{BingWebmasterTools} pour demander une indexation explicitement et suivre les statistiques d'apparition du site dans les résultats de recherche.
 Combiner ces deux plateformes permet l'apparition dans la plupart des moteurs de recherches et également dans les résultats des modèles IA.
 
-\noindent Pour améliorer le score de ranking nous avons optimisé les temps de chargement et mis des balises \texttt{<meta>} dynamiques en fonction des pages. Nous avons également essayé de suivre au maximum les bonnes pratiques de structuration de pages.
+\noindent Pour améliorer le score de ranking nous avons optimisé les temps de chargement en utilisant React Router pour gérer la navigation entre les différentes pages du site de manière plus efficace qu'un changement classic avec un clic sur une url. React Router change les composants sans recharger la page entière. Nous avons en complément utilisé la fonctionnalité \texttt{lazy} de React qui permet de ne charger que les composants quand on en a besoin.\\
 
-\noindent Actuellement le référencement n'est qu'à son début et la page n'est pas encore bien indexée. En effet, le nom de domaine vient d'être déposé et le site vient d'être mis en ligne, donc le score de pertinence de la page est encore bas. Pour faire augmenter la crédibilité du site auprès des moteurs de recherche, il faudrait que des pages sérieuses et reconnues parlent de ce projet et contiennent un lien renvoyant sur le site.
+\noindent Le build de production Vite produit un seul fichier html pour toutes les pages, et c'est le javascript qui permet de changer le contenu. Pour améliorer le référencement et améliorer l'expérience utilisateur, il est important d'avoir le titre, la description et les balises \texttt{<meta>} en général qui changent en fonction de la page. Les moteurs de recherches sanctionnent les pages qu'il pensent être en doublon. Nous avons utilisé la librairie React Helmet Async pour pouvoir changer dynamiquement ces informations.\\
+
+\noindent De manière générale, nous avons essayé de suivre au maximum les bonnes pratiques de structuration de pages, une progression de niveau de titre cohérente, des balises \texttt{alt} pour les images, etc. Si certaines exigences de base ne sont pas respectées, cela peut nuire au référencement du site.\\
+
+\noindent Actuellement le référencement n'est qu'à son début et la page n'est pas encore bien indexée. En effet, le nom de domaine vient d'être déposé et le site vient d'être mis en ligne, donc le score de pertinence de la page est encore bas. Pour faire augmenter la crédibilité du site auprès des moteurs de recherche, il faudrait que des pages sérieuses et reconnues parlent de ce projet et contiennent un lien renvoyant sur le site. Il reste également du progès à faire au niveau des règles d'accessibilité du site. Ces exigences sont aussi prises en compte dans le référencement, mais elle permettent surtout de ne pas faire de discrimination sur le handicap. Nous avons essayé de suivre au mieux ces règles, mais il reste encore des améliorations à faire en se renseignant sur les dernières recommandations.\\
+
+\noindent Vous pouvez tester vous-même en cherchant "sécu cycle", il y a de fortes chances que notre site soit dans les premiers résultats, mais cela peut dépendre de votre moteur de recherche. Vous pouvez également essayer de chercher avec des mots clés plus vagues, mais dans l'état actuel des choses, il risque de ne pas faire parti des résultats.\\
 
 \subsection{Application mobile}
 \label{sec:mobile}
