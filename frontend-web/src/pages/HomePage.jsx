@@ -5,8 +5,37 @@ import IconButton from "../components/ui/IconButton";
 import Logo from "../assets/logo.svg?react";
 import apercuApplication from "../assets/screenshots/apercu_itineraire-left.png";
 import { IoIosArrowDropdown } from "react-icons/io";
+import { FaLinkedin } from "react-icons/fa";
 
 export default function HomePage() {
+    const teamMembers = [
+        {
+            name: "Alexis Gaudray Bouju",
+            linkedin: "https://www.linkedin.com/in/alexis-gaudray-bouju/"
+        },
+        {
+            name: "Matheline Chevalier",
+            linkedin: "https://www.linkedin.com/in/matheline-chevalier/"
+        },
+        {
+            name: "Khaoula Najmeddine",
+            linkedin: "https://www.linkedin.com/in/khaoula-najmeddine-18b4aa226/"
+        },
+        {
+            name: "Angelo Tunney",
+            linkedin: "https://www.linkedin.com/in/angelo-tunney-943081318/"
+        },
+        {
+            name: "Joan Dumarchat",
+            linkedin: "https://www.linkedin.com/in/joan-dumarchat-813269344/"
+        },
+        {
+            name: "Léia Daragnès",
+            linkedin: "https://www.linkedin.com/in/l%C3%A9ia-daragn%C3%A8s/"
+        },
+
+    ];
+
     return (
         <>
             <Meta title="Sécu'Cycle | Accueil" description="Découvrez Sécu'Cycle, l'application et le site pour trouver des itinéraires à vélo sécurisés et adaptés à votre profil." />
@@ -63,6 +92,17 @@ export default function HomePage() {
                         </a>
                     </div>
                 </aside>
+            </div>
+            <div id="team-section">
+                <h2>L'équipe Sécu'Cycle</h2>
+                <div className="team-wrapper">
+                    {teamMembers.map((member, index) => (
+                        <a key={index} href={member.linkedin} target="_blank" rel="noopener noreferrer" className="team-member">
+                            <FaLinkedin size={30} className="icon" />
+                            <h3>{member.name}</h3>
+                        </a>
+                    ))}
+                </div>
             </div>
         </>
     )
