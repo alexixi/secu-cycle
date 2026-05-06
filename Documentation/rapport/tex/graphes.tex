@@ -15,7 +15,7 @@ L'originalité de notre approche réside dans la manipulation des poids de ce gr
 
 \subsection{Calcul de la distance perçue}
 La première partie importante pour nos calculs d'itinéraire est de prendre en compte certains paramètres pour déterminer si les routes sont sécurisées ou non. Pour faire cela on attribut des poids aux différents critères
-que l'on prend en compte et on calcul une valeur de distance perçue avec les pénalisants.
+que l'on prend en compte et on calcule une valeur de distance perçue avec les poids pénalisants.
 
 \subsubsection{Calcul du score de sécurité}
 
@@ -73,7 +73,7 @@ Si un jour cette application et ce site sont voués et à être publiques, nous 
 
 \subsection{Algorithme de recherche d'itinéraire et distance perçue}
 
-Le calcul de l'itinéraire optimal repose sur l'algorithme \textbf{A* (A-Star)}, choisi pour son efficacité sur des graphes de grande taille. Le poids final de chaque arête (W), utilisé par l'algorithme pour trouver le chemin le moins "coûteux", suit la stratégie de la distance perçue :
+Le calcul de l'itinéraire optimal repose sur l'algorithme \textbf{A* (A-Star)}~\cite{AStar}, choisi pour son efficacité sur des graphes de grande taille. Le poids final de chaque arête (W), utilisé par l'algorithme pour trouver le chemin le moins "coûteux", suit la stratégie de la distance perçue :
 \begin{equation}
 W = D_{réelle} \times (1 + M_{risque} + M_{effort})
 \end{equation}
