@@ -1,31 +1,33 @@
 \section{Graphes et calcul d'itinéraires sécurisés}
 \label{sec:graphes}
 
-Cette partie détaille la conception de notre moteur de navigation, de l'acquisition des données à la sélection de l'itinéraire. Nous aborderons d'abord la modélisation du réseau via la théorie des graphes, puis la définition d'un score de sécurité multicritère, pour enfin expliquer comment l'algorithme A* utilise la notion de distance perçue pour privilégier le confort et la sécurité du cycliste.
+Cette partie détaille la conception de notre moteur de navigation, de l'acquisition des données à la sélection de l'itinéraire. Nous aborderons d'abord la modélisation du réseau via la théorie des graphes, puis la définition d'un score de sécurité multicritère, pour enfin expliquer comment l'algorithme A* utilise la notion de distance perçue pour privilégier le confort et la sécurité du cycliste. La distance perçue est définie comme la distance réelle pondérée par les poids des différents critères de calcul, comme détaillé dans la Section~\ref{sec:distancePercue}.
 
 \subsection{Modélisation du réseau : le graphe urbain}
 
 Pour représenter le réseau routier, nous utilisons la bibliothèque \textbf{OSMnx}, qui permet d'extraire les données d'OpenStreetMap (OSM) sous forme d'un graphe orienté multi-couches. Dans cette structure :
 \begin{itemize}
 \item \textbf{Les nœuds} représentent les intersections et les points de passage.
-\item \textbf{Les arêtes} représentent les segments de rue, porteurs de métadonnées critiques (longueur, type de voie, présence d'aménagements cyclables, vitesse maximale, éclairage public).
+\item \textbf{Les arêtes} représentent les segments de rue, porteurs de métadonnées critiques (longueur, type de voie, présence d'aménagements cyclables (détaillés dans la Section~\ref{sec:calcul}), vitesse maximale, éclairage public).
 \end{itemize}
 
 L'originalité de notre approche réside dans la manipulation des poids de ce graphe. Contrairement à un GPS classique qui minimise la distance physique, notre système minimise une \textbf{distance perçue} (ou distance augmentée), calculée pour refléter le ressenti psychologique et physique d'un cycliste.
 
 \subsection{Calcul de la distance perçue}
+\label{sec:distancePercue}
 La première partie importante pour nos calculs d'itinéraire est de prendre en compte certains paramètres pour déterminer si les routes sont sécurisées ou non. Pour faire cela on attribut des poids aux différents critères
 que l'on prend en compte et on calcule une valeur de distance perçue avec les poids pénalisants.
 
 \subsubsection{Calcul du score de sécurité}
-
-Chaque segment du graphe reçoit une note de sécurité S sur une échelle de 1 à 10. Cette note est le résultat d'une pondération multicritère :
+\label{sec:calcul}
+Chaque segment du graphe reçoit une note de sécurité S sur une échelle de 1 à 10. Cette note est le résultat d'une pondération multicritère. Le choix des différents poids est inspiré du travail effectué par V. Verlaan en 2023 \cite{StageVerlaan}.
+Le calcul est le suivant :
 \begin{equation}
 S = (n_{highway} \times 0.25) + (n_{cycleway} \times 0.30) + (n_{speed} \times 0.45)
 \end{equation}
 \begin{itemize}
     \item $n_{speed}$ (45\,\%) : La vitesse limite automobile est le critère prépondérant. Une route à 50\,km/h pénalise lourdement la moyenne, tandis qu'une zone 20\,km/h ou 30\,km/h la favorise.
-    \item $n_{cycleway}$ (30\,\%) : Évalue la protection cyclable (10/10 pour une piste séparée, 1/10 pour l'absence d'aménagement).
+    \item $n_{cycleway}$ (30\,\%) : Évalue la protection cyclable. On considère cinq types d'aménagement. Les pistes cyclables séparées sont notées 10/10, les bandes cyclables longeant une route sont notées 7/10, les voies partagées avec les bus sont notées 6/10, celles partagées avec les voitures sont notées 4/10 et l'absence d'aménagement est à 1/10.
     \item $n_{highway}$ (25\,\%) : Qualifie la typologie urbaine de la voie (rue résidentielle ou boulevard).
 \end{itemize}
 
