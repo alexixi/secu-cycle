@@ -20,6 +20,6 @@
 *.snm
 *.nav
 
-*.pdf
+rapport.pdf
 *.fdb_latexmk
 *.synctex.gz
