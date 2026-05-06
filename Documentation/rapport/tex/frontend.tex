@@ -136,9 +136,9 @@ Combiner ces deux plateformes permet l'apparition dans la plupart des moteurs de
 
 \noindent L'application mobile a été développée en utilisant React Native~\cite{ReactNative}, permettant de créer une application compatible à la fois avec Android et iOS. Nous avons utilisé le framework Expo~\cite{Expo} pour faciliter le développement et le déploiement de l'application.\\
 
-\noindent L'application mobile propose les mêmes fonctionnalités que le site web, mais de manière réarrangée pour mieux correspondre à l'utilisation sur smartphone. L'application embarque également la navigation en temps réel avec instructions détaillée dans la Section~\ref{sec:mobile-navigation}.
+\noindent L'avantage d'avoir utilisé React Native est que nous avons gardé la même logique que pour le site web, ce qui a facilité le développement de l'application. Nous avons également pu reprendre facilement les fonctions de communication avec l'API. Ainsi l'architecture est globalement similaire entre les deux versions, vous pouvez la voir Figure~\ref{fig:archi_web}.\\
 
-\noindent Pour le moment l'application n'est pas publiée sur les stores d'applications.
+\noindent L'application mobile propose les mêmes fonctionnalités que le site web, mais de manière réarrangée pour mieux correspondre à l'utilisation sur smartphone. L'application embarque également la navigation en temps réel avec instructions détaillée dans la Section~\ref{sec:mobile-navigation}.
 
 \noindent L'application est composée principalement d'une page de recherche d'itinéraires (page principale) et d'une page de profil utilisateur qui sont accessibles via un menu en bas de l'écran. Elle est également composée de pages annexes de formulaires comme la page de connexion, de création de compte, de modification de profil, d'ajout de vélo ou encore de détail de l'historique. Les pages principales de l'application sont présentées dans la Figure~\ref{fig:app_screens}.
 
@@ -197,3 +197,11 @@ Combiner ces deux plateformes permet l'apparition dans la plupart des moteurs de
 L'avantage de faire de cette façon est que le backend a la connaissance complète de la route (intersection, rond-points, etc), le frontend lui ne voit qu'une ligne de trajet. Une icone indique le type d'action que doit faire l'utilisateur à la prochaine intersection (tourner, continuer tout droit, prendre une sortie de rond-point, etc).\\
 
 \noindent Pour faciliter l'expérience du cycliste, l'écran du smartphone reste allumé tant qu'il est en mode navigation. Nous avons également implémenté le guidage vocal, qui utilise la librairie Text To Speech du téléphone.\\
+
+\subsubsection{Déploiement et publication}
+
+\noindent L'application doit être compilée pour passer de code React Native en code natif Android et iOS. Nous avons utilisé Expo pour faciliter ce processus de compilation. Expo propose un service de build en ligne (EAS) qui permet de compiler en cloud l'application pour les deux plateformes sans avoir besoin d'installer les outils spécifiques qui sont Android Studio pour Android et Xcode pour iOS (qui nécessite d'avoir un Mac). Cet outil est freemium, la version gratuite permet de compiler 30 builds par mois mais oblige à passer par une file d'attente qui prend parfois un peu de temps.\\
+
+\noindent L'objectif est donc de réduire au maximum le nombre de buils nécessaires pour tester l'application. Expo proposent des outils de développement qui permettent de faire du rechargement instantané sur téléphone, c'est à dire que les petits changements faits dans le code sont directement appliqués sur le téléphone sans avoir besoin de recompiler.\\
+
+\noindent Il y a trois builds différents possibles, un build de développement qui permet le rechargement live, mais qui doit être connecté à un ordinateur pour fonctionner, un build de production qui fourni un fichier au bon format pour la publication sur les stores d'applications, mais qui ne peut pas être installé directement, et un pour finir un build de prévisualisation qui est une version intermédiaire permettant d'avoir une application directement installable (\textt{.apk} sur Android) et qui est autonome. C'est cette application que nous donnons en livrable pour le projet. Pour des raisons financière l'application mobile n'est pas publiée sur les stores d'applications, mais elle pourrait l'être facilement en utilisant le build de production. Expo permet même de créer des pipline d'automatisation pour gérer la publications automatique sur les stores.\\
