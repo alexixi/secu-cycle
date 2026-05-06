@@ -9,7 +9,7 @@ Cela nous a permis de travailler en parallèle du développement Backend, et de 
 
 \noindent La validation du backend a reposé sur une approche manuelle en deux phases. Les endpoints de l'API REST ont été 
 testés via l'interface \textbf{Swagger UI}, générée automatiquement par FastAPI et accessible à l'adresse \texttt{/docs}. 
-Grace a cette interface, nous avons pu tester directement les différentes routes de l'API, en parallèle du développement du 
+Grâce à cette interface, nous avons pu tester directement les différentes routes de l'API, en parallèle du développement du 
 frontend. Chaque route a été vérifiée dans son cas nominal — création de compte, connexion, calcul d'itinéraire, gestion des 
 vélos, des signalements et de l'historique — ainsi que dans quelques cas d'erreur : requête sans token d'authentification 
 (\texttt{401 Unauthorized}), corps de requête invalide (\texttt{422 Unprocessable Entity} géré automatiquement par Pydantic), 
