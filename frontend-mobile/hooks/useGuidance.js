@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 import * as Location from 'expo-location';
 import { updateNavigation } from '../services/apiBack';
+import {
+    startBackgroundLocation,
+    stopBackgroundLocation,
+    BACKGROUND_LOCATION_EVENT,
+} from '../services/backgroundLocation';
 
 const UPDATE_INTERVAL_MS = 2000;
 
@@ -46,8 +52,26 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
     }, []);
 
     useEffect(() => {
+        const subscription = DeviceEventEmitter.addListener(
+            BACKGROUND_LOCATION_EVENT,
+            (coords) => {
+                const pos = {
+                    lat: coords.latitude,
+                    lon: coords.longitude,
+                    heading: coords.heading ?? 0,
+                };
+                setCurrentPosition(pos);
+                lastPositionRef.current = pos;
+            }
+        );
+
+        return () => subscription.remove();
+    }, []);
+
+    useEffect(() => {
         if (!isNavigating) {
             _stopNavInterval();
+            stopBackgroundLocation();
             setGuidanceState(null);
             return;
         }
@@ -57,8 +81,12 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
 
         stepIdxRef.current = 0;
         _startNavInterval(activeRoute);
+        startBackgroundLocation();
 
-        return () => _stopNavInterval();
+        return () => {
+            _stopNavInterval();
+            stopBackgroundLocation();
+        };
     }, [isNavigating, selectedItineraire]);
 
     function _startNavInterval(activeRoute) {

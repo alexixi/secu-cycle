@@ -16,7 +16,9 @@ export default {
             bundleIdentifier: IS_DEV ? "com.alexixisorganization.secucycle.dev" : "com.alexixisorganization.secucycle",
             infoPlist: {
                 ITSAppUsesNonExemptEncryption: false,
+                UIBackgroundModes: ["location"],
                 NSLocationWhenInUseUsageDescription: "Sécu'Cycle a besoin de votre position pour vous guider en temps réel.",
+                NSLocationAlwaysAndWhenInUseUsageDescription: "Sécu Cycle utilise votre position en arrière-plan pour continuer la navigation avec le téléphone dans votre poche.",
                 NSMicrophoneUsageDescription: "Sécu'Cycle utilise la synthèse vocale pour les instructions de navigation."
             }
         },
@@ -32,6 +34,7 @@ export default {
             permissions: [
                 "ACCESS_COARSE_LOCATION",
                 "ACCESS_FINE_LOCATION",
+                "ACCESS_BACKGROUND_LOCATION",
                 "FOREGROUND_SERVICE",
                 "FOREGROUND_SERVICE_LOCATION"
             ]
@@ -52,6 +55,14 @@ export default {
                     "dark": {
                         "backgroundColor": "#2f3148"
                     }
+                }
+            ],
+            [
+                "expo-location",
+                {
+                    "locationAlwaysAndWhenInUsePermission": "Sécu Cycle utilise votre position pour la navigation vélo.",
+                    "locationAlwaysPermission": "Sécu Cycle utilise votre position en arrière-plan pour continuer la navigation avec le téléphone dans votre poche.",
+                    "isAndroidBackgroundLocationEnabled": true
                 }
             ],
             "@react-native-community/datetimepicker",
