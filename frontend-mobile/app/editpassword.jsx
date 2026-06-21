@@ -12,6 +12,8 @@ import { changeProfileInfo } from "../services/apiBack";
 
 import * as Haptics from 'expo-haptics';
 
+const MIN_PASSWORD_LENGTH = 10;
+
 export default function ChangePasswordPage() {
     const router = useRouter();
     const { colors, typography } = useTheme();
@@ -26,6 +28,12 @@ export default function ChangePasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleConfirm = async () => {
+        if (newPassword.length < MIN_PASSWORD_LENGTH) {
+            setError(`Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
+            return;
+        }
+
         if (newPassword !== confirmPassword) {
             setError("Les nouveaux mots de passe ne correspondent pas.");
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
@@ -74,8 +82,10 @@ export default function ChangePasswordPage() {
                     <PasswordInput
                         password={newPassword}
                         setPassword={setNewPassword}
+                        hasError={newPassword.length > 0 && newPassword.length < MIN_PASSWORD_LENGTH}
                         setHasError={setPasswordError}
                     />
+                    <Text style={[styles.helpText, { color: colors.textSecondary }]}>Au moins {MIN_PASSWORD_LENGTH} caractères.</Text>
                 </View>
 
                 <View style={styles.inputGroup}>
@@ -97,7 +107,7 @@ export default function ChangePasswordPage() {
                         title="Confirmer le changement"
                         onPress={handleConfirm}
                         isLoading={isLoading}
-                        disabled={!oldPassword || !newPassword || newPassword !== confirmPassword}
+                        disabled={!oldPassword || !newPassword || newPassword !== confirmPassword || newPassword.length < MIN_PASSWORD_LENGTH}
                     />
                 </View>
             </View>
@@ -112,6 +122,7 @@ const styles = StyleSheet.create({
     title: { textAlign: 'center', marginBottom: 30 },
     inputGroup: { marginBottom: 20 },
     label: { fontSize: 14, fontWeight: 'bold', marginBottom: 8, marginLeft: 4 },
+    helpText: { fontSize: 12, marginTop: 5, marginLeft: 4 },
     errorText: { textAlign: 'center', marginVertical: 10, fontSize: 14 },
     buttonWrapper: { marginTop: 20 }
 });

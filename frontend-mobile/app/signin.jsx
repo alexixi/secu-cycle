@@ -20,6 +20,8 @@ import { useTheme } from "../hooks/useTheme";
 import { login as apiLogin, getUserProfile, register } from "../services/apiBack";
 import * as Haptics from 'expo-haptics';
 
+const MIN_PASSWORD_LENGTH = 10;
+
 export default function RegisterScreen() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -38,9 +40,16 @@ export default function RegisterScreen() {
     const { loginAuth, updateUser } = useAuth();
     const { colors, typography } = useTheme();
 
-    const isValidated = email && password && password2 && !hasPasswordError && !emailSyntaxError;
+    const passwordTooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
+    const isValidated = email && password && password2 && !hasPasswordError && !emailSyntaxError && password.length >= MIN_PASSWORD_LENGTH;
 
     const handleSubmit = async () => {
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            setHasPasswordError(true);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
+            return;
+        }
+
         if (password !== password2) {
             setHasPasswordError(true);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
@@ -184,9 +193,11 @@ export default function RegisterScreen() {
                     <PasswordInput
                         password={password}
                         setPassword={setPassword}
-                        hasError={hasPasswordError || generalError}
+                        hasError={hasPasswordError || generalError || passwordTooShort}
                         setHasError={(error) => { setHasPasswordError(error); setGeneralError(error); }}
                     />
+                    <Text style={[styles.errorText, { color: colors.textSecondary }]}>Au moins {MIN_PASSWORD_LENGTH} caractères.</Text>
+                    {passwordTooShort && <Text style={[styles.errorText, { color: colors.error }]}>Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères.</Text>}
                 </View>
 
                 <View style={styles.inputGroup}>

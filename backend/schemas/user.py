@@ -12,7 +12,7 @@ class UserBase(BaseModel):
     work_address: Optional[str] = None
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(min_length=10)
 
 class UserRead(UserBase):
     id: int

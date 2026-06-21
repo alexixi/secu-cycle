@@ -7,6 +7,8 @@ import "../../ui/Input.css"
 import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 
+const MIN_PASSWORD_LENGTH = 10;
+
 export default function EditPasswordModal({ isOpen, onClose, onConfirm, oldPasswordError, generalError }) {
     const [formData, setFormData] = useState({
         oldPassword: "",
@@ -15,6 +17,7 @@ export default function EditPasswordModal({ isOpen, onClose, onConfirm, oldPassw
     });
 
     const [newPasswordError, setNewPasswordError] = useState(false);
+    const [tooShortError, setTooShortError] = useState(false);
 
 
     useEffect(() => {
@@ -51,15 +54,21 @@ export default function EditPasswordModal({ isOpen, onClose, onConfirm, oldPassw
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
         setNewPasswordError(false);
+        setTooShortError(false);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (formData.newPassword.length < MIN_PASSWORD_LENGTH) {
+            setTooShortError(true);
+            return;
+        }
         if (formData.newPassword !== formData.confirmPassword) {
             setNewPasswordError(true);
             return;
         }
         setNewPasswordError(false);
+        setTooShortError(false);
         onConfirm(formData);
     };
 
@@ -79,9 +88,13 @@ export default function EditPasswordModal({ isOpen, onClose, onConfirm, oldPassw
                             }
                         </div>
 
-                        <div className={"input-group" + (newPasswordError ? " input-error" : "")}>
+                        <div className={"input-group" + (newPasswordError || tooShortError ? " input-error" : "")}>
                             <label>Nouveau mot de passe</label>
                             <PasswordInput value={formData.newPassword} onChange={handleChange} name="newPassword" />
+                            <div className="rule">Au moins {MIN_PASSWORD_LENGTH} caractères.</div>
+                            {tooShortError &&
+                                <p className="error-text">Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères.</p>
+                            }
                         </div>
 
                         <div className={"input-group" + (newPasswordError ? " input-error" : "")}>

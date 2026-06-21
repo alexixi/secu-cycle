@@ -14,6 +14,8 @@ import { LuLogIn } from "react-icons/lu";
 import confetti from "canvas-confetti"
 import "../components/ui/Form.css"
 
+const MIN_PASSWORD_LENGTH = 10;
+
 export default function ProfileCreationPage() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -30,9 +32,15 @@ export default function ProfileCreationPage() {
 
     const { loginAuth, updateUser, updateBikes } = useAuth();
 
+    const passwordTooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            return;
+        }
 
         if (password !== password2) {
             setHasError(true);
@@ -185,9 +193,11 @@ export default function ProfileCreationPage() {
                             )}
                         </div>
 
-                        <div className={`input-group ${hasError ? "input-error" : ""}`}>
+                        <div className={`input-group ${hasError || passwordTooShort ? "input-error" : ""}`}>
                             <label htmlFor="password">Mot de passe *</label>
                             <PasswordInput value={password} onChange={handlePasswordChange(setPassword)} onBlur={handlePasswordBlur}></PasswordInput>
+                            <div className="rule">Au moins {MIN_PASSWORD_LENGTH} caractères.</div>
+                            {passwordTooShort && <div className="error-text">Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères.</div>}
                         </div>
 
                         <div className={`input-group ${hasError ? "input-error" : ""}`}>
@@ -197,7 +207,7 @@ export default function ProfileCreationPage() {
 
                         {hasError && <p className="error-text">Les mots de passe ne correspondent pas.</p>}
 
-                        <Button type="submit" id="signin-button" disabled={!email || !password || !password2 || hasError || !isValidated}><FaPersonCirclePlus />    Créer mon compte</Button>
+                        <Button type="submit" id="signin-button" disabled={!email || !password || !password2 || hasError || !isValidated || password.length < MIN_PASSWORD_LENGTH}><FaPersonCirclePlus />    Créer mon compte</Button>
 
                         {generalError && <p className="error-text"><ImSad2 /> Une erreur est survenue lors de la création du compte.<br />Veuillez réessayer.</p>}
                     </form>
