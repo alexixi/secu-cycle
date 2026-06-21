@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import date, datetime
 from typing import Optional
 
@@ -33,3 +33,7 @@ class UserUpdate(BaseModel):
     sport_level: Optional[str] = None
     home_address: Optional[str] = None
     work_address: Optional[str] = None
+
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str = Field(min_length=10)

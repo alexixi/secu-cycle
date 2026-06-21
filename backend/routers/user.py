@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
-from schemas.user import UserCreate, UserRead, UserLogin, UserUpdate
+from schemas.user import UserCreate, UserRead, UserLogin, UserUpdate, PasswordChange
 from fastapi import HTTPException
 from utils.security import verify_password, hash_password, create_access_token
 from dependencies import get_current_user
@@ -85,12 +85,11 @@ def update_me(
 
 @router.patch("/me/password", status_code=204)
 def update_password(
-    old_password: str,
-    new_password: str,
+    data: PasswordChange,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if not verify_password(old_password, current_user.password_hash):
+    if not verify_password(data.old_password, current_user.password_hash):
         raise HTTPException(status_code=401, detail="Ancien mot de passe incorrect.")
-    current_user.password_hash = hash_password(new_password)
+    current_user.password_hash = hash_password(data.new_password)
     db.commit()

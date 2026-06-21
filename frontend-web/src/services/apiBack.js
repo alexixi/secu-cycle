@@ -136,11 +136,14 @@ export async function changeProfileInfo(token, firstName, lastName, email, birth
 }
 
 export async function changePassword(token, oldPassword, newPassword) {
-    const url = new URL("/users/me/password", window.location.origin);
-    url.searchParams.append("old_password", oldPassword);
-    url.searchParams.append("new_password", newPassword);
     try {
-        const data = await apiFetch(url, { method: "PATCH" }, token);
+        const data = await apiFetch("/users/me/password", {
+            method: "PATCH",
+            body: JSON.stringify({
+                old_password: oldPassword,
+                new_password: newPassword
+            })
+        }, token);
         return data;
     } catch (error) {
         throw error;
