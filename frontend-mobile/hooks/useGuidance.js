@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { DeviceEventEmitter } from 'react-native';
 import * as Location from 'expo-location';
+import * as Speech from 'expo-speech';
 import { updateNavigation } from '../services/apiBack';
 import {
     startBackgroundLocation,
@@ -9,6 +10,8 @@ import {
 } from '../services/backgroundLocation';
 
 const UPDATE_INTERVAL_MS = 2000;
+const APPROACH_DISTANCE_M = 200;
+const IMMINENT_DISTANCE_M = 40;
 
 export default function useGuidance(itineraires, selectedItineraire, isNavigating, onStop) {
     const [currentPosition, setCurrentPosition] = useState(null);
@@ -19,7 +22,10 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
     const locationSubRef = useRef(null);
     const lastPositionRef = useRef(null);
 
-    // GPS toujours actif — pour afficher la position sur la carte
+    const approachStepRef = useRef(-1);
+    const imminentStepRef = useRef(-1);
+    const arrivedSpokenRef = useRef(false);
+
     useEffect(() => {
         let sub = null;
 
@@ -80,6 +86,9 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
         if (!activeRoute?.nodes || !activeRoute?.maneuvers) return;
 
         stepIdxRef.current = 0;
+        approachStepRef.current = -1;
+        imminentStepRef.current = -1;
+        arrivedSpokenRef.current = false;
         _startNavInterval(activeRoute);
         startBackgroundLocation();
 
@@ -117,6 +126,14 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
 
             const hasArrived = result.current_maneuver?.turn_type === 'arrive';
 
+            _announce(
+                stepIdxRef.current,
+                result.instruction,
+                result.distance_to_next_m,
+                result.status,
+                hasArrived,
+            );
+
             setGuidanceState({
                 status: result.status,
                 instruction: result.instruction ?? null,
@@ -141,6 +158,46 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
         if (navIntervalRef.current) {
             clearInterval(navIntervalRef.current);
             navIntervalRef.current = null;
+        }
+    }
+
+    function _speak(text) {
+        Speech.stop();
+        Speech.speak(text, { language: 'fr-FR', pitch: 1, rate: 1 });
+    }
+
+    function _spokenDistance(meters) {
+        if (meters >= 1000) {
+            const km = (meters / 1000).toFixed(1).replace('.', ',');
+            return `dans ${km} kilomètres`;
+        }
+        return `dans ${Math.round(meters / 10) * 10} mètres`;
+    }
+
+    function _announce(step, instruction, distance, status, hasArrived) {
+        if (hasArrived) {
+            if (!arrivedSpokenRef.current) {
+                _speak("Vous êtes arrivé à destination");
+                arrivedSpokenRef.current = true;
+            }
+            return;
+        }
+
+        if (status === 'off_route' || !instruction?.text || distance == null) return;
+
+        if (distance <= IMMINENT_DISTANCE_M) {
+            if (imminentStepRef.current !== step) {
+                imminentStepRef.current = step;
+                _speak(instruction.text);
+            }
+            return;
+        }
+
+        if (distance <= APPROACH_DISTANCE_M) {
+            if (approachStepRef.current !== step) {
+                approachStepRef.current = step;
+                _speak(`${_spokenDistance(distance)}, ${instruction.text}`);
+            }
         }
     }
 

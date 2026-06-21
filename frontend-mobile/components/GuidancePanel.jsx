@@ -2,10 +2,8 @@ import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Speech from 'expo-speech';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
-// Mapping turn_type → nom d'icône MaterialCommunityIcons
 const TURN_ICONS = {
     depart: 'navigation',
     continue: 'arrow-up',
@@ -28,27 +26,8 @@ function formatDistance(meters) {
     return `${(rounded / 1000).toFixed(1)} km`;
 }
 
-const tts = (texte) => {
-    Speech.stop();
-    Speech.speak(texte, {
-        language: 'fr-FR',
-        pitch: 1,
-        rate: 1,
-    });
-};
-
 export default function GuidancePanel({ guidanceState, onStop }) {
     const insets = useSafeAreaInsets();
-
-    useEffect(() => {
-        if (guidanceState?.hasArrived) {
-            tts("Vous êtes arrivé à destination")
-            return;
-        }
-        if (guidanceState?.instruction?.text) {
-            tts(guidanceState.instruction.text);
-        }
-    }, [guidanceState?.instruction?.text, guidanceState?.hasArrived]);
 
     useEffect(() => {
         if (guidanceState && !guidanceState.hasArrived) {
@@ -95,7 +74,6 @@ export default function GuidancePanel({ guidanceState, onStop }) {
     return (
         <View style={[styles.container, { top: insets.top + 12 }]}>
 
-            {/* Instruction principale */}
             <View style={styles.instructionRow}>
                 <View style={[
                     styles.iconContainer,
@@ -125,7 +103,6 @@ export default function GuidancePanel({ guidanceState, onStop }) {
                 </TouchableOpacity>
             </View>
 
-            {/* Prochaine instruction */}
             {nextInstruction && nextIconName && (
                 <View style={styles.nextRow}>
                     <MaterialCommunityIcons name={nextIconName} size={16} color="rgba(255,255,255,0.7)" />
@@ -135,7 +112,6 @@ export default function GuidancePanel({ guidanceState, onStop }) {
                 </View>
             )}
 
-            {/* Barre de progression */}
             <View style={styles.footer}>
                 <View style={styles.progressBarBg}>
                     <View style={[
