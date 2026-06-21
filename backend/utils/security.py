@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -5,7 +6,12 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 
 
-SECRET_KEY = "080ddf258f5cd00a3fcaf7e550bf27b1c583f29f447d015354031f1423ed35c3" #ne pas laisser en dur a changer plus tard
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "La variable d'environnement SECRET_KEY est manquante. "
+        "Générez-en une avec `openssl rand -hex 32` et placez-la dans le fichier .env."
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 30  # 30 jours
 
