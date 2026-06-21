@@ -38,7 +38,7 @@ function App() {
           <Route path="/signin" element={<ProfileCreationPage />} />
 
           <Route path="/admin" element={
-            <ProtectedRoute>
+            <ProtectedRoute requireAdmin>
               <AdminPage />
             </ProtectedRoute>
           } />

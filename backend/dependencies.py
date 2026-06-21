@@ -31,6 +31,12 @@ def get_current_user(
     return user
 
 
+def require_admin(current_user: User = Depends(get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
+    return current_user
+
+
 oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="users/login", auto_error=False)
 
 def get_current_user_optional(
