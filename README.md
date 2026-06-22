@@ -102,3 +102,17 @@ location /users/login {
 
 Pour que `slowapi` voie l'IP réelle du client derrière Nginx, lancer uvicorn avec
 `--proxy-headers --forwarded-allow-ips="127.0.0.1"` et transmettre `X-Forwarded-For` côté Nginx.
+
+### Sécurité : audit des dépendances
+Les versions des dépendances backend sont épinglées dans `backend/requirements.txt` pour des
+builds reproductibles. Pensez à auditer régulièrement les vulnérabilités connues :
+
+```sh
+# Backend (Python)
+pip install pip-audit
+pip-audit -r backend/requirements.txt
+
+# Frontends (Node)
+cd frontend-web && npm audit
+cd frontend-mobile && npm audit
+```
