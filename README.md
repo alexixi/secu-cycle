@@ -80,3 +80,25 @@ make prod
 ```
 
 `make prod` lance la commande production du backend qui construit les conteneurs en mode production (plus de restrictions sur les ports) et la commande déploiement du frontend web qui fait un build du projet via Vite, deplace le build au bon endroit et donne les bonnes permissions pour que Nginx puisse y accéder.
+
+### Sécurité : limitation du débit (rate-limiting)
+L'API limite déjà le débit des tentatives de connexion (`5/minute` par IP via `slowapi`).
+En production, l'API tourne derrière Nginx avec plusieurs workers : le stockage en mémoire de
+`slowapi` est par worker, et derrière le reverse-proxy l'IP vue est celle de Nginx si les
+en-têtes ne sont pas transmis. Il est donc recommandé d'ajouter une limitation **au niveau Nginx**
+(par IP réelle) en défense en profondeur :
+
+```nginx
+# Dans le bloc http { }
+limit_req_zone $binary_remote_addr zone=login_limit:10m rate=5r/m;
+
+# Dans le bloc location de l'API (ex. /users/login)
+location /users/login {
+    limit_req zone=login_limit burst=5 nodelay;
+    proxy_pass http://127.0.0.1:8000;
+    # ... (proxy_set_header X-Forwarded-For, etc.)
+}
+```
+
+Pour que `slowapi` voie l'IP réelle du client derrière Nginx, lancer uvicorn avec
+`--proxy-headers --forwarded-allow-ips="127.0.0.1"` et transmettre `X-Forwarded-For` côté Nginx.

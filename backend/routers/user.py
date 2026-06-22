@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from utils.security import verify_password, hash_password, create_access_token
 from dependencies import get_current_user
 from fastapi.security import OAuth2PasswordRequestForm
+from limiter import limiter
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -39,7 +40,9 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 @router.post("/login")
+@limiter.limit("5/minute")
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):

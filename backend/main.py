@@ -11,6 +11,9 @@ from routers import traffic
 from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from limiter import limiter
 import os
 
 
@@ -53,6 +56,9 @@ async def lifespan(app: FastAPI):
     print("Shutdown terminé")
 
 app = FastAPI(title="Sécu Cycle", lifespan=lifespan)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(user.router)
 app.include_router(route.router)
