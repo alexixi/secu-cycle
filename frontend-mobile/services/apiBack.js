@@ -1,4 +1,5 @@
 import { DeviceEventEmitter } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 let API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -22,7 +23,27 @@ if (__DEV__) {
     }
 }
 
-export async function apiFetch(endpoint, options = {}, token = null) {
+async function refreshAccessToken() {
+    const refreshToken = await AsyncStorage.getItem('refresh_token');
+    if (!refreshToken) return null;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+        if (!response.ok) return null;
+        const data = await response.json();
+        await AsyncStorage.setItem('access_token', data.access_token);
+        DeviceEventEmitter.emit("token-refreshed", data.access_token);
+        return data.access_token;
+    } catch {
+        return null;
+    }
+}
+
+export async function apiFetch(endpoint, options = {}, token = null, _retried = false) {
     const headers = {
         "Content-Type": "application/json",
         ...options.headers,
@@ -38,7 +59,14 @@ export async function apiFetch(endpoint, options = {}, token = null) {
 
     if (!response.ok) {
         const errorData = await response.text();
-        if (response.status === 401 && !url.includes("/login") && errorData.includes("token")) {
+        const isAuthEndpoint = url.includes("/login") || url.includes("/refresh");
+        if (response.status === 401 && !isAuthEndpoint && errorData.includes("token")) {
+            if (!_retried) {
+                const newToken = await refreshAccessToken();
+                if (newToken) {
+                    return apiFetch(endpoint, options, newToken, true);
+                }
+            }
             console.warn("Token expiré ! Déconnexion forcée.");
             DeviceEventEmitter.emit("force-logout");
             throw new Error("Session expirée");

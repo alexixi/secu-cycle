@@ -60,7 +60,7 @@ export default function ProfileCreationPage() {
         }
         try {
             const response_login = await login(email, password);
-            loginAuth(response_login.access_token);
+            loginAuth(response_login.access_token, response_login.refresh_token);
             const response_user = await getUserProfile(response_login.access_token);
             updateUser(response_user);
             const userBikes = await getUserBikes(response_login.access_token);

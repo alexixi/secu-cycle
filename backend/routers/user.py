@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
-from schemas.user import UserCreate, UserRead, UserLogin, UserUpdate, PasswordChange
+from schemas.user import UserCreate, UserRead, UserLogin, UserUpdate, PasswordChange, TokenRefresh
 from fastapi import HTTPException
-from utils.security import verify_password, hash_password, create_access_token
+from utils.security import verify_password, hash_password, create_access_token, create_refresh_token, verify_token
 from dependencies import get_current_user
 from fastapi.security import OAuth2PasswordRequestForm
 from limiter import limiter
@@ -54,9 +54,31 @@ def login(
     if not verify_password(form_data.password, db_user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    access_token = create_access_token(
-        data={"sub": str(db_user.id)}
-    )
+    access_token = create_access_token(data={"sub": str(db_user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(db_user.id)})
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+
+@router.post("/refresh")
+def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
+    payload = verify_token(data.refresh_token, expected_type="refresh")
+    if payload is None:
+        raise HTTPException(status_code=401, detail="Refresh token invalide ou expiré")
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Refresh token invalide")
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None:
+        raise HTTPException(status_code=401, detail="Utilisateur introuvable")
+
+    access_token = create_access_token(data={"sub": str(user.id)})
 
     return {
         "access_token": access_token,

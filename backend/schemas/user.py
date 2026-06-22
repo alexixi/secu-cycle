@@ -37,3 +37,6 @@ class UserUpdate(BaseModel):
 class PasswordChange(BaseModel):
     old_password: str
     new_password: str = Field(min_length=10)
+
+class TokenRefresh(BaseModel):
+    refresh_token: str

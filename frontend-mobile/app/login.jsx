@@ -33,7 +33,7 @@ export default function Login() {
         setIsLoading(true);
         try {
             const response_login = await apiLogin(email, password);
-            await loginAuth(response_login.access_token);
+            await loginAuth(response_login.access_token, response_login.refresh_token);
 
             const response_user = await getUserProfile(response_login.access_token);
             await updateUser(response_user);

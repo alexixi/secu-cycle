@@ -56,13 +56,17 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('historic', JSON.stringify(historicData));
     }
 
-    const loginAuth = (token) => {
+    const loginAuth = (token, refreshToken) => {
         localStorage.setItem('access_token', token);
+        if (refreshToken) {
+            localStorage.setItem('refresh_token', refreshToken);
+        }
         setToken(token);
     };
 
     const logoutAuth = () => {
         localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
         localStorage.removeItem('bikes');
         localStorage.removeItem('historic');
@@ -74,9 +78,18 @@ export const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
+        const handleTokenRefreshed = (event) => {
+            setToken(event.detail);
+        };
+        window.addEventListener("token-refreshed", handleTokenRefreshed);
+        return () => window.removeEventListener("token-refreshed", handleTokenRefreshed);
+    }, []);
+
+    useEffect(() => {
         const handleForceLogout = () => {
             console.log("Session expired, logging out...");
             localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
             localStorage.removeItem('user');
             localStorage.removeItem('bikes');
             localStorage.removeItem('historic');

@@ -13,7 +13,8 @@ if not SECRET_KEY:
         "Générez-en une avec `openssl rand -hex 32` et placez-la dans le fichier .env."
     )
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 30  # 30 jours
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 heure
+REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 30  # 30 jours
 
 #pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 pwd_context = CryptContext(
@@ -30,23 +31,30 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return pwd_context.verify(password, hashed_password)
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def _create_token(data: dict, expires_delta: timedelta, token_type: str):
     to_encode = data.copy()
-
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-    return encoded_jwt
+    expire = datetime.utcnow() + expires_delta
+    to_encode.update({"exp": expire, "type": token_type})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def verify_token(token: str):
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    delta = expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    return _create_token(data, delta, "access")
+
+
+def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
+    delta = expires_delta or timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
+    return _create_token(data, delta, "refresh")
+
+
+def verify_token(token: str, expected_type: str = "access"):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
     except JWTError:
         return None
+
+    if payload.get("type") != expected_type:
+        return None
+
+    return payload

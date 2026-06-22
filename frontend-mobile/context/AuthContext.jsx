@@ -41,6 +41,16 @@ export const AuthProvider = ({ children }) => {
         };
     }, []);
 
+    useEffect(() => {
+        const subscription = DeviceEventEmitter.addListener('token-refreshed', (newToken) => {
+            setToken(newToken);
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
     const updateUser = async (userData) => {
         setUser(userData);
         await AsyncStorage.setItem('user', JSON.stringify(userData));
@@ -56,9 +66,12 @@ export const AuthProvider = ({ children }) => {
         await AsyncStorage.setItem('historic', JSON.stringify(historicData));
     }
 
-    const loginAuth = async (newToken) => {
+    const loginAuth = async (newToken, refreshToken) => {
         setToken(newToken);
         await AsyncStorage.setItem('access_token', newToken);
+        if (refreshToken) {
+            await AsyncStorage.setItem('refresh_token', refreshToken);
+        }
     };
 
     const logoutAuth = async () => {
@@ -67,6 +80,7 @@ export const AuthProvider = ({ children }) => {
         setBikes([]);
         setHistoric([]);
         await AsyncStorage.removeItem('access_token');
+        await AsyncStorage.removeItem('refresh_token');
         await AsyncStorage.removeItem('user');
         await AsyncStorage.removeItem('bikes');
         await AsyncStorage.removeItem('historic');
