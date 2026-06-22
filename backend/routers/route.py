@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import osmnx as ox
 from typing import List
 from database import get_db
-from schemas.route import RouteCreate, RouteRead, ComputeRoutesResponse
+from schemas.route import RouteCreate, RouteRead, ComputeRoutesResponse, ComputeRouteRequest
 from models.route import Route
 from dependencies import get_current_user, get_current_user_optional
 from graph.routing import get_optimal_routes
@@ -13,41 +13,6 @@ from models.report import Report
 from datetime import datetime, timedelta
 from graph.guidance import build_maneuvers
 router = APIRouter(prefix="/routes", tags=["Routes"])
-
-@router.get("/debug/traffic")
-async def get_current_traffic(request: Request):
-    """
-    Renvoie la liste des rues actuellement embouteillées avec leur nom et coordonnées.
-    """
-    G = request.app.state.G
-    congested_segments = []
-    rues_bouchonnees_uniques = set()
-
-    for u, v, k, data in G.edges(keys=True, data=True):
-        if data.get('traffic_jam'):
-            street_name = data.get('name', 'Rue sans nom')
-            if isinstance(street_name, list):
-                street_name = " / ".join(street_name)
-
-            rues_bouchonnees_uniques.add(street_name)
-
-            u_node = G.nodes[u]
-            v_node = G.nodes[v]
-
-            congested_segments.append({
-                "street": street_name,
-                "coords": [
-                    [u_node['y'], u_node['x']], # [latitude, longitude]
-                    [v_node['y'], v_node['x']]
-                ]
-            })
-
-    return {
-        "status": "success",
-        "total_segments_impactes": len(congested_segments),
-        "rues_principales_impactees": list(rues_bouchonnees_uniques),
-        "details": congested_segments
-    }
 
 @router.post("/", response_model=RouteRead)
 def create_route(route_data: RouteCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
@@ -69,19 +34,16 @@ def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends
     return route
 
 @router.post("/route", response_model=ComputeRoutesResponse)
-async def compute_route(request: Request, data: dict, db: Session = Depends(get_db), current_user=Depends(get_current_user_optional)):
+async def compute_route(request: Request, data: ComputeRouteRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user_optional)):
     G = request.app.state.G
     if G is None:
-        raise HTTPException(status_code=500, detail="Graphe non chargé")
+        raise HTTPException(status_code=503, detail="Graphe non chargé")
 
-    try:
-        start = (data["start_lat"], data["start_lon"])
-        end = (data["end_lat"], data["end_lon"])
-    except KeyError as e:
-        raise HTTPException(status_code=422, detail=f"Champ manquant : {e}")
+    start = (data.start_lat, data.start_lon)
+    end = (data.end_lat, data.end_lon)
 
-    is_electric = bool(data.get("is_electric", False))
-    bike_type = data.get("bike_type", "standard") or "standard"
+    is_electric = data.is_electric
+    bike_type = data.bike_type or "standard"
     cyclist_level = "intermediaire"
 
     if current_user:
@@ -89,9 +51,8 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
         if niveau_db:
             cyclist_level = niveau_db.lower()
 
-        bike_id = data.get("bike_id")
-        if bike_id and str(bike_id).lstrip('-').isdigit():
-            bike = db.query(Bike).filter(Bike.id == int(bike_id), Bike.user_id == current_user.id).first()
+        if data.bike_id is not None:
+            bike = db.query(Bike).filter(Bike.id == data.bike_id, Bike.user_id == current_user.id).first()
             if bike:
                 is_electric = bike.is_electric
                 bike_type = bike.type or "standard"
@@ -130,14 +91,14 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
             bike_type=bike_type,
             is_electric=is_electric,
             cyclist_level=cyclist_level,
-            max_time_min=data.get("temps_max_min"),
-            iterations=data.get("iterations", 6),
+            max_time_min=data.temps_max_min,
+            iterations=data.iterations,
             reported_edges=reported_edges
         )
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Erreur lors du calcul de l'itinéraire.")
 
 
     if not result.get("success"):
@@ -161,8 +122,8 @@ async def compute_route(request: Request, data: dict, db: Session = Depends(get_
             route["maneuvers"] = maneuvers
 
     if current_user:
-        start_address = data.get("start_address", f"{start[0]}, {start[1]}")
-        end_address = data.get("end_address", f"{end[0]}, {end[1]}")
+        start_address = data.start_address or f"{start[0]}, {start[1]}"
+        end_address = data.end_address or f"{end[0]}, {end[1]}"
 
         for route_info in result.get("routes", []):
             db_route = Route(

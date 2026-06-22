@@ -1,7 +1,21 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, List, Any, Dict
 from schemas.navigation import ManeuverOut
+
+class ComputeRouteRequest(BaseModel):
+    """Entrée validée du calcul d'itinéraire POST /routes/route."""
+    start_lat: float = Field(ge=-90, le=90)
+    start_lon: float = Field(ge=-180, le=180)
+    end_lat: float = Field(ge=-90, le=90)
+    end_lon: float = Field(ge=-180, le=180)
+    is_electric: bool = False
+    bike_type: Optional[str] = Field(default="standard", max_length=50)
+    bike_id: Optional[int] = None
+    temps_max_min: Optional[float] = Field(default=None, ge=1, le=1440)
+    iterations: int = Field(default=6, ge=1, le=20)
+    start_address: Optional[str] = Field(default=None, max_length=255)
+    end_address: Optional[str] = Field(default=None, max_length=255)
 
 class RouteBase(BaseModel):
     start_address: str
