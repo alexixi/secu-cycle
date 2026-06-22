@@ -1,6 +1,6 @@
 services:
   db:
-    container_name: db
+    container_name: secu_cycle_db
     image: postgres:16
     environment:
       POSTGRES_DB: ${POSTGRES_DB}

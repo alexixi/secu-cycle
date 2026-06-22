@@ -3,43 +3,27 @@ import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(null);
-    const [userBikes, setUserBikes] = useState([]);
-    const [historic, setHistoric] = useState([]);
-    const navigate = useNavigate();
+const readStored = (key, { parse = false, fallback = null } = {}) => {
+    const raw = localStorage.getItem(key);
+    if (!raw || raw === "undefined" || raw === "null") {
+        return fallback;
+    }
+    if (!parse) {
+        return raw;
+    }
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return fallback;
+    }
+};
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('access_token');
-        const storedBikes = localStorage.getItem('bikes');
-        const storedHistoric = localStorage.getItem('historic');
-        if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
-            setUser(JSON.parse(storedUser));
-        } else {
-            localStorage.removeItem('user');
-            setUser(null);
-        }
-        if (storedToken && storedToken !== "undefined" && storedToken !== "null") {
-            setToken(storedToken);
-        } else {
-            localStorage.removeItem('access_token');
-            setToken(null);
-        }
-        if (storedBikes && storedBikes !== "undefined" && storedBikes !== "null") {
-            setUserBikes(JSON.parse(storedBikes));
-        } else {
-            localStorage.removeItem('bikes');
-            setUserBikes([]);
-        }
-        if (storedHistoric && storedHistoric !== "undefined" && storedHistoric !== "null") {
-            setHistoric(JSON.parse(storedHistoric));
-        } else {
-            localStorage.removeItem('historic');
-            setHistoric([]);
-        }
-    }, []);
+export const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState(() => readStored('user', { parse: true }));
+    const [token, setToken] = useState(() => readStored('access_token'));
+    const [userBikes, setUserBikes] = useState(() => readStored('bikes', { parse: true, fallback: [] }));
+    const [historic, setHistoric] = useState(() => readStored('historic', { parse: true, fallback: [] }));
+    const navigate = useNavigate();
 
     const updateUser = (userData) => {
         setUser(userData);

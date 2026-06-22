@@ -1,6 +1,6 @@
 import { DeviceEventEmitter } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { getRefreshToken, saveAccessToken } from './tokenStorage';
 
 let API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -24,7 +24,7 @@ if (__DEV__) {
 }
 
 async function refreshAccessToken() {
-    const refreshToken = await AsyncStorage.getItem('refresh_token');
+    const refreshToken = await getRefreshToken();
     if (!refreshToken) return null;
 
     try {
@@ -35,7 +35,7 @@ async function refreshAccessToken() {
         });
         if (!response.ok) return null;
         const data = await response.json();
-        await AsyncStorage.setItem('access_token', data.access_token);
+        await saveAccessToken(data.access_token);
         DeviceEventEmitter.emit("token-refreshed", data.access_token);
         return data.access_token;
     } catch {
