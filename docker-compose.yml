@@ -38,6 +38,8 @@ services:
 
 volumes:
   postgres_data:
-    # Nom physique épinglé sur l'ancien (projet "backend") pour conserver les
-    # données de prod existantes après le passage du compose à la racine.
+    # Volume géré hors compose : on réutilise l'existant (créé sous l'ancien
+    # projet "backend") pour conserver les données de prod. `external` évite
+    # que compose tente de le (re)créer/labelliser et supprime le warning.
+    external: true
     name: backend_postgres_data
