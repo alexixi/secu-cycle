@@ -5,6 +5,46 @@ import requests
 import json
 import time
 
+
+def load_graph_profile():
+    """
+    Charge le profil de graphe actif depuis le fichier de configuration JSON.
+
+    Le fichier est désigné par la variable d'environnement GRAPH_CONFIG
+    (défaut : graphs.json à la racine du backend). Le profil actif est
+    désigné par GRAPH_PROFILE (défaut : la clé "default_profile" du fichier).
+
+    Retourne un dict avec des chemins absolus :
+        {"graph_file": ..., "ign_cache_file": ..., "communes": [...]}.
+    Les chemins du fichier de config sont résolus relativement au dossier de
+    ce fichier, pour rester stables quel que soit le répertoire courant.
+    """
+    default_config = os.path.join(os.path.dirname(__file__), "..", "graphs.json")
+    config_path = os.path.abspath(os.getenv("GRAPH_CONFIG", default_config))
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    name = os.getenv("GRAPH_PROFILE") or config.get("default_profile")
+    profiles = config.get("profiles", {})
+    if name not in profiles:
+        raise RuntimeError(
+            f"Profil de graphe '{name}' introuvable dans {config_path}. "
+            f"Profils disponibles : {', '.join(profiles) or 'aucun'}."
+        )
+
+    profile = profiles[name]
+    print(f"Profil de graphe actif : '{name}' "
+          f"({len(profile['communes'])} communes, fichier : {profile['graph_file']})",
+          flush=True)
+    base = os.path.dirname(config_path)
+    return {
+        "graph_file": os.path.join(base, profile["graph_file"]),
+        "ign_cache_file": os.path.join(base, profile["ign_cache_file"]),
+        "communes": profile["communes"],
+    }
+
+
 def create_ign_data_file(filepath_graph, filepath_json):
     """Télécharge et lisse les altitudes IGN le plus rapidement possible."""
     G = ox.load_graphml(filepath_graph)
@@ -89,44 +129,39 @@ def create_ign_data_file(filepath_graph, filepath_json):
     print("Succès : Fichier d'altitudes mis à jour.")
 
 
-def create_graph(filename, filepath_json):
+def create_graph(filename, filepath_json, communes):
     """
-    Charge le graphe ou le crée s'il n'existe pas, 
+    Charge le graphe ou le crée s'il n'existe pas,
     puis met à jour automatiquement les données IGN.
+
+    `communes` : liste des communes (format Nominatim "Nom, France") utilisée
+    uniquement à la génération si le fichier `filename` n'existe pas encore.
     """
     if os.path.exists(filename):
         print("Chargement du graphe depuis le fichier local...")
         G = ox.load_graphml(filepath=filename)
     else:
         print("Création du graphe complet de la métropole en cours (cela peut prendre quelques minutes)...")
-        
+
         useful_tags = ox.settings.useful_tags_way + ['cycleway', 'lit', 'maxspeed', 'surface']
         ox.settings.useful_tags_way = list(set(useful_tags))
-        
-        # Liste exhaustive avec orthographe corrigée pour Nominatim
-        places = [
-            'Bordeaux, France', 'Pessac, France', 'Talence, France',
-            'Mérignac, France', 'Bègles, France', 'Gradignan, France',
-            "Villenave-d'Ornon, France", 'Canéjan, France', 'Cenon, France',
-            'Le Haillan, France', 'Eysines, France', 'Bruges, France',
-            'Le Bouscat, France', 'Lormont, France', 'Floirac, France',
-            'Blanquefort, France', 'Artigues-près-Bordeaux, France'
-        ]
-        
-        G = ox.graph_from_place(places, network_type='bike')
+
+        G = ox.graph_from_place(communes, network_type='bike')
         G = ox.truncate.largest_component(G, strongly=True)
+
+        os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
         ox.save_graphml(G, filepath=filename)
         print("Graphe téléchargé et sauvegardé avec succès.")
-        
+
         # On déclenche l'API IGN uniquement si on vient de créer un nouveau graphe !
         print("Lancement de la mise à jour des altitudes IGN...")
         create_ign_data_file(filename, filepath_json)
-        
+
     return G
-    
-def load_graph_with_ign(filepath_graph, filepath_json):
+
+def load_graph_with_ign(filepath_graph, filepath_json, communes):
     """Charge le graphe routier et y injecte le cache d'altitudes IGN."""
-    G = create_graph(filepath_graph, filepath_json)
+    G = create_graph(filepath_graph, filepath_json, communes)
     
     with open(filepath_json, 'r') as f:
         ign_data = json.load(f)

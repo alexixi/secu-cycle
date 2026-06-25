@@ -125,5 +125,7 @@ def create_ign_data_file(filepath_graph, filepath_json):
 
 
 if __name__ == "__main__":
-    create_ign_data_file("../victoire_campus.graphml", "../ign_bordeaux_cache.json")
+    from graph_manager import load_graph_profile
+    profile = load_graph_profile()
+    create_ign_data_file(profile["graph_file"], profile["ign_cache_file"])
 

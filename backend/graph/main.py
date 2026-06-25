@@ -5,7 +5,7 @@ import json
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import time
 import osmnx as ox
-from graph_manager import create_graph, load_graph_with_ign, update_graph_with_traffic
+from graph_manager import create_graph, load_graph_with_ign, update_graph_with_traffic, load_graph_profile
 from routing import get_optimal_routes, calculate_route_distance, _parse_maxspeed
 from statistique import calculer_statistiques_osm, analyser_qualite_trajet, calculate_route_elevation
 from elevation import verifier_altitudes
@@ -13,7 +13,9 @@ from elevation import verifier_altitudes
 
 def main():    
     print("\nChargement de la carte en cours...")
-    G = load_graph_with_ign("victoire_campus.graphml", "ign_bordeaux_cache.json")
+    profile = load_graph_profile()
+    G = load_graph_with_ign(
+        profile["graph_file"], profile["ign_cache_file"], profile["communes"])
 
     start_time = time.perf_counter()
 

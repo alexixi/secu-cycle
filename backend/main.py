@@ -8,7 +8,7 @@ from routers import bike
 from routers import report
 from routers import navigation
 from routers import traffic
-from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic
+from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic, load_graph_profile
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -33,7 +33,9 @@ Base.metadata.create_all(bind=engine)
 async def lifespan(app: FastAPI):
     print("Chargement du graphe...")
 
-    app.state.G = load_graph_with_ign("victoire_campus.graphml", "ign_bordeaux_cache.json")
+    profile = load_graph_profile()
+    app.state.G = load_graph_with_ign(
+        profile["graph_file"], profile["ign_cache_file"], profile["communes"])
 
     print("Chargement initial du trafic...")
 

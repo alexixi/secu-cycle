@@ -1,0 +1,110 @@
+{
+    "default_profile": "bordeaux",
+    "profiles": {
+        "bordeaux": {
+            "graph_file": "graphs/bordeaux.graphml",
+            "ign_cache_file": "graphs/bordeaux.ign.json",
+            "communes": [
+                "Bordeaux, France",
+                "Pessac, France",
+                "Talence, France",
+                "Mérignac, France",
+                "Bègles, France",
+                "Gradignan, France",
+                "Villenave-d'Ornon, France",
+                "Cenon, France",
+                "Le Haillan, France",
+                "Eysines, France",
+                "Bruges, France",
+                "Le Bouscat, France",
+                "Lormont, France",
+                "Floirac, France",
+                "Blanquefort, France",
+                "Artigues-près-Bordeaux, France",
+                "Ambarès-et-Lagrave, France",
+                "Ambès, France",
+                "Bassens, France",
+                "Bouliac, France",
+                "Carbon-Blanc, France",
+                "Martignas-sur-Jalle, France",
+                "Parempuyre, France",
+                "Saint-Aubin-de-Médoc, France",
+                "Saint-Louis-de-Montferrand, France",
+                "Saint-Médard-en-Jalles, France",
+                "Saint-Vincent-de-Paul, France",
+                "Le Taillan-Médoc, France",
+                "Canéjan, France",
+                "Cestas, France",
+                "Léognan, France",
+                "Cadaujac, France",
+                "La Brède, France",
+                "Martillac, France",
+                "Saucats, France",
+                "Saint-Médard-d'Eyrans, France",
+                "Saint-Selve, France",
+                "Saint-Morillon, France",
+                "Beautiran, France",
+                "Castres-Gironde, France",
+                "Ayguemorte-les-Graves, France",
+                "Isle-Saint-Georges, France",
+                "Cabanac-et-Villagrains, France"
+            ]
+        },
+        "bordeaux_metropole": {
+            "graph_file": "graphs/bordeaux_metropole.graphml",
+            "ign_cache_file": "graphs/bordeaux_metropole.ign.json",
+            "communes": [
+                "Bordeaux, France",
+                "Pessac, France",
+                "Talence, France",
+                "Mérignac, France",
+                "Bègles, France",
+                "Gradignan, France",
+                "Villenave-d'Ornon, France",
+                "Cenon, France",
+                "Le Haillan, France",
+                "Eysines, France",
+                "Bruges, France",
+                "Le Bouscat, France",
+                "Lormont, France",
+                "Floirac, France",
+                "Blanquefort, France",
+                "Artigues-près-Bordeaux, France",
+                "Ambarès-et-Lagrave, France",
+                "Ambès, France",
+                "Bassens, France",
+                "Bouliac, France",
+                "Carbon-Blanc, France",
+                "Martignas-sur-Jalle, France",
+                "Parempuyre, France",
+                "Saint-Aubin-de-Médoc, France",
+                "Saint-Louis-de-Montferrand, France",
+                "Saint-Médard-en-Jalles, France",
+                "Saint-Vincent-de-Paul, France",
+                "Le Taillan-Médoc, France"
+            ]
+        },
+        "victoire-campus": {
+            "graph_file": "graphs/victoire-campus.graphml",
+            "ign_cache_file": "graphs/victoire-campus.ign.json",
+            "communes": [
+                "Bordeaux, France",
+                "Pessac, France",
+                "Talence, France",
+                "Gradignan, France"
+            ]
+        },
+        "tournai": {
+            "graph_file": "graphs/tournai.graphml",
+            "ign_cache_file": "graphs/tournai.ign.json",
+            "communes": [
+                "Tournai, Belgium",
+                "Antoing, Belgium",
+                "Leuze-en-Hainaut, Belgium",
+                "Estaimpuis, Belgium",
+                "Mont-de-l'Enclus, Belgium",
+                "Mouscron, Belgium"
+            ]
+        }
+    }
+}

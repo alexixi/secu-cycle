@@ -6,3 +6,4 @@ __pycache__/
 venv/
 database/venv/
 *.graphml
+graphs/*.ign.json
