@@ -26,6 +26,7 @@ services:
       - CORS_ORIGINS=${CORS_ORIGINS}
       - SECRET_KEY=${SECRET_KEY}
       - GRAPH_PROFILE=${GRAPH_PROFILE}
+      - PYTHONUNBUFFERED=1
     volumes:
       - graphs_data:/app/graphs
     depends_on:
