@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.neighbors import BallTree
 from graph.config import *
 from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_bordeaux_lighting_condition, calculate_infra_stats
+from graph.route_cache import route_cache
 
 def _get_speed_score(vmax):
     if vmax <= 20: return 10
@@ -233,6 +234,16 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
             precompute_static_costs(G)
         lighting_on = get_bordeaux_lighting_condition()[1]
 
+        cache_key = (
+            round(start_coords[0], 5), round(start_coords[1], 5),
+            round(end_coords[0], 5), round(end_coords[1], 5),
+            bike_type, bool(is_electric), cyclist_level,
+            max_time_min, int(iterations), lighting_on,
+        )
+        cached = route_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         if not G.graph.get('_node_index_ready'):
             precompute_nearest_node_index(G)
         start_node, end_node = _nearest_nodes(
@@ -260,5 +271,6 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
                     a_low = a_mid
             best_data = _full_route_data(G, best_nodes, bike_type, is_electric, cyclist_level)
             res["routes"].append({"id": "compromise", "name": "Compromis", "alpha_final": a_high, **best_data})
+        route_cache.set(cache_key, res)
         return res
     except Exception as e: return {"success": False, "error": str(e)}

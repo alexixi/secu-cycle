@@ -6,6 +6,7 @@ from database import get_db
 from models.report import Report
 from schemas.report import ReportCreate, ReportRead
 from dependencies import get_current_user
+from graph.route_cache import route_cache
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
@@ -25,6 +26,7 @@ def create_report(
     db.add(db_report)
     db.commit()
     db.refresh(db_report)
+    route_cache.invalidate()
     return db_report
 
 REPORT_EXPIRY = {
@@ -57,3 +59,4 @@ def delete_report(report_id: int, db: Session = Depends(get_db), current_user=De
         raise HTTPException(status_code=404, detail="Signalement introuvable.")
     db.delete(report)
     db.commit()
+    route_cache.invalidate()

@@ -26,6 +26,7 @@ services:
       - CORS_ORIGINS=${CORS_ORIGINS}
       - SECRET_KEY=${SECRET_KEY}
       - GRAPH_PROFILE=${GRAPH_PROFILE}
+      - ROUTE_CACHE_SIZE=${ROUTE_CACHE_SIZE:-256}
       - PYTHONUNBUFFERED=1
     volumes:
       - graphs_data:/app/graphs

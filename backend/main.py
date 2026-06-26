@@ -9,6 +9,7 @@ from routers import report
 from routers import navigation
 from routers import traffic
 from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic, load_graph_profile
+from graph.route_cache import route_cache
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -27,6 +28,7 @@ async def periodic_traffic_update(app: FastAPI):
         if hasattr(app.state, 'G') and app.state.G is not None:
             print("[Background Task] Actualisation du trafic en cours...", flush=True)
             app.state.G = await asyncio.to_thread(update_graph_with_traffic, app.state.G)
+            route_cache.invalidate()
 
 Base.metadata.create_all(bind=engine)
 @asynccontextmanager
