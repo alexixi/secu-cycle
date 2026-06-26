@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+import asyncio
 import osmnx as ox
 from typing import List
 from database import get_db
@@ -84,16 +85,18 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
                     reported_edges[edge] = r_type
 
     try:
-        result = get_optimal_routes(
+        # Calcul CPU-bound déporté hors de l'event loop pour ne pas bloquer le worker.
+        result = await asyncio.to_thread(
+            get_optimal_routes,
             G,
-            start_coords=start,
-            end_coords=end,
-            bike_type=bike_type,
-            is_electric=is_electric,
-            cyclist_level=cyclist_level,
-            max_time_min=data.temps_max_min,
-            iterations=data.iterations,
-            reported_edges=reported_edges
+            start,
+            end,
+            bike_type,
+            is_electric,
+            cyclist_level,
+            data.temps_max_min,
+            data.iterations,
+            reported_edges,
         )
     except Exception:
         import traceback
@@ -103,13 +106,6 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
 
     if not result.get("success"):
         raise HTTPException(status_code=404, detail=result.get("error", "Calcul échoué."))
-    for route_info in result.get("routes", []):
-        coords = route_info["path"]
-        nodes = list(ox.distance.nearest_nodes(
-            G,
-            [p[1] for p in coords],
-            [p[0] for p in coords]
-        ))
 
     for route in result.get("routes", []):
             maneuvers = build_maneuvers(route["nodes"], G)
