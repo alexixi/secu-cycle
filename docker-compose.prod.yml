@@ -1,5 +1,11 @@
 services:
   api:
+    # 1 seul worker en prod : chaque worker charge sa propre copie du graphe
+    # bordeaux (~0,5-1 Go en mémoire). Avec 3 workers sur un VPS 3,8 Go sans
+    # swap, le pic de chargement saturait la RAM et déclenchait l'OOM killer,
+    # rendant l'hôte injoignable. Le calcul d'itinéraire étant déporté hors de
+    # l'event loop (asyncio.to_thread), 1 worker async reste réactif.
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
     ports:
       - "127.0.0.1:8000:8000"
   web:
