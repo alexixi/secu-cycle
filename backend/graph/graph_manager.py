@@ -186,8 +186,10 @@ def load_graph_with_ign(filepath_graph, filepath_json, communes):
     G = ox.elevation.add_edge_grades(G, add_absolute=True)
 
     # Précalcule une fois les composantes de coût statiques des arêtes
-    from graph.routing import precompute_static_costs
+    # et l'index spatial des nœuds (recherche du point d'accroche).
+    from graph.routing import precompute_static_costs, precompute_nearest_node_index
     precompute_static_costs(G)
+    precompute_nearest_node_index(G)
 
     return G
 

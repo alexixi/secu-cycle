@@ -1,5 +1,7 @@
 import osmnx as ox
 import networkx as nx
+import numpy as np
+from sklearn.neighbors import BallTree
 from graph.config import *
 from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_bordeaux_lighting_condition, calculate_infra_stats
 
@@ -99,16 +101,7 @@ def calculate_weights(G, alpha=0.5, beta=0.5, reported_edges=None):
     return G
 
 def precompute_static_costs(G):
-    """
-    Précalcule UNE FOIS, par arête, les composantes de coût indépendantes de la
-    requête (score de sécurité, risque normalisé, terme de pente) et les stocke
-    sur l'arête. Évite de réitérer sur tout le graphe à chaque calcul d'itinéraire.
-
-    Deux variantes de sécurité selon l'éclairage public (cf. _compute_safety_scores) :
-    `_risk_on` (éclairage actif, terme `lit`) et `_risk_off` (sans `lit`).
-    Le choix se fait au moment de la requête via get_bordeaux_lighting_condition()[1].
-    Idempotent (marqueur G.graph['_static_costs_ready']).
-    """
+    """Pré-calcul des coûts statiques pour chaque arête du graphe, en fonction de la sécurité et de l'effort."""
     min_on = min_off = float('inf')
     max_on = max_off = float('-inf')
 
@@ -167,13 +160,28 @@ def precompute_static_costs(G):
     G.graph['_static_costs_ready'] = True
     return G
 
+def precompute_nearest_node_index(G):
+    """Pré-calcul de l'index spatial pour la recherche des nœuds les plus proches."""
+    node_ids = np.array(list(G.nodes))
+    coords = np.array([[G.nodes[n]['y'], G.nodes[n]['x']] for n in node_ids], dtype=float)
+    tree = BallTree(np.deg2rad(coords), metric='haversine')
+
+    G.graph['_node_ids'] = node_ids
+    G.graph['_node_tree'] = tree
+    G.graph['_node_index_ready'] = True
+    return G
+
+
+def _nearest_nodes(G, lons, lats):
+    """Renvoie la liste des nœuds les plus proches via l'index précalculé."""
+    import numpy as np
+    pts = np.deg2rad(np.column_stack([lats, lons]))
+    _, pos = G.graph['_node_tree'].query(pts, k=1)
+    return [int(n) for n in G.graph['_node_ids'][pos[:, 0]]]
+
 
 def _make_weight(alpha, beta, reported_edges, lighting_on):
-    """
-    Fabrique le callback de poids passé à nx.astar_path : calcule le coût d'une
-    arête À LA VOLÉE (uniquement pour les arêtes explorées), à partir des
-    composantes précalculées. Formule strictement identique à calculate_weights.
-    """
+    """Renvoie une fonction de poids pour l'algorithme A* en fonction des paramètres alpha, beta, des arêtes signalées et de l'état de l'éclairage."""
     one_minus = 1.0 - alpha
     risk_key = '_risk_on' if lighting_on else '_risk_off'
 
@@ -225,9 +233,10 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
             precompute_static_costs(G)
         lighting_on = get_bordeaux_lighting_condition()[1]
 
-        snap = ox.distance.nearest_nodes(
+        if not G.graph.get('_node_index_ready'):
+            precompute_nearest_node_index(G)
+        start_node, end_node = _nearest_nodes(
             G, [start_coords[1], end_coords[1]], [start_coords[0], end_coords[0]])
-        start_node, end_node = snap[0], snap[1]
         beta_elev = 0.0 if is_electric else ELEVATION_WEIGHT_BY_LEVEL.get(cyclist_level.lower(), 0.7)
 
         fast_nodes = _astar_nodes(G, start_node, end_node, 1.0, beta_elev, reported_edges, lighting_on)
