@@ -18,8 +18,9 @@ import HistoricModal from "../components/layout/modals/HistoricModal";
 
 // Icons
 import { PiPathBold } from "react-icons/pi";
-import { MdOutlineTimer, MdDirectionsBike } from "react-icons/md";
-import { FaFlagCheckered } from "react-icons/fa";
+import { MdOutlineTimer, MdDirectionsBike, MdStraighten, MdOutlineRoute } from "react-icons/md";
+import { MdOutlineSpeed, MdHealthAndSafety } from "react-icons/md";
+import { FaFlagCheckered, FaStar, FaBalanceScale } from "react-icons/fa";
 import { MdOutlineWork, MdEditLocationAlt } from "react-icons/md";
 import { MdBatteryChargingFull, MdDelete } from "react-icons/md";
 
@@ -356,32 +357,39 @@ export default function ProfilePage() {
                   return acc;
                 }, {});
                 const typeLabels = { fast: "Rapide", safe: "Sécurisé", compromise: "Compromis" };
+                const typeIcons = { fast: MdOutlineSpeed, safe: MdHealthAndSafety, compromise: FaBalanceScale };
                 const prefType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
+                const PrefTypeIcon = prefType ? (typeIcons[prefType[0]] || FaStar) : FaStar;
 
                 if (totalTrajets === 0) return <p style={{ paddingLeft: "3%", color: "var(--text-secondary)" }}>Aucun trajet enregistré pour le moment.</p>;
 
                 return (
                   <div className="stats-grid">
                     <div className="stat-card">
+                      <span className="stat-card-icon"><MdDirectionsBike size={24} /></span>
                       <span className="stat-value">{totalTrajets}</span>
                       <span className="stat-label">Trajets effectués</span>
                     </div>
                     <div className="stat-card">
+                      <span className="stat-card-icon"><MdOutlineRoute size={24} /></span>
                       <span className="stat-value">{totalDist.toFixed(1)} km</span>
                       <span className="stat-label">Distance totale</span>
                     </div>
                     <div className="stat-card">
+                      <span className="stat-card-icon"><MdOutlineTimer size={24} /></span>
                       <span className="stat-value">
                         {Math.floor(totalTime / 60) > 0 ? `${Math.floor(totalTime / 60)}h ` : ""}{Math.round(totalTime % 60)}min
                       </span>
                       <span className="stat-label">Temps total</span>
                     </div>
                     <div className="stat-card">
+                      <span className="stat-card-icon"><MdStraighten size={24} /></span>
                       <span className="stat-value">{avgDist.toFixed(1)} km</span>
                       <span className="stat-label">Distance moyenne</span>
                     </div>
                     {prefType && (
                       <div className="stat-card">
+                        <span className="stat-card-icon"><PrefTypeIcon size={24} /></span>
                         <span className="stat-value">{typeLabels[prefType[0]] || prefType[0]}</span>
                         <span className="stat-label">Type préféré</span>
                       </div>
