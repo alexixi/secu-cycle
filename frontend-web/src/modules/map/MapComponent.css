@@ -78,6 +78,23 @@
     z-index: 10;
 }
 
+.map-container.map-dark .maplibregl-ctrl-attrib {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.map-container.map-dark .maplibregl-ctrl-attrib.maplibregl-compact {
+    background-color: rgba(40, 40, 50, 0.9);
+}
+
+.map-container.map-dark .maplibregl-ctrl-attrib a {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.map-container.map-dark .maplibregl-ctrl-attrib-button {
+    background-color: rgba(255, 255, 255, 0.85);
+}
+
 .map-theme-control .theme-toggle {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }

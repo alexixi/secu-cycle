@@ -41,13 +41,21 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [isMapLoaded, setIsMapLoaded] = useState(false);
 
     useEffect(() => {
-        const saved = localStorage.getItem('userMapThemeMode');
-        if (saved === 'light' || saved === 'auto' || saved === 'dark') setMapThemeMode(saved);
+        const savedTheme = localStorage.getItem('userMapThemeMode');
+        if (savedTheme === 'light' || savedTheme === 'auto' || savedTheme === 'dark') setMapThemeMode(savedTheme);
+
+        const savedBase = localStorage.getItem('userMapBaseStyle');
+        if (savedBase && MAP_STYLES.some(s => s.id === savedBase)) setSelectedMapStyle(savedBase);
     }, []);
 
     const handleMapThemeChange = (theme) => {
         setMapThemeMode(theme);
         localStorage.setItem('userMapThemeMode', theme);
+    };
+
+    const handleMapStyleChange = (styleId) => {
+        setSelectedMapStyle(styleId);
+        localStorage.setItem('userMapBaseStyle', styleId);
     };
 
     useEffect(() => {
@@ -135,7 +143,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     };
 
     return (
-        <div className={`map-container ${littleMap ? 'little-map' : ''}`}>
+        <div className={`map-container ${littleMap ? 'little-map' : ''} ${resolvedTheme === 'dark' ? 'map-dark' : ''}`}>
             {!littleMap && canReport && (
                 <div className="map-report-control">
                     <Button
@@ -187,7 +195,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 key={style.id}
                                 className={`map-style-item ${selectedMapStyle === style.id ? 'active' : ''}`}
                                 onClick={() => {
-                                    setSelectedMapStyle(style.id);
+                                    handleMapStyleChange(style.id);
                                     setIsMapSelectOpen(false);
                                 }}
                             >
