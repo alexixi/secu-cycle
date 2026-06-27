@@ -24,53 +24,90 @@ def _get_lit_score(lit, h_type):
     elif lit == 'no': return 0.0
     return 7.0
 
-def _compute_safety_scores(G):
-    s_min, s_max = float('inf'), float('-inf')
-    lighting_active = get_bordeaux_lighting_condition()
+def _first(value, default=None):
+    """Normalise un tag OSM potentiellement sous forme de liste."""
+    if isinstance(value, list):
+        return value[0] if value else default
+    return value if value is not None else default
 
-    for u, v, k, data in G.edges(keys=True, data=True):
-        h_type = data.get('highway', 'unclassified')
-        if isinstance(h_type, list): h_type = h_type[0]
-        n_highway = SCORE_HIGHWAY.get(h_type, 1)
+def _edge_roughness(data):
+    """Rugosité [0, 1] d'un segment, dérivée de surface / smoothness / tracktype.
 
-        c_type = data.get('cycleway', 'none')
-        if isinstance(c_type, list): c_type = c_type[0]
+    On retient le signal le plus pessimiste disponible ; en l'absence de toute
+    information, on renvoie DEFAULT_ROUGHNESS (prudence légère).
+    """
+    signals = []
+    surface = _first(data.get('surface'))
+    if surface is not None and surface in SURFACE_ROUGHNESS:
+        signals.append(SURFACE_ROUGHNESS[surface])
+    smooth = _first(data.get('smoothness'))
+    if smooth is not None and smooth in SMOOTHNESS_ROUGHNESS:
+        signals.append(SMOOTHNESS_ROUGHNESS[smooth])
+    track = _first(data.get('tracktype'))
+    if track is not None and track in TRACKTYPE_ROUGHNESS:
+        signals.append(TRACKTYPE_ROUGHNESS[track])
+    return max(signals) if signals else DEFAULT_ROUGHNESS
 
-        vmax = _parse_maxspeed(data.get('maxspeed', 30), h_type)
-        n_speed = _get_speed_score(vmax)
+def _edge_quality(data):
+    """Source unique de vérité du scoring d'un segment.
 
-        if h_type == 'cycleway' or c_type in ['track', 'separate']:
-            n_highway, n_cycleway, n_speed = 10.0, 10.0, 10.0
-        elif c_type in ['lane', 'shared_busway']:
-            n_cycleway = 7.0
-            if n_speed < 8.0: n_speed = 8.0
-        elif c_type == 'none' and vmax <= 30 and h_type in ['residential', 'living_street', 'pedestrian']:
-            n_cycleway = 6.0
-        else:
-            n_cycleway = SCORE_CYCLEWAY.get(c_type, 1)
+    Renvoie (score_on, score_off, roughness), tous bike-indépendants :
+    - score_on  : score de sécurité [0, 10] avec prise en compte de l'éclairage
+    - score_off : score de sécurité [0, 10] sans composante éclairage
+    - roughness : rugosité du revêtement [0, 1]
+    """
+    h_type = _first(data.get('highway'), 'unclassified')
+    n_highway = SCORE_HIGHWAY.get(h_type, 1)
 
-        n_lit = _get_lit_score(data.get('lit', 'unknown'), h_type)
+    c_type = _first(data.get('cycleway'), 'none')
 
-        if lighting_active[1]:
-            score = (n_highway * 0.20) + (n_cycleway * 0.30) + (n_speed * 0.35) + (n_lit * 0.15)
-        else:
-            score = (n_highway * 0.25) + (n_cycleway * 0.30) + (n_speed * 0.45)
+    vmax = _parse_maxspeed(data.get('maxspeed', 30), h_type)
+    n_speed = _get_speed_score(vmax)
 
-        data['safety_score'] = score
-        s_min, s_max = min(s_min, score), max(s_max, score)
+    if h_type == 'cycleway' or c_type in ['track', 'separate']:
+        n_highway, n_cycleway, n_speed = 10.0, 10.0, 10.0
+    elif c_type in ['lane', 'shared_busway', 'opposite_lane', 'opposite_track']:
+        n_cycleway = 7.0
+        if n_speed < 8.0: n_speed = 8.0
+    elif c_type == 'none' and vmax <= 30 and h_type in ['residential', 'living_street', 'pedestrian']:
+        n_cycleway = 6.0
+    else:
+        n_cycleway = SCORE_CYCLEWAY.get(c_type, 1)
 
-    return s_min, s_max
+    bicycle = _first(data.get('bicycle'))
+    if bicycle == 'designated':
+        n_cycleway = min(10.0, n_cycleway + BICYCLE_DESIGNATED_BONUS)
+    elif bicycle == 'dismount':
+        n_cycleway = max(0.0, n_cycleway - BICYCLE_DISMOUNT_PENALTY)
 
-def _compute_effort_factor(G, u, v, data, beta):
-    length = float(data.get('length', 1.0))
+    if _first(data.get('segregated')) == 'yes':
+        n_cycleway = min(10.0, n_cycleway + SEGREGATED_BONUS)
+
+    width = _parse_float(_first(data.get('width')))
+    if width is not None and width < NARROW_WIDTH_M:
+        n_highway = max(0.0, n_highway - NARROW_WIDTH_PENALTY)
+
+    lanes = _parse_float(_first(data.get('lanes')))
+    if lanes is not None and lanes >= MULTILANE_LANES and n_cycleway < 7.0:
+        n_speed = max(0.0, n_speed - MULTILANE_PENALTY)
+
+    if data.get('contraflow'):
+        n_cycleway = max(0.0, n_cycleway - CONTRAFLOW_PENALTY)
+
+    n_lit = _get_lit_score(_first(data.get('lit'), 'unknown'), h_type)
+
+    score_on = (n_highway * 0.20) + (n_cycleway * 0.30) + (n_speed * 0.35) + (n_lit * 0.15)
+    score_off = (n_highway * 0.25) + (n_cycleway * 0.30) + (n_speed * 0.45)
+    return score_on, score_off, _edge_roughness(data)
+
+def _parse_float(value):
+    """Parse robuste d'un tag numérique OSM ('3.5 m', '2', etc.)."""
+    if value is None:
+        return None
     try:
-        if 'grade' in data: grade = float(data['grade'])
-        else:
-            elev_diff = G.nodes[v].get('elevation', 0) - G.nodes[u].get('elevation', 0)
-            grade = elev_diff / length if length > 0 else 0
-        grade_pct = max(0.0, grade) * 100
-    except: grade_pct = 0.0
-    return ((grade_pct ** 2) / ELEVATION_DIVISOR) * beta
+        return float(str(value).split()[0].replace(',', '.'))
+    except (ValueError, IndexError):
+        return None
 
 def _apply_report_penalty(weight_base, report_type, alpha):
     if not report_type: return max(0.1, weight_base)
@@ -78,64 +115,20 @@ def _apply_report_penalty(weight_base, report_type, alpha):
     if report_type == 'accident': return weight_base * penalite
     return weight_base * (1.0 + (penalite * (1.0 - alpha)))
 
-def get_traffic_penalty(has_traffic, alpha):
-    if not has_traffic: return 0.0
-    return TRAFFIC_BASE_PENALTY + (TRAFFIC_SAFETY_FACTOR * (1.0 - alpha))
-
-def calculate_weights(G, alpha=0.5, beta=0.5, reported_edges=None):
-    if reported_edges is None: reported_edges = {}
-    s_min, s_max = _compute_safety_scores(G)
-    s_range = (s_max - s_min) if s_max != s_min else 1
-
-    for u, v, k, data in G.edges(keys=True, data=True):
-        length = float(data.get('length', 1.0))
-        norm_risk = (s_max - data['safety_score']) / s_range
-
-        facteur_risque = (norm_risk ** 2) * DEFAULT_SAFETY_PENALTY * (1.0 - alpha)
-        facteur_effort = _compute_effort_factor(G, u, v, data, beta)
-
-        weight_base = length * (1.0 + facteur_risque + facteur_effort)
-        weight_base += get_traffic_penalty(data.get('traffic_jam', False), alpha)
-
-        report_type = reported_edges.get((u, v)) or reported_edges.get((v, u))
-        data['hybrid_weight'] = _apply_report_penalty(weight_base, report_type, alpha)
-    return G
-
 def precompute_static_costs(G):
     """Pré-calcul des coûts statiques pour chaque arête du graphe, en fonction de la sécurité et de l'effort."""
     min_on = min_off = float('inf')
     max_on = max_off = float('-inf')
+    lighting_on = get_bordeaux_lighting_condition()[1]
 
     for u, v, k, data in G.edges(keys=True, data=True):
-        h_type = data.get('highway', 'unclassified')
-        if isinstance(h_type, list): h_type = h_type[0]
-        n_highway = SCORE_HIGHWAY.get(h_type, 1)
-
-        c_type = data.get('cycleway', 'none')
-        if isinstance(c_type, list): c_type = c_type[0]
-
-        vmax = _parse_maxspeed(data.get('maxspeed', 30), h_type)
-        n_speed = _get_speed_score(vmax)
-
-        if h_type == 'cycleway' or c_type in ['track', 'separate']:
-            n_highway, n_cycleway, n_speed = 10.0, 10.0, 10.0
-        elif c_type in ['lane', 'shared_busway']:
-            n_cycleway = 7.0
-            if n_speed < 8.0: n_speed = 8.0
-        elif c_type == 'none' and vmax <= 30 and h_type in ['residential', 'living_street', 'pedestrian']:
-            n_cycleway = 6.0
-        else:
-            n_cycleway = SCORE_CYCLEWAY.get(c_type, 1)
-
-        n_lit = _get_lit_score(data.get('lit', 'unknown'), h_type)
-
-        score_on = (n_highway * 0.20) + (n_cycleway * 0.30) + (n_speed * 0.35) + (n_lit * 0.15)
-        score_off = (n_highway * 0.25) + (n_cycleway * 0.30) + (n_speed * 0.45)
+        score_on, score_off, roughness = _edge_quality(data)
         data['_s_on'], data['_s_off'] = score_on, score_off
+        data['_roughness'] = roughness
         min_on, max_on = min(min_on, score_on), max(max_on, score_on)
         min_off, max_off = min(min_off, score_off), max(max_off, score_off)
 
-        # Terme de pente (réplique _compute_effort_factor sans le facteur beta).
+        # Terme de pente (sans le facteur beta, appliqué au routage).
         length = float(data.get('length', 1.0))
         try:
             if 'grade' in data:
@@ -157,6 +150,7 @@ def precompute_static_costs(G):
         nr_off = (max_off - data['_s_off']) / range_off
         data['_risk_on'] = (nr_on ** 2) * DEFAULT_SAFETY_PENALTY
         data['_risk_off'] = (nr_off ** 2) * DEFAULT_SAFETY_PENALTY
+        data['safety_score'] = data['_s_on'] if lighting_on else data['_s_off']
 
     G.graph['_static_costs_ready'] = True
     return G
@@ -181,13 +175,19 @@ def _nearest_nodes(G, lons, lats):
     return [int(n) for n in G.graph['_node_ids'][pos[:, 0]]]
 
 
-def _make_weight(alpha, beta, reported_edges, lighting_on):
-    """Renvoie une fonction de poids pour l'algorithme A* en fonction des paramètres alpha, beta, des arêtes signalées et de l'état de l'éclairage."""
+def _make_weight(alpha, beta, surface_sens, reported_edges, lighting_on):
+    """Renvoie une fonction de poids pour l'algorithme A*.
+
+    alpha       : curseur rapidité (1) ↔ sécurité (0)
+    beta        : poids de l'effort (pente), dépend du niveau / type de vélo
+    surface_sens: sensibilité au revêtement, dépend du type de vélo
+    """
     one_minus = 1.0 - alpha
     risk_key = '_risk_on' if lighting_on else '_risk_off'
 
     def _edge_cost(d):
-        base = d['_length_f'] * (1.0 + d[risk_key] * one_minus + d['_grade_term'] * beta)
+        comfort = d.get('_roughness', DEFAULT_ROUGHNESS) * surface_sens
+        base = d['_length_f'] * (1.0 + d[risk_key] * one_minus + d['_grade_term'] * beta + comfort)
         if d.get('traffic_jam', False):
             base += TRAFFIC_BASE_PENALTY + (TRAFFIC_SAFETY_FACTOR * one_minus)
         return base
@@ -206,8 +206,8 @@ def _make_weight(alpha, beta, reported_edges, lighting_on):
     return weight
 
 
-def _astar_nodes(G, start_node, end_node, alpha, beta, reported_edges, lighting_on):
-    w = _make_weight(alpha, beta, reported_edges, lighting_on)
+def _astar_nodes(G, start_node, end_node, alpha, beta, surface_sens, reported_edges, lighting_on):
+    w = _make_weight(alpha, beta, surface_sens, reported_edges, lighting_on)
 
     def dist_heuristic(u, v):
         return ox.distance.great_circle(G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x'])
@@ -222,7 +222,7 @@ def _full_route_data(G, route_nodes, bike_type, is_electric, cyclist_level):
         "distance": calculate_route_distance(G, route_nodes),
         "duration": calculate_exact_travel_time(G, route_nodes, bike_type, is_electric, cyclist_level),
         "height_difference": calculate_route_elevation(G, route_nodes),
-        "score": get_route_safety_score(G, route_nodes),
+        "score": get_route_safety_score(G, route_nodes, bike_type, is_electric),
         "infra_stats": calculate_infra_stats(G, route_nodes)
     }
 
@@ -249,9 +249,11 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
         start_node, end_node = _nearest_nodes(
             G, [start_coords[1], end_coords[1]], [start_coords[0], end_coords[0]])
         beta_elev = 0.0 if is_electric else ELEVATION_WEIGHT_BY_LEVEL.get(cyclist_level.lower(), 0.7)
+        surface_sens = (ELECTRIC_SURFACE_SENSITIVITY if is_electric
+                        else BIKE_SURFACE_SENSITIVITY.get(bike_type.lower(), DEFAULT_SURFACE_SENSITIVITY))
 
-        fast_nodes = _astar_nodes(G, start_node, end_node, 1.0, beta_elev, reported_edges, lighting_on)
-        safe_nodes = _astar_nodes(G, start_node, end_node, 0.0, beta_elev, reported_edges, lighting_on)
+        fast_nodes = _astar_nodes(G, start_node, end_node, 1.0, beta_elev, surface_sens, reported_edges, lighting_on)
+        safe_nodes = _astar_nodes(G, start_node, end_node, 0.0, beta_elev, surface_sens, reported_edges, lighting_on)
         fast_data = _full_route_data(G, fast_nodes, bike_type, is_electric, cyclist_level)
         safe_data = _full_route_data(G, safe_nodes, bike_type, is_electric, cyclist_level)
 
@@ -263,7 +265,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
             best_nodes = fast_nodes
             for _ in range(iterations):
                 a_mid = (a_low + a_high) / 2
-                mid_nodes = _astar_nodes(G, start_node, end_node, a_mid, beta_elev, reported_edges, lighting_on)
+                mid_nodes = _astar_nodes(G, start_node, end_node, a_mid, beta_elev, surface_sens, reported_edges, lighting_on)
                 mid_dur = calculate_exact_travel_time(G, mid_nodes, bike_type, is_electric, cyclist_level)
                 if mid_dur <= float(max_time_min):
                     best_nodes, a_high = mid_nodes, a_mid

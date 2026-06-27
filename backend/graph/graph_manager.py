@@ -129,6 +129,70 @@ def create_ign_data_file(filepath_graph, filepath_json):
     print("Succès : Fichier d'altitudes mis à jour.")
 
 
+def _tag_values(data, *keys):
+    """Renvoie l'ensemble des valeurs (normalisées en liste) pour des tags OSM."""
+    values = set()
+    for key in keys:
+        v = data.get(key)
+        if v is None:
+            continue
+        if isinstance(v, list):
+            values.update(str(x).lower() for x in v)
+        else:
+            values.add(str(v).lower())
+    return values
+
+
+# Valeurs de cycleway indiquant un aménagement à contre-sens, et leur
+# équivalent « dans le sens de circulation » pour le scoring de l'arête inverse.
+_CONTRAFLOW_CYCLEWAY = {'opposite': 'shared_lane', 'opposite_lane': 'lane',
+                        'opposite_track': 'track'}
+
+
+def add_contraflow_edges(G):
+    """Ajoute les arêtes inverses pour les contre-sens cyclables.
+
+    OSMnx (network_type='bike') respecte `oneway` pour tous : une rue à sens
+    unique ouverte aux vélos à contre-sens (oneway:bicycle=no, cycleway*=opposite*)
+    n'a donc qu'une arête u→v. On ajoute ici l'arête v→u manquante, avec une
+    géométrie inversée, marquée `contraflow=True`.
+    """
+    from shapely.geometry import LineString
+
+    to_add = []
+    for u, v, k, data in list(G.edges(keys=True, data=True)):
+        if G.has_edge(v, u):
+            continue
+
+        oneway_bike = _tag_values(data, 'oneway:bicycle')
+        if 'yes' in oneway_bike:
+            continue
+
+        cw_values = _tag_values(data, 'cycleway', 'cycleway:left',
+                                'cycleway:right', 'cycleway:both')
+        contraflow_cw = cw_values & set(_CONTRAFLOW_CYCLEWAY)
+
+        allowed = ('no' in oneway_bike) or bool(contraflow_cw)
+        if not allowed:
+            continue
+
+        new_data = dict(data)
+        geom = data.get('geometry')
+        if isinstance(geom, LineString):
+            new_data['geometry'] = LineString(list(geom.coords)[::-1])
+        new_data['contraflow'] = True
+        new_data['oneway'] = False
+        if contraflow_cw:
+            new_data['cycleway'] = _CONTRAFLOW_CYCLEWAY[sorted(contraflow_cw)[0]]
+        to_add.append((v, u, new_data))
+
+    for v, u, new_data in to_add:
+        G.add_edge(v, u, **new_data)
+
+    print(f"[Contre-sens] {len(to_add)} arêtes cyclables à contre-sens ajoutées.", flush=True)
+    return G
+
+
 def create_graph(filename, filepath_json, communes):
     """
     Charge le graphe ou le crée s'il n'existe pas,
@@ -146,17 +210,22 @@ def create_graph(filename, filepath_json, communes):
     else:
         print("Création du graphe complet de la métropole en cours (cela peut prendre quelques minutes)...")
 
-        useful_tags = ox.settings.useful_tags_way + ['cycleway', 'lit', 'maxspeed', 'surface']
-        ox.settings.useful_tags_way = list(set(useful_tags))
+        extra_tags = [
+            'cycleway', 'cycleway:left', 'cycleway:right', 'cycleway:both',
+            'oneway', 'oneway:bicycle', 'bicycle', 'segregated',
+            'surface', 'smoothness', 'tracktype', 'width', 'lanes',
+            'lit', 'maxspeed',
+        ]
+        ox.settings.useful_tags_way = list(set(ox.settings.useful_tags_way + extra_tags))
 
         G = ox.graph_from_place(communes, network_type='bike')
         G = ox.truncate.largest_component(G, strongly=True)
+        G = add_contraflow_edges(G)
 
         os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
         ox.save_graphml(G, filepath=filename)
         print("Graphe téléchargé et sauvegardé avec succès.")
 
-        # On déclenche l'API IGN uniquement si on vient de créer un nouveau graphe !
         print("Lancement de la mise à jour des altitudes IGN...")
         create_ign_data_file(filename, filepath_json)
 

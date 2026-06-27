@@ -21,11 +21,11 @@ SCORE_HIGHWAY = {
 }
 
 SCORE_CYCLEWAY = {
-    'track': 10, 
-    'separate': 10, 
-    'lane': 7, 
-    'shared_busway': 6, 
-    'shared_lane': 4, 
+    'track': 10,
+    'separate': 10,
+    'lane': 7,
+    'shared_busway': 6,
+    'shared_lane': 4,
     'none': 1
 }
 
@@ -38,7 +38,7 @@ DEFAULT_MAXSPEED_BY_HIGHWAY = {
 }
 
 DEFAULT_LIT_SCORE_BY_HIGHWAY = {
-    'residential': 0.9, 'primary': 0.9, 'secondary': 0.9, 'tertiary': 0.9, 
+    'residential': 0.9, 'primary': 0.9, 'secondary': 0.9, 'tertiary': 0.9,
     'living_street': 0.9, 'pedestrian': 0.9,
     'cycleway': 0.7,
     'path': 0.2, 'track': 0.2, 'footway': 0.2
@@ -57,7 +57,6 @@ DEFAULT_SPEED = (18, 21, 14, 22)
 
 BIKE_TYPE_INDEX = {
     "standard": 0,
-    "ville":    0,
     "vtt":      2,
     "route":    3,
 }
@@ -84,5 +83,39 @@ REPORT_PENALTIES = {
 
 ELEVATION_DIVISOR = 30.0
 DEFAULT_SAFETY_PENALTY = 30.0
-TRAFFIC_BASE_PENALTY = 50.0       
+TRAFFIC_BASE_PENALTY = 50.0
 TRAFFIC_SAFETY_FACTOR = 250.0
+
+SURFACE_ROUGHNESS = {
+    'asphalt': 0.0, 'concrete': 0.05, 'concrete:plates': 0.1, 'paved': 0.05,
+    'metal': 0.1, 'wood': 0.2,
+    'paving_stones': 0.2, 'compacted': 0.35, 'fine_gravel': 0.35,
+    'sett': 0.5, 'gravel': 0.6, 'unpaved': 0.5, 'pebblestone': 0.6,
+    'cobblestone': 0.75, 'unhewn_cobblestone': 0.85,
+    'ground': 0.7, 'dirt': 0.7, 'earth': 0.7, 'grass': 0.85,
+    'sand': 1.0, 'mud': 1.0,
+}
+SMOOTHNESS_ROUGHNESS = {
+    'excellent': 0.0, 'good': 0.1, 'intermediate': 0.3, 'bad': 0.6,
+    'very_bad': 0.8, 'horrible': 0.9, 'very_horrible': 1.0, 'impassable': 1.0,
+}
+TRACKTYPE_ROUGHNESS = {
+    'grade1': 0.2, 'grade2': 0.4, 'grade3': 0.6, 'grade4': 0.8, 'grade5': 1.0,
+}
+DEFAULT_ROUGHNESS = 0.05
+
+BIKE_SURFACE_SENSITIVITY = {'route': 14.0, 'standard': 4.0, 'vtt': 0.5}
+BIKE_SURFACE_SPEED_FACTOR = {'route': 0.6, 'standard': 0.35, 'vtt': 0.1}
+DEFAULT_SURFACE_SENSITIVITY = 4.0
+DEFAULT_SURFACE_SPEED_FACTOR = 0.35
+ELECTRIC_SURFACE_SENSITIVITY = 3.0
+ELECTRIC_SURFACE_SPEED_FACTOR = 0.25
+
+SEGREGATED_BONUS = 1.5          # segregated=yes : piste séparée des piétons
+BICYCLE_DESIGNATED_BONUS = 1.0  # bicycle=designated : voie pensée pour le vélo
+BICYCLE_DISMOUNT_PENALTY = 4.0  # bicycle=dismount : pied à terre obligatoire
+NARROW_WIDTH_M = 2.5            # largeur (m) en deçà de laquelle on pénalise
+NARROW_WIDTH_PENALTY = 1.0
+MULTILANE_LANES = 3            # nb de voies à partir duquel on pénalise
+MULTILANE_PENALTY = 1.0
+CONTRAFLOW_PENALTY = 0.5        # léger malus de confort pour un contre-sens

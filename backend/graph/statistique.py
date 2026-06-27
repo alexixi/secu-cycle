@@ -1,9 +1,13 @@
-import math 
+import math
 from datetime import datetime
 from astral import LocationInfo
 from astral.sun import sun
 import pytz
-from graph.config import SPEED_BY_INFRASTRUCTURE, DEFAULT_SPEED, BIKE_TYPE_INDEX, LEVEL_MULTIPLIER
+from graph.config import (
+    SPEED_BY_INFRASTRUCTURE, DEFAULT_SPEED, BIKE_TYPE_INDEX, LEVEL_MULTIPLIER,
+    DEFAULT_ROUGHNESS, BIKE_SURFACE_SPEED_FACTOR, DEFAULT_SURFACE_SPEED_FACTOR,
+    ELECTRIC_SURFACE_SPEED_FACTOR,
+)
 
 def calculer_statistiques_osm(G):
     """
@@ -14,7 +18,11 @@ def calculer_statistiques_osm(G):
     compteur_lit = 0
     compteur_maxspeed = 0
     compteur_surface = 0
-    
+    compteur_smoothness = 0
+    compteur_tracktype = 0
+    compteur_bicycle = 0
+    compteur_contraflow = 0
+
     highway_counts = {}
 
     for u, v, k, data in G.edges(keys=True, data=True):
@@ -22,22 +30,31 @@ def calculer_statistiques_osm(G):
 
         if 'lit' in data and data['lit'] not in ['unknown', 'none', '']:
             compteur_lit += 1
-            
+
         if 'maxspeed' in data and data['maxspeed'] not in ['unknown', 'none', '']:
             compteur_maxspeed += 1
-            
+
         if 'surface' in data:
             compteur_surface += 1
+        if 'smoothness' in data:
+            compteur_smoothness += 1
+        if 'tracktype' in data:
+            compteur_tracktype += 1
+        if 'bicycle' in data:
+            compteur_bicycle += 1
+        if data.get('contraflow'):
+            compteur_contraflow += 1
 
         h_type = data.get('highway', 'unknown')
         if isinstance(h_type, list):
             h_type = h_type[0]
-            
+
         highway_counts[h_type] = highway_counts.get(h_type, 0) + 1
 
-    pct_lit = (compteur_lit / total_edges) * 100 if total_edges > 0 else 0
-    pct_maxspeed = (compteur_maxspeed / total_edges) * 100 if total_edges > 0 else 0
-    pct_surface = (compteur_surface / total_edges) * 100 if total_edges > 0 else 0
+    pct = lambda c: (c / total_edges) * 100 if total_edges > 0 else 0
+    pct_lit = pct(compteur_lit)
+    pct_maxspeed = pct(compteur_maxspeed)
+    pct_surface = pct(compteur_surface)
 
     print("\n" + "="*50)
     print("STATISTIQUES DES DONNÉES BRUTES OSM")
@@ -45,19 +62,23 @@ def calculer_statistiques_osm(G):
     print(f"Nombre total de segments : {total_edges}")
     print(f"Vitesse (maxspeed) renseignée : {compteur_maxspeed} ({pct_maxspeed:.1f}%)")
     print(f"Éclairage (lit) renseigné     : {compteur_lit} ({pct_lit:.1f}%)")
-    print(f"Surface renseignée           : {compteur_surface} ({pct_surface:.1f}%)\n")
-    
+    print(f"Surface renseignée           : {compteur_surface} ({pct_surface:.1f}%)")
+    print(f"Smoothness renseignée        : {compteur_smoothness} ({pct(compteur_smoothness):.1f}%)")
+    print(f"Tracktype renseigné          : {compteur_tracktype} ({pct(compteur_tracktype):.1f}%)")
+    print(f"Tag bicycle renseigné        : {compteur_bicycle} ({pct(compteur_bicycle):.1f}%)")
+    print(f"Arêtes contre-sens cyclable  : {compteur_contraflow} ({pct(compteur_contraflow):.1f}%)\n")
+
     print("RÉPARTITION DES TYPES DE ROUTES (HIGHWAY)")
     print("-" * 50)
-    
+
     highways_tries = sorted(highway_counts.items(), key=lambda x: x[1], reverse=True)
-    
+
     for h_type, count in highways_tries:
         pct = (count / total_edges) * 100
         print(f" - {h_type:<15} : {count:>5} segments ({pct:.1f}%)")
-        
+
     print("="*50 + "\n")
-    
+
     return {
         "total": total_edges,
         "pct_lit": pct_lit,
@@ -70,17 +91,17 @@ def analyser_qualite_trajet(G, route, nom_trajet="Trajet"):
     from routing import _parse_maxspeed
     vitesses = []
     scores = []
-    
+
     for i in range(len(route) - 1):
         u, v = route[i], route[i + 1]
         edge_data = G.get_edge_data(u, v)
         if edge_data:
             data = edge_data[0] if isinstance(edge_data, dict) and 0 in edge_data else edge_data
-            
+
             h_type = data.get('highway', 'unknown')
             if isinstance(h_type, list): h_type = h_type[0]
             vmax = _parse_maxspeed(data.get('maxspeed', None), h_type)
-            
+
             vitesses.append(vmax)
             scores.append(data.get('safety_score', 0))
 
@@ -113,7 +134,7 @@ def calculate_route_elevation(G, route, window_size=7, threshold=0.15):
     for i in range(len(altitudes)):
         debut = max(0, i - window_size // 2)
         fin = min(len(altitudes), i + window_size // 2 + 1)
-        
+
         moyenne = sum(altitudes[debut:fin]) / (fin - debut)
         altitudes_lissees.append(moyenne)
 
@@ -133,25 +154,29 @@ def calculate_route_elevation(G, route, window_size=7, threshold=0.15):
 
 def calculate_exact_travel_time(G, route_nodes, bike_type, is_electric, cyclist_level):
     total_time_min = 0.0
-    
+
     idx = 1 if is_electric else BIKE_TYPE_INDEX.get(bike_type.lower(), 0)
     multiplier = 1.0 if is_electric else LEVEL_MULTIPLIER.get(cyclist_level.lower(), 1.0)
+    surface_factor = (ELECTRIC_SURFACE_SPEED_FACTOR if is_electric
+                      else BIKE_SURFACE_SPEED_FACTOR.get(bike_type.lower(), DEFAULT_SURFACE_SPEED_FACTOR))
     for i in range(len(route_nodes) - 1):
         u, v = route_nodes[i], route_nodes[i + 1]
         edge_data = G.get_edge_data(u, v)
-        
+
         if edge_data:
             data = edge_data[0] if 0 in edge_data else edge_data
-            
+
             length_m = float(data.get('length', 1.0))
             cycleway = data.get("cycleway", "none")
             if isinstance(cycleway, list):
                 cycleway = cycleway[0]
-                
+
             speeds = SPEED_BY_INFRASTRUCTURE.get(cycleway, DEFAULT_SPEED)
             speed_kmh = speeds[idx] * multiplier
+            roughness = float(data.get('_roughness', DEFAULT_ROUGHNESS))
+            speed_kmh *= max(0.2, 1.0 - roughness * surface_factor)
             speed_m_min = (speed_kmh * 1000) / 60
-            
+
             total_time_min += (length_m / speed_m_min)
 
     return total_time_min
@@ -169,26 +194,43 @@ def calculate_route_distance(G, route):
                 distance += float(edge_data.get('length', 0))
     return distance/1000
 
-def get_route_safety_score(G, route):
-    """Calcule et renvoie la note de sécurité moyenne d'un itinéraire (sur 10)."""
-    scores = []
-    
+def get_route_safety_score(G, route, bike_type=None, is_electric=False):
+    """Note de sécurité d'un itinéraire (sur 10), pondérée par la longueur.
+
+    Utilise le score précalculé correspondant à l'état d'éclairage courant
+    (`_s_on`/`_s_off`) et applique un petit malus si le revêtement est inadapté
+    au type de vélo (un vélo de route sur gravier voit sa note baisser).
+    """
+    lighting_on = get_bordeaux_lighting_condition()[1]
+    score_key = '_s_on' if lighting_on else '_s_off'
+    surface_factor = (ELECTRIC_SURFACE_SPEED_FACTOR if is_electric
+                      else BIKE_SURFACE_SPEED_FACTOR.get((bike_type or 'standard').lower(),
+                                                         DEFAULT_SURFACE_SPEED_FACTOR))
+
+    total_len = 0.0
+    weighted_score = 0.0
+    weighted_rough = 0.0
+
     for i in range(len(route) - 1):
         u, v = route[i], route[i + 1]
         edge_data = G.get_edge_data(u, v)
-        
-        if edge_data:
-            data = edge_data[0] if isinstance(edge_data, dict) and 0 in edge_data else edge_data
-            
-            score_brut = float(data.get('safety_score', 0.0))
-            scores.append(score_brut)
+        if not edge_data:
+            continue
+        data = edge_data[0] if isinstance(edge_data, dict) and 0 in edge_data else edge_data
 
-    if not scores:
+        length = float(data.get('length', 0.0)) or 1.0
+        base = float(data.get(score_key, data.get('safety_score', 0.0)))
+        weighted_score += base * length
+        weighted_rough += float(data.get('_roughness', DEFAULT_ROUGHNESS)) * length
+        total_len += length
+
+    if total_len == 0:
         return 0.0
 
-    score_moyen = sum(scores) / len(scores)
-    
-    return round(score_moyen, 2)
+    score = weighted_score / total_len
+    malus = (weighted_rough / total_len) * surface_factor * 5.0
+    score = max(0.0, min(10.0, score - malus))
+    return round(score, 2)
 
 def extract_route_geometry(G, route_nodes):
     """
@@ -196,15 +238,15 @@ def extract_route_geometry(G, route_nodes):
     Retourne une liste de [lat, lon, elevation].
     """
     path_coords = []
-    
+
     for i in range(len(route_nodes) - 1):
         u = route_nodes[i]
         v = route_nodes[i + 1]
-        
+
         elev_u = G.nodes[u].get("elevation", 0.0)
-        
+
         edge_data = G.get_edge_data(u, v)[0]
-        
+
         if 'geometry' in edge_data:
             for lon, lat in edge_data['geometry'].coords:
                 path_coords.append([lat, lon, elev_u])
@@ -214,7 +256,7 @@ def extract_route_geometry(G, route_nodes):
     last_node = route_nodes[-1]
     elev_last = G.nodes[last_node].get("elevation", 0.0)
     path_coords.append([G.nodes[last_node]['y'], G.nodes[last_node]['x'], elev_last])
-    
+
     return path_coords
 
 def get_bordeaux_lighting_condition(check_time=None):
@@ -230,15 +272,15 @@ def get_bordeaux_lighting_condition(check_time=None):
 
     bordeaux = LocationInfo("Bordeaux", "France", "Europe/Paris", 44.8378, -0.5792)
     s = sun(bordeaux.observer, date=check_time.date(), tzinfo=bordeaux.timezone)
-    
+
     is_dark_outside = check_time < s['sunrise'] or check_time > s['sunset']
-    
+
     if not is_dark_outside:
-        return False, False 
+        return False, False
 
     if 1 <= check_time.hour < 5:
-        return True, False 
-        
+        return True, False
+
     return True, True
 
 def calculate_infra_stats(G, route):
@@ -246,8 +288,11 @@ def calculate_infra_stats(G, route):
     cyclable_length = 0.0
     low_speed_length = 0.0
     lit_length = 0.0
+    smooth_length = 0.0
+    contraflow_length = 0.0
 
-    CYCLABLE_CYCLEWAYS = {'track', 'separate', 'lane', 'shared_busway'}
+    CYCLABLE_CYCLEWAYS = {'track', 'separate', 'lane', 'shared_busway',
+                          'opposite_lane', 'opposite_track', 'opposite'}
     CYCLABLE_HIGHWAYS = {'cycleway', 'path'}
 
     for i in range(len(route) - 1):
@@ -269,6 +314,12 @@ def calculate_infra_stats(G, route):
 
         if cycleway in CYCLABLE_CYCLEWAYS or h_type in CYCLABLE_HIGHWAYS:
             cyclable_length += length
+
+        if float(data.get('_roughness', DEFAULT_ROUGHNESS)) <= 0.2:
+            smooth_length += length
+
+        if data.get('contraflow'):
+            contraflow_length += length
 
         try:
             vmax_raw = data.get('maxspeed', None)
@@ -292,10 +343,13 @@ def calculate_infra_stats(G, route):
             lit_length += length * 0.85
 
     if total_length == 0:
-        return {"pct_cyclable": 0.0, "pct_low_speed": 0.0, "pct_lit": 0.0}
+        return {"pct_cyclable": 0.0, "pct_low_speed": 0.0, "pct_lit": 0.0,
+                "pct_smooth": 0.0, "pct_contraflow": 0.0}
 
     return {
         "pct_cyclable": round(cyclable_length / total_length * 100, 1),
         "pct_low_speed": round(low_speed_length / total_length * 100, 1),
         "pct_lit": round(lit_length / total_length * 100, 1),
+        "pct_smooth": round(smooth_length / total_length * 100, 1),
+        "pct_contraflow": round(contraflow_length / total_length * 100, 1),
     }
