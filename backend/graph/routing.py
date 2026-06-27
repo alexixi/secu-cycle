@@ -125,6 +125,11 @@ def precompute_static_costs(G):
         score_on, score_off, roughness = _edge_quality(data)
         data['_s_on'], data['_s_off'] = score_on, score_off
         data['_roughness'] = roughness
+
+        h_type = _first(data.get('highway'), 'unclassified')
+        is_shared_footway = (h_type in PEDESTRIAN_SHARED_HIGHWAYS
+                             and _first(data.get('bicycle')) != 'designated')
+        data['_footway'] = 1.0 if is_shared_footway else 0.0
         min_on, max_on = min(min_on, score_on), max(max_on, score_on)
         min_off, max_off = min(min_off, score_off), max(max_off, score_off)
 
@@ -175,19 +180,21 @@ def _nearest_nodes(G, lons, lats):
     return [int(n) for n in G.graph['_node_ids'][pos[:, 0]]]
 
 
-def _make_weight(alpha, beta, surface_sens, reported_edges, lighting_on):
+def _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, lighting_on):
     """Renvoie une fonction de poids pour l'algorithme A*.
 
-    alpha       : curseur rapidité (1) ↔ sécurité (0)
-    beta        : poids de l'effort (pente), dépend du niveau / type de vélo
-    surface_sens: sensibilité au revêtement, dépend du type de vélo
+    alpha        : curseur rapidité (1) ↔ sécurité (0)
+    beta         : poids de l'effort (pente), dépend du niveau / type de vélo
+    surface_sens : sensibilité au revêtement, dépend du type de vélo
+    footway_avoid: aversion aux chemins piétons partagés, dépend du type de vélo
     """
     one_minus = 1.0 - alpha
     risk_key = '_risk_on' if lighting_on else '_risk_off'
 
     def _edge_cost(d):
         comfort = d.get('_roughness', DEFAULT_ROUGHNESS) * surface_sens
-        base = d['_length_f'] * (1.0 + d[risk_key] * one_minus + d['_grade_term'] * beta + comfort)
+        footway = d.get('_footway', 0.0) * footway_avoid
+        base = d['_length_f'] * (1.0 + d[risk_key] * one_minus + d['_grade_term'] * beta + comfort + footway)
         if d.get('traffic_jam', False):
             base += TRAFFIC_BASE_PENALTY + (TRAFFIC_SAFETY_FACTOR * one_minus)
         return base
@@ -206,8 +213,8 @@ def _make_weight(alpha, beta, surface_sens, reported_edges, lighting_on):
     return weight
 
 
-def _astar_nodes(G, start_node, end_node, alpha, beta, surface_sens, reported_edges, lighting_on):
-    w = _make_weight(alpha, beta, surface_sens, reported_edges, lighting_on)
+def _astar_nodes(G, start_node, end_node, alpha, beta, surface_sens, footway_avoid, reported_edges, lighting_on):
+    w = _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, lighting_on)
 
     def dist_heuristic(u, v):
         return ox.distance.great_circle(G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x'])
@@ -251,9 +258,11 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
         beta_elev = 0.0 if is_electric else ELEVATION_WEIGHT_BY_LEVEL.get(cyclist_level.lower(), 0.7)
         surface_sens = (ELECTRIC_SURFACE_SENSITIVITY if is_electric
                         else BIKE_SURFACE_SENSITIVITY.get(bike_type.lower(), DEFAULT_SURFACE_SENSITIVITY))
+        footway_avoid = (ELECTRIC_FOOTWAY_AVOIDANCE if is_electric
+                         else BIKE_FOOTWAY_AVOIDANCE.get(bike_type.lower(), DEFAULT_FOOTWAY_AVOIDANCE))
 
-        fast_nodes = _astar_nodes(G, start_node, end_node, 1.0, beta_elev, surface_sens, reported_edges, lighting_on)
-        safe_nodes = _astar_nodes(G, start_node, end_node, 0.0, beta_elev, surface_sens, reported_edges, lighting_on)
+        fast_nodes = _astar_nodes(G, start_node, end_node, 1.0, beta_elev, surface_sens, footway_avoid, reported_edges, lighting_on)
+        safe_nodes = _astar_nodes(G, start_node, end_node, 0.0, beta_elev, surface_sens, footway_avoid, reported_edges, lighting_on)
         fast_data = _full_route_data(G, fast_nodes, bike_type, is_electric, cyclist_level)
         safe_data = _full_route_data(G, safe_nodes, bike_type, is_electric, cyclist_level)
 
@@ -265,7 +274,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
             best_nodes = fast_nodes
             for _ in range(iterations):
                 a_mid = (a_low + a_high) / 2
-                mid_nodes = _astar_nodes(G, start_node, end_node, a_mid, beta_elev, surface_sens, reported_edges, lighting_on)
+                mid_nodes = _astar_nodes(G, start_node, end_node, a_mid, beta_elev, surface_sens, footway_avoid, reported_edges, lighting_on)
                 mid_dur = calculate_exact_travel_time(G, mid_nodes, bike_type, is_electric, cyclist_level)
                 if mid_dur <= float(max_time_min):
                     best_nodes, a_high = mid_nodes, a_mid

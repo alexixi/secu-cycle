@@ -149,6 +149,36 @@ _CONTRAFLOW_CYCLEWAY = {'opposite': 'shared_lane', 'opposite_lane': 'lane',
                         'opposite_track': 'track'}
 
 
+def _bike_network_filters():
+    """Filtres Overpass : réseau cyclable + footways autorisés aux vélos.
+
+    Le filtre `network_type='bike'` d'OSMnx exclut TOUS les `highway=footway`
+    (liste d'exclusion : ...|escalator|footway|motor|...|steps). Or beaucoup de
+    chemins piétons sont explicitement ouverts aux vélos (`bicycle=yes`,
+    `designated`, ...) et constituent des raccourcis légitimes. On les réintègre
+    via un second filtre. OSMnx accepte une liste de filtres et fusionne les
+    résultats, ce qui laisse le filtre `bike` d'origine intact (oneway respecté,
+    gestion des contre-sens inchangée).
+    """
+    try:
+        from osmnx._overpass import _get_network_filter
+        bike_filter = _get_network_filter('bike')
+    except Exception:
+        # Repli : copie du filtre 'bike' d'OSMnx 2.1 (default_access développé).
+        bike_filter = (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|bus_guideway|construction|corridor|elevator|'
+            'escalator|footway|motor|no|planned|platform|proposed|raceway|razed|'
+            'rest_area|services|steps"]'
+            '["bicycle"!~"no"]["service"!~"private"]'
+        )
+    footway_bike_filter = (
+        '["highway"="footway"]'
+        '["bicycle"~"yes|designated|permissive|destination"]'
+    )
+    return [bike_filter, footway_bike_filter]
+
+
 def add_contraflow_edges(G):
     """Ajoute les arêtes inverses pour les contre-sens cyclables.
 
@@ -218,7 +248,8 @@ def create_graph(filename, filepath_json, communes):
         ]
         ox.settings.useful_tags_way = list(set(ox.settings.useful_tags_way + extra_tags))
 
-        G = ox.graph_from_place(communes, network_type='bike')
+        G = ox.graph_from_place(communes, network_type='bike',
+                                custom_filter=_bike_network_filters())
         G = ox.truncate.largest_component(G, strongly=True)
         G = add_contraflow_edges(G)
 

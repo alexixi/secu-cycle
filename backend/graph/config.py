@@ -111,6 +111,13 @@ DEFAULT_SURFACE_SPEED_FACTOR = 0.35
 ELECTRIC_SURFACE_SENSITIVITY = 3.0
 ELECTRIC_SURFACE_SPEED_FACTOR = 0.25
 
+PEDESTRIAN_SHARED_HIGHWAYS = ('footway', 'pedestrian')
+FOOTWAY_SPEED_FACTOR = 0.6
+
+BIKE_FOOTWAY_AVOIDANCE = {'route': 1.5, 'standard': 0.2, 'vtt': 0.1}
+DEFAULT_FOOTWAY_AVOIDANCE = 0.2
+ELECTRIC_FOOTWAY_AVOIDANCE = 0.4
+
 SEGREGATED_BONUS = 1.5          # segregated=yes : piste séparée des piétons
 BICYCLE_DESIGNATED_BONUS = 1.0  # bicycle=designated : voie pensée pour le vélo
 BICYCLE_DISMOUNT_PENALTY = 4.0  # bicycle=dismount : pied à terre obligatoire

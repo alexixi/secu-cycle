@@ -7,6 +7,7 @@ from graph.config import (
     SPEED_BY_INFRASTRUCTURE, DEFAULT_SPEED, BIKE_TYPE_INDEX, LEVEL_MULTIPLIER,
     DEFAULT_ROUGHNESS, BIKE_SURFACE_SPEED_FACTOR, DEFAULT_SURFACE_SPEED_FACTOR,
     ELECTRIC_SURFACE_SPEED_FACTOR,
+    PEDESTRIAN_SHARED_HIGHWAYS, FOOTWAY_SPEED_FACTOR,
 )
 
 def calculer_statistiques_osm(G):
@@ -175,6 +176,16 @@ def calculate_exact_travel_time(G, route_nodes, bike_type, is_electric, cyclist_
             speed_kmh = speeds[idx] * multiplier
             roughness = float(data.get('_roughness', DEFAULT_ROUGHNESS))
             speed_kmh *= max(0.2, 1.0 - roughness * surface_factor)
+
+            h_type = data.get('highway', 'unclassified')
+            if isinstance(h_type, list):
+                h_type = h_type[0]
+            bicycle = data.get('bicycle')
+            if isinstance(bicycle, list):
+                bicycle = bicycle[0]
+            if h_type in PEDESTRIAN_SHARED_HIGHWAYS and bicycle != 'designated':
+                speed_kmh *= FOOTWAY_SPEED_FACTOR
+
             speed_m_min = (speed_kmh * 1000) / 60
 
             total_time_min += (length_m / speed_m_min)
