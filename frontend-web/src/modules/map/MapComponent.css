@@ -71,6 +71,17 @@
     gap: 10px;
 }
 
+.map-theme-control {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+}
+
+.map-theme-control .theme-toggle {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 .map-style-menu {
     background-color: var(--bg-surface);
     border-radius: 8px;

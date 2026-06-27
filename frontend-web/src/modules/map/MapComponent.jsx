@@ -2,11 +2,22 @@ import { useRef, useEffect, useState } from 'react';
 import Map, { Marker, Popup, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import Button from '../../components/ui/Button';
+import ThemeToggle from '../../components/ui/ThemeToggle';
+import { useTheme } from '../../context/ThemeContext';
 
 import { IoMdPin } from "react-icons/io";
 import { FaLayerGroup } from "react-icons/fa";
 import { MdOutlineReportProblem, MdOutlineTraffic } from "react-icons/md";
 import './MapComponent.css';
+
+const MAP_STYLES = [
+    { id: "base", lightId: "base-v4", darkId: "base-v4-dark", label: "Basic", icon: "🍃" },
+    { id: "streets", lightId: "streets-v4", darkId: "streets-v4-dark", label: "Rues", icon: "🛣️" },
+    { id: "outdoor", lightId: "outdoor-v4", darkId: "outdoor-v4-dark", label: "Outdoor", icon: "🚴" },
+    { id: "topo", lightId: "topo-v4", darkId: "topo-v4-dark", label: "Relief", icon: "⛰️" },
+    { id: "hybrid", lightId: "hybrid-v4", darkId: "hybrid-v4", label: "Satellite", icon: "🛰️" },
+    { id: "openstreetmap", lightId: "openstreetmap", darkId: "openstreetmap", label: "Détaillée", icon: "🗺️" },
+];
 
 const TRAFFIC_COLORS = { green: "#22c55e", orange: "#f97316", red: "#ef4444", gray: "#9ca3af" };
 
@@ -20,12 +31,24 @@ const REPORT_ICONS = {
 export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, isReportMode, onToggleReportMode, canReport, trafficPoints = [], showTraffic = false, onToggleTraffic, littleMap = false }) {
 
     const mapRef = useRef();
+    const { effectiveTheme } = useTheme();
     const [hoverInfo, setHoverInfo] = useState(null);
     const [activeReport, setActiveReport] = useState(null);
     const [activeTraffic, setActiveTraffic] = useState(null);
     const [isMapSelectOpen, setIsMapSelectOpen] = useState(false);
-    const [selectedMapStyle, setSelectedMapStyle] = useState("basic-v2");
+    const [selectedMapStyle, setSelectedMapStyle] = useState("base");
+    const [mapThemeMode, setMapThemeMode] = useState("auto");
     const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('userMapThemeMode');
+        if (saved === 'light' || saved === 'auto' || saved === 'dark') setMapThemeMode(saved);
+    }, []);
+
+    const handleMapThemeChange = (theme) => {
+        setMapThemeMode(theme);
+        localStorage.setItem('userMapThemeMode', theme);
+    };
 
     useEffect(() => {
         if (!mapRef.current || !isMapLoaded) return;
@@ -82,18 +105,11 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         }
     };
 
-    const MAP_STYLES = [
-        { id: "dataviz-dark", label: "Sombre", icon: "🌙" },
-        { id: "outdoor-v2", label: "Outdoor", icon: "🚴" },
-        { id: "openstreetmap", label: "Détaillée", icon: "🗺️" },
-        { id: "streets-v2", label: "Rues", icon: "🛣️" },
-        { id: "topo-v2", label: "Relief", icon: "⛰️" },
-        { id: "hybrid", label: "Satellite", icon: "🛰️" },
-        { id: "basic-v2", label: "Basic", icon: "🍃" },
-    ];
-
     const mapTilerKey = import.meta.env.VITE_MAPTILER_KEY;
-    const currentMapStyle = `https://api.maptiler.com/maps/${selectedMapStyle}/style.json?key=${mapTilerKey}`;
+    const resolvedTheme = mapThemeMode === "auto" ? effectiveTheme : mapThemeMode;
+    const styleConfig = MAP_STYLES.find(s => s.id === selectedMapStyle) || MAP_STYLES[0];
+    const styleIdToUse = resolvedTheme === "dark" ? styleConfig.darkId : styleConfig.lightId;
+    const currentMapStyle = `https://api.maptiler.com/maps/${styleIdToUse}/style.json?key=${mapTilerKey}`;
 
     const getInitialViewState = () => {
         const it = itineraires?.[0];
@@ -153,6 +169,12 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                             <span className="traffic-legend-item"><span className="traffic-dot" style={{ backgroundColor: "#9ca3af" }} />Inconnu</span>
                         </div>
                     )}
+                </div>
+            )}
+
+            {!littleMap && (
+                <div className="map-theme-control">
+                    <ThemeToggle compact value={mapThemeMode} onChange={handleMapThemeChange} />
                 </div>
             )}
 

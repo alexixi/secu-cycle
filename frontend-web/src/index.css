@@ -1,4 +1,5 @@
-:root {
+:root,
+:root[data-theme="light"] {
     --primary: #8389fa;
     --primary-hover: #646cff;
     --primary-light: rgb(from var(--primary) r g b / 50%);
@@ -22,30 +23,32 @@
 
     --green-color: #249d40;
     --red-color: #a5212e;
+
+    color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --primary: #646cff;
-        --primary-hover: #b1b5ff;
-        --primary-light: rgb(from var(--primary) r g b / 50%);
-        --primary-transparent: rgb(from var(--primary) r g b / 10%);
+:root[data-theme="dark"] {
+    --primary: #646cff;
+    --primary-hover: #b1b5ff;
+    --primary-light: rgb(from var(--primary) r g b / 50%);
+    --primary-transparent: rgb(from var(--primary) r g b / 10%);
 
-        --bg-main: #2b2c3d;
-        --bg-secondary: #1a1b26;
-        --bg-tertiary: #2f3148;
-        --bg-surface: #242533;
-        --bg-surface-hover: #2b2d3d;
+    --bg-main: #2b2c3d;
+    --bg-secondary: #1a1b26;
+    --bg-tertiary: #2f3148;
+    --bg-surface: #242533;
+    --bg-surface-hover: #2b2d3d;
 
-        --text-main: #f2f3f6;
-        --text-inverse: #1e2030;
+    --text-main: #f2f3f6;
+    --text-inverse: #1e2030;
 
-        --border-light: #32344a;
-        --border-strong: #41445e;
+    --border-light: #32344a;
+    --border-strong: #41445e;
 
-        --green-color: #62b174;
-        --red-color: #e86572;
-    }
+    --green-color: #62b174;
+    --red-color: #e86572;
+
+    color-scheme: dark;
 }
 
 :root {
@@ -53,7 +56,6 @@
     line-height: 1.5;
     font-weight: 400;
 
-    color-scheme: light dark;
     color: var(--text-main);
     background-color: var(--bg-main);
 
@@ -65,6 +67,26 @@
 
 #root {
     width: 100%;
+}
+
+/* Animation appliquée brièvement par ThemeContext lors d'un changement de thème. */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+    transition: background-color 0.45s ease,
+        color 0.45s ease,
+        border-color 0.45s ease,
+        fill 0.45s ease,
+        stroke 0.45s ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    html.theme-transition,
+    html.theme-transition * {
+        transition: none !important;
+    }
 }
 
 * {

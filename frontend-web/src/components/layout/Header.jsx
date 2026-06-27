@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import './Header.css';
 import LinkButton from '../ui/LinkButton';
 import IconButton from '../ui/IconButton';
+import ThemeToggle from '../ui/ThemeToggle';
 import Logo from "../../assets/logo.svg?react";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { LuLogIn, LuLogOut, LuMenu } from "react-icons/lu";
 import { FaUser, FaHome } from "react-icons/fa";
 import { FaPersonCirclePlus } from "react-icons/fa6";
@@ -24,6 +26,7 @@ const ProfileButton = ({ className, onClick }) => {
 
 const Header = ({ page }) => {
     const { user, logoutAuth } = useAuth();
+    const { mode, setMode } = useTheme();
     const [isProfileMenuOpen, setisProfileMenuOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
@@ -52,6 +55,7 @@ const Header = ({ page }) => {
                 <LinkButton to="/itineraire" className={isPage(page, "itineraire")}>Itinéraire</LinkButton>
             </nav>
             <div className='header-user-section media-large'>
+                <ThemeToggle compact value={mode} onChange={setMode} />
                 {user
                     ? <div className="user-connected" onClick={() => navigate("/profil")}>
                         {user.first_name}
@@ -95,6 +99,10 @@ const Header = ({ page }) => {
 
             {isMobileMenuOpen && (
                 <div className="dropdown mobile-dropdown media-small">
+                    <div className="dropdown-theme-toggle">
+                        <ThemeToggle value={mode} onChange={setMode} />
+                    </div>
+                    <hr className="dropdown-divider" />
                     <button className="dropdown-item" onClick={() => navigate("/")}>
                         <FaHome /> Accueil
                     </button>

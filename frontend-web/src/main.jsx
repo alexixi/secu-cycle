@@ -3,16 +3,24 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { BrowserRouter } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
+
+const storedThemeMode = localStorage.getItem('themeMode') || 'auto';
+const initialDark = storedThemeMode === 'dark'
+    || (storedThemeMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+document.documentElement.dataset.theme = initialDark ? 'dark' : 'light';
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
         <HelmetProvider>
             <BrowserRouter>
-                <AuthProvider>
-                    <App />
-                </AuthProvider>
+                <ThemeProvider>
+                    <AuthProvider>
+                        <App />
+                    </AuthProvider>
+                </ThemeProvider>
             </BrowserRouter>
         </HelmetProvider>
     </StrictMode>,

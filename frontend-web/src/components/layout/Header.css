@@ -158,6 +158,10 @@ header #profile-button.active:active {
     animation: fadeInDown 0.2s ease forwards;
 }
 
+.dropdown-theme-toggle {
+    padding: 4px 12px 8px;
+}
+
 .dropdown-divider {
     border: none;
     height: 1px;
