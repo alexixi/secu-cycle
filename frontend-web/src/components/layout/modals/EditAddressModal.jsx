@@ -10,7 +10,7 @@ import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 import "./AddressModal.css"
 
-export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm }) {
+export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm, focusField = "home" }) {
     const { user } = useAuth();
 
     const [homeAddress, setHomeAddress] = useState(user?.home_address || "");
@@ -72,7 +72,7 @@ export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm 
                                 placeholder="Domicile"
                                 defaultValue={homeAddress}
                                 onSelect={(address) => setHomeAddress(address?.name || "")}
-                                autoFocus
+                                autoFocus={focusField === "home"}
                             />
                         </div>
 
@@ -83,6 +83,7 @@ export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm 
                                 placeholder="Travail"
                                 defaultValue={workAddress}
                                 onSelect={(address) => setWorkAddress(address?.name || "")}
+                                autoFocus={focusField === "work"}
                             />
                         </div>
 

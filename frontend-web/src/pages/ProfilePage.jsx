@@ -46,6 +46,7 @@ export default function ProfilePage() {
   const [selectedBike, setSelectedBike] = useState(null);
   const [selectedHistoricEntry, setSelectedHistoricEntry] = useState(null);
   const [confirmDeleteHistoric, setConfirmDeleteHistoric] = useState(false);
+  const [addressFocusField, setAddressFocusField] = useState("home");
 
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
@@ -275,8 +276,38 @@ export default function ProfilePage() {
               </IconButton>
             </div>
             <div className="address-section">
-              <div><FaHome size={15} /> <strong>Domicile :</strong> {homeAddress}</div>
-              <div><MdOutlineWork size={15} /> <strong>Travail :</strong> {workAddress}</div>
+              <div
+                className="address-card"
+                role="button"
+                tabIndex={0}
+                onClick={() => { setAddressFocusField("home"); setIsModalOpenAddress(true); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setAddressFocusField("home"); setIsModalOpenAddress(true); } }}
+              >
+                <span className="address-card-icon address-home"><FaHome size={20} /></span>
+                <div className="address-card-text">
+                  <span className="address-card-label">Domicile</span>
+                  <span className={`address-card-value${homeAddress ? "" : " address-empty"}`}>
+                    {homeAddress || "Aucune adresse renseignée"}
+                  </span>
+                </div>
+                <MdEditLocationAlt className="address-card-edit" size={18} />
+              </div>
+              <div
+                className="address-card"
+                role="button"
+                tabIndex={0}
+                onClick={() => { setAddressFocusField("work"); setIsModalOpenAddress(true); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setAddressFocusField("work"); setIsModalOpenAddress(true); } }}
+              >
+                <span className="address-card-icon address-work"><MdOutlineWork size={20} /></span>
+                <div className="address-card-text">
+                  <span className="address-card-label">Travail</span>
+                  <span className={`address-card-value${workAddress ? "" : " address-empty"}`}>
+                    {workAddress || "Aucune adresse renseignée"}
+                  </span>
+                </div>
+                <MdEditLocationAlt className="address-card-edit" size={18} />
+              </div>
             </div>
           </div>
 
@@ -414,6 +445,7 @@ export default function ProfilePage() {
       <EditAddressModal
         isOpen={isModalOpenAddress}
         hasError={hasError}
+        focusField={addressFocusField}
         onClose={() => setIsModalOpenAddress(false) || setHasError(false)}
         onConfirm={handleSubmitAddress}
       />

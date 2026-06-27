@@ -46,11 +46,82 @@
 
 .address-section{
   margin-top: 1em;
-  padding-left: 3%;
+  padding: 0 3%;
   display: flex;
   flex-direction: column;
-  justify-content: space-around ;
-  height: 30%;
+  gap: 14px;
+}
+
+.address-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background-color: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.address-card:hover,
+.address-card:focus-visible {
+  border-color: var(--primary-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  outline: none;
+}
+
+.address-card-edit {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+.address-card:hover .address-card-edit,
+.address-card:focus-visible .address-card-edit {
+  opacity: 1;
+  color: var(--primary);
+}
+
+.address-card-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--primary-transparent);
+  color: var(--primary);
+}
+
+.address-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.address-card-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.address-card-value {
+  color: var(--text-main);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.address-card-value.address-empty {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-secondary);
 }
 
 .form-group-checkbox {
