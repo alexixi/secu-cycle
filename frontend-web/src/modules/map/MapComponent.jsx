@@ -25,12 +25,21 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [activeTraffic, setActiveTraffic] = useState(null);
     const [isMapSelectOpen, setIsMapSelectOpen] = useState(false);
     const [selectedMapStyle, setSelectedMapStyle] = useState("basic-v2");
+    const [isMapLoaded, setIsMapLoaded] = useState(false);
 
     useEffect(() => {
-        if (!mapRef.current) return;
+        if (!mapRef.current || !isMapLoaded) return;
         const map = mapRef.current.getMap();
 
-        if (start && end) {
+        const it = itineraires?.[0];
+        if (it?.path?.length) {
+            const lons = it.path.map(p => p[1]);
+            const lats = it.path.map(p => p[0]);
+            map.fitBounds([
+                [Math.min(...lons), Math.min(...lats)],
+                [Math.max(...lons), Math.max(...lats)]
+            ], { padding: 50, maxZoom: 16, duration: 1000 });
+        } else if (start && end) {
             const lons = [start.lon, end.lon];
             const lats = [start.lat, end.lat];
             map.fitBounds([
@@ -42,7 +51,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         } else if (end) {
             map.flyTo({ center: [end.lon, end.lat], zoom: 15, duration: 1500 });
         }
-    }, [start, end]);
+    }, [start, end, itineraires, isMapLoaded]);
 
     const onClick = (event) => {
         const features = event.features;
@@ -85,6 +94,29 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
 
     const mapTilerKey = import.meta.env.VITE_MAPTILER_KEY;
     const currentMapStyle = `https://api.maptiler.com/maps/${selectedMapStyle}/style.json?key=${mapTilerKey}`;
+
+    const getInitialViewState = () => {
+        const it = itineraires?.[0];
+        if (it?.path?.length) {
+            const lons = it.path.map(p => p[1]);
+            const lats = it.path.map(p => p[0]);
+            return {
+                bounds: [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
+                fitBoundsOptions: { padding: 50, maxZoom: 16 }
+            };
+        }
+        if (start && end) {
+            const lons = [start.lon, end.lon];
+            const lats = [start.lat, end.lat];
+            return {
+                bounds: [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
+                fitBoundsOptions: { padding: 50, maxZoom: 16 }
+            };
+        }
+        if (start) return { longitude: start.lon, latitude: start.lat, zoom: 15 };
+        if (end) return { longitude: end.lon, latitude: end.lat, zoom: 15 };
+        return { longitude: -0.5795, latitude: 44.8378, zoom: 13 };
+    };
 
     return (
         <div className={`map-container ${littleMap ? 'little-map' : ''}`}>
@@ -156,11 +188,12 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             </div>
             <Map
                 ref={mapRef}
-                initialViewState={{ longitude: -0.5795, latitude: 44.8378, zoom: 13 }}
+                initialViewState={getInitialViewState()}
                 mapStyle={currentMapStyle}
                 interactiveLayerIds={itineraires ? itineraires.map((it) => `route-hitbox-${it.id}`) : []}
                 onClick={onClick}
                 onMouseMove={onHover}
+                onLoad={() => setIsMapLoaded(true)}
                 style={{ width: '100%', height: '100%' }}
             >
                 <NavigationControl position="top-right" />

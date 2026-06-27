@@ -171,6 +171,22 @@
   font-weight: normal;
 }
 
+.historic-entry .path-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.historic-entry .path-info span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
 @media (max-width: 800px) {
   .profile-section {
     width: 90%;
