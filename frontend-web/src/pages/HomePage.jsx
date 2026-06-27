@@ -3,7 +3,7 @@ import Header from "../components/layout/Header"
 import './HomePage.css';
 import IconButton from "../components/ui/IconButton";
 import Logo from "../assets/logo.svg?react";
-import apercuApplication from "../assets/screenshots/apercu_itineraire-left.png";
+import apercuApplication from "../assets/screenshots/mobile/apercu_itineraire-left.png";
 import { IoIosArrowDropdown } from "react-icons/io";
 import { FaLinkedin } from "react-icons/fa";
 

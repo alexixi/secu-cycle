@@ -1,10 +1,23 @@
 #container-top-homepage {
+    --bg-screenshot: url("../assets/screenshots/desktop/itineraire_light.webp");
+
     height: 90vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    background-image:
+        linear-gradient(color-mix(in srgb, var(--bg-main) 20%, transparent), var(--bg-main)),
+        var(--bg-screenshot);
+    background-position: left top;
+    background-repeat: no-repeat;
+    position: relative;
 }
+
+[data-theme="dark"] #container-top-homepage {
+    --bg-screenshot: url("../assets/screenshots/desktop/itineraire_dark.webp");
+}
+
 
 #logo-homepage {
     width: 35em;
@@ -13,7 +26,8 @@
 }
 
 #title-homepage {
-    font-size: clamp(3em, 14vw, 6.5em);;
+    font-size: clamp(3em, 14vw, 6.5em);
+    ;
     font-weight: bold;
 }
 
