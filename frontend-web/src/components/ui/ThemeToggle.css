@@ -10,6 +10,7 @@
 
 .theme-toggle-btn {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -22,8 +23,13 @@
     color: var(--text-secondary);
     font-size: 0.9rem;
     font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
     transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.theme-toggle-btn svg {
+    flex-shrink: 0;
 }
 
 .theme-toggle-btn:hover {
@@ -45,4 +51,17 @@
     flex: 0 0 auto;
     padding: 7px;
     border-radius: 7px;
+}
+
+@media (max-width: 700px) {
+    .theme-toggle:not(.theme-toggle-compact) {
+        width: 100%;
+    }
+
+    .theme-toggle:not(.theme-toggle-compact) .theme-toggle-btn {
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 4px;
+        font-size: 0.78rem;
+    }
 }
