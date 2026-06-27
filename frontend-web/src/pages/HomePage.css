@@ -1,13 +1,13 @@
 #container-top-homepage {
     --bg-screenshot: url("../assets/screenshots/desktop/itineraire_light.webp");
 
-    height: 90vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     background-image:
-        linear-gradient(color-mix(in srgb, var(--bg-main) 20%, transparent), var(--bg-main)),
+        linear-gradient(color-mix(in srgb, var(--bg-main) 30%, transparent), var(--bg-main)),
         var(--bg-screenshot);
     background-position: left top;
     background-repeat: no-repeat;
@@ -27,17 +27,18 @@
 
 #title-homepage {
     font-size: clamp(3em, 14vw, 6.5em);
-    ;
     font-weight: bold;
+    backdrop-filter: blur(1px);
 }
 
 #home-faq-section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 60px;
-    padding-top: 50px;
-    margin-bottom: 60px;
+    gap: 100px;
+    padding-top: 100px;
+    padding-bottom: 150px;
+    position: relative;
 }
 
 .home-section h2 {
@@ -59,17 +60,21 @@
 }
 
 .home-section {
-    background-color: var(--bg-tertiary);
+    background-color: color-mix(in srgb, var(--bg-tertiary) 80%, transparent);
     border-radius: 20px;
     padding: 40px 30px;
     width: 50%;
     min-width: 620px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    backdrop-filter: blur(2px);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
 }
 
 .home-section:hover {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(8px);
 }
 
 .home-section:nth-child(even) {
@@ -217,6 +222,12 @@
 }
 
 @media (max-width: 800px) {
+    #home-faq-section {
+        gap: 60px;
+        padding-top: 25px;
+        margin-bottom: 60px;
+    }
+
     .home-section {
         width: 90%;
         min-width: 300px;

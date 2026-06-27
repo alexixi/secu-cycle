@@ -1,0 +1,50 @@
+.faq-route-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.faq-route-line {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 2 14;
+    opacity: 0.35;
+}
+
+.faq-route-progress {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 2 14;
+    opacity: 0.85;
+}
+
+.faq-route-pin {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
+    line-height: 0;
+    filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.3));
+}
+
+.faq-route-bike {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+    color: var(--primary);
+    transform-origin: center;
+    will-change: transform;
+    line-height: 0;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+    transition: opacity 0.25s ease;
+}
