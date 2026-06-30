@@ -1,0 +1,29 @@
+# Sécu'Cycle
+
+> Application web et mobile (android et ios) open source qui calcule des itinéraires à vélo sécurisés, personnalisés et adaptés au profil de l'utilisateur. Le calcul privilégie la sécurité du cycliste plutôt que la seule vitesse, en s'adaptant au profil sportif, au type de vélo et au type d'aménagement, au type de sol, à la vitesse des automobiliste, aux embouteillages et à l'éclairage public. Couverture principale : métropole de Bordeaux et le sud Bordeaux pour le moment, en voie à s'aggrandir.
+
+Sécu'Cycle propose plusieurs itinéraires (rapide, sécurisé, compromis) en s'appuyant sur des données de trafic temps réel, des données topographiques et des signalements de dangers remontés par la communauté. L'application gère les profils utilisateurs, plusieurs vélos (standard ou électrique), l'historique des trajets et la navigation guidée.
+
+Projet open source développé par 6 étudiants de l'ENSEIRB-MATMECA (Bordeaux) dans le cadre d'un PFA. Service gratuit, en français.
+
+## Pages
+
+- [Accueil](https://secu-cycle.fr/) : présentation du projet, des problématiques de sécurité à vélo et des sources de données.
+- [Calculateur d'itinéraire](https://secu-cycle.fr/itineraire) : calcul d'un trajet vélo sécurisé entre deux adresses selon le profil et le vélo de l'utilisateur. Page principale
+
+## Couverture géographique
+
+- Principale : Bordeaux, Bordeaux Métropole et le sud Bordeaux (45 communes).
+
+## Sources de données
+
+- OpenStreetMap : réseau routier et pistes cyclables.
+- IGN : données d'altimétrie / dénivelé.
+- Base Adresse Nationale (BAN) : complétion et géocodage d'adresses.
+- AVATAR (CEREMA) et open data Bordeaux Métropole : données de trafic.
+- Signalements communautaires : accidents et dangers remontés par les utilisateurs.
+- MapTiler : fond de carte.
+
+## Notes
+
+- Langue : français. Tarif : gratuit. Domaine : https://secu-cycle.fr

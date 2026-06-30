@@ -17,9 +17,46 @@
     <meta name="theme-color" content="#646cff" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="keywords" content="vélo, sécurité, itinéraires, gps, cyclisme, trajets, mobilité douce" />
+    <meta name="keywords" content="vélo, sécurité, itinéraires, gps, cyclisme, trajets, mobilité douce, Bordeaux" />
     <meta name="author"
         content="Alexis Gaudray Bouju, Matheline Chevalier, Khaoula Najmeddine, Angelo Thunney, Joan Dumarchat, Léia Daragnès" />
+
+    <link rel="preconnect" href="https://api.secu-cycle.fr" />
+    <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "Sécu'Cycle",
+          "url": "https://secu-cycle.fr",
+          "description": "Calculez des itinéraires à vélo sécurisés et adaptés à votre profil, votre vélo et le type de route. Données temps réel de trafic sur la métropole de Bordeaux.",
+          "applicationCategory": "TravelApplication",
+          "operatingSystem": "Web",
+          "inLanguage": "fr",
+          "areaServed": {
+            "@type": "City",
+            "name": "Bordeaux Métropole"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "EUR"
+          },
+          "publisher": { "@id": "https://secu-cycle.fr/#organization" }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://secu-cycle.fr/#organization",
+          "name": "Sécu'Cycle",
+          "url": "https://secu-cycle.fr",
+          "logo": "https://secu-cycle.fr/apple-touch-icon.png"
+        }
+      ]
+    }
+    </script>
 </head>
 
 <body>

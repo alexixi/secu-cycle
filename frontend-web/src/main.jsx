@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from "./context/AuthContext";
@@ -12,7 +12,9 @@ const initialDark = storedThemeMode === 'dark'
     || (storedThemeMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 document.documentElement.dataset.theme = initialDark ? 'dark' : 'light';
 
-createRoot(document.getElementById('root')).render(
+const root = document.getElementById('root');
+
+const tree = (
     <StrictMode>
         <HelmetProvider>
             <BrowserRouter>
@@ -23,5 +25,11 @@ createRoot(document.getElementById('root')).render(
                 </ThemeProvider>
             </BrowserRouter>
         </HelmetProvider>
-    </StrictMode>,
-)
+    </StrictMode>
+);
+
+if (root.hasChildNodes()) {
+    hydrateRoot(root, tree);
+} else {
+    createRoot(root).render(tree);
+}

@@ -52,7 +52,7 @@ export default function Login() {
 
     return (
         <>
-            <Meta title="Connexion | Sécu'Cycle" description="Connectez-vous à votre compte Sécu'Cycle pour accéder à vos vélos et vos adresses enregistrées." />
+            <Meta title="Connexion | Sécu'Cycle" description="Connectez-vous à votre compte Sécu'Cycle pour accéder à vos vélos et vos adresses enregistrées." noindex />
             <Header page="login" />
             <div className="page-form-container">
                 {errorMessage && (

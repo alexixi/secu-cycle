@@ -121,7 +121,7 @@ export default function ProfileCreationPage() {
 
     return (
         <>
-            <Meta title="Créer un compte | Sécu'Cycle" description="Rejoignez la communauté Sécu'Cycle et roulez en toute sécurité." />
+            <Meta title="Créer un compte | Sécu'Cycle" description="Rejoignez la communauté Sécu'Cycle et roulez en toute sécurité." noindex />
             <Header page="signin" />
             <div className="page-form-container">
                 <div className="form-container">

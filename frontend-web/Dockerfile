@@ -4,6 +4,16 @@ FROM node:22-alpine AS build
 
 WORKDIR /app
 
+RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_SKIP_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+ARG VITE_API_BASE_URL
+ARG VITE_MAPTILER_KEY
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_MAPTILER_KEY=$VITE_MAPTILER_KEY
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
