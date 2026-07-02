@@ -1,0 +1,33 @@
+{
+    "name": "Sécu'Cycle",
+    "short_name": "Sécu'Cycle",
+    "description": "Calculez des itinéraires à vélo sécurisés et adaptés à votre profil sur la métropole de Bordeaux.",
+    "lang": "fr",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "theme_color": "#646cff",
+    "background_color": "#e7ecfb",
+    "categories": ["navigation", "sports", "travel", "fitness"],
+    "icons": [
+        {
+            "src": "/pwa-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/pwa-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/pwa-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
