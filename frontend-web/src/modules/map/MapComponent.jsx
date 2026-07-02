@@ -7,7 +7,7 @@ import { useTheme } from '../../context/ThemeContext';
 
 import { IoMdPin } from "react-icons/io";
 import { FaLayerGroup } from "react-icons/fa";
-import { MdOutlineReportProblem, MdOutlineTraffic } from "react-icons/md";
+import { MdOutlineReportProblem, MdOutlineTraffic, MdMyLocation } from "react-icons/md";
 import './MapComponent.css';
 
 const MAP_STYLES = [
@@ -39,6 +39,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [selectedMapStyle, setSelectedMapStyle] = useState("base");
     const [mapThemeMode, setMapThemeMode] = useState("auto");
     const [isMapLoaded, setIsMapLoaded] = useState(false);
+    const [userPosition, setUserPosition] = useState(null);
+    const [isLocating, setIsLocating] = useState(false);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem('userMapThemeMode');
@@ -83,6 +85,27 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             map.flyTo({ center: [end.lon, end.lat], zoom: 15, duration: 1500 });
         }
     }, [start, end, itineraires, isMapLoaded]);
+
+    const handleLocate = () => {
+        if (!navigator.geolocation) {
+            alert("La géolocalisation n'est pas disponible sur ce navigateur.");
+            return;
+        }
+        setIsLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const { latitude, longitude } = pos.coords;
+                setUserPosition({ lat: latitude, lon: longitude });
+                setIsLocating(false);
+                mapRef.current?.getMap().flyTo({ center: [longitude, latitude], zoom: 16, duration: 1500 });
+            },
+            () => {
+                setIsLocating(false);
+                alert("Impossible de récupérer votre position. Vérifiez que la localisation est autorisée pour ce site.");
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
 
     const onClick = (event) => {
         const features = event.features;
@@ -186,6 +209,21 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 </div>
             )}
 
+            {!littleMap && (
+                <div className="map-locate-control">
+                    <Button
+                        type="button"
+                        className="map-locate-toggle"
+                        onClick={handleLocate}
+                        disabled={isLocating}
+                        title="Centrer la carte sur ma position"
+                    >
+                        <MdMyLocation size={18} />
+                        {littleMap ? "" : (isLocating ? "Localisation..." : "Ma position")}
+                    </Button>
+                </div>
+            )}
+
             <div className="map-layer-control">
                 {isMapSelectOpen && (
                     <div className="map-style-menu">
@@ -227,6 +265,12 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 style={{ width: '100%', height: '100%' }}
             >
                 <NavigationControl position="top-right" />
+
+                {userPosition && (
+                    <Marker longitude={userPosition.lon} latitude={userPosition.lat} anchor="center">
+                        <div className="user-position-dot" />
+                    </Marker>
+                )}
 
                 {pointilles && pointilles.map((path, index) => {
                     const coords = path.map(p => [p.lon, p.lat]);
