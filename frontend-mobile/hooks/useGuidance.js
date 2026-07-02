@@ -8,6 +8,11 @@ import {
     stopBackgroundLocation,
     BACKGROUND_LOCATION_EVENT,
 } from '../services/backgroundLocation';
+import {
+    startNavigationNotification,
+    updateNavigationNotification,
+    stopNavigationNotification,
+} from '../services/navigationNotification';
 
 const UPDATE_INTERVAL_MS = 2000;
 const APPROACH_DISTANCE_M = 200;
@@ -78,6 +83,7 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
         if (!isNavigating) {
             _stopNavInterval();
             stopBackgroundLocation();
+            stopNavigationNotification();
             setGuidanceState(null);
             return;
         }
@@ -91,10 +97,12 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
         arrivedSpokenRef.current = false;
         _startNavInterval(activeRoute);
         startBackgroundLocation();
+        startNavigationNotification();
 
         return () => {
             _stopNavInterval();
             stopBackgroundLocation();
+            stopNavigationNotification();
         };
     }, [isNavigating, selectedItineraire]);
 
@@ -144,6 +152,14 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
                 recalculate: result.recalculate ?? false,
                 hasArrived,
                 progress,
+            });
+
+            updateNavigationNotification({
+                status: result.status,
+                instruction: result.instruction ?? null,
+                distanceToNext: result.distance_to_next_m ?? null,
+                progress,
+                hasArrived,
             });
 
             if (hasArrived) {

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { formatDistance } from '../utils/format';
 
 const TURN_ICONS = {
     depart: 'navigation',
@@ -17,14 +18,6 @@ const TURN_ICONS = {
     roundabout: 'rotate-right',
     arrive: 'flag-checkered',
 };
-
-function formatDistance(meters) {
-    if (meters === null || meters === undefined) return '';
-    if (meters < 50) return 'Maintenant';
-    const rounded = Math.round(meters / 10) * 10;
-    if (rounded < 1000) return `${rounded} m`;
-    return `${(rounded / 1000).toFixed(1)} km`;
-}
 
 export default function GuidancePanel({ guidanceState, onStop }) {
     const insets = useSafeAreaInsets();
