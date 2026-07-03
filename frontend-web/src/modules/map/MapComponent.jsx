@@ -173,9 +173,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                         id="report-button"
                         onClick={onToggleReportMode}
                         className={isReportMode ? "report-button-active" : "report-button"}
+                        title="Ajouter un signalement"
                     >
                         <MdOutlineReportProblem size={18} />
-                        {isReportMode ? "Cliquez sur la carte..." : "Ajouter un signalement"}
+                        <span className="map-btn-label">{isReportMode ? "Cliquez sur la carte..." : "Ajouter un signalement"}</span>
                     </Button>
                 </div>
             )}
@@ -188,9 +189,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     <Button
                         onClick={onToggleTraffic}
                         className={showTraffic ? "report-button-active" : "report-button"}
+                        title="Trafic en temps réel"
                     >
                         <MdOutlineTraffic size={18} />
-                        {showTraffic ? "Masquer le trafic" : "Trafic en temps réel"}
+                        <span className="map-btn-label">{showTraffic ? "Masquer le trafic" : "Trafic en temps réel"}</span>
                     </Button>
                     {showTraffic && (
                         <div className="traffic-legend">
@@ -219,7 +221,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                         title="Centrer la carte sur ma position"
                     >
                         <MdMyLocation size={18} />
-                        {littleMap ? "" : (isLocating ? "Localisation..." : "Ma position")}
+                        {littleMap ? "" : <span className="map-btn-label">{isLocating ? "Localisation..." : "Ma position"}</span>}
                     </Button>
                 </div>
             )}
@@ -251,7 +253,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     title="Changer le fond de carte"
                 >
                     <FaLayerGroup size={18} />
-                    {littleMap ? "" : "Calques"}
+                    {littleMap ? "" : <span className="map-btn-label">Calques</span>}
                 </Button>
             </div>
             <Map

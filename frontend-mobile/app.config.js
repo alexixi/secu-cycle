@@ -36,7 +36,8 @@ export default {
                 "ACCESS_FINE_LOCATION",
                 "ACCESS_BACKGROUND_LOCATION",
                 "FOREGROUND_SERVICE",
-                "FOREGROUND_SERVICE_LOCATION"
+                "FOREGROUND_SERVICE_LOCATION",
+                "POST_NOTIFICATIONS"
             ]
         },
         web: {
@@ -63,6 +64,13 @@ export default {
                     "locationAlwaysAndWhenInUsePermission": "Sécu Cycle utilise votre position pour la navigation vélo.",
                     "locationAlwaysPermission": "Sécu Cycle utilise votre position en arrière-plan pour continuer la navigation avec le téléphone dans votre poche.",
                     "isAndroidBackgroundLocationEnabled": true
+                }
+            ],
+            [
+                "expo-notifications",
+                {
+                    "icon": "./assets/images/notification-icon.png",
+                    "color": "#646cff"
                 }
             ],
             "@react-native-community/datetimepicker",
