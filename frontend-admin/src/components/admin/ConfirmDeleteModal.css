@@ -1,0 +1,33 @@
+.confirm-delete-modal {
+  max-width: 420px;
+  text-align: center;
+}
+
+.confirm-delete-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--error-bg);
+  color: var(--error);
+  margin-bottom: 0.75rem;
+}
+
+.confirm-delete-modal h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.confirm-delete-modal p {
+  margin: 0 0 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.confirm-delete-modal .modal-actions {
+  justify-content: center;
+  gap: 0.75rem;
+}

@@ -34,6 +34,15 @@ class UserUpdate(BaseModel):
     home_address: Optional[str] = None
     work_address: Optional[str] = None
 
+class UserAdminUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    birth_date: Optional[date] = None
+    sport_level: Optional[str] = None
+    home_address: Optional[str] = None
+    work_address: Optional[str] = None
+    is_admin: Optional[bool] = None
+
 class PasswordChange(BaseModel):
     old_password: str
     new_password: str = Field(min_length=10)

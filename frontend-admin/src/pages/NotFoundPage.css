@@ -1,0 +1,20 @@
+.notfound-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.notfound-page h1 {
+  font-size: 4rem;
+  margin: 0;
+  color: var(--primary);
+}
+
+.notfound-page p {
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem;
+}
