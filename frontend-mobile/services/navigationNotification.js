@@ -1,23 +1,10 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { formatDistance } from '../utils/format';
-
-const CHANNEL_ID = 'navigation-guidance';
-const NOTIFICATION_ID = 'nav-guidance';
+import * as NavNotification from '../modules/nav-notification';
 
 let isActive = false;
 let lastSignature = null;
-
-if (Platform.OS === 'android') {
-    Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-            shouldShowBanner: false,
-            shouldShowList: true,
-            shouldPlaySound: false,
-            shouldSetBadge: false,
-        }),
-    });
-}
 
 export async function startNavigationNotification() {
     if (Platform.OS !== 'android') return;
@@ -26,18 +13,9 @@ export async function startNavigationNotification() {
         const { status } = await Notifications.requestPermissionsAsync();
         if (status !== 'granted') return;
 
-        await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-            name: 'Navigation',
-            importance: Notifications.AndroidImportance.LOW,
-            sound: null,
-            enableVibrate: false,
-            showBadge: false,
-            lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-        });
-
         isActive = true;
         lastSignature = null;
-        await _post('Navigation en cours', 'Calcul du guidage...');
+        await NavNotification.start();
     } catch (e) {
         console.warn('Notification de navigation indisponible :', e);
     }
@@ -46,30 +24,23 @@ export async function startNavigationNotification() {
 export async function updateNavigationNotification(guidance) {
     if (!isActive || !guidance) return;
 
-    let title;
-    let body = '';
+    const payload = _buildPayload(guidance);
+    if (!payload) return;
 
-    if (guidance.hasArrived) {
-        title = 'Vous êtes arrivé !';
-    } else if (guidance.status === 'off_route') {
-        title = "Recalcul de l'itinéraire...";
-    } else if (guidance.instruction?.text) {
-        title = guidance.instruction.text;
-        const distance = formatDistance(guidance.distanceToNext);
-        const percent = guidance.progress != null
-            ? `${Math.round(guidance.progress * 100)} %`
-            : null;
-        body = [distance, percent].filter(Boolean).join(' • ');
-    } else {
-        return;
-    }
-
-    const signature = `${title}|${body}`;
+    const signature = [
+        payload.turnType,
+        payload.instruction,
+        payload.distanceLabel,
+        payload.nextInstruction,
+        payload.progress,
+        payload.status,
+        payload.hasArrived,
+    ].join('|');
     if (signature === lastSignature) return;
     lastSignature = signature;
 
     try {
-        await _post(title, body);
+        await NavNotification.update(payload);
     } catch (e) {
         console.warn('Mise à jour de la notification impossible :', e);
     }
@@ -81,23 +52,48 @@ export async function stopNavigationNotification() {
     isActive = false;
     lastSignature = null;
     try {
-        await Notifications.dismissNotificationAsync(NOTIFICATION_ID);
+        await NavNotification.stop();
     } catch {
 
     }
 }
 
-async function _post(title, body) {
-    await Notifications.scheduleNotificationAsync({
-        identifier: NOTIFICATION_ID,
-        content: {
-            title,
-            body,
-            sticky: true,
-            autoDismiss: false,
-            color: '#646cff',
-            sound: false,
-        },
-        trigger: { channelId: CHANNEL_ID },
-    });
+function _buildPayload(guidance) {
+    if (guidance.hasArrived) {
+        return {
+            hasArrived: true,
+            progress: 1,
+            turnType: 'arrive',
+            instruction: null,
+            distanceLabel: null,
+            nextInstruction: null,
+            status: null,
+        };
+    }
+
+    if (guidance.status === 'off_route') {
+        return {
+            status: 'off_route',
+            progress: guidance.progress ?? 0,
+            hasArrived: false,
+            turnType: null,
+            instruction: null,
+            distanceLabel: null,
+            nextInstruction: null,
+        };
+    }
+
+    if (!guidance.instruction?.text) return null;
+
+    return {
+        turnType: guidance.instruction.turn_type ?? null,
+        instruction: guidance.instruction.text,
+        distanceLabel: guidance.distanceToNext != null
+            ? formatDistance(guidance.distanceToNext)
+            : null,
+        nextInstruction: guidance.nextInstruction?.text ?? null,
+        progress: guidance.progress ?? 0,
+        status: guidance.status ?? null,
+        hasArrived: false,
+    };
 }

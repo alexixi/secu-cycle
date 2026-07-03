@@ -158,6 +158,7 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
             updateNavigationNotification({
                 status: result.status,
                 instruction: result.instruction ?? null,
+                nextInstruction: result.next_instruction ?? null,
                 distanceToNext: result.distance_to_next_m ?? null,
                 progress,
                 hasArrived,
