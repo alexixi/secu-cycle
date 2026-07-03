@@ -10,6 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import GuidancePanel from '../../components/GuidancePanel';
 import ItineraryPanel from '../../components/ItineraryPanel';
 import * as Haptics from 'expo-haptics';
+import { trackEvent } from '../../services/analytics';
 
 export default function Index() {
     const [startPoint, setStartPoint] = useState(null);
@@ -30,10 +31,14 @@ export default function Index() {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             return;
         }
+        trackEvent('navigation_started', { bike: selectedBike });
         setIsNavigating(true);
     };
 
     const handleStopNavigation = () => {
+        if (isNavigating && !guidanceState?.hasArrived) {
+            trackEvent('navigation_stopped');
+        }
         setIsNavigating(false);
     };
     const handleSelectItineraire = React.useCallback((id) => {
@@ -76,13 +81,16 @@ export default function Index() {
                 setErrorPath(false);
                 setRoutePaths(itineraries);
                 setSelectedItineraire(itineraries[0].id);
+                trackEvent('route_calculated', { bike: selectedBike, count: itineraries.length });
             } else {
                 setErrorPath(true);
+                trackEvent('route_calculation_failed', { bike: selectedBike });
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             }
         } catch (error) {
             console.error("Erreur calcul itinéraire:", error);
             setErrorPath(true);
+            trackEvent('route_calculation_failed', { bike: selectedBike });
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         } finally {
             setIsLoading(false);

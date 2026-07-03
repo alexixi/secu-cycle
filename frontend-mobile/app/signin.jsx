@@ -18,6 +18,7 @@ import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
 import { login as apiLogin, getUserProfile, register } from "../services/apiBack";
+import { trackEvent } from "../services/analytics";
 import * as Haptics from 'expo-haptics';
 
 const MIN_PASSWORD_LENGTH = 10;
@@ -61,6 +62,7 @@ export default function RegisterScreen() {
 
         try {
             await register(firstName, lastName, birthDate.toISOString().split('T')[0], email, password);
+            trackEvent('account_created');
 
             try {
                 const response_login = await apiLogin(email, password);

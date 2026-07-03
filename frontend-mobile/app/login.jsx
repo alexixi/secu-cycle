@@ -14,6 +14,7 @@ import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
 import { login as apiLogin, getUserProfile, getUserBikes, getUserHistoric } from "../services/apiBack";
+import { trackEvent } from "../services/analytics";
 import * as Haptics from 'expo-haptics';
 
 export default function Login() {
@@ -34,6 +35,7 @@ export default function Login() {
         try {
             const response_login = await apiLogin(email, password);
             await loginAuth(response_login.access_token, response_login.refresh_token);
+            trackEvent('logged_in');
 
             const response_user = await getUserProfile(response_login.access_token);
             await updateUser(response_user);
