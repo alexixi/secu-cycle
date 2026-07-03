@@ -32,3 +32,10 @@ app-example
 # generated native folders
 /ios
 /android
+
+# build artifacts des modules natifs locaux (le code source des modules,
+# lui, reste versionné — seuls les dossiers de build Gradle sont ignorés)
+modules/*/android/build/
+modules/*/android/.gradle/
+modules/*/android/.cxx/
+modules/*/ios/build/

@@ -40,8 +40,8 @@ export const startBackgroundLocation = async () => {
         timeInterval: 2000,
         distanceInterval: 5,
         foregroundService: {
-            notificationTitle: "Sécu'Cycle est actif",
-            notificationBody: "Suivi GPS actif",
+            notificationTitle: "Sécu'Cycle",
+            notificationBody: "Guidage en cours",
             notificationColor: "#646cff",
             killServiceOnDestroy: true,
         },
