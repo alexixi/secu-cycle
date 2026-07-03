@@ -1,7 +1,7 @@
-const VERSION = 'v1';
+const VERSION = new URL(self.location.href).searchParams.get('v') || 'v1';
 const STATIC_CACHE = `secucycle-static-${VERSION}`;
 const HTML_CACHE = `secucycle-html-${VERSION}`;
-const TILE_CACHE = `secucycle-tiles-${VERSION}`;
+const TILE_CACHE = `secucycle-tiles`;
 const TILE_MAX_ENTRIES = 300;
 
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg'];
@@ -47,8 +47,10 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             fetch(request)
                 .then((res) => {
-                    const copy = res.clone();
-                    caches.open(HTML_CACHE).then((c) => c.put('/index.html', copy));
+                    if (res.ok) {
+                        const copy = res.clone();
+                        caches.open(HTML_CACHE).then((c) => c.put('/index.html', copy));
+                    }
                     return res;
                 })
                 .catch(() => caches.match(request).then((r) => r || caches.match('/index.html')))
