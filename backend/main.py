@@ -64,6 +64,11 @@ app = FastAPI(title="Sécu Cycle", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 app.include_router(user.router)
 app.include_router(route.router)
 app.include_router(history.router)
