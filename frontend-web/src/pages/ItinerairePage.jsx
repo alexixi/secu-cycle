@@ -6,7 +6,11 @@ import MapComponent from "../modules/map/MapComponent";
 import SearchAside from "../components/layout/SearchAside";
 import ReportModal from "../components/layout/modals/ReportModal";
 import { calculateItineraries, getReports, createReport, deleteReport, getTraffic } from "../services/apiBack";
+import { trackEvent } from "../services/analytics";
 import "./ItinerairePage.css";
+
+const bikeLabel = (bikeId) =>
+    typeof bikeId === "string" && bikeId.startsWith("default-") ? bikeId.slice("default-".length) : "perso";
 
 export default function ItinerairePage() {
     const [startPoint, setStartPoint] = useState(null);
@@ -62,11 +66,14 @@ export default function ItinerairePage() {
             if (itineraries && itineraries.length > 0) {
                 setErrorPath(false);
                 setRoutePaths(itineraries);
+                trackEvent("route_calculated", { bike: bikeLabel(selectedBike), count: itineraries.length });
             } else {
                 setErrorPath(true);
+                trackEvent("route_calculation_failed", { bike: bikeLabel(selectedBike) });
             }
         } catch (error) {
             setErrorPath(true);
+            trackEvent("route_calculation_failed", { bike: bikeLabel(selectedBike) });
             setIsLoading(false);
             return;
         }
@@ -96,6 +103,7 @@ export default function ItinerairePage() {
             setReports(prev => [...prev, newReport]);
             setIsReportModalOpen(false);
             setIsReportMode(false);
+            trackEvent("report_created", { type: reportType });
         } catch (error) {
             console.error("Erreur signalement:", error);
         }

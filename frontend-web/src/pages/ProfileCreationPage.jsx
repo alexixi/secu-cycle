@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { FaPersonCirclePlus } from "react-icons/fa6";
 import { ImSad2 } from "react-icons/im";
 import { register, login, getUserProfile, getUserBikes } from "../services/apiBack";
+import { trackEvent } from "../services/analytics";
 import { useNavigate } from "react-router-dom";
 import { LuLogIn } from "react-icons/lu";
 import confetti from "canvas-confetti"
@@ -49,8 +50,10 @@ export default function ProfileCreationPage() {
 
         try {
             await register(firstName, lastName, birthDate, email, password);
+            trackEvent("account_created");
             triggerConfetti();
         } catch (error) {
+            trackEvent("signup_failed", { reason: error.status === 409 ? "email_exists" : "error" });
             if (error.status === 409) {
                 setEmailAlreadyUsedError(true);
             } else {

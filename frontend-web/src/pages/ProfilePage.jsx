@@ -3,6 +3,7 @@ import "./ProfilePage.css"
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike, getUserBikes, getUserHistoric, deleteHistoricEntry, deleteAllHistoric } from "../services/apiBack";
+import { trackEvent } from "../services/analytics";
 
 import Meta from "../components/Meta";
 import Header from "../components/layout/Header";
@@ -122,6 +123,7 @@ export default function ProfilePage() {
   const handleSubmitAddBike = async (newBike) => {
     try {
       await addBike(token, newBike.name, newBike.type, newBike.isElectric);
+      trackEvent("bike_added", { type: newBike.type, electric: newBike.isElectric });
       const response_bikes = await getUserBikes(token);
       updateBikes(response_bikes);
       setIsModalOpen(false);
