@@ -5,10 +5,10 @@
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self';
-                 connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https://api.secu-cycle.fr https://*.maptiler.com https://api-adresse.data.gouv.fr;
+                 connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https://api.secu-cycle.fr https://*.maptiler.com https://api-adresse.data.gouv.fr https://analytics.secu-cycle.fr;
                  img-src 'self' data: blob: https://*.maptiler.com;
                  worker-src 'self' blob:;
-                 script-src 'self';
+                 script-src 'self' https://analytics.secu-cycle.fr;
                  style-src 'self' 'unsafe-inline';
                  font-src 'self' data: https://*.maptiler.com;
                  object-src 'none';
@@ -62,6 +62,10 @@
       ]
     }
     </script>
+
+    <script defer src="https://analytics.secu-cycle.fr/script.js"
+        data-website-id="%VITE_UMAMI_WEBSITE_ID%"
+        data-domains="secu-cycle.fr,www.secu-cycle.fr"></script>
 </head>
 
 <body>
