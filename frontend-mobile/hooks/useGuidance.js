@@ -13,6 +13,7 @@ import {
     updateNavigationNotification,
     stopNavigationNotification,
 } from '../services/navigationNotification';
+import { trackEvent } from '../services/analytics';
 
 const UPDATE_INTERVAL_MS = 2000;
 const APPROACH_DISTANCE_M = 200;
@@ -163,6 +164,7 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
             });
 
             if (hasArrived) {
+                trackEvent('navigation_arrived');
                 _stopNavInterval();
                 setTimeout(() => onStop?.(), 3000);
             }

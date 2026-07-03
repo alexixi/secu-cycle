@@ -8,6 +8,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { login, getUserProfile, getUserBikes } from "../services/apiBack";
 import { getUserHistoric } from "../services/apiBack";
 import { useAuth } from "../context/AuthContext";
+import { trackEvent } from "../services/analytics";
 import { LuLogIn } from "react-icons/lu";
 import { FaPersonCirclePlus } from "react-icons/fa6";
 import "../components/ui/Input.css"
@@ -43,9 +44,11 @@ export default function Login() {
             const response_historic = await getUserHistoric(response_login.access_token);
             console.log("Historic data:", response_historic);
             updateHistoric(response_historic);
+            trackEvent("logged_in");
             navigate("/profil");
         } catch (error) {
             console.error("Login error:", error);
+            trackEvent("login_failed");
             setHasError(true);
         }
     };

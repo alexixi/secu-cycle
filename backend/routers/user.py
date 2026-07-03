@@ -4,14 +4,26 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
-from schemas.user import UserCreate, UserRead, UserLogin, UserUpdate, PasswordChange, TokenRefresh
+from schemas.user import UserCreate, UserRead, UserLogin, UserUpdate, UserAdminUpdate, PasswordChange, TokenRefresh
 from fastapi import HTTPException
 from utils.security import verify_password, hash_password, create_access_token, create_refresh_token, verify_token
-from dependencies import get_current_user
+from dependencies import get_current_user, require_admin
+from admin_emails import is_user_admin
 from fastapi.security import OAuth2PasswordRequestForm
 from limiter import limiter
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+
+def _with_effective_admin(db: Session, user: User) -> User:
+    """Reflète `ADMIN_EMAILS` dans le champ `is_admin` renvoyé, sans persister.
+
+    L'instance est détachée de la session pour garantir qu'aucune écriture ne
+    parte en base (les endpoints concernés sont en lecture seule).
+    """
+    db.expunge(user)
+    user.is_admin = is_user_admin(user)
+    return user
 
 @router.post("/", response_model=UserRead)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -88,8 +100,11 @@ def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserRead)
-def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
+def get_me(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return _with_effective_admin(db, current_user)
 
 
 @router.patch("/me", response_model=UserRead)
@@ -117,4 +132,74 @@ def update_password(
     if not verify_password(data.old_password, current_user.password_hash):
         raise HTTPException(status_code=401, detail="Ancien mot de passe incorrect.")
     current_user.password_hash = hash_password(data.new_password)
+    db.commit()
+
+
+# --- Administration des utilisateurs (réservé aux admins) ---
+
+@router.get("/", response_model=list[UserRead])
+def list_users(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    return [_with_effective_admin(db, u) for u in users]
+
+
+@router.get("/{user_id}", response_model=UserRead)
+def get_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+    return _with_effective_admin(db, user)
+
+
+@router.patch("/{user_id}", response_model=UserRead)
+def admin_update_user(
+    user_id: int,
+    updates: UserAdminUpdate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+
+    update_data = updates.model_dump(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+
+    # Un admin ne peut pas se retirer à lui-même ses propres droits (évite de se verrouiller dehors).
+    if user.id == admin.id and update_data.get("is_admin") is False:
+        raise HTTPException(
+            status_code=400,
+            detail="Vous ne pouvez pas retirer vos propres droits d'administrateur.",
+        )
+
+    for field, value in update_data.items():
+        setattr(user, field, value)
+    db.commit()
+    db.refresh(user)
+    return _with_effective_admin(db, user)
+
+
+@router.delete("/{user_id}", status_code=204)
+def admin_delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    if user_id == admin.id:
+        raise HTTPException(
+            status_code=400,
+            detail="Vous ne pouvez pas supprimer votre propre compte.",
+        )
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+    db.delete(user)
     db.commit()

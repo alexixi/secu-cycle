@@ -1,0 +1,24 @@
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
+import { BrowserRouter } from 'react-router-dom'
+
+const storedThemeMode = localStorage.getItem('themeMode') || 'auto'
+const initialDark = storedThemeMode === 'dark'
+    || (storedThemeMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+document.documentElement.dataset.theme = initialDark ? 'dark' : 'light'
+
+createRoot(document.getElementById('root')).render(
+    <StrictMode>
+        <BrowserRouter>
+            <ThemeProvider>
+                <AuthProvider>
+                    <App />
+                </AuthProvider>
+            </ThemeProvider>
+        </BrowserRouter>
+    </StrictMode>
+)

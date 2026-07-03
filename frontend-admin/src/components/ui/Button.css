@@ -1,0 +1,60 @@
+.button {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.button:hover {
+    border-color: var(--primary-hover);
+    color: var(--text-main);
+    background-color: var(--bg-surface-hover);
+}
+
+.button:focus,
+.button:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+}
+
+.button:active {
+    transform: scale(0.95);
+}
+
+.button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.button:disabled:hover {
+    border-color: transparent;
+    background-color: var(--bg-surface);
+}
+
+.button.active {
+    font-weight: bold;
+    background-color: var(--primary);
+    color: var(--text-inverse);
+}
+
+.button.active:hover {
+    background-color: var(--primary-hover);
+}
+
+.danger-button {
+    background-color: var(--error-bg);
+}
+
+.danger-button:hover {
+    background-color: var(--error-bg);
+    border-color: var(--error);
+}
+
+.danger-button:active {
+    background-color: var(--error);
+}

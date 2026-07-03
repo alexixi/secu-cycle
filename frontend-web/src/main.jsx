@@ -36,7 +36,7 @@ if (root.hasChildNodes()) {
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then((reg) => {
+        navigator.serviceWorker.register(`/sw.js?v=${import.meta.env.VITE_BUILD_ID}`).then((reg) => {
             reg.addEventListener('updatefound', () => {
                 const sw = reg.installing;
                 if (!sw) return;
