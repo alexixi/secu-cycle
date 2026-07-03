@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
 from utils.security import verify_token
+from admin_emails import is_user_admin
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
@@ -32,7 +33,7 @@ def get_current_user(
 
 
 def require_admin(current_user: User = Depends(get_current_user)):
-    if not current_user.is_admin:
+    if not is_user_admin(current_user):
         raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
     return current_user
 
