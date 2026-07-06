@@ -2,6 +2,8 @@ import osmnx as ox
 import networkx as nx
 import numpy as np
 from sklearn.neighbors import BallTree
+from shapely.geometry import Point, LineString
+from shapely.ops import substring
 from graph.config import *
 from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_bordeaux_lighting_condition, calculate_infra_stats
 from graph.route_cache import route_cache
@@ -234,6 +236,171 @@ def _full_route_data(G, route_nodes, bike_type, is_electric, cyclist_level):
     }
 
 
+def _edge_geometry(G, u, v, data):
+    """Géométrie (LineString, orientée u→v) d'une arête, reconstruite depuis les
+    nœuds si le tag `geometry` est absent (arête droite)."""
+    geom = data.get('geometry')
+    if isinstance(geom, LineString):
+        return geom
+    return LineString([(G.nodes[u]['x'], G.nodes[u]['y']),
+                       (G.nodes[v]['x'], G.nodes[v]['y'])])
+
+
+def _project_to_nearest_edge(G, lat, lon, k_nodes=12):
+    """Projette (lat, lon) sur l'arête la plus proche du réseau.
+
+    Contrairement à l'accroche « nœud » (qui colle le point à l'intersection la
+    plus proche, souvent des dizaines de mètres avant/après ou sur une autre
+    rue), on projette le point sur le segment de route le plus proche. On
+    réutilise le BallTree des nœuds pour restreindre la recherche aux arêtes
+    incidentes aux nœuds voisins, ce qui évite de reconstruire un index d'arêtes
+    à chaque requête.
+    """
+    node_ids = G.graph['_node_ids']
+    tree = G.graph['_node_tree']
+    k = int(min(k_nodes, len(node_ids)))
+    _, pos = tree.query(np.deg2rad([[lat, lon]]), k=k)
+    cand_nodes = [int(node_ids[p]) for p in pos[0]]
+
+    pt = Point(lon, lat)
+    seen = set()
+    best = None
+    for n in cand_nodes:
+        if not G.has_node(n):
+            continue
+        incident = list(G.out_edges(n, keys=True)) + list(G.in_edges(n, keys=True))
+        for (u, v, k_) in incident:
+            if (u, v, k_) in seen:
+                continue
+            seen.add((u, v, k_))
+            data = G.get_edge_data(u, v, k_)
+            if data is None:
+                continue
+            geom = _edge_geometry(G, u, v, data)
+            gl = geom.length
+            if gl <= 0:
+                continue
+            d_along = min(max(geom.project(pt), 0.0), gl)
+            proj = geom.interpolate(d_along)
+            dist_m = ox.distance.great_circle(lat, lon, proj.y, proj.x)
+            if best is None or dist_m < best['dist_m']:
+                best = {
+                    'u': u, 'v': v, 'k': k_,
+                    'geom': geom, 'geom_len': gl, 'd_along': d_along,
+                    'frac': min(max(d_along / gl, 0.0), 1.0),
+                    'edge_len_m': float(data.get('length') or dist_m or 1.0),
+                    'dist_m': dist_m,
+                }
+    return best
+
+
+def _stub(G, snap, role, which):
+    """Tronçon d'accroche entre le point projeté P et un nœud d'accès (u ou v).
+
+    Renvoie {node, stub_len (m), coords}. `coords` est une liste [lat, lon, elev]
+    orientée dans le sens de parcours : P→node pour un départ, node→P pour une
+    arrivée.
+    """
+    geom, d_along, gl = snap['geom'], snap['d_along'], snap['geom_len']
+    frac, elen = snap['frac'], snap['edge_len_m']
+    if which == 'u':
+        node = snap['u']
+        seg = substring(geom, 0.0, d_along)      # u → P
+        stub_len = elen * frac
+        coords = list(seg.coords) if seg.geom_type == 'LineString' else [(seg.x, seg.y)]
+        if role == 'start':
+            coords = coords[::-1]                 # P → u
+    else:
+        node = snap['v']
+        seg = substring(geom, d_along, gl)        # P → v
+        stub_len = elen * (1.0 - frac)
+        coords = list(seg.coords) if seg.geom_type == 'LineString' else [(seg.x, seg.y)]
+        if role == 'end':
+            coords = coords[::-1]                 # v → P
+    elev = G.nodes[node].get('elevation', 0.0)
+    latlon = [[c[1], c[0], elev] for c in coords]
+    if not latlon:
+        latlon = [[G.nodes[node]['y'], G.nodes[node]['x'], elev]]
+    return {'node': node, 'stub_len': stub_len, 'coords': latlon}
+
+
+def _endpoint_candidates(G, snap, role):
+    """Les deux nœuds d'accès possibles (extrémités de l'arête projetée)."""
+    cands, seen = [], set()
+    for which in ('u', 'v'):
+        node = snap['u'] if which == 'u' else snap['v']
+        if node in seen:
+            continue
+        seen.add(node)
+        cands.append(_stub(G, snap, role, which))
+    return cands
+
+
+def _stitch_geometry(start_coords, start_c, path_coords, end_c, end_coords):
+    """Assemble la géométrie finale : pin de départ → point projeté → tronçon
+    d'accroche → trajet A* → tronçon d'accroche → point projeté → pin d'arrivée.
+    Le trajet démarre et se termine ainsi exactement aux points demandés."""
+    sc, ec = start_c['coords'], end_c['coords']
+    geom = [[start_coords[0], start_coords[1], sc[0][2]]]
+    geom.extend(sc[:-1] if len(sc) > 1 else [])   # P → (node exclu, déjà dans path)
+    geom.extend(path_coords)
+    geom.extend(ec[1:] if len(ec) > 1 else [])    # (node exclu) → P
+    geom.append([end_coords[0], end_coords[1], ec[-1][2]])
+    return geom
+
+
+def _route_with_stubs(G, route_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level):
+    """Données complètes d'un itinéraire, géométrie recousue aux vrais points de
+    départ/arrivée et distance/durée ajustées des tronçons d'accroche.
+
+    `nodes` reste la liste des vrais nœuds du graphe : maneuvers, navigation
+    (snap live) et statistiques continuent de fonctionner à l'identique."""
+    data = _full_route_data(G, route_nodes, bike_type, is_electric, cyclist_level)
+    data['path'] = _stitch_geometry(start_coords, start_c, data['path'], end_c, end_coords)
+    stub_km = (start_c['stub_len'] + end_c['stub_len']) / 1000.0
+    if stub_km > 0:
+        if data['distance'] > 0 and data['duration'] > 0:
+            speed_km_per_min = data['distance'] / data['duration']
+            if speed_km_per_min > 0:
+                data['duration'] += stub_km / speed_km_per_min
+        data['distance'] += stub_km
+    return data
+
+
+def _direct_edge_route(G, snap, start_coords, end_coords, bike_type, is_electric, cyclist_level):
+    """Cas où départ et arrivée tombent sur la même arête : on trace le segment
+    direct entre les deux points projetés, sans détour par une intersection."""
+    geom, gl, elen = snap['geom'], snap['geom_len'], snap['edge_len_m']
+    ds = min(max(geom.project(Point(start_coords[1], start_coords[0])), 0.0), gl)
+    de = min(max(geom.project(Point(end_coords[1], end_coords[0])), 0.0), gl)
+    lo, hi = (ds, de) if ds <= de else (de, ds)
+    seg = substring(geom, lo, hi)
+    coords = list(seg.coords) if seg.geom_type == 'LineString' else [(seg.x, seg.y)]
+    if ds > de:
+        coords = coords[::-1]                     # orienté départ → arrivée
+
+    u, v = snap['u'], snap['v']
+    first_node, last_node = (u, v) if ds <= de else (v, u)
+    elev_first = G.nodes[first_node].get('elevation', 0.0)
+    elev_last = G.nodes[last_node].get('elevation', 0.0)
+
+    path = [[start_coords[0], start_coords[1], elev_first]]
+    path += [[c[1], c[0], elev_first] for c in coords]
+    path.append([end_coords[0], end_coords[1], elev_last])
+
+    frac_seg = abs(de - ds) / gl if gl > 0 else 0.0
+    full_dur = calculate_exact_travel_time(G, [u, v], bike_type, is_electric, cyclist_level)
+    return {
+        "nodes": [first_node, last_node],
+        "path": path,
+        "distance": elen * frac_seg / 1000.0,
+        "duration": full_dur * frac_seg,
+        "height_difference": calculate_route_elevation(G, [first_node, last_node]),
+        "score": get_route_safety_score(G, [u, v], bike_type, is_electric),
+        "infra_stats": calculate_infra_stats(G, [u, v]),
+    }
+
+
 def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_electric=False, cyclist_level="intermediaire", max_time_min=None, iterations=6, reported_edges=None):
     if reported_edges is None: reported_edges = {}
     try:
@@ -253,18 +420,63 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
 
         if not G.graph.get('_node_index_ready'):
             precompute_nearest_node_index(G)
-        start_node, end_node = _nearest_nodes(
-            G, [start_coords[1], end_coords[1]], [start_coords[0], end_coords[0]])
+
         beta_elev = 0.0 if is_electric else ELEVATION_WEIGHT_BY_LEVEL.get(cyclist_level.lower(), 0.7)
         surface_sens = (ELECTRIC_SURFACE_SENSITIVITY if is_electric
                         else BIKE_SURFACE_SENSITIVITY.get(bike_type.lower(), DEFAULT_SURFACE_SENSITIVITY))
         footway_avoid = (ELECTRIC_FOOTWAY_AVOIDANCE if is_electric
                          else BIKE_FOOTWAY_AVOIDANCE.get(bike_type.lower(), DEFAULT_FOOTWAY_AVOIDANCE))
 
-        fast_nodes = _astar_nodes(G, start_node, end_node, 1.0, beta_elev, surface_sens, footway_avoid, reported_edges, lighting_on)
+        # Accroche sur l'ARÊTE la plus proche (et non le nœud) : le trajet part
+        # exactement du point projeté sur la route, pas d'une intersection voisine.
+        snap_s = _project_to_nearest_edge(G, start_coords[0], start_coords[1])
+        snap_e = _project_to_nearest_edge(G, end_coords[0], end_coords[1])
+        if snap_s is None or snap_e is None:
+            return {"success": False, "error": "Impossible d'accrocher le départ ou l'arrivée au réseau cyclable."}
+
+        # Départ et arrivée sur la même arête : segment direct (pas d'aller-retour
+        # jusqu'à une intersection).
+        if frozenset((snap_s['u'], snap_s['v'])) == frozenset((snap_e['u'], snap_e['v'])):
+            direct = _direct_edge_route(G, snap_s, start_coords, end_coords, bike_type, is_electric, cyclist_level)
+            res = {"success": True, "routes": [
+                {"id": "fast", "name": "Rapide", **direct},
+                {"id": "safe", "name": "Sécurisé", **direct},
+            ]}
+            route_cache.set(cache_key, res)
+            return res
+
+        start_cands = _endpoint_candidates(G, snap_s, 'start')
+        end_cands = _endpoint_candidates(G, snap_e, 'end')
+
+        def _heur(a, b):
+            return ox.distance.great_circle(G.nodes[a]['y'], G.nodes[a]['x'], G.nodes[b]['y'], G.nodes[b]['x'])
+
+        # Choix du bon point d'accès (bon côté de la rue) : on minimise le coût
+        # total « tronçon d'accroche + trajet » sur le profil rapide.
+        w_fast = _make_weight(1.0, beta_elev, surface_sens, footway_avoid, reported_edges, lighting_on)
+        best_combo = None
+        for sc in start_cands:
+            for ec in end_cands:
+                try:
+                    path = nx.astar_path(G, sc['node'], ec['node'], heuristic=_heur, weight=w_fast)
+                except nx.NetworkXNoPath:
+                    continue
+                cost = sum(w_fast(path[i], path[i + 1], G[path[i]][path[i + 1]])
+                           for i in range(len(path) - 1))
+                total = sc['stub_len'] + cost + ec['stub_len']
+                if best_combo is None or total < best_combo['total']:
+                    best_combo = {'total': total, 'sc': sc, 'ec': ec, 'fast_nodes': path}
+
+        if best_combo is None:
+            return {"success": False, "error": "Aucun itinéraire trouvé entre le départ et l'arrivée."}
+
+        start_c, end_c = best_combo['sc'], best_combo['ec']
+        start_node, end_node = start_c['node'], end_c['node']
+
+        fast_nodes = best_combo['fast_nodes']
         safe_nodes = _astar_nodes(G, start_node, end_node, 0.0, beta_elev, surface_sens, footway_avoid, reported_edges, lighting_on)
-        fast_data = _full_route_data(G, fast_nodes, bike_type, is_electric, cyclist_level)
-        safe_data = _full_route_data(G, safe_nodes, bike_type, is_electric, cyclist_level)
+        fast_data = _route_with_stubs(G, fast_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
+        safe_data = _route_with_stubs(G, safe_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
 
         res = {"success": True, "routes": [{"id": "fast", "name": "Rapide", **fast_data}, {"id": "safe", "name": "Sécurisé", **safe_data}]}
 
@@ -280,7 +492,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
                     best_nodes, a_high = mid_nodes, a_mid
                 else:
                     a_low = a_mid
-            best_data = _full_route_data(G, best_nodes, bike_type, is_electric, cyclist_level)
+            best_data = _route_with_stubs(G, best_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
             res["routes"].append({"id": "compromise", "name": "Compromis", "alpha_final": a_high, **best_data})
         route_cache.set(cache_key, res)
         return res
