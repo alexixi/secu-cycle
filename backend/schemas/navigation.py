@@ -26,6 +26,7 @@ class NavigationUpdateRequest(BaseModel):
     step_idx: int
     route_nodes: list[int]
     maneuvers: list[ManeuverOut]
+    path: Optional[list] = None
 
 
 class NavigationUpdateResponse(BaseModel):
