@@ -51,8 +51,12 @@ export const startBackgroundLocation = async () => {
 };
 
 export const stopBackgroundLocation = async () => {
-    const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK);
-    if (isRegistered) {
-        await Location.stopLocationUpdatesAsync(LOCATION_TASK);
+    try {
+        const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK);
+        if (hasStarted) {
+            await Location.stopLocationUpdatesAsync(LOCATION_TASK);
+        }
+    } catch (error) {
+        console.warn("stopBackgroundLocation:", error?.message ?? error);
     }
 };
