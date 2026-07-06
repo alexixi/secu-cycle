@@ -325,17 +325,19 @@ export async function createReport(token, reportType, description, latitude, lon
     }
 }
 
-export async function updateNavigation(lat, lon, stepIdx, routeNodes, maneuvers) {
+export async function updateNavigation(lat, lon, stepIdx, routeNodes, maneuvers, path = null) {
     try {
+        const body = {
+            lat,
+            lon,
+            step_idx: stepIdx,
+            route_nodes: routeNodes,
+            maneuvers,
+        };
+        if (path) body.path = path;
         const data = await apiFetch("/navigation/update", {
             method: "POST",
-            body: JSON.stringify({
-                lat,
-                lon,
-                step_idx: stepIdx,
-                route_nodes: routeNodes,
-                maneuvers,
-            }),
+            body: JSON.stringify(body),
         });
         return data;
     } catch (error) {

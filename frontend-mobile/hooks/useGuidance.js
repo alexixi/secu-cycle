@@ -31,6 +31,7 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
     const approachStepRef = useRef(-1);
     const imminentStepRef = useRef(-1);
     const arrivedSpokenRef = useRef(false);
+    const pathSentRef = useRef(false);
 
     useEffect(() => {
         let sub = null;
@@ -96,6 +97,7 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
         approachStepRef.current = -1;
         imminentStepRef.current = -1;
         arrivedSpokenRef.current = false;
+        pathSentRef.current = false;
         _startNavInterval(activeRoute);
         startBackgroundLocation();
         startNavigationNotification();
@@ -114,15 +116,19 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
             const pos = lastPositionRef.current;
             if (!pos) return;
 
+            const sendPath = !pathSentRef.current;
+
             const result = await updateNavigation(
                 pos.lat,
                 pos.lon,
                 stepIdxRef.current,
                 activeRoute.nodes,
                 activeRoute.maneuvers,
+                sendPath ? activeRoute.path : null,
             );
 
             if (!result) return;
+            if (sendPath) pathSentRef.current = true;
 
             if (result.current_step_idx !== undefined) {
                 stepIdxRef.current = result.current_step_idx;
