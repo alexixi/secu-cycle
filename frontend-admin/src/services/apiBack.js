@@ -131,3 +131,40 @@ export async function reorderHomeCases(token, ids) {
         body: JSON.stringify({ ids }),
     }, token);
 }
+
+// --- Administrateurs (pour l'assignation des tâches) ---
+
+export async function getAdmins(token) {
+    return apiFetch("/users/admins", { method: "GET" }, token);
+}
+
+// --- Planning (tâches d'administration) ---
+
+export async function getTasks(token) {
+    return apiFetch("/tasks/", { method: "GET" }, token);
+}
+
+export async function createTask(token, body) {
+    return apiFetch("/tasks/", {
+        method: "POST",
+        body: JSON.stringify(body),
+    }, token);
+}
+
+export async function updateTask(token, taskId, updates) {
+    return apiFetch(`/tasks/${taskId}`, {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}
+
+export async function deleteTask(token, taskId) {
+    return apiFetch(`/tasks/${taskId}`, { method: "DELETE" }, token);
+}
+
+export async function reorderTasks(token, items) {
+    return apiFetch("/tasks/reorder", {
+        method: "PUT",
+        body: JSON.stringify({ items }),
+    }, token);
+}
