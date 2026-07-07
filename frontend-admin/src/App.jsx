@@ -4,6 +4,7 @@ import AdminLayout from "./components/layout/AdminLayout";
 import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
 import CasesPage from "./pages/CasesPage";
+import PlanningPage from "./pages/PlanningPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
       >
         <Route path="/" element={<UsersPage />} />
         <Route path="/cases" element={<CasesPage />} />
+        <Route path="/planning" element={<PlanningPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

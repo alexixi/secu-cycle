@@ -1,0 +1,250 @@
+.planning-manager {
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+/* Actions d'en-tête (réutilise le style des cases). */
+.cases-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cases-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cases-add:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/* --- Filtres --- */
+.planning-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.planning-filter-tab {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.planning-filter-tab:hover {
+  background: var(--bg-surface-hover);
+}
+
+.planning-filter-tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.planning-filter-select {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.planning-filter-select.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* --- Board --- */
+.planning-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.planning-column {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 0.75rem;
+  min-height: 200px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.planning-column.drag-over {
+  border-color: var(--primary);
+  background: var(--primary-transparent);
+}
+
+.planning-column-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.35rem 0.75rem;
+}
+
+.planning-column-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.planning-column-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.planning-column-dot.dot-a_faire {
+  background: var(--text-secondary);
+}
+
+.planning-column-dot.dot-en_cours {
+  background: var(--primary);
+}
+
+.planning-column-dot.dot-fait {
+  background: var(--green-color);
+}
+
+.planning-column-count {
+  margin-left: auto;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.planning-column-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 60px;
+}
+
+.planning-column-empty {
+  margin: 0;
+  padding: 1.25rem 0.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+/* --- Carte tâche --- */
+.planning-card {
+  background: var(--bg-main);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 0.7rem 0.75rem;
+  cursor: grab;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.planning-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.planning-card.dragging {
+  opacity: 0.5;
+  border-style: dashed;
+  border-color: var(--primary);
+}
+
+.planning-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.planning-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.planning-card-actions {
+  display: flex;
+  gap: 0.1rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.planning-card:hover .planning-card-actions {
+  opacity: 1;
+}
+
+.planning-card-desc {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+.planning-card-footer {
+  margin-top: 0.6rem;
+}
+
+.planning-assignee {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: var(--primary-transparent);
+  color: var(--primary-hover);
+  font-size: 0.75rem;
+}
+
+.planning-assignee.unassigned {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 900px) {
+  .planning-board {
+    grid-template-columns: 1fr;
+  }
+
+  /* Toujours réactif : les actions restent visibles au toucher. */
+  .planning-card-actions {
+    opacity: 1;
+  }
+}

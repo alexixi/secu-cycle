@@ -1,0 +1,32 @@
+.task-detail-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.task-detail-row .case-detail-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.case-detail-field select {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-size: 0.92rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.case-detail-field select:focus {
+  border-color: var(--primary);
+}
+
+@media (max-width: 520px) {
+  .task-detail-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
