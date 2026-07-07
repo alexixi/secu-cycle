@@ -17,6 +17,7 @@ class UserCreate(UserBase):
 class UserRead(UserBase):
     id: int
     is_admin: bool
+    is_verified: bool
     created_at: datetime
 
     class Config:
@@ -49,3 +50,10 @@ class PasswordChange(BaseModel):
 
 class TokenRefresh(BaseModel):
     refresh_token: str
+
+class EmailVerifyRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
