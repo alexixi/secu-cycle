@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { LuUsers, LuChartBar, LuLogOut, LuMenu, LuShieldCheck } from "react-icons/lu";
+import { LuUsers, LuChartBar, LuLogOut, LuMenu, LuShieldCheck, LuLayoutGrid, LuKanban } from "react-icons/lu";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import ThemeToggle from "../ui/ThemeToggle";
@@ -8,6 +8,8 @@ import "./AdminLayout.css";
 
 const NAV = [
     { to: "/", label: "Utilisateurs", icon: LuUsers, end: true },
+    { to: "/planning", label: "Planning", icon: LuKanban },
+    { to: "/cases", label: "Page d'accueil", icon: LuLayoutGrid },
     { to: "/stats", label: "Statistiques", icon: LuChartBar, disabled: true },
 ];
 

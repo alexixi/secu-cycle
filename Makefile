@@ -32,9 +32,15 @@ mobile:
 mobile-install:
 	$(MAKE) -C frontend-mobile install
 
+admin:
+	$(MAKE) -C frontend-admin dev
+
+admin-install:
+	$(MAKE) -C frontend-admin install
+
 appli: api-background mobile
 
-install: web-install mobile-install
+install: web-install mobile-install admin-install
 
 logs:
 	$(COMPOSE) logs -f api

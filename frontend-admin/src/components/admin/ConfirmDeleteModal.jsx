@@ -4,7 +4,15 @@ import Button from "../ui/Button";
 import "../ui/PopUp.css";
 import "./ConfirmDeleteModal.css";
 
-export default function ConfirmDeleteModal({ user, onCancel, onConfirm }) {
+export default function ConfirmDeleteModal({
+  user,
+  title,
+  message,
+  confirmLabel = "Supprimer définitivement",
+  busyLabel = "Suppression…",
+  onCancel,
+  onConfirm,
+}) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -28,8 +36,9 @@ export default function ConfirmDeleteModal({ user, onCancel, onConfirm }) {
     }
   };
 
-  const label =
-    [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email;
+  const label = user
+    ? [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email
+    : null;
 
   return (
     <div
@@ -40,17 +49,21 @@ export default function ConfirmDeleteModal({ user, onCancel, onConfirm }) {
         <div className="confirm-delete-icon">
           <LuTriangleAlert size={28} />
         </div>
-        <h2>Supprimer cet utilisateur ?</h2>
-        <p>
-          Le compte de <strong>{label}</strong> ({user.email}) sera définitivement supprimé.
-          Cette action est irréversible.
-        </p>
+        <h2>{title || "Supprimer cet utilisateur ?"}</h2>
+        {message ? (
+          <p>{message}</p>
+        ) : (
+          <p>
+            Le compte de <strong>{label}</strong> ({user.email}) sera définitivement supprimé.
+            Cette action est irréversible.
+          </p>
+        )}
         <div className="modal-actions">
           <Button type="button" onClick={onCancel} disabled={busy}>
             Annuler
           </Button>
           <Button type="button" className="danger-button" onClick={handleConfirm} disabled={busy}>
-            {busy ? "Suppression…" : "Supprimer définitivement"}
+            {busy ? busyLabel : confirmLabel}
           </Button>
         </div>
       </div>

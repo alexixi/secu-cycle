@@ -146,6 +146,16 @@ def list_users(
     return [_with_effective_admin(db, u) for u in users]
 
 
+@router.get("/admins", response_model=list[UserRead])
+def list_admins(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Liste des administrateurs effectifs (utilisée pour assigner les tâches)."""
+    users = db.query(User).order_by(User.first_name, User.last_name, User.email).all()
+    return [_with_effective_admin(db, u) for u in users if is_user_admin(u)]
+
+
 @router.get("/{user_id}", response_model=UserRead)
 def get_user(
     user_id: int,

@@ -22,6 +22,7 @@ def update_navigation(req: NavigationUpdateRequest, request: Request):
         maneuvers_as_dicts,
         req.step_idx,
         G,
+        req.path,
     )
 
     if result["status"] == "on_route":
