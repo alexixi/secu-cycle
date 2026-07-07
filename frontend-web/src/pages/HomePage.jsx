@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Meta from "../components/Meta";
 import Header from "../components/layout/Header"
 import './HomePage.css';
@@ -8,9 +8,49 @@ import Logo from "../assets/logo.svg?react";
 import apercuApplication from "../assets/screenshots/mobile/apercu_itineraire-left.png";
 import { IoIosArrowDropdown } from "react-icons/io";
 import { FaLinkedin } from "react-icons/fa";
+import { getHomeCases } from "../services/apiBack";
+
+// Contenu par défaut des cases : sert d'état initial (préserve le rendu
+// prérendu par react-snap et fournit un repli si l'API est indisponible).
+// Texte en clair : les liens et emphases d'origine sont aplatis.
+const DEFAULT_CASES = [
+    {
+        title: "Qu'est-ce que Sécu'Cycle ?",
+        text: "Sécu'Cycle est un projet développé par 6 étudiants de l'ENSEIRB-MATMECA dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous nous sommes focalisés sur la zone de Bordeaux et de notre campus universitaire pour affiner les résultats avec nos connaissances locales du terrain.",
+    },
+    {
+        title: "Problématiques",
+        text: "Dans les nombreux freins à l'utilisation du vélo, la sécurité est un facteur déterminant. Les cyclistes sont souvent confrontés à des routes dangereuses ou à un manque d'infrastructures adaptées. Sécu'Cycle répond à ces problématiques en proposant des itinéraires optimisés pour la sécurité, en tenant compte des préférences et du profil de chaque utilisateur.",
+    },
+    {
+        title: "Pourquoi Sécu'Cycle ?",
+        text: "Sécu'Cycle a pour but de palier ces problèmes. Il s'inscrit dans une démarche de promotion des mobilités douces et de la sécurité des cyclistes. En fournissant des itinéraires adaptés, Sécu'Cycle vise à encourager davantage de personnes à adopter le vélo comme moyen de transport quotidien à la place de la voiture ou des transports en commun.",
+    },
+    {
+        title: "Sources des données",
+        text: "Sécu'Cycle combine différentes sources de données, principalement les données d'OpenStreetMap (openstreetmap.fr) pour la carte des routes et pistes cyclables. Nous ajoutons à cette carte des données topographiques de l'IGN (ign.fr). Pour la complétion des adresses nous utilisons la BAN (Base Adresse Nationale, adresse.data.gouv.fr). Pour avoir des données de trafic de la circulation routière nous utilisons les données du projet Avatar du Cerema (avatar.cerema.fr). Enfin pour l'affichage de la carte, nous utilisons MapTiler (maptiler.com) qui propose des tuiles cartographiques basées sur les données d'OpenStreetMap.",
+    },
+];
 
 export default function HomePage() {
     const faqRef = useRef(null);
+    const [cases, setCases] = useState(DEFAULT_CASES);
+
+    useEffect(() => {
+        let active = true;
+        getHomeCases()
+            .then((data) => {
+                if (active && Array.isArray(data) && data.length > 0) {
+                    setCases(data);
+                }
+            })
+            .catch(() => {
+                // On garde le contenu par défaut en cas d'erreur.
+            });
+        return () => {
+            active = false;
+        };
+    }, []);
 
     const teamMembers = [
         {
@@ -61,30 +101,12 @@ export default function HomePage() {
             </div>
             <div id="home-faq-section" ref={faqRef}>
                 <FaqRoute sectionRef={faqRef} />
-                <section className="home-section">
-                    <h2>Qu'est-ce que Sécu'Cycle ?</h2>
-                    <p>
-                        <em>Sécu'Cycle</em> est un projet développé par 6 étudiants de <em>l'ENSEIRB-MATMECA</em> dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous nous sommes focalisés sur la zone de Bordeaux et de notre campus universitaire pour affiner les résultats avec nos connaissances locales du terrain.
-                    </p>
-                </section>
-                <section className="home-section">
-                    <h2>Problématiques</h2>
-                    <p>
-                        Dans les nombreux freins à l'utilisation du vélo, la sécurité est un facteur déterminant. Les cyclistes sont souvent confrontés à des routes dangereuses ou à un manque d'infrastructures adaptées. Sécu'Cycle répond à ces problématiques en proposant des itinéraires optimisés pour la sécurité, en tenant compte des préférences et du profil de chaque utilisateur.
-                    </p>
-                </section>
-                <section className="home-section">
-                    <h2>Pourquoi Sécu'Cycle ?</h2>
-                    <p>
-                        Sécu'Cycle a pour but de palier ces problèmes. Il s'inscrit dans une démarche de promotion des <em>mobilités douces</em> et de la sécurité des cyclistes. En fournissant des itinéraires adaptés, Sécu'Cycle vise à encourager davantage de personnes à adopter le vélo comme moyen de transport quotidien à la place de la voiture ou des transports en commun.
-                    </p>
-                </section>
-                <section className="home-section">
-                    <h2>Sources des données</h2>
-                    <p>
-                        <em>Sécu'Cycle</em> combine différentes sources de données, principalement les données d'<a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener noreferrer"><em>OpenStreetMap</em></a> pour la carte des routes et pistes cyclables. Nous ajoutons à cette carte des données topographiques de l'<a href="https://www.ign.fr/" target="_blank" rel="noopener noreferrer">IGN</a>. Pour la complétion des adresses nous utilisons la <a href="https://adresse.data.gouv.fr/" target="_blank" rel="noopener noreferrer">BAN</a> (Base Adresse Nationale). Pour avoir des données de trafic de la circulation routière nous utilisons les données du projet <a href="https://avatar.cerema.fr/" target="_blank" rel="noopener noreferrer"><em>Avatar</em></a> du Cerema. Enfin pour l'affichage de la carte, nous utilisons <a href="https://www.maptiler.com/" target="_blank" rel="noopener noreferrer"><em>MapTiler</em></a> qui propose des tuiles cartographiques basées sur les données d'OpenStreetMap.
-                    </p>
-                </section>
+                {cases.map((c) => (
+                    <section className="home-section" key={c.id ?? c.title}>
+                        <h2>{c.title}</h2>
+                        <p>{c.text}</p>
+                    </section>
+                ))}
             </div>
             <div id="app-section">
                 <img className="app-visual" src={apercuApplication} alt="Aperçu de l'application mobile" />

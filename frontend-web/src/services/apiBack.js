@@ -333,3 +333,12 @@ export async function getTraffic() {
         throw error;
     }
 }
+
+export async function getHomeCases() {
+    try {
+        const data = await apiFetch("/home-cases/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}

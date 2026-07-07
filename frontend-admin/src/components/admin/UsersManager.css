@@ -1,5 +1,6 @@
 .users-manager {
   max-width: 1100px;
+  margin-inline: auto;
 }
 
 .users-manager-head {
