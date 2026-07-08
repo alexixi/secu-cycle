@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import { LuTrash2 } from "react-icons/lu";
 import Button from "../ui/Button";
-import { STATUS_OPTIONS, adminLabel } from "./planningConstants";
+import { STATUS_OPTIONS, adminLabel, readableTextColor } from "./planningConstants";
 import "../ui/PopUp.css";
 import "./CaseDetailModal.css";
 import "./TaskDetailModal.css";
 
-export default function TaskDetailModal({ item, admins, onClose, onSave, onDelete }) {
+export default function TaskDetailModal({ item, admins, tags = [], onClose, onSave, onDelete }) {
   const isNew = !item?.id;
   const [form, setForm] = useState(() => ({
     title: item?.title || "",
     description: item?.description || "",
     status: item?.status || "a_faire",
     assignee_id: item?.assignee_id ?? "",
+    tag_ids: item?.tags?.map((t) => t.id) || [],
   }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -26,6 +27,14 @@ export default function TaskDetailModal({ item, admins, onClose, onSave, onDelet
   }, []);
 
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const toggleTag = (tagId) =>
+    setForm((prev) => ({
+      ...prev,
+      tag_ids: prev.tag_ids.includes(tagId)
+        ? prev.tag_ids.filter((id) => id !== tagId)
+        : [...prev.tag_ids, tagId],
+    }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,6 +50,7 @@ export default function TaskDetailModal({ item, admins, onClose, onSave, onDelet
         description: form.description,
         status: form.status,
         assignee_id: form.assignee_id === "" ? null : Number(form.assignee_id),
+        tag_ids: form.tag_ids,
       });
       onClose();
     } catch (err) {
@@ -106,6 +116,39 @@ export default function TaskDetailModal({ item, admins, onClose, onSave, onDelet
                 ))}
               </select>
             </label>
+          </div>
+
+          <div className="case-detail-field">
+            <span>Étiquettes</span>
+            {tags.length === 0 ? (
+              <p className="task-tags-empty">
+                Aucune étiquette. Créez-en depuis « Gérer les étiquettes ».
+              </p>
+            ) : (
+              <div className="task-tags-picker">
+                {tags.map((tag) => {
+                  const selected = form.tag_ids.includes(tag.id);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      className={`task-tag-chip ${selected ? "selected" : ""}`}
+                      style={
+                        selected
+                          ? { backgroundColor: tag.color, color: readableTextColor(tag.color), borderColor: tag.color }
+                          : { borderColor: tag.color, color: "var(--text-main)" }
+                      }
+                      onClick={() => toggleTag(tag.id)}
+                    >
+                      {!selected && (
+                        <span className="task-tag-dot" style={{ backgroundColor: tag.color }} />
+                      )}
+                      {tag.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {error && <div className="users-alert">{error}</div>}

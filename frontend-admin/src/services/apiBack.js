@@ -168,3 +168,27 @@ export async function reorderTasks(token, items) {
         body: JSON.stringify({ items }),
     }, token);
 }
+
+// --- Étiquettes (thèmes des tâches) ---
+
+export async function getTags(token) {
+    return apiFetch("/tags/", { method: "GET" }, token);
+}
+
+export async function createTag(token, body) {
+    return apiFetch("/tags/", {
+        method: "POST",
+        body: JSON.stringify(body),
+    }, token);
+}
+
+export async function updateTag(token, tagId, updates) {
+    return apiFetch(`/tags/${tagId}`, {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}
+
+export async function deleteTag(token, tagId) {
+    return apiFetch(`/tags/${tagId}`, { method: "DELETE" }, token);
+}

@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
+from models.tag import task_tags
 
 
 # Statuts (colonnes du planning). Doit rester synchronisé avec le frontend.
@@ -25,3 +26,4 @@ class Task(Base):
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
     assignee = relationship("User", foreign_keys=[assignee_id], lazy="joined")
+    tags = relationship("Tag", secondary=task_tags, lazy="joined")
