@@ -63,6 +63,7 @@ def create_task(
         title=data.title,
         description=data.description,
         status=data.status,
+        priority=data.priority,
         assignee_id=data.assignee_id,
         created_by_id=admin.id,
         position=position,

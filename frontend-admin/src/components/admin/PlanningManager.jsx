@@ -16,7 +16,7 @@ import {
 import TaskDetailModal from "./TaskDetailModal";
 import TagsManagerModal from "./TagsManagerModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import { STATUS_OPTIONS, adminLabel, readableTextColor } from "./planningConstants";
+import { STATUS_OPTIONS, PRIORITY_MAP, adminLabel, readableTextColor } from "./planningConstants";
 import "../admin/UsersManager.css";
 import "./PlanningManager.css";
 
@@ -456,6 +456,17 @@ export default function PlanningManager() {
                             <span className="planning-assignee unassigned">
                               <LuUserX size={13} />
                               Non assignée
+                            </span>
+                          )}
+                          {PRIORITY_MAP[task.priority] && (
+                            <span
+                              className="planning-priority-badge"
+                              style={{
+                                backgroundColor: PRIORITY_MAP[task.priority].color,
+                                color: readableTextColor(PRIORITY_MAP[task.priority].color),
+                              }}
+                            >
+                              {PRIORITY_MAP[task.priority].label}
                             </span>
                           )}
                         </div>

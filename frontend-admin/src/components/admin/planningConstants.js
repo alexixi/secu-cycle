@@ -11,6 +11,19 @@ export const STATUS_LABELS = STATUS_OPTIONS.reduce((acc, s) => {
   return acc;
 }, {});
 
+// Niveaux de priorité (facultatif). Les clés `key` doivent rester synchronisées
+// avec le backend (models/task.py TASK_PRIORITIES).
+export const PRIORITY_OPTIONS = [
+  { key: "urgent", label: "Urgent", color: "#EF4444" }, // rouge
+  { key: "moyenne", label: "Urgence moyenne", color: "#F59E0B" }, // ambre
+  { key: "peu_urgent", label: "Peu urgent", color: "#10B981" }, // vert
+];
+
+export const PRIORITY_MAP = PRIORITY_OPTIONS.reduce((acc, p) => {
+  acc[p.key] = p;
+  return acc;
+}, {});
+
 // Libellé lisible d'un admin (nom complet, sinon e-mail).
 export function adminLabel(admin) {
   if (!admin) return "—";

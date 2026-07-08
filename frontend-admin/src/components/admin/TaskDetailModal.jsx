@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { LuTrash2 } from "react-icons/lu";
 import Button from "../ui/Button";
-import { STATUS_OPTIONS, adminLabel, readableTextColor } from "./planningConstants";
+import { STATUS_OPTIONS, PRIORITY_OPTIONS, adminLabel, readableTextColor } from "./planningConstants";
 import "../ui/PopUp.css";
 import "./CaseDetailModal.css";
 import "./TaskDetailModal.css";
@@ -12,6 +12,7 @@ export default function TaskDetailModal({ item, admins, tags = [], onClose, onSa
     title: item?.title || "",
     description: item?.description || "",
     status: item?.status || "a_faire",
+    priority: item?.priority || "",
     assignee_id: item?.assignee_id ?? "",
     tag_ids: item?.tags?.map((t) => t.id) || [],
   }));
@@ -49,6 +50,7 @@ export default function TaskDetailModal({ item, admins, tags = [], onClose, onSa
         title: form.title.trim(),
         description: form.description,
         status: form.status,
+        priority: form.priority === "" ? null : form.priority,
         assignee_id: form.assignee_id === "" ? null : Number(form.assignee_id),
         tag_ids: form.tag_ids,
       });
@@ -97,6 +99,18 @@ export default function TaskDetailModal({ item, admins, tags = [], onClose, onSa
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s.key} value={s.key}>
                     {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="case-detail-field">
+              <span>Priorité</span>
+              <select value={form.priority} onChange={(e) => setField("priority", e.target.value)}>
+                <option value="">Non renseignée</option>
+                {PRIORITY_OPTIONS.map((p) => (
+                  <option key={p.key} value={p.key}>
+                    {p.label}
                   </option>
                 ))}
               </select>

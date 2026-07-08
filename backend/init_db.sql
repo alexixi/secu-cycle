@@ -107,6 +107,7 @@ CREATE TABLE tasks (
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     status VARCHAR(20) NOT NULL DEFAULT 'a_faire', -- a_faire / en_cours / fait
+    priority VARCHAR(20), -- NULL / urgent / moyenne / peu_urgent
     position INTEGER NOT NULL DEFAULT 0,
     assignee_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     created_by_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
