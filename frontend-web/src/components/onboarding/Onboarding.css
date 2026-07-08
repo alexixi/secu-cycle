@@ -1,0 +1,235 @@
+.onboarding-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 1rem;
+}
+
+.onboarding-back {
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.onboarding-back:hover {
+    background-color: var(--bg-surface-hover);
+}
+
+.onboarding-progress {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+}
+
+.onboarding-progress-segment {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--border-light);
+    transition: background-color 0.3s ease;
+}
+
+.onboarding-progress-segment.filled {
+    background-color: var(--primary);
+}
+
+.onboarding-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.onboarding-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-top: -0.5rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.4;
+}
+
+.onboarding-form .input-group {
+    width: 100%;
+    align-items: stretch;
+}
+
+.onboarding-form .input,
+.onboarding-form .password-container {
+    width: 100%;
+}
+
+.onboarding-form .button.active {
+    width: 100%;
+}
+
+.onboarding-code-input {
+    text-align: center;
+    font-size: 1.8rem;
+    letter-spacing: 0.6rem;
+    font-weight: bold;
+}
+
+.onboarding-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.onboarding-footer .button {
+    width: 100%;
+}
+
+.onboarding-skip {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 6px;
+}
+
+.onboarding-skip:hover:not(:disabled) {
+    color: var(--text-main);
+    text-decoration: underline;
+}
+
+.onboarding-skip:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.onboarding-verify-links {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 1rem;
+    gap: 1rem;
+}
+
+.onboarding-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+}
+
+.onboarding-link:hover:not(:disabled) {
+    text-decoration: underline;
+}
+
+.onboarding-link.secondary {
+    color: var(--text-secondary);
+}
+
+.onboarding-link:disabled {
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+.onboarding-resend-message {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: 1rem;
+}
+
+.onboarding-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.onboarding-option {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 1rem;
+    border: 2px solid var(--border-strong);
+    border-radius: 10px;
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.onboarding-option:hover {
+    border-color: var(--primary);
+}
+
+.onboarding-option.selected {
+    border-color: var(--primary);
+    background-color: var(--primary-transparent);
+}
+
+.onboarding-option-label {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.onboarding-option-description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.onboarding-bike-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.onboarding-bike-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    background-color: var(--bg-surface);
+}
+
+.onboarding-bike-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.onboarding-bike-name {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.onboarding-bike-type {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.onboarding-bike-check {
+    color: var(--primary);
+}
+
+.form-group-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
