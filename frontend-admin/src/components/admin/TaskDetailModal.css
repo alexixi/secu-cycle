@@ -1,11 +1,12 @@
 .task-detail-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
 .task-detail-row .case-detail-field {
   flex: 1;
-  min-width: 0;
+  min-width: 140px;
 }
 
 .case-detail-field select {
