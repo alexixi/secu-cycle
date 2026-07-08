@@ -114,6 +114,21 @@ CREATE TABLE tasks (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- TAGS (étiquettes de thème applicables aux tâches du planning)
+CREATE TABLE tags (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    color VARCHAR(7) NOT NULL, -- #RRGGBB
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Association many-to-many entre tâches et étiquettes
+CREATE TABLE task_tags (
+    task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
+    tag_id INTEGER REFERENCES tags(id) ON DELETE CASCADE,
+    PRIMARY KEY (task_id, tag_id)
+);
+
 INSERT INTO home_cases (title, text, position) VALUES
 ('Qu''est-ce que Sécu''Cycle ?', 'Sécu''Cycle est un projet développé par 6 étudiants de l''ENSEIRB-MATMECA dans le cadre d''un PFA. L''objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous nous sommes focalisés sur la zone de Bordeaux et de notre campus universitaire pour affiner les résultats avec nos connaissances locales du terrain.', 0),
 ('Problématiques', 'Dans les nombreux freins à l''utilisation du vélo, la sécurité est un facteur déterminant. Les cyclistes sont souvent confrontés à des routes dangereuses ou à un manque d''infrastructures adaptées. Sécu''Cycle répond à ces problématiques en proposant des itinéraires optimisés pour la sécurité, en tenant compte des préférences et du profil de chaque utilisateur.', 1),

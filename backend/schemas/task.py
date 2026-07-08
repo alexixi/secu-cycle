@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from models.task import TASK_STATUSES
+from schemas.tag import TagRead
 
 
 class AdminBrief(BaseModel):
@@ -28,6 +29,7 @@ class TaskCreate(BaseModel):
     description: str = ""
     status: str = "a_faire"
     assignee_id: Optional[int] = None
+    tag_ids: Optional[list[int]] = None
 
     @field_validator("status")
     @classmethod
@@ -41,6 +43,8 @@ class TaskUpdate(BaseModel):
     status: Optional[str] = None
     assignee_id: Optional[int] = None
     position: Optional[int] = None
+    # None = ne pas toucher aux étiquettes ; [] = retirer toutes les étiquettes.
+    tag_ids: Optional[list[int]] = None
 
     @field_validator("status")
     @classmethod
@@ -56,6 +60,7 @@ class TaskRead(BaseModel):
     position: int
     assignee_id: Optional[int] = None
     assignee: Optional[AdminBrief] = None
+    tags: list[TagRead] = []
     created_by_id: Optional[int] = None
     created_at: datetime
     updated_at: Optional[datetime] = None

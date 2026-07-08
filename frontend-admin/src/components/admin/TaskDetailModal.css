@@ -24,6 +24,44 @@
   border-color: var(--primary);
 }
 
+/* --- Sélecteur d'étiquettes --- */
+.task-tags-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.task-tags-empty {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.task-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg-main);
+  font-family: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.task-tag-chip:hover {
+  opacity: 0.85;
+}
+
+.task-tag-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 @media (max-width: 520px) {
   .task-detail-row {
     flex-direction: column;
