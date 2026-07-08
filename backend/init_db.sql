@@ -11,6 +11,17 @@ CREATE TABLE users (
     home_address TEXT,
     work_address TEXT,
     is_admin BOOLEAN DEFAULT FALSE,
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE email_verifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    code_hash TEXT NOT NULL,
+    purpose VARCHAR(50) NOT NULL DEFAULT 'email_verification',
+    expires_at TIMESTAMP NOT NULL,
+    consumed_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -41,7 +52,7 @@ CREATE TABLE routes (
 );
 
 
--- BADGES 
+-- BADGES
 CREATE TABLE badges (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,

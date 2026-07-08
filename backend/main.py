@@ -10,6 +10,7 @@ from routers import navigation
 from routers import traffic
 from routers import home_case
 from routers import task
+from models import email_verification  # noqa: F401 (enregistre la table pour create_all)
 from seed_home_cases import seed_home_cases
 from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic, load_graph_profile
 from graph.route_cache import route_cache

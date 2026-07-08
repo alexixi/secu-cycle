@@ -1,18 +1,42 @@
+import logging
+
 from sqlalchemy.exc import IntegrityError
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
-from schemas.user import UserCreate, UserRead, UserLogin, UserUpdate, UserAdminUpdate, PasswordChange, TokenRefresh
+from schemas.user import (
+    UserCreate, UserRead, UserLogin, UserUpdate, UserAdminUpdate, PasswordChange,
+    TokenRefresh, EmailVerifyRequest, ResendVerificationRequest,
+)
 from fastapi import HTTPException
 from utils.security import verify_password, hash_password, create_access_token, create_refresh_token, verify_token
+from utils.verification import issue_code, verify_code
 from dependencies import get_current_user, require_admin
 from admin_emails import is_user_admin
 from fastapi.security import OAuth2PasswordRequestForm
 from limiter import limiter
+import mailer
+from mailer.templates import verification_email
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+
+def _send_verification_code(db: Session, user: User) -> None:
+    """Émet un code de vérification et l'envoie par e-mail.
+
+    Les erreurs d'envoi sont loguées mais n'interrompent pas l'appelant :
+    l'utilisateur pourra toujours demander un renvoi via /users/resend-verification.
+    """
+    try:
+        code = issue_code(db, user)
+        subject, html, text = verification_email(code)
+        mailer.send_email(user.email, subject, html, text)
+    except Exception:
+        logger.exception("Échec de l'envoi du code de vérification à %s", user.email)
 
 
 def _with_effective_admin(db: Session, user: User) -> User:
@@ -49,6 +73,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
             status_code=409,
             detail="Cette adresse e-mail est déjà associée à un compte."
         )
+    _send_verification_code(db, db_user)
     return db_user
 
 @router.post("/login")
@@ -65,6 +90,12 @@ def login(
 
     if not verify_password(form_data.password, db_user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if not db_user.is_verified:
+        raise HTTPException(
+            status_code=403,
+            detail="Compte non vérifié. Vérifiez votre e-mail.",
+        )
 
     access_token = create_access_token(data={"sub": str(db_user.id)})
     refresh_token = create_refresh_token(data={"sub": str(db_user.id)})
@@ -97,6 +128,26 @@ def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
         "token_type": "bearer"
     }
 
+
+@router.post("/verify")
+@limiter.limit("5/minute")
+def verify_email(request: Request, data: EmailVerifyRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == data.email).first()
+    if user is None or not verify_code(db, user, data.code):
+        raise HTTPException(status_code=400, detail="Code invalide ou expiré.")
+    return {"detail": "Compte vérifié."}
+
+
+@router.post("/resend-verification")
+@limiter.limit("3/hour")
+def resend_verification(
+    request: Request, data: ResendVerificationRequest, db: Session = Depends(get_db)
+):
+    # Réponse générique dans tous les cas pour ne pas divulguer l'existence d'un compte.
+    user = db.query(User).filter(User.email == data.email).first()
+    if user is not None and not user.is_verified:
+        _send_verification_code(db, user)
+    return {"detail": "Si un compte non vérifié existe pour cet e-mail, un code a été envoyé."}
 
 
 @router.get("/me", response_model=UserRead)
