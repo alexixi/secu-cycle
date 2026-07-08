@@ -64,6 +64,17 @@
   border-color: var(--primary);
 }
 
+.user-detail-value {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 0.92rem;
+  min-height: 1.2em;
+}
+
 .user-detail-toggle {
   display: flex;
   align-items: center;
