@@ -1,117 +1,378 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { useState } from "react";
-import {
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
-} from "react-native";
+import * as Haptics from "expo-haptics";
 
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { Button, OutlineButton } from "../components/ui/Button";
-import EmailInput from "../components/ui/EmailInput";
-import PasswordInput from "../components/ui/PasswordInput";
+import OnboardingProgress from "../components/onboarding/OnboardingProgress";
+import StepCredentials, { MIN_PASSWORD_LENGTH } from "../components/onboarding/StepCredentials";
+import StepVerifyEmail from "../components/onboarding/StepVerifyEmail";
+import StepName from "../components/onboarding/StepName";
+import StepBirthDate from "../components/onboarding/StepBirthDate";
+import StepSportLevel from "../components/onboarding/StepSportLevel";
+import StepAddresses from "../components/onboarding/StepAddresses";
+import StepBikes from "../components/onboarding/StepBikes";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
-import { login as apiLogin, getUserProfile, register } from "../services/apiBack";
+import {
+    addBike,
+    changeAddress,
+    changeProfileInfo,
+    getUserBikes,
+    getUserHistoric,
+    getUserProfile,
+    login as apiLogin,
+    register,
+    resendVerification,
+    verifyEmail,
+} from "../services/apiBack";
 import { trackEvent } from "../services/analytics";
-import * as Haptics from 'expo-haptics';
 
-const MIN_PASSWORD_LENGTH = 10;
+const TOTAL_STEPS = 7;
 
-export default function RegisterScreen() {
+export default function OnboardingScreen() {
+    const router = useRouter();
+    const { colors } = useTheme();
+    const { loginAuth, updateUser, updateBikes, updateHistoric } = useAuth();
+
+    const params = useLocalSearchParams();
+    const startAtVerify = params?.verify === "1";
+    const initialEmail = typeof params?.email === "string" ? params.email : "";
+    const initialPassword = typeof params?.password === "string" ? params.password : "";
+
+    const [step, setStep] = useState(startAtVerify ? 1 : 0);
+
+    const [email, setEmail] = useState(initialEmail);
+    const [password, setPassword] = useState(initialPassword);
+    const [password2, setPassword2] = useState(initialPassword);
+    const [emailSyntaxError, setEmailSyntaxError] = useState(false);
+    const [passwordMismatch, setPasswordMismatch] = useState(false);
+    const [generalError, setGeneralError] = useState(null);
+    const [registeredEmail, setRegisteredEmail] = useState(startAtVerify ? initialEmail : null);
+
+    const [code, setCode] = useState("");
+    const [verifyError, setVerifyError] = useState(null);
+    const [isResending, setIsResending] = useState(false);
+    const [resendMessage, setResendMessage] = useState(null);
+    const [resendCooldown, setResendCooldown] = useState(0);
+
+    const [accessToken, setAccessToken] = useState(null);
+
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
-    const [birthDate, setBirthDate] = useState(new Date());
-    const [birthDateText, setBirthDateText] = useState("");
-    const [showDatePicker, setShowDatePicker] = useState(false); const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [password2, setPassword2] = useState("");
+    const [birthDate, setBirthDate] = useState(new Date(2000, 0, 1));
+    const [birthDateHasValue, setBirthDateHasValue] = useState(false);
+    const [level, setLevel] = useState("");
+    const [home, setHome] = useState("");
+    const [work, setWork] = useState("");
+    const [addedBikes, setAddedBikes] = useState([]);
 
-    const [hasPasswordError, setHasPasswordError] = useState(false);
-    const [emailSyntaxError, setEmailSyntaxError] = useState(false);
-    const [generalError, setGeneralError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const router = useRouter();
-    const { loginAuth, updateUser } = useAuth();
-    const { colors, typography } = useTheme();
+    const errorHaptic = () =>
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
 
-    const passwordTooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
-    const isValidated = email && password && password2 && !hasPasswordError && !emailSyntaxError && password.length >= MIN_PASSWORD_LENGTH;
+    const goNext = () => setStep((s) => s + 1);
 
-    const handleSubmit = async () => {
-        if (password.length < MIN_PASSWORD_LENGTH) {
-            setHasPasswordError(true);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
+    const handleBack = () => {
+        if (step === 0) {
+            router.back();
+            return;
+        }
+        if (step === 1) {
+            setStep(0);
+            return;
+        }
+        setStep((s) => Math.max(2, s - 1));
+    };
+
+    const loadExistingSession = async (res) => {
+        await loginAuth(res.access_token, res.refresh_token);
+        trackEvent("logged_in");
+
+        const profile = await getUserProfile(res.access_token);
+        await updateUser(profile);
+
+        const [bikesRes, historicRes] = await Promise.all([
+            getUserBikes(res.access_token),
+            getUserHistoric(res.access_token),
+        ]);
+        await updateBikes(bikesRes);
+        await updateHistoric(historicRes);
+
+        router.replace("/(tabs)/profile");
+    };
+
+    const handleRegister = async () => {
+        if (registeredEmail && registeredEmail === email) {
+            setGeneralError(null);
+            setStep(1);
             return;
         }
 
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            errorHaptic();
+            return;
+        }
         if (password !== password2) {
-            setHasPasswordError(true);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
+            setPasswordMismatch(true);
+            errorHaptic();
             return;
         }
 
         setIsLoading(true);
-        setGeneralError(false);
-
+        setGeneralError(null);
         try {
-            await register(firstName, lastName, birthDate.toISOString().split('T')[0], email, password);
-            trackEvent('account_created');
-
-            try {
-                const response_login = await apiLogin(email, password);
-                await loginAuth(response_login.access_token, response_login.refresh_token);
-
-                const response_user = await getUserProfile(response_login.access_token);
-                await updateUser(response_user);
-
-                router.replace("/(tabs)/profile");
-            } catch (error) {
-                router.replace("/login");
-            }
+            await register(null, null, null, email, password);
+            setRegisteredEmail(email);
+            trackEvent("account_created");
+            setStep(1);
+            startResendCooldown();
         } catch (error) {
-            setGeneralError(true);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
+            if (error?.status === 409) {
+                try {
+                    const res = await apiLogin(email, password);
+                    await loadExistingSession(res);
+                    return;
+                } catch (loginError) {
+                    if (loginError?.status === 403) {
+                        setRegisteredEmail(email);
+                        setStep(1);
+                        handleResend();
+                        return;
+                    }
+                    errorHaptic();
+                    setGeneralError("Cette adresse e-mail est déjà utilisée et le mot de passe ne correspond pas.");
+                    return;
+                }
+            }
+            errorHaptic();
+            setGeneralError("Une erreur est survenue lors de la création du compte. Veuillez réessayer.");
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handlePasswordBlur = () => {
-        setGeneralError(false);
-        if (password && password2) {
-            setHasPasswordError(password !== password2);
-            if (password !== password2) {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
-            }
-        }
-    };
+    const handleVerify = async () => {
+        setVerifyError(null);
+        setResendMessage(null);
+        setIsLoading(true);
 
-    const onChangeDate = (event, selectedDate) => {
-        if (event.type === "dismissed") {
-            setShowDatePicker(false);
+        try {
+            await verifyEmail(email, code);
+        } catch (_error) {
+            errorHaptic();
+            setVerifyError("Code invalide ou expiré.");
+            setIsLoading(false);
             return;
         }
 
-        const currentDate = selectedDate || birthDate;
+        try {
+            const res = await apiLogin(email, password);
+            await loginAuth(res.access_token, res.refresh_token);
+            setAccessToken(res.access_token);
+            trackEvent("logged_in");
 
-        if (Platform.OS === 'android') {
-            setShowDatePicker(false);
+            const profile = await getUserProfile(res.access_token);
+            await updateUser(profile);
+
+            setStep(2);
+        } catch (_error) {
+            router.replace("/login");
+        } finally {
+            setIsLoading(false);
         }
+    };
 
-        setBirthDate(currentDate);
-        setGeneralError(false);
+    const RESEND_COOLDOWN_SECONDS = 60;
+    const startResendCooldown = () => setResendCooldown(RESEND_COOLDOWN_SECONDS);
 
-        const day = String(currentDate.getDate()).padStart(2, '0');
-        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-        const year = currentDate.getFullYear();
-        setBirthDateText(`${day}/${month}/${year}`);
+    const isCoolingDown = resendCooldown > 0;
+    useEffect(() => {
+        if (!isCoolingDown) return undefined;
+        const id = setInterval(() => {
+            setResendCooldown((s) => (s <= 1 ? 0 : s - 1));
+        }, 1000);
+        return () => clearInterval(id);
+    }, [isCoolingDown]);
+
+    const handleResend = async () => {
+        if (resendCooldown > 0 || isResending) return;
+        setResendMessage(null);
+        setVerifyError(null);
+        setIsResending(true);
+        try {
+            await resendVerification(email);
+            setResendMessage("Si un compte non vérifié existe, un nouveau code a été envoyé.");
+            startResendCooldown();
+        } catch (error) {
+            if (error?.status === 429) {
+                setResendMessage("Trop de tentatives. Veuillez réessayer plus tard.");
+                startResendCooldown();
+            } else {
+                setResendMessage("Impossible d'envoyer le code pour le moment.");
+            }
+        } finally {
+            setIsResending(false);
+        }
+    };
+
+    const didAutoResend = useRef(false);
+    useEffect(() => {
+        if (startAtVerify && email && !didAutoResend.current) {
+            didAutoResend.current = true;
+            handleResend();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const runSave = async (saveFn) => {
+        setIsLoading(true);
+        try {
+            await saveFn();
+            goNext();
+        } catch (_error) {
+            errorHaptic();
+            setGeneralError(null);
+            goNext();
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const saveName = () =>
+        runSave(async () => {
+            if (!firstName.trim() && !lastName.trim()) return;
+            const updated = await changeProfileInfo(accessToken, firstName.trim(), lastName.trim());
+            await updateUser(updated);
+        });
+
+    const saveBirthDate = () =>
+        runSave(async () => {
+            const dateStr = birthDate.toISOString().split("T")[0];
+            const updated = await changeProfileInfo(accessToken, undefined, undefined, undefined, dateStr);
+            await updateUser(updated);
+        });
+
+    const saveSportLevel = () =>
+        runSave(async () => {
+            const updated = await changeProfileInfo(accessToken, undefined, undefined, undefined, undefined, level);
+            await updateUser(updated);
+        });
+
+    const saveAddresses = () =>
+        runSave(async () => {
+            const updated = await changeAddress(accessToken, home, work);
+            await updateUser(updated);
+        });
+
+    const handleAddBike = async ({ name, type, isElectric }) => {
+        const bike = await addBike(accessToken, name, type, isElectric);
+        const newList = [...addedBikes, bike];
+        setAddedBikes(newList);
+        await updateBikes(newList);
+    };
+
+    const handleFinish = () => {
+        router.replace("/(tabs)/profile");
+    };
+
+    const renderStep = () => {
+        switch (step) {
+            case 0:
+                return (
+                    <StepCredentials
+                        email={email}
+                        setEmail={setEmail}
+                        password={password}
+                        setPassword={setPassword}
+                        password2={password2}
+                        setPassword2={setPassword2}
+                        emailSyntaxError={emailSyntaxError}
+                        setEmailSyntaxError={setEmailSyntaxError}
+                        passwordMismatch={passwordMismatch}
+                        setPasswordMismatch={setPasswordMismatch}
+                        generalError={generalError}
+                        onSubmit={handleRegister}
+                        onGoLogin={() => router.push("/login")}
+                        isLoading={isLoading}
+                    />
+                );
+            case 1:
+                return (
+                    <StepVerifyEmail
+                        email={email}
+                        code={code}
+                        setCode={setCode}
+                        onSubmit={handleVerify}
+                        onResend={handleResend}
+                        onEditEmail={() => setStep(0)}
+                        error={verifyError}
+                        isLoading={isLoading}
+                        isResending={isResending}
+                        resendMessage={resendMessage}
+                        cooldown={resendCooldown}
+                    />
+                );
+            case 2:
+                return (
+                    <StepName
+                        firstName={firstName}
+                        setFirstName={setFirstName}
+                        lastName={lastName}
+                        setLastName={setLastName}
+                        onNext={saveName}
+                        onSkip={goNext}
+                        isLoading={isLoading}
+                    />
+                );
+            case 3:
+                return (
+                    <StepBirthDate
+                        birthDate={birthDate}
+                        setBirthDate={setBirthDate}
+                        hasValue={birthDateHasValue}
+                        setHasValue={setBirthDateHasValue}
+                        onNext={saveBirthDate}
+                        onSkip={goNext}
+                        isLoading={isLoading}
+                    />
+                );
+            case 4:
+                return (
+                    <StepSportLevel
+                        level={level}
+                        setLevel={setLevel}
+                        onNext={saveSportLevel}
+                        onSkip={goNext}
+                        isLoading={isLoading}
+                    />
+                );
+            case 5:
+                return (
+                    <StepAddresses
+                        home={home}
+                        setHome={setHome}
+                        work={work}
+                        setWork={setWork}
+                        onNext={saveAddresses}
+                        onSkip={goNext}
+                        isLoading={isLoading}
+                    />
+                );
+            case 6:
+                return (
+                    <StepBikes
+                        addedBikes={addedBikes}
+                        onAddBike={handleAddBike}
+                        onFinish={handleFinish}
+                        isFinishing={isLoading}
+                    />
+                );
+            default:
+                return null;
+        }
     };
 
     return (
@@ -123,208 +384,19 @@ export default function RegisterScreen() {
             extraHeight={200}
             keyboardShouldPersistTaps="handled"
         >
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                 <Ionicons name="arrow-back" size={28} color={colors.textMain} />
             </TouchableOpacity>
 
-            <View style={styles.formContainer}>
-                <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Créer un compte</Text>
+            <OnboardingProgress current={step} total={TOTAL_STEPS} />
 
-                <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Prénom</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: colors.bgSurface, color: colors.textMain, borderColor: colors.borderStrong }]}
-                        value={firstName}
-                        onChangeText={setFirstName}
-                    />
-                </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Nom</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: colors.bgSurface, color: colors.textMain, borderColor: colors.borderStrong }]}
-                        value={lastName}
-                        onChangeText={(text) => { setLastName(text); setGeneralError(false); }}
-                    />
-                </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Date de naissance</Text>
-
-                    <TouchableOpacity
-                        style={[
-                            styles.input,
-                            {
-                                backgroundColor: colors.bgSurface,
-                                borderColor: colors.borderStrong,
-                                justifyContent: 'center'
-                            }
-                        ]}
-                        onPress={() => setShowDatePicker(true)}
-                    >
-                        <Text style={{ color: birthDateText ? colors.textMain : colors.textSecondary, fontSize: 16 }}>
-                            {birthDateText || " "}
-                        </Text>
-                    </TouchableOpacity>
-
-                    {showDatePicker && (
-                        <DateTimePicker
-                            value={birthDate}
-                            mode="date"
-                            display="spinner"
-                            maximumDate={new Date()}
-                            onChange={onChangeDate}
-                        />
-                    )}
-                </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Adresse mail *</Text>
-                    <EmailInput
-                        email={email}
-                        setEmail={setEmail}
-                        emailError={emailSyntaxError}
-                        setEmailError={setEmailSyntaxError}
-                        hasError={generalError}
-                        setHasError={setGeneralError}
-                    />
-                </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Mot de passe *</Text>
-                    <PasswordInput
-                        password={password}
-                        setPassword={setPassword}
-                        hasError={hasPasswordError || generalError || passwordTooShort}
-                        setHasError={(error) => { setHasPasswordError(error); setGeneralError(error); }}
-                    />
-                    <Text style={[styles.errorText, { color: colors.textSecondary }]}>Au moins {MIN_PASSWORD_LENGTH} caractères.</Text>
-                    {passwordTooShort && <Text style={[styles.errorText, { color: colors.error }]}>Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères.</Text>}
-                </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Confirmation du mot de passe *</Text>
-                    <PasswordInput
-                        password={password2}
-                        setPassword={setPassword2}
-                        hasError={hasPasswordError || generalError}
-                        setHasError={(error) => { setHasPasswordError(error); setGeneralError(error); }}
-                    />
-                    {hasPasswordError && <Text style={[styles.errorText, { color: colors.error, marginTop: 5 }]}>Les mots de passe ne correspondent pas.</Text>}
-                </View>
-
-                {generalError && (
-                    <View style={styles.generalErrorBox}>
-                        <Ionicons name="sad-outline" size={20} color={colors.error} />
-                        <Text style={[styles.errorText, { color: colors.error, marginLeft: 10, flex: 1 }]}>
-                            Une erreur est survenue lors de la création du compte. Veuillez réessayer.
-                        </Text>
-                    </View>
-                )}
-
-                <Button
-                    onPress={handleSubmit}
-                    isLoading={isLoading}
-                    disabled={!isValidated}
-                    title="Créer mon compte"
-                    iconName={"person-add-outline"}
-                />
-
-                <View style={styles.separatorContainer}>
-                    <View style={[styles.separatorLine, { backgroundColor: colors.borderLight }]} />
-                    <Text style={[styles.separatorText, { color: colors.textSecondary }]}>ou</Text>
-                    <View style={[styles.separatorLine, { backgroundColor: colors.borderLight }]} />
-                </View>
-
-
-                <OutlineButton
-                    onPress={() => router.push("/login")}
-                    title="J'ai déjà un compte"
-                    iconName="log-in-outline"
-                    isLoading={false}
-                    disabled={false}
-                />
-
-                <Text style={[styles.ruleText, { color: colors.textSecondary }]}>
-                    * Les champs marqués d'une étoile sont obligatoires.
-                </Text>
-
-            </View>
+            {renderStep()}
         </KeyboardAwareScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1
-    },
-    scrollContainer: {
-        flexGrow: 1,
-        padding: 20,
-        paddingBottom: 50
-    },
-    backButton: {
-        marginTop: 40,
-        marginBottom: 10
-    },
-    formContainer: {
-        width: '100%'
-    },
-    title: {
-        textAlign: 'center',
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 30
-    },
-    inputGroup: {
-        width: '100%',
-        marginBottom: 15,
-        flexDirection: 'column',
-        alignItems: 'left'
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        marginLeft: 4
-    },
-    input: {
-        borderWidth: 1,
-        borderRadius: 12,
-        paddingHorizontal: 15,
-        paddingVertical: 12,
-        fontSize: 16
-    },
-    errorText: {
-        fontSize: 12,
-        marginTop: 5,
-        marginLeft: 4
-    },
-    generalErrorBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 15,
-        padding: 10,
-        borderRadius: 8,
-        backgroundColor: 'rgba(255, 0, 0, 0.1)'
-    },
-    separatorContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 30,
-    },
-    separatorLine: {
-        flex: 1,
-        height: 1,
-    },
-    separatorText: {
-        marginHorizontal: 10,
-        fontSize: 14,
-    },
-    ruleText: {
-        fontSize: 12,
-        textAlign: 'center',
-        marginTop: 30,
-        fontStyle: 'italic'
-    },
+    container: { flex: 1 },
+    scrollContainer: { flexGrow: 1, padding: 20, paddingBottom: 50 },
+    backButton: { marginTop: 40, marginBottom: 16 },
 });

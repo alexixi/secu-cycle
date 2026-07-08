@@ -1,125 +1,381 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import confetti from "canvas-confetti";
+import { IoArrowBack } from "react-icons/io5";
+
 import Meta from "../components/Meta";
 import Header from "../components/layout/Header";
-import Button from "../components/ui/Button";
-import LinkButton from "../components/ui/LinkButton";
-import PasswordInput from "../components/ui/PasswordInput";
-import "../components/ui/Input.css"
+import OnboardingProgress from "../components/onboarding/OnboardingProgress";
+import StepCredentials, { MIN_PASSWORD_LENGTH } from "../components/onboarding/StepCredentials";
+import StepVerifyEmail from "../components/onboarding/StepVerifyEmail";
+import StepName from "../components/onboarding/StepName";
+import StepBirthDate from "../components/onboarding/StepBirthDate";
+import StepSportLevel from "../components/onboarding/StepSportLevel";
+import StepAddresses from "../components/onboarding/StepAddresses";
+import StepBikes from "../components/onboarding/StepBikes";
 import { useAuth } from "../context/AuthContext";
-import { FaPersonCirclePlus } from "react-icons/fa6";
-import { ImSad2 } from "react-icons/im";
-import { register, login, getUserProfile, getUserBikes } from "../services/apiBack";
+import {
+    addBike,
+    changeAddress,
+    changeProfileInfo,
+    getUserBikes,
+    getUserHistoric,
+    getUserProfile,
+    login as apiLogin,
+    register,
+    resendVerification,
+    verifyEmail,
+} from "../services/apiBack";
 import { trackEvent } from "../services/analytics";
-import { useNavigate } from "react-router-dom";
-import { LuLogIn } from "react-icons/lu";
-import confetti from "canvas-confetti"
-import "../components/ui/Form.css"
+import "../components/ui/Input.css";
+import "../components/ui/Form.css";
+import "../components/onboarding/Onboarding.css";
 
-const MIN_PASSWORD_LENGTH = 10;
+const TOTAL_STEPS = 7;
+const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function ProfileCreationPage() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { loginAuth, updateUser, updateBikes, updateHistoric } = useAuth();
+
+    const startAtVerify = location.state?.verify === true;
+    const initialEmail = typeof location.state?.email === "string" ? location.state.email : "";
+    const initialPassword = typeof location.state?.password === "string" ? location.state.password : "";
+
+    const [step, setStep] = useState(startAtVerify ? 1 : 0);
+
+    const [email, setEmail] = useState(initialEmail);
+    const [password, setPassword] = useState(initialPassword);
+    const [password2, setPassword2] = useState(initialPassword);
+    const [emailSyntaxError, setEmailSyntaxError] = useState(false);
+    const [passwordMismatch, setPasswordMismatch] = useState(false);
+    const [generalError, setGeneralError] = useState(null);
+    const [registeredEmail, setRegisteredEmail] = useState(startAtVerify ? initialEmail : null);
+
+    const [code, setCode] = useState("");
+    const [verifyError, setVerifyError] = useState(null);
+    const [isResending, setIsResending] = useState(false);
+    const [resendMessage, setResendMessage] = useState(null);
+    const [resendCooldown, setResendCooldown] = useState(0);
+
+    const [accessToken, setAccessToken] = useState(null);
+
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
-    const [email, setEmail] = useState("");
-    const [birthDate, setBirthdate] = useState("");
-    const [password, setPassword] = useState("");
-    const navigate = useNavigate();
-    const [password2, setPassword2] = useState("");
-    const [hasError, setHasError] = useState(false);
-    const [isValidated, setIsValidated] = useState(false);
-    const [emailSyntaxError, setEmailSyntaxError] = useState(false);
-    const [emailAlreadyUsedError, setEmailAlreadyUsedError] = useState(false);
-    const [generalError, setGeneralError] = useState(false);
+    const [birthDate, setBirthDate] = useState("");
+    const [level, setLevel] = useState("");
+    const [home, setHome] = useState("");
+    const [work, setWork] = useState("");
+    const [addedBikes, setAddedBikes] = useState([]);
 
-    const { loginAuth, updateUser, updateBikes } = useAuth();
+    const [isLoading, setIsLoading] = useState(false);
 
-    const passwordTooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
+    const goNext = () => setStep((s) => s + 1);
 
+    const handleBack = () => {
+        if (step === 0) {
+            navigate(-1);
+            return;
+        }
+        if (step === 1) {
+            setStep(0);
+            return;
+        }
+        setStep((s) => Math.max(2, s - 1));
+    };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const triggerConfetti = () => {
+        const end = performance.now() + 1000;
+        const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+        const frame = () => {
+            if (performance.now() > end) return;
+            confetti({ particleCount: 3, angle: 60, spread: 55, startVelocity: 80, origin: { x: 0, y: 0.8 }, colors });
+            confetti({ particleCount: 2, angle: 120, spread: 55, startVelocity: 80, origin: { x: 1, y: 0.8 }, colors });
+            requestAnimationFrame(frame);
+        };
+        frame();
+    };
+
+    const loadExistingSession = async (res) => {
+        loginAuth(res.access_token, res.refresh_token);
+        trackEvent("logged_in");
+
+        const profile = await getUserProfile(res.access_token);
+        updateUser(profile);
+
+        const [bikesRes, historicRes] = await Promise.all([
+            getUserBikes(res.access_token),
+            getUserHistoric(res.access_token),
+        ]);
+        updateBikes(bikesRes);
+        updateHistoric(historicRes);
+
+        navigate("/profil");
+    };
+
+    const handleRegister = async () => {
+        if (registeredEmail && registeredEmail === email) {
+            setGeneralError(null);
+            setStep(1);
+            return;
+        }
 
         if (password.length < MIN_PASSWORD_LENGTH) {
             return;
         }
-
         if (password !== password2) {
-            setHasError(true);
+            setPasswordMismatch(true);
             return;
         }
 
+        setIsLoading(true);
+        setGeneralError(null);
         try {
-            await register(firstName, lastName, birthDate, email, password);
+            await register(null, null, null, email, password);
+            setRegisteredEmail(email);
             trackEvent("account_created");
-            triggerConfetti();
+            setStep(1);
+            startResendCooldown();
         } catch (error) {
-            trackEvent("signup_failed", { reason: error.status === 409 ? "email_exists" : "error" });
-            if (error.status === 409) {
-                setEmailAlreadyUsedError(true);
-            } else {
-                setGeneralError(true);
+            trackEvent("signup_failed", { reason: error?.status === 409 ? "email_exists" : "error" });
+            if (error?.status === 409) {
+                try {
+                    const res = await apiLogin(email, password);
+                    await loadExistingSession(res);
+                    return;
+                } catch (loginError) {
+                    if (loginError?.status === 403) {
+                        setRegisteredEmail(email);
+                        setStep(1);
+                        handleResend();
+                        return;
+                    }
+                    setGeneralError("Cette adresse e-mail est déjà utilisée et le mot de passe ne correspond pas.");
+                    return;
+                }
             }
+            setGeneralError("Une erreur est survenue lors de la création du compte. Veuillez réessayer.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleVerify = async () => {
+        setVerifyError(null);
+        setResendMessage(null);
+        setIsLoading(true);
+
+        try {
+            await verifyEmail(email, code);
+        } catch {
+            setVerifyError("Code invalide ou expiré.");
+            setIsLoading(false);
             return;
         }
+
         try {
-            const response_login = await login(email, password);
-            loginAuth(response_login.access_token, response_login.refresh_token);
-            const response_user = await getUserProfile(response_login.access_token);
-            updateUser(response_user);
-            const userBikes = await getUserBikes(response_login.access_token);
-            updateBikes(userBikes);
-            navigate("/profil");
-        } catch (error) {
+            const res = await apiLogin(email, password);
+            loginAuth(res.access_token, res.refresh_token);
+            setAccessToken(res.access_token);
+            trackEvent("logged_in");
+
+            const profile = await getUserProfile(res.access_token);
+            updateUser(profile);
+
+            setStep(2);
+        } catch {
             navigate("/login");
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handlePasswordChange = (setter) => (e) => {
-        setter(e.target.value);
-        if (hasError) setHasError(false);
-        setGeneralError(false);
-    };
+    const startResendCooldown = () => setResendCooldown(RESEND_COOLDOWN_SECONDS);
 
-    const handlePasswordBlur = () => {
-        setGeneralError(false);
-        if (password && password2) {
-            if (password !== password2) {
-                setHasError(true);
-                setIsValidated(false);
+    const isCoolingDown = resendCooldown > 0;
+    useEffect(() => {
+        if (!isCoolingDown) return undefined;
+        const id = setInterval(() => {
+            setResendCooldown((s) => (s <= 1 ? 0 : s - 1));
+        }, 1000);
+        return () => clearInterval(id);
+    }, [isCoolingDown]);
+
+    const handleResend = async () => {
+        if (resendCooldown > 0 || isResending) return;
+        setResendMessage(null);
+        setVerifyError(null);
+        setIsResending(true);
+        try {
+            await resendVerification(email);
+            setResendMessage("Si un compte non vérifié existe, un nouveau code a été envoyé.");
+            startResendCooldown();
+        } catch (error) {
+            if (error?.status === 429) {
+                setResendMessage("Trop de tentatives. Veuillez réessayer plus tard.");
+                startResendCooldown();
             } else {
-                setHasError(false);
-                setIsValidated(true);
+                setResendMessage("Impossible d'envoyer le code pour le moment.");
             }
+        } finally {
+            setIsResending(false);
         }
     };
 
-    const triggerConfetti = () => {
-        const end = Date.now() + 1 * 1000;
-        const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+    const didAutoResend = useRef(false);
+    useEffect(() => {
+        if (startAtVerify && email && !didAutoResend.current) {
+            didAutoResend.current = true;
+            handleResend();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-        const frame = () => {
-            if (Date.now() > end) return;
+    const runSave = async (saveFn) => {
+        setIsLoading(true);
+        try {
+            await saveFn();
+            goNext();
+        } catch {
+            goNext();
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-            confetti({
-                particleCount: 3,
-                angle: 60,
-                spread: 55,
-                startVelocity: 80,
-                origin: { x: 0, y: 0.8 },
-                colors: colors,
-            });
-            confetti({
-                particleCount: 2,
-                angle: 120,
-                spread: 55,
-                startVelocity: 80,
-                origin: { x: 1, y: 0.8 },
-                colors: colors,
-            });
+    const saveName = () =>
+        runSave(async () => {
+            if (!firstName.trim() && !lastName.trim()) return;
+            const updated = await changeProfileInfo(accessToken, firstName.trim(), lastName.trim());
+            updateUser(updated);
+        });
 
-            requestAnimationFrame(frame);
-        };
-        frame();
+    const saveBirthDate = () =>
+        runSave(async () => {
+            if (!birthDate) return;
+            const updated = await changeProfileInfo(accessToken, undefined, undefined, undefined, birthDate);
+            updateUser(updated);
+        });
+
+    const saveSportLevel = () =>
+        runSave(async () => {
+            if (!level) return;
+            const updated = await changeProfileInfo(accessToken, undefined, undefined, undefined, undefined, level);
+            updateUser(updated);
+        });
+
+    const saveAddresses = () =>
+        runSave(async () => {
+            const updated = await changeAddress(accessToken, home, work);
+            updateUser(updated);
+        });
+
+    const handleAddBike = async ({ name, type, isElectric }) => {
+        const bike = await addBike(accessToken, name, type, isElectric);
+        const newList = [...addedBikes, bike];
+        setAddedBikes(newList);
+        updateBikes(newList);
+        trackEvent("bike_added");
+    };
+
+    const handleFinish = () => {
+        triggerConfetti();
+        navigate("/profil");
+    };
+
+    const renderStep = () => {
+        switch (step) {
+            case 0:
+                return (
+                    <StepCredentials
+                        email={email}
+                        setEmail={setEmail}
+                        password={password}
+                        setPassword={setPassword}
+                        password2={password2}
+                        setPassword2={setPassword2}
+                        emailSyntaxError={emailSyntaxError}
+                        setEmailSyntaxError={setEmailSyntaxError}
+                        passwordMismatch={passwordMismatch}
+                        setPasswordMismatch={setPasswordMismatch}
+                        generalError={generalError}
+                        onSubmit={handleRegister}
+                        isLoading={isLoading}
+                    />
+                );
+            case 1:
+                return (
+                    <StepVerifyEmail
+                        email={email}
+                        code={code}
+                        setCode={setCode}
+                        onSubmit={handleVerify}
+                        onResend={handleResend}
+                        onEditEmail={() => setStep(0)}
+                        error={verifyError}
+                        isLoading={isLoading}
+                        isResending={isResending}
+                        resendMessage={resendMessage}
+                        cooldown={resendCooldown}
+                    />
+                );
+            case 2:
+                return (
+                    <StepName
+                        firstName={firstName}
+                        setFirstName={setFirstName}
+                        lastName={lastName}
+                        setLastName={setLastName}
+                        onNext={saveName}
+                        onSkip={goNext}
+                        isLoading={isLoading}
+                    />
+                );
+            case 3:
+                return (
+                    <StepBirthDate
+                        birthDate={birthDate}
+                        setBirthDate={setBirthDate}
+                        onNext={saveBirthDate}
+                        onSkip={goNext}
+                        isLoading={isLoading}
+                    />
+                );
+            case 4:
+                return (
+                    <StepSportLevel
+                        level={level}
+                        setLevel={setLevel}
+                        onNext={saveSportLevel}
+                        onSkip={goNext}
+                        isLoading={isLoading}
+                    />
+                );
+            case 5:
+                return (
+                    <StepAddresses
+                        home={home}
+                        setHome={setHome}
+                        work={work}
+                        setWork={setWork}
+                        onNext={saveAddresses}
+                        onSkip={goNext}
+                        isLoading={isLoading}
+                    />
+                );
+            case 6:
+                return (
+                    <StepBikes
+                        addedBikes={addedBikes}
+                        onAddBike={handleAddBike}
+                        onFinish={handleFinish}
+                        isFinishing={isLoading}
+                    />
+                );
+            default:
+                return null;
+        }
     };
 
     return (
@@ -128,101 +384,15 @@ export default function ProfileCreationPage() {
             <Header page="signin" />
             <div className="page-form-container">
                 <div className="form-container">
-                    <form className="form" onSubmit={handleSubmit}>
-                        <h2>Créer un compte</h2>
-
-                        <div className="input-group">
-                            <label htmlFor="text">Prénom</label>
-                            <input
-                                className="input"
-                                type="text"
-                                id="firstName"
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="input-group">
-                            <label htmlFor="lastName">Nom</label>
-                            <input
-                                className="input"
-                                type="text"
-                                id="lastName"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value) && setGeneralError(false)}
-                            />
-                        </div>
-
-                        <div className="input-group">
-                            <label htmlFor="birthdate">Date de naissance</label>
-                            <input
-                                className="input"
-                                type="date"
-                                id="birthdate"
-                                value={birthDate}
-                                onChange={(e) => setBirthdate(e.target.value) && setGeneralError(false)}
-                            />
-                        </div>
-
-                        <div className={`input-group ${emailSyntaxError ? "input-error" : ""}`}>
-                            <label htmlFor="email">Adresse mail *</label>
-                            <input
-                                className="input"
-                                type="email"
-                                id="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value) || setEmailSyntaxError(false) || setEmailAlreadyUsedError(false) || setGeneralError(false)}
-                                onBlur={(e) => {
-                                    if (!e.target.value) {
-                                        setEmailSyntaxError(false);
-                                    } else if (!e.target.value.includes("@") || !e.target.value.includes(".")) {
-                                        setEmailSyntaxError(true);
-                                    } else {
-                                        setEmailSyntaxError(false);
-                                    }
-                                }}
-                                placeholder="exemple@gmail.com"
-                                required
-                            />
-                            {emailSyntaxError && (
-                                <div className="error-text">
-                                    Adresse mail invalide.
-                                </div>
-                            )}
-                            {emailAlreadyUsedError && (
-                                <div className="error-text">
-                                    Adresse mail déjà utilisée.
-                                </div>
-                            )}
-                        </div>
-
-                        <div className={`input-group ${hasError || passwordTooShort ? "input-error" : ""}`}>
-                            <label htmlFor="password">Mot de passe *</label>
-                            <PasswordInput value={password} onChange={handlePasswordChange(setPassword)} onBlur={handlePasswordBlur}></PasswordInput>
-                            <div className="rule">Au moins {MIN_PASSWORD_LENGTH} caractères.</div>
-                            {passwordTooShort && <div className="error-text">Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères.</div>}
-                        </div>
-
-                        <div className={`input-group ${hasError ? "input-error" : ""}`}>
-                            <label htmlFor="password2">Confirmation du mot de passe *</label>
-                            <PasswordInput value={password2} onChange={handlePasswordChange(setPassword2)} onBlur={handlePasswordBlur}></PasswordInput>
-                        </div>
-
-                        {hasError && <p className="error-text">Les mots de passe ne correspondent pas.</p>}
-
-                        <Button type="submit" id="signin-button" disabled={!email || !password || !password2 || hasError || !isValidated || password.length < MIN_PASSWORD_LENGTH}><FaPersonCirclePlus />    Créer mon compte</Button>
-
-                        {generalError && <p className="error-text"><ImSad2 /> Une erreur est survenue lors de la création du compte.<br />Veuillez réessayer.</p>}
-                    </form>
-
-                    <div className="separator">ou</div>
-
-                    <LinkButton to={"/login"}>J'ai déjà un compte <LuLogIn /></LinkButton>
-
-                    <div className="rule">* Les champs marqués d'une étoile sont obligatoires.</div>
-
+                    <div className="onboarding-header">
+                        <button type="button" className="onboarding-back" onClick={handleBack} aria-label="Retour">
+                            <IoArrowBack size={24} />
+                        </button>
+                        <OnboardingProgress current={step} total={TOTAL_STEPS} />
+                    </div>
+                    {renderStep()}
                 </div>
             </div>
         </>
-    )
+    );
 }

@@ -48,6 +48,10 @@ export default function Login() {
 
             router.replace("/(tabs)/profile");
         } catch (error) {
+            if (error?.status === 403) {
+                router.replace({ pathname: "/signin", params: { email, password, verify: "1" } });
+                return;
+            }
             console.error("Login error:", error);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
             setHasError(true);

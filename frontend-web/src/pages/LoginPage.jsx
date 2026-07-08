@@ -47,6 +47,10 @@ export default function Login() {
             trackEvent("logged_in");
             navigate("/profil");
         } catch (error) {
+            if (error?.status === 403) {
+                navigate("/signin", { state: { email, password, verify: true } });
+                return;
+            }
             console.error("Login error:", error);
             trackEvent("login_failed");
             setHasError(true);
