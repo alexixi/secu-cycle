@@ -12,18 +12,8 @@ const FIELDS = [
   { key: "work_address", label: "Adresse travail" },
 ];
 
-const emptyToNull = (obj) =>
-  Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, v === "" ? null : v]));
-
 export default function UserDetailModal({ user, currentUserId, onClose, onSave, onDelete }) {
-  const [form, setForm] = useState(() => ({
-    first_name: user.first_name || "",
-    last_name: user.last_name || "",
-    sport_level: user.sport_level || "",
-    home_address: user.home_address || "",
-    work_address: user.work_address || "",
-    is_admin: !!user.is_admin,
-  }));
+  const [isAdmin, setIsAdmin] = useState(() => !!user.is_admin);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -41,14 +31,12 @@ export default function UserDetailModal({ user, currentUserId, onClose, onSave, 
     };
   }, [onClose]);
 
-  const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSaving(true);
     try {
-      await onSave(user.id, emptyToNull(form));
+      await onSave(user.id, { is_admin: isAdmin });
       onClose();
     } catch (err) {
       setError(err.message || "Enregistrement impossible.");
@@ -80,27 +68,23 @@ export default function UserDetailModal({ user, currentUserId, onClose, onSave, 
         <form onSubmit={handleSubmit} className="user-detail-form">
           <div className="user-detail-grid">
             {FIELDS.map(({ key, label }) => (
-              <label key={key} className="user-detail-field">
+              <div key={key} className="user-detail-field">
                 <span>{label}</span>
-                <input
-                  type="text"
-                  value={form[key]}
-                  onChange={(e) => setField(key, e.target.value)}
-                />
-              </label>
+                <p className="user-detail-value">{user[key] || "—"}</p>
+              </div>
             ))}
           </div>
 
-          <label className={`user-detail-toggle ${form.is_admin ? "on" : ""}`}>
+          <label className={`user-detail-toggle ${isAdmin ? "on" : ""}`}>
             <input
               type="checkbox"
-              checked={form.is_admin}
+              checked={isAdmin}
               disabled={isSelf}
-              onChange={(e) => setField("is_admin", e.target.checked)}
+              onChange={(e) => setIsAdmin(e.target.checked)}
             />
-            {form.is_admin ? <LuShieldCheck size={18} /> : <LuShieldOff size={18} />}
+            {isAdmin ? <LuShieldCheck size={18} /> : <LuShieldOff size={18} />}
             <span>
-              {form.is_admin ? "Administrateur" : "Membre standard"}
+              {isAdmin ? "Administrateur" : "Membre standard"}
               {isSelf && <em> (votre compte)</em>}
             </span>
           </label>
