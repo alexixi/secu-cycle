@@ -18,6 +18,9 @@ class UserRead(UserBase):
     id: int
     is_admin: bool
     is_verified: bool
+    is_banned: bool = False
+    reports_blocked: bool = False
+    ban_reason: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -43,6 +46,9 @@ class UserAdminUpdate(BaseModel):
     home_address: Optional[str] = None
     work_address: Optional[str] = None
     is_admin: Optional[bool] = None
+    is_banned: Optional[bool] = None
+    reports_blocked: Optional[bool] = None
+    ban_reason: Optional[str] = None
 
 class PasswordChange(BaseModel):
     old_password: str

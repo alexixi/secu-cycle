@@ -101,6 +101,16 @@ export async function adminDeleteUser(token, userId) {
     return apiFetch(`/users/${userId}`, { method: "DELETE" }, token);
 }
 
+// --- Signalements (modération) ---
+
+export async function getReportsAdmin(token) {
+    return apiFetch("/reports/admin", { method: "GET" }, token);
+}
+
+export async function deleteReport(token, reportId) {
+    return apiFetch(`/reports/${reportId}`, { method: "DELETE" }, token);
+}
+
 // --- Cases de la page d'accueil ---
 
 export async function getHomeCases(token) {

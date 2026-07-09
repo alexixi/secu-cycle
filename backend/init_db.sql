@@ -12,8 +12,16 @@ CREATE TABLE users (
     work_address TEXT,
     is_admin BOOLEAN DEFAULT FALSE,
     is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    is_banned BOOLEAN NOT NULL DEFAULT FALSE,        -- compte suspendu : connexion refusée
+    reports_blocked BOOLEAN NOT NULL DEFAULT FALSE,  -- ne peut plus déposer de signalements
+    ban_reason TEXT,                                 -- motif de sanction (optionnel)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Migration pour bases existantes (init_db.sql ne s'exécute que sur une base neuve) :
+--   ALTER TABLE users ADD COLUMN IF NOT EXISTS is_banned BOOLEAN NOT NULL DEFAULT FALSE;
+--   ALTER TABLE users ADD COLUMN IF NOT EXISTS reports_blocked BOOLEAN NOT NULL DEFAULT FALSE;
+--   ALTER TABLE users ADD COLUMN IF NOT EXISTS ban_reason TEXT;
 
 CREATE TABLE email_verifications (
     id SERIAL PRIMARY KEY,

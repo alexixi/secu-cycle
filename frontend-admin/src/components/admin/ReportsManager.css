@@ -1,0 +1,610 @@
+.reports-manager {
+  max-width: 1100px;
+  margin-inline: auto;
+}
+
+.reports-manager-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.reports-manager-head h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.reports-manager-sub {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.reports-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.reports-refresh:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+}
+
+.reports-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reports-refresh .spin {
+  animation: reports-spin 0.8s linear infinite;
+}
+
+@keyframes reports-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Barre d'outils --- */
+.reports-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.reports-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 200px;
+}
+
+.reports-search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.reports-toolbar select {
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.reports-alert {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+.reports-state {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+}
+
+.reports-state-error {
+  color: var(--error);
+  background: var(--error-bg);
+}
+
+/* --- Table --- */
+.reports-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+}
+
+.reports-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.reports-table thead th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.reports-table tbody tr {
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.reports-table tbody tr:hover {
+  background: var(--bg-surface-hover);
+}
+
+.reports-table td {
+  padding: 0.7rem 1rem;
+  vertical-align: middle;
+}
+
+.cell-desc {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.cell-author {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.author-flags {
+  display: inline-flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.flag-ban {
+  background: rgba(220, 38, 38, 0.14);
+  color: #dc2626;
+}
+
+.flag-block {
+  background: rgba(217, 119, 6, 0.16);
+  color: #d97706;
+}
+
+.col-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.reports-table .row-action,
+.report-detail-modal .row-action {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 0.35rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.reports-table .row-action:hover:not(:disabled) {
+  background: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.reports-table .row-action.danger:hover:not(:disabled) {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+/* --- Badges de type --- */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.type-accident {
+  background: rgba(220, 38, 38, 0.14);
+  color: #dc2626;
+}
+
+.type-danger {
+  background: rgba(234, 88, 12, 0.16);
+  color: #ea580c;
+}
+
+.type-obstacle {
+  background: rgba(217, 119, 6, 0.16);
+  color: #b45309;
+}
+
+.type-travaux {
+  background: rgba(37, 99, 235, 0.16);
+  color: #2563eb;
+}
+
+/* --- Badge de statut --- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+
+.status-badge.expired {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+
+/* --- Cartes mobiles --- */
+.reports-cards {
+  display: none;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.report-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  cursor: pointer;
+}
+
+.report-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.report-card-desc {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.report-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 820px) {
+  .reports-table-wrap {
+    display: none;
+  }
+
+  .reports-cards {
+    display: flex;
+  }
+}
+
+/* --- Modale de détail / sanctions --- */
+.report-detail-modal {
+  width: 900px;
+  max-width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.report-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+/* Infos à gauche, carte pleine hauteur à droite ; empilées sous 820px. */
+.report-detail-cols {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 1.25rem;
+}
+
+.report-detail-info {
+  width: 45%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (max-width: 820px) {
+  .report-detail-cols {
+    flex-direction: column;
+  }
+
+  .report-detail-info {
+    width: 100%;
+  }
+}
+
+.report-map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+  color: var(--primary-hover);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.report-map-link:hover {
+  text-decoration: underline;
+}
+
+/* Étirée sur la hauteur de la colonne d'infos ; la carte est ancrée en absolu
+   car un élément flex étiré conserve height:auto. */
+.report-map,
+.report-map-fallback {
+  position: relative;
+  width: 55%;
+  min-height: 400px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+@media (max-width: 820px) {
+  .report-map,
+  .report-map-fallback {
+    width: 100%;
+    min-height: 240px;
+  }
+}
+
+.report-map-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.report-map-pin {
+  font-size: 28px;
+  line-height: 1;
+  cursor: default;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Contrôles compacts posés sur la carte ; z-index pour passer devant le canvas
+   (rendu après eux) et les contrôles MapLibre. */
+.report-map-controls {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.report-map-controls .theme-toggle {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.report-map-controls .theme-toggle-compact .theme-toggle-btn {
+  padding: 5px;
+}
+
+.report-map-controls .theme-toggle-compact svg {
+  width: 14px;
+  height: 14px;
+}
+
+.report-map-layers {
+  position: relative;
+}
+
+.report-map-layer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.report-map-layer-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.report-map-style-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 150px;
+  padding: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.report-map-style-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 2px 6px 4px;
+}
+
+.report-map-style-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.report-map-style-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.report-map-style-item.active {
+  background: var(--primary);
+  color: var(--text-inverse);
+}
+
+.report-author-email {
+  color: var(--text-secondary);
+  font-style: normal;
+}
+
+.report-sanctions {
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+}
+
+.report-sanctions h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.report-sanctions-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.report-sanction-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.report-sanction-row:first-of-type {
+  border-top: none;
+}
+
+.report-sanction-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.report-sanction-info strong {
+  font-size: 0.92rem;
+}
+
+.report-sanction-info span {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.report-ban-confirm {
+  margin-top: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid var(--error);
+  border-radius: 8px;
+  background: var(--error-bg);
+}
+
+.report-ban-confirm label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  margin-bottom: 0.6rem;
+}
+
+.report-ban-confirm input {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.report-ban-confirm p {
+  margin: 0 0 0.6rem;
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
+.report-ban-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}

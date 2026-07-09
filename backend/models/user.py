@@ -19,4 +19,9 @@ class User(Base):
 
     is_admin = Column(Boolean, default=False)
     is_verified = Column(Boolean, nullable=False, default=False, server_default="false")
+
+    is_banned = Column(Boolean, nullable=False, default=False, server_default="false")
+    reports_blocked = Column(Boolean, nullable=False, default=False, server_default="false")
+    ban_reason = Column(Text, nullable=True)
+
     created_at = Column(TIMESTAMP, server_default=func.now())

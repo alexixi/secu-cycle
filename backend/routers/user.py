@@ -97,6 +97,12 @@ def login(
             detail="Compte non vérifié. Vérifiez votre e-mail.",
         )
 
+    if db_user.is_banned:
+        raise HTTPException(
+            status_code=403,
+            detail="Compte suspendu. Contactez l'administration.",
+        )
+
     access_token = create_access_token(data={"sub": str(db_user.id)})
     refresh_token = create_refresh_token(data={"sub": str(db_user.id)})
 
@@ -239,6 +245,14 @@ def admin_update_user(
         raise HTTPException(
             status_code=400,
             detail="Vous ne pouvez pas retirer vos propres droits d'administrateur.",
+        )
+
+    if user.id == admin.id and (
+        update_data.get("is_banned") is True or update_data.get("reports_blocked") is True
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Vous ne pouvez pas vous sanctionner vous-même.",
         )
 
     for field, value in update_data.items():
