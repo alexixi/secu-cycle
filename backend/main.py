@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 import asyncio
 from routers import user
-from database import Base, engine
 from routers import route
 from routers import history
 from routers import bike
@@ -11,8 +10,6 @@ from routers import traffic
 from routers import home_case
 from routers import task
 from routers import tag
-from models import email_verification  # noqa: F401 (enregistre la table pour create_all)
-from models import tag as tag_model  # noqa: F401 (enregistre les tables tags / task_tags pour create_all)
 from seed_home_cases import seed_home_cases
 from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic, load_graph_profile
 from graph.route_cache import route_cache
@@ -36,7 +33,6 @@ async def periodic_traffic_update(app: FastAPI):
             app.state.G = await asyncio.to_thread(update_graph_with_traffic, app.state.G)
             route_cache.invalidate()
 
-Base.metadata.create_all(bind=engine)
 seed_home_cases()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
