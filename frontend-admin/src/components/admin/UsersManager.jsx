@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { LuSearch, LuRefreshCw, LuTrash2, LuPencil, LuShieldCheck, LuUser } from "react-icons/lu";
+import { LuSearch, LuRefreshCw, LuTrash2, LuEye, LuShieldCheck, LuUser } from "react-icons/lu";
 import { useAuth } from "../../context/AuthContext";
 import { getAllUsers, adminUpdateUser, adminDeleteUser } from "../../services/apiBack";
 import UserDetailModal from "./UserDetailModal";
@@ -153,8 +153,8 @@ export default function UsersManager() {
                     </td>
                     <td>{formatDate(u.created_at)}</td>
                     <td className="col-actions" onClick={(e) => e.stopPropagation()}>
-                      <button className="row-action" title="Voir / éditer" onClick={() => setSelected(u)}>
-                        <LuPencil size={16} />
+                      <button className="row-action" title="Voir" onClick={() => setSelected(u)}>
+                        <LuEye size={16} />
                       </button>
                       <button
                         className="row-action danger"

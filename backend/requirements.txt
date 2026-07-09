@@ -4,6 +4,7 @@ python-multipart==0.0.32
 
 sqlalchemy==2.0.51
 psycopg2-binary==2.9.12
+alembic==1.14.1
 
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.5.0

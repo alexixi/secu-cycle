@@ -101,6 +101,16 @@ export async function adminDeleteUser(token, userId) {
     return apiFetch(`/users/${userId}`, { method: "DELETE" }, token);
 }
 
+// --- Signalements (modération) ---
+
+export async function getReportsAdmin(token) {
+    return apiFetch("/reports/admin", { method: "GET" }, token);
+}
+
+export async function deleteReport(token, reportId) {
+    return apiFetch(`/reports/${reportId}`, { method: "DELETE" }, token);
+}
+
 // --- Cases de la page d'accueil ---
 
 export async function getHomeCases(token) {
@@ -167,4 +177,28 @@ export async function reorderTasks(token, items) {
         method: "PUT",
         body: JSON.stringify({ items }),
     }, token);
+}
+
+// --- Étiquettes (thèmes des tâches) ---
+
+export async function getTags(token) {
+    return apiFetch("/tags/", { method: "GET" }, token);
+}
+
+export async function createTag(token, body) {
+    return apiFetch("/tags/", {
+        method: "POST",
+        body: JSON.stringify(body),
+    }, token);
+}
+
+export async function updateTag(token, tagId, updates) {
+    return apiFetch(`/tags/${tagId}`, {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}
+
+export async function deleteTag(token, tagId) {
+    return apiFetch(`/tags/${tagId}`, { method: "DELETE" }, token);
 }

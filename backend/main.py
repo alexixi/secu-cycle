@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 import asyncio
 from routers import user
-from database import Base, engine
 from routers import route
 from routers import history
 from routers import bike
@@ -10,6 +9,7 @@ from routers import navigation
 from routers import traffic
 from routers import home_case
 from routers import task
+from routers import tag
 from seed_home_cases import seed_home_cases
 from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic, load_graph_profile
 from graph.route_cache import route_cache
@@ -33,7 +33,6 @@ async def periodic_traffic_update(app: FastAPI):
             app.state.G = await asyncio.to_thread(update_graph_with_traffic, app.state.G)
             route_cache.invalidate()
 
-Base.metadata.create_all(bind=engine)
 seed_home_cases()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -82,6 +81,7 @@ app.include_router(navigation.router)
 app.include_router(traffic.router)
 app.include_router(home_case.router)
 app.include_router(task.router)
+app.include_router(tag.router)
 
 origins_str = os.getenv("CORS_ORIGINS", "")
 if origins_str:

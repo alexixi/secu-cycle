@@ -5,11 +5,12 @@
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self';
-                 connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https://api.secu-cycle.fr https://api.dev.secu-cycle.fr;
-                 img-src 'self' data:;
+                 connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https://api.secu-cycle.fr https://api.dev.secu-cycle.fr https://*.maptiler.com;
+                 img-src 'self' data: blob: https://*.maptiler.com;
+                 worker-src 'self' blob:;
                  script-src 'self';
                  style-src 'self' 'unsafe-inline';
-                 font-src 'self' data:;
+                 font-src 'self' data: https://*.maptiler.com;
                  object-src 'none';
                  base-uri 'self';" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

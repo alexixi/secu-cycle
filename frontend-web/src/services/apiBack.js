@@ -120,6 +120,30 @@ export async function login(email, password) {
     }
 }
 
+export async function verifyEmail(email, code) {
+    try {
+        const data = await apiFetch("/users/verify", {
+            method: "POST",
+            body: JSON.stringify({ email: email, code: code })
+        }, null);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function resendVerification(email) {
+    try {
+        const data = await apiFetch("/users/resend-verification", {
+            method: "POST",
+            body: JSON.stringify({ email: email })
+        }, null);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function register(firstName, lastName, birthdate, email, password) {
     try {
         const data = await apiFetch("/users/", {

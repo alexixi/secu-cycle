@@ -15,3 +15,12 @@ class ReportRead(ReportCreate):
 
     class Config:
         from_attributes = True
+
+
+class ReportAdminRead(ReportRead):
+    """Vue enrichie pour la modération : infos sur l'auteur + statut d'expiration."""
+    is_expired: bool = False
+    author_email: Optional[str] = None
+    author_name: Optional[str] = None
+    author_is_banned: bool = False
+    author_reports_blocked: bool = False

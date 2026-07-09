@@ -1,0 +1,102 @@
+.tags-manager-modal {
+  max-width: 480px;
+}
+
+.tags-manager-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.tags-manager-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.tags-manager-empty {
+  margin: 0.5rem 0 1rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.tags-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.tag-row,
+.tag-add-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tag-add-row {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.tag-color-input {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 2px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-main);
+  cursor: pointer;
+}
+
+.tag-name-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.tag-name-input:focus {
+  border-color: var(--primary);
+}
+
+/* Bouton d'action rond (édition/suppression), aligné sur le reste de l'admin. */
+.tags-manager-modal .row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tags-manager-modal .row-action:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-main);
+}
+
+.tags-manager-modal .row-action.danger:hover {
+  background: var(--red-transparent, rgba(239, 68, 68, 0.12));
+  color: var(--red-color, #ef4444);
+}
+
+.tags-manager-actions {
+  justify-content: flex-end;
+}

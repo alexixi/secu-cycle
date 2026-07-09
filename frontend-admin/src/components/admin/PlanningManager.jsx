@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { LuRefreshCw, LuPlus, LuPencil, LuTrash2, LuUser, LuUserX } from "react-icons/lu";
+import { LuRefreshCw, LuPlus, LuPencil, LuTrash2, LuUser, LuUserX, LuTag } from "react-icons/lu";
 import { useAuth } from "../../context/AuthContext";
 import {
   getTasks,
@@ -8,10 +8,15 @@ import {
   updateTask,
   deleteTask,
   reorderTasks,
+  getTags,
+  createTag,
+  updateTag,
+  deleteTag,
 } from "../../services/apiBack";
 import TaskDetailModal from "./TaskDetailModal";
+import TagsManagerModal from "./TagsManagerModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import { STATUS_OPTIONS, adminLabel } from "./planningConstants";
+import { STATUS_OPTIONS, PRIORITY_MAP, adminLabel, readableTextColor } from "./planningConstants";
 import "../admin/UsersManager.css";
 import "./PlanningManager.css";
 
@@ -21,15 +26,20 @@ export default function PlanningManager() {
   const { token, user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [admins, setAdmins] = useState([]);
+  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [selected, setSelected] = useState(null); // tâche en édition (id) ou {} pour création
   const [toDelete, setToDelete] = useState(null);
+  const [managingTags, setManagingTags] = useState(false);
   const [reordering, setReordering] = useState(false);
 
   // Filtre : { type: 'all' | 'mine' | 'unassigned' | 'other', adminId }
   const [filter, setFilter] = useState({ type: "all", adminId: null });
+  // Filtre par étiquettes : liste d'ids ; une tâche passe si elle a au moins
+  // une des étiquettes sélectionnées (logique OU). Vide = pas de filtre.
+  const [tagFilter, setTagFilter] = useState([]);
 
   // Drag & drop natif
   const [dragId, setDragId] = useState(null);
@@ -39,9 +49,14 @@ export default function PlanningManager() {
     setLoading(true);
     setError(null);
     try {
-      const [taskData, adminData] = await Promise.all([getTasks(token), getAdmins(token)]);
+      const [taskData, adminData, tagData] = await Promise.all([
+        getTasks(token),
+        getAdmins(token),
+        getTags(token),
+      ]);
       setTasks(Array.isArray(taskData) ? taskData : []);
       setAdmins(Array.isArray(adminData) ? adminData : []);
+      setTags(Array.isArray(tagData) ? tagData : []);
     } catch (err) {
       setError(err.message || "Impossible de charger le planning.");
     } finally {
@@ -54,7 +69,7 @@ export default function PlanningManager() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  const matchesFilter = (task) => {
+  const matchesAssignee = (task) => {
     switch (filter.type) {
       case "mine":
         return task.assignee_id === user?.id;
@@ -67,10 +82,18 @@ export default function PlanningManager() {
     }
   };
 
+  const matchesTags = (task) => {
+    if (tagFilter.length === 0) return true;
+    const taskTagIds = (task.tags || []).map((t) => t.id);
+    return tagFilter.some((id) => taskTagIds.includes(id));
+  };
+
+  const matchesFilter = (task) => matchesAssignee(task) && matchesTags(task);
+
   const visibleTasks = useMemo(
     () => tasks.filter(matchesFilter),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tasks, filter, user],
+    [tasks, filter, tagFilter, user],
   );
 
   // Tâches visibles regroupées par colonne, triées par position.
@@ -114,6 +137,41 @@ export default function PlanningManager() {
       setActionError(err.message || "Suppression impossible.");
     }
   };
+
+  // --- Étiquettes ---
+
+  const handleCreateTag = async (body) => {
+    const created = await createTag(token, body);
+    setTags((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+  };
+
+  const handleUpdateTag = async (tagId, updates) => {
+    const updated = await updateTag(token, tagId, updates);
+    setTags((prev) =>
+      prev.map((t) => (t.id === tagId ? updated : t)).sort((a, b) => a.name.localeCompare(b.name)),
+    );
+    // Répercute le changement (nom/couleur) sur les tâches déjà chargées.
+    setTasks((prev) =>
+      prev.map((t) => ({
+        ...t,
+        tags: (t.tags || []).map((tag) => (tag.id === tagId ? updated : tag)),
+      })),
+    );
+  };
+
+  const handleDeleteTag = async (tagId) => {
+    await deleteTag(token, tagId);
+    setTags((prev) => prev.filter((t) => t.id !== tagId));
+    setTagFilter((prev) => prev.filter((id) => id !== tagId));
+    setTasks((prev) =>
+      prev.map((t) => ({ ...t, tags: (t.tags || []).filter((tag) => tag.id !== tagId) })),
+    );
+  };
+
+  const toggleTagFilter = (tagId) =>
+    setTagFilter((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
+    );
 
   // --- Drag & drop : déplace une tâche vers une colonne, avant `beforeId`
   // (ou en fin de colonne si null). Recalcule les positions des colonnes
@@ -243,6 +301,10 @@ export default function PlanningManager() {
             <LuRefreshCw size={16} className={loading ? "spin" : ""} />
             <span>Actualiser</span>
           </button>
+          <button className="users-refresh" onClick={() => setManagingTags(true)} title="Gérer les étiquettes">
+            <LuTag size={16} />
+            <span>Gérer les étiquettes</span>
+          </button>
           <button className="cases-add" onClick={() => setSelected({})}>
             <LuPlus size={16} />
             <span>Ajouter une tâche</span>
@@ -277,6 +339,36 @@ export default function PlanningManager() {
           ))}
         </select>
       </div>
+
+      {tags.length > 0 && (
+        <div className="planning-tag-filters">
+          <LuTag size={15} className="planning-tag-filters-icon" />
+          {tags.map((tag) => {
+            const active = tagFilter.includes(tag.id);
+            return (
+              <button
+                key={tag.id}
+                type="button"
+                className={`planning-tag-filter ${active ? "active" : ""}`}
+                style={
+                  active
+                    ? { backgroundColor: tag.color, color: readableTextColor(tag.color), borderColor: tag.color }
+                    : { borderColor: tag.color, color: "var(--text-main)" }
+                }
+                onClick={() => toggleTagFilter(tag.id)}
+              >
+                {!active && <span className="planning-tag-dot" style={{ backgroundColor: tag.color }} />}
+                {tag.name}
+              </button>
+            );
+          })}
+          {tagFilter.length > 0 && (
+            <button type="button" className="planning-tag-filter-clear" onClick={() => setTagFilter([])}>
+              Réinitialiser
+            </button>
+          )}
+        </div>
+      )}
 
       {actionError && <div className="users-alert">{actionError}</div>}
 
@@ -340,6 +432,20 @@ export default function PlanningManager() {
                           </p>
                         )}
 
+                        {task.tags?.length > 0 && (
+                          <div className="planning-card-tags">
+                            {task.tags.map((tag) => (
+                              <span
+                                key={tag.id}
+                                className="planning-card-tag"
+                                style={{ backgroundColor: tag.color, color: readableTextColor(tag.color) }}
+                              >
+                                {tag.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
                         <div className="planning-card-footer">
                           {task.assignee ? (
                             <span className="planning-assignee">
@@ -350,6 +456,17 @@ export default function PlanningManager() {
                             <span className="planning-assignee unassigned">
                               <LuUserX size={13} />
                               Non assignée
+                            </span>
+                          )}
+                          {PRIORITY_MAP[task.priority] && (
+                            <span
+                              className="planning-priority-badge"
+                              style={{
+                                backgroundColor: PRIORITY_MAP[task.priority].color,
+                                color: readableTextColor(PRIORITY_MAP[task.priority].color),
+                              }}
+                            >
+                              {PRIORITY_MAP[task.priority].label}
                             </span>
                           )}
                         </div>
@@ -367,9 +484,20 @@ export default function PlanningManager() {
         <TaskDetailModal
           item={selected}
           admins={admins}
+          tags={tags}
           onClose={() => setSelected(null)}
           onSave={handleSave}
           onDelete={(t) => setToDelete(t)}
+        />
+      )}
+
+      {managingTags && (
+        <TagsManagerModal
+          tags={tags}
+          onClose={() => setManagingTags(false)}
+          onCreate={handleCreateTag}
+          onUpdate={handleUpdateTag}
+          onDelete={handleDeleteTag}
         />
       )}
 

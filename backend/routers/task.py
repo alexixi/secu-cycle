@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models.task import Task
+from models.tag import Tag
 from models.user import User
 from schemas.task import TaskCreate, TaskUpdate, TaskRead, TaskReorder
 from dependencies import require_admin
@@ -21,6 +22,17 @@ def _ensure_assignee_is_admin(db: Session, assignee_id):
         raise HTTPException(status_code=404, detail="Utilisateur assigné introuvable.")
     if not is_user_admin(user):
         raise HTTPException(status_code=400, detail="Une tâche ne peut être assignée qu'à un administrateur.")
+
+
+def _resolve_tags(db: Session, tag_ids):
+    """Renvoie les étiquettes correspondant aux ids fournis (404 si l'une manque)."""
+    if not tag_ids:
+        return []
+    unique_ids = list(dict.fromkeys(tag_ids))
+    tags = db.query(Tag).filter(Tag.id.in_(unique_ids)).all()
+    if len(tags) != len(unique_ids):
+        raise HTTPException(status_code=404, detail="Une ou plusieurs étiquettes sont introuvables.")
+    return tags
 
 
 @router.get("/", response_model=list[TaskRead])
@@ -51,10 +63,13 @@ def create_task(
         title=data.title,
         description=data.description,
         status=data.status,
+        priority=data.priority,
         assignee_id=data.assignee_id,
         created_by_id=admin.id,
         position=position,
     )
+    if data.tag_ids is not None:
+        task.tags = _resolve_tags(db, data.tag_ids)
     db.add(task)
     db.commit()
     db.refresh(task)
@@ -78,6 +93,10 @@ def update_task(
 
     if "assignee_id" in update_data:
         _ensure_assignee_is_admin(db, update_data["assignee_id"])
+
+    # tag_ids n'est pas une colonne : on remplace la relation à part.
+    if "tag_ids" in update_data:
+        task.tags = _resolve_tags(db, update_data.pop("tag_ids"))
 
     # Si la colonne change sans position explicite, on place la tâche en fin de
     # sa nouvelle colonne.
