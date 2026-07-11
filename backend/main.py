@@ -17,7 +17,9 @@ from routers import traffic
 from routers import home_case
 from routers import task
 from routers import tag
+from routers import graph as graph_router
 from seed_home_cases import seed_home_cases
+from graph import builder as graph_builder
 from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic, load_graph_profile
 from graph.route_cache import route_cache
 from contextlib import asynccontextmanager
@@ -86,6 +88,8 @@ async def lifespan(app: FastAPI):
     print("Chargement du graphe...")
 
     profile = load_graph_profile()
+    app.state.graph_profile = profile["name"]
+    app.state.graph_loading = False
     app.state.G = load_graph_with_ign(
         profile["graph_file"], profile["ign_cache_file"], profile["communes"])
 
@@ -98,6 +102,10 @@ async def lifespan(app: FastAPI):
     stale = await asyncio.to_thread(poi_runner.fail_stale_runs)
     if stale:
         print(f"{stale} synchro(s) POI interrompue(s) marquée(s) en échec.", flush=True)
+
+    stale_builds = await asyncio.to_thread(graph_builder.fail_stale_runs)
+    if stale_builds:
+        print(f"{stale_builds} génération(s) de graphe interrompue(s) marquée(s) en échec.", flush=True)
 
     traffic_task = asyncio.create_task(periodic_traffic_update(app))
     poi_task = asyncio.create_task(periodic_poi_sync())
@@ -139,6 +147,7 @@ app.include_router(traffic.router)
 app.include_router(home_case.router)
 app.include_router(task.router)
 app.include_router(tag.router)
+app.include_router(graph_router.router)
 
 origins_str = os.getenv("CORS_ORIGINS", "")
 if origins_str:
