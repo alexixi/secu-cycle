@@ -7,6 +7,7 @@ import CasesPage from "./pages/CasesPage";
 import PlanningPage from "./pages/PlanningPage";
 import ReportsPage from "./pages/ReportsPage";
 import PoisPage from "./pages/PoisPage";
+import GraphPage from "./pages/GraphPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/cases" element={<CasesPage />} />
         <Route path="/planning" element={<PlanningPage />} />
         <Route path="/pois" element={<PoisPage />} />
+        <Route path="/graph" element={<GraphPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
