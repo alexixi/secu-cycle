@@ -75,6 +75,59 @@
   min-height: 1.2em;
 }
 
+/* --- Badges obtenus --- */
+
+.user-detail-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.user-detail-badges-title {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.user-detail-badges-title em {
+  font-style: normal;
+}
+
+.user-detail-badges-empty {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.user-detail-badges-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  background: var(--primary-transparent);
+  color: var(--primary-hover);
+  font-size: 0.82rem;
+}
+
+.user-detail-badge-name {
+  font-weight: 600;
+}
+
+.user-detail-badge-date {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
 .user-detail-toggle {
   display: flex;
   align-items: center;
