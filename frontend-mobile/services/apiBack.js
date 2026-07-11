@@ -300,6 +300,24 @@ export async function getUserHistoric(token) {
     }
 }
 
+export async function getBadges(token) {
+    try {
+        const data = await apiFetch("/badges/", { method: "GET" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function completeRoute(token, routeId) {
+    try {
+        const data = await apiFetch(`/routes/${routeId}/complete`, { method: "POST" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function deleteHistoricEntry(token, historyId) {
     try {
         const data = await apiFetch(`/history/${historyId}`, { method: "DELETE" }, token);

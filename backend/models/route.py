@@ -17,3 +17,6 @@ class Route(Base):
     bike_type = Column(String(50), nullable=True)
     is_electric = Column(String(5), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    # Renseigné à l'arrivée via POST /routes/{id}/complete. Une ligne est créée dès le
+    # calcul (2-3 variantes par recherche) : seule celle réellement parcourue est complétée.
+    completed_at = Column(DateTime(timezone=True), nullable=True)

@@ -35,14 +35,16 @@ class RouteRead(RouteBase):
     bike_type: Optional[str] = None
     is_electric: Optional[str] = None
     created_at: datetime
+    completed_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
-        
+
 class ComputedRoute(BaseModel):
     """Une route calculée par get_optimal_routes, jamais persistée telle quelle."""
     id: str                          # "fast" | "safe" | "compromise"
     name: str
+    route_id: Optional[int] = None   # id en base, None si utilisateur anonyme
     path: List[Any]                  # liste de coordonnées GeoJSON
     nodes: List[int]                 # route_nodes OSMnx, utile côté front pour /nav/update
     distance: float

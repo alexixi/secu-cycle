@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text, Alert } from 'react-native';
 import MapComponent from '../../components/MapComponent';
 import SearchContainer from '../../components/SearchContainer';
-import { calculateItineraries } from "../../services/apiBack";
+import { calculateItineraries, completeRoute } from "../../services/apiBack";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from '../../hooks/useTheme';
 import useGuidance from '../../hooks/useGuidance';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import GuidancePanel from '../../components/GuidancePanel';
 import ItineraryPanel from '../../components/ItineraryPanel';
+import BadgeUnlockedModal from '../../components/BadgeUnlockedModal';
 import * as Haptics from 'expo-haptics';
 import { trackEvent } from '../../services/analytics';
 
@@ -23,6 +24,10 @@ export default function Index() {
     const [errorPath, setErrorPath] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const [pendingPoiRoute, setPendingPoiRoute] = useState(false);
+    // File des badges gagnés à l'arrivée : le modal affiche la tête, onNext dépile.
+    const [unlockedBadges, setUnlockedBadges] = useState([]);
+    // Garde anti-double-appel : un trajet n'est complété qu'une fois par calcul.
+    const completedRouteRef = useRef(null);
 
     const { token, user, bikes } = useAuth();
     const { colors, typography } = useTheme();
@@ -59,8 +64,35 @@ export default function Index() {
             setSelectedItineraire(null);
             setErrorPath(false);
             setIsNavigating(false);
+            completedRouteRef.current = null;
         }
     }, [startPoint, endPoint]);
+
+    // À l'arrivée, on marque terminée la seule variante réellement suivie : le backend
+    // a persisté 2-3 routes au calcul, mais l'utilisateur n'en a parcouru qu'une.
+    // On dépend du booléen hasArrived, pas de guidanceState (recréé à chaque tick de 2 s).
+    useEffect(() => {
+        if (!guidanceState?.hasArrived) return;
+
+        const activeRoute = routePaths?.find(it => it.id === selectedItineraire);
+        const routeId = activeRoute?.route_id ?? null;
+
+        // Pas de token (calcul anonyme, aucune route persistée) ou déjà complété.
+        if (!token || routeId == null) return;
+        if (completedRouteRef.current === routeId) return;
+        completedRouteRef.current = routeId;
+
+        (async () => {
+            try {
+                const result = await completeRoute(token, routeId);
+                if (result?.newly_unlocked?.length) {
+                    setUnlockedBadges(result.newly_unlocked);
+                }
+            } catch (error) {
+                console.error("Erreur lors de la validation du trajet:", error);
+            }
+        })();
+    }, [guidanceState?.hasArrived, token, routePaths, selectedItineraire]);
 
     const handleCalculate = React.useCallback(async () => {
         if (!startPoint?.lat || !startPoint?.lon || !endPoint?.lat || !endPoint?.lon) {
@@ -74,6 +106,7 @@ export default function Index() {
         setSelectedItineraire(null);
         setErrorPath(false);
         setIsNavigating(false);
+        completedRouteRef.current = null;
 
         try {
             const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint?.name, endPoint?.name);
@@ -202,6 +235,13 @@ export default function Index() {
                     <Text style={styles.startButtonText}>Démarrer</Text>
                 </TouchableOpacity>
             )}
+
+            <BadgeUnlockedModal
+                badge={unlockedBadges[0] ?? null}
+                remaining={Math.max(0, unlockedBadges.length - 1)}
+                onNext={() => setUnlockedBadges(prev => prev.slice(1))}
+                colors={colors}
+            />
 
         </View>
     );

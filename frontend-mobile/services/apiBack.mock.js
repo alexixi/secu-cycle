@@ -122,6 +122,28 @@ export async function suppressBike(token, bike) {
     await new Promise(resolve => setTimeout(resolve, 500));
 }
 
+// Progressions alignées sur getUserHistoric : 2 trajets terminés, tous deux `safe`, 24.68 km.
+export async function getBadges(token) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    return [
+        { id: 1, code: "first_route", name: "Premier itinéraire", description: "Terminer votre premier trajet.", criteria: "routes_completed", icon: "bicycle", goal_value: 1, obtained_at: "2026-04-04T14:35:12Z", progress: 2 },
+        { id: 2, code: "routes_10", name: "10 itinéraires", description: "Terminer 10 trajets.", criteria: "routes_completed", icon: "trophy", goal_value: 10, obtained_at: null, progress: 2 },
+        { id: 3, code: "safe_routes_10", name: "10 itinéraires sécurisés", description: "Terminer 10 trajets en suivant l'itinéraire sécurisé.", criteria: "safe_routes_completed", icon: "shield-checkmark", goal_value: 10, obtained_at: null, progress: 2 },
+        { id: 4, code: "distance_50", name: "50 km parcourus", description: "Cumuler 50 km sur vos trajets terminés.", criteria: "total_distance_km", icon: "speedometer", goal_value: 50, obtained_at: null, progress: 24.68 },
+        { id: 5, code: "distance_200", name: "200 km parcourus", description: "Cumuler 200 km sur vos trajets terminés.", criteria: "total_distance_km", icon: "earth", goal_value: 200, obtained_at: null, progress: 24.68 },
+    ];
+}
+
+export async function completeRoute(token, routeId) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return {
+        completed: true,
+        newly_unlocked: [
+            { id: 1, code: "first_route", name: "Premier itinéraire", description: "Terminer votre premier trajet.", criteria: "routes_completed", icon: "bicycle", goal_value: 1 },
+        ],
+    };
+}
+
 export async function getUserHistoric(token) {
     await new Promise(resolve => setTimeout(resolve, 250));
     return [
@@ -149,6 +171,7 @@ export async function getUserHistoric(token) {
                 "id": 0,
                 "user_id": 0,
                 "created_at": "2026-04-04T14:20:39.484Z",
+                "completed_at": "2026-04-04T14:35:12.000Z",
                 "path": [
                     { "lat": 44.8378, "lon": -0.5795 },
                     { "lat": 44.8400, "lon": -0.5750 },
@@ -181,6 +204,7 @@ export async function getUserHistoric(token) {
                 "id": 0,
                 "user_id": 0,
                 "created_at": "2026-04-04T14:20:39.484Z",
+                "completed_at": "2026-04-05T09:12:03.000Z",
                 "path": [
                     { "lat": 44.8378, "lon": -0.5795 },
                     { "lat": 44.8400, "lon": -0.5750 },

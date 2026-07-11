@@ -2,7 +2,7 @@ import "./ProfilePage.css"
 
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike, getUserBikes, getUserHistoric, deleteHistoricEntry, deleteAllHistoric } from "../services/apiBack";
+import { changeProfileInfo, changeAddress, addBike, editBike, suppressBike, getUserBikes, getUserHistoric, deleteHistoricEntry, deleteAllHistoric, getBadges } from "../services/apiBack";
 import { trackEvent } from "../services/analytics";
 
 import Meta from "../components/Meta";
@@ -32,7 +32,21 @@ import IconBikeVTT from '../assets/bikes/vtt.svg?react';
 import IconBikeVTT_Electric from '../assets/bikes/vtt-electric.svg?react';
 import IconBikeRoute from '../assets/bikes/route.svg?react';
 import { AiFillPlusCircle } from "react-icons/ai";
-import { FaHome, FaUserEdit } from "react-icons/fa";
+import { FaHome, FaUserEdit, FaMedal } from "react-icons/fa";
+
+// Le mobile lit `badge.icon` (nom Ionicons) ; le web utilise react-icons, d'où ce mapping
+// par `code`, avec FaMedal en repli pour tout badge ajouté plus tard côté backend.
+const BADGE_ICONS = {
+  first_route: MdDirectionsBike,
+  routes_10: FaStar,
+  safe_routes_10: MdHealthAndSafety,
+  distance_50: MdOutlineRoute,
+  distance_200: MdStraighten,
+};
+
+// Un compteur de distance est fractionnaire, un compteur de trajets ne l'est pas.
+const formatProgress = (value, criteria) =>
+  criteria === "total_distance_km" ? Number(value).toFixed(1) : Math.round(value);
 
 export default function ProfilePage() {
   const { user, updateUser, token, userBikes, updateBikes, historic, updateHistoric } = useAuth();
@@ -57,6 +71,7 @@ export default function ProfilePage() {
   const [homeAddress, setHomeAddress] = useState(user?.home_address || "");
   const [workAddress, setWorkAddress] = useState(user?.work_address || "");
   const [bikes, setBikes] = useState(userBikes || []);
+  const [badges, setBadges] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -70,6 +85,12 @@ export default function ProfilePage() {
       setBikes(userBikes || []);
     }
   }, [user, userBikes]);
+
+  useEffect(() => {
+    if (token) {
+      getBadges(token).then(setBadges).catch(console.error);
+    }
+  }, [token]);
 
   useEffect(() => {
     if (token) {
@@ -379,7 +400,9 @@ export default function ProfilePage() {
             <h2>Statistiques</h2>
             <div className="statistic">
               {(() => {
-                const trajets = historic.filter(e => e.route);
+                // Seuls les trajets réellement parcourus comptent : une recherche persiste
+                // 2 à 3 variantes (rapide / sécurisé / compromis) dont une seule est complétée.
+                const trajets = historic.filter(e => e.route && e.route.completed_at);
                 const totalTrajets = trajets.length;
                 const totalDist = trajets.reduce((s, e) => s + (e.route.distance_km || 0), 0);
                 const totalTime = trajets.reduce((s, e) => s + (e.route.duration_min || 0), 0);
@@ -401,7 +424,7 @@ export default function ProfilePage() {
                     <div className="stat-card">
                       <span className="stat-card-icon"><MdDirectionsBike size={24} /></span>
                       <span className="stat-value">{totalTrajets}</span>
-                      <span className="stat-label">Trajets effectués</span>
+                      <span className="stat-label">Trajets terminés</span>
                     </div>
                     <div className="stat-card">
                       <span className="stat-card-icon"><MdOutlineRoute size={24} /></span>
@@ -430,6 +453,37 @@ export default function ProfilePage() {
                   </div>
                 );
               })()}
+            </div>
+          </div>
+
+          <div className="profile-section">
+            <h2>Mes badges</h2>
+            <div className="statistic">
+              {badges.length === 0 ? (
+                <p style={{ paddingLeft: "3%", color: "var(--text-secondary)" }}>Aucun badge disponible.</p>
+              ) : (
+                <div className="badges-grid">
+                  {badges.map((badge) => {
+                    const BadgeIcon = BADGE_ICONS[badge.code] || FaMedal;
+                    const unlocked = !!badge.obtained_at;
+                    return (
+                      <div
+                        key={badge.id}
+                        className={`stat-card${unlocked ? "" : " badge-locked"}`}
+                        title={badge.description}
+                      >
+                        <span className="stat-card-icon"><BadgeIcon size={24} /></span>
+                        <span className="stat-value badge-name">{badge.name}</span>
+                        <span className="stat-label">
+                          {unlocked
+                            ? "Débloqué"
+                            : `${formatProgress(badge.progress, badge.criteria)}/${badge.goal_value}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 

@@ -1,12 +1,16 @@
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Button, DangerButton, OutlineButton } from '../../components/ui/Button';
 import HistoricModal from '../../components/HistoricModal';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
-import { getUserHistoric, deleteHistoricEntry } from '../../services/apiBack';
+import { getUserHistoric, deleteHistoricEntry, getBadges } from '../../services/apiBack';
+
+// Un compteur de distance est fractionnaire, un compteur de trajets ne l'est pas.
+const formatProgress = (value, criteria) =>
+    criteria === 'total_distance_km' ? Number(value).toFixed(1) : Math.round(value);
 
 export default function ProfilePage() {
 
@@ -19,6 +23,8 @@ export default function ProfilePage() {
     const [userHistoric, setHistoric] = useState([]);
     const [isModalOpenHistoric, setIsModalOpenHistoric] = useState(false);
     const [selectedHistoricEntry, setSelectedHistoricEntry] = useState(null);
+    const [badges, setBadges] = useState([]);
+    const [badgesLoading, setBadgesLoading] = useState(true);
 
     const handleOpenHistoric = (entry) => {
         setSelectedHistoricEntry(entry);
@@ -45,11 +51,34 @@ export default function ProfilePage() {
         }
     }, [token]);
 
+    useEffect(() => {
+        // /badges/ exige un token : sans lui on coupe le spinner au lieu de le laisser tourner.
+        if (!token) {
+            setBadgesLoading(false);
+            return;
+        }
+        const loadBadges = async () => {
+            try {
+                setBadgesLoading(true);
+                setBadges(await getBadges(token));
+            } catch (error) {
+                console.error("Erreur chargement badges:", error);
+            } finally {
+                setBadgesLoading(false);
+            }
+        };
+        loadBadges();
+    }, [token]);
+
+    // L'historique liste toutes les entrées, y compris les itinéraires seulement calculés.
     const trajets = userHistoric.filter(e => e.route);
-    const totalTrajets = trajets.length;
-    const totalDist = trajets.reduce((s, e) => s + (e.route.distance_km || 0), 0);
-    const totalTime = trajets.reduce((s, e) => s + (e.route.duration_min || 0), 0);
-    const typeCount = trajets.reduce((acc, e) => {
+    // Les stats ne comptent que les trajets réellement parcourus : une recherche persiste
+    // 2 à 3 variantes (rapide / sécurisé / compromis) dont une seule est complétée.
+    const trajetsTermines = trajets.filter(e => e.route.completed_at);
+    const totalTrajets = trajetsTermines.length;
+    const totalDist = trajetsTermines.reduce((s, e) => s + (e.route.distance_km || 0), 0);
+    const totalTime = trajetsTermines.reduce((s, e) => s + (e.route.duration_min || 0), 0);
+    const typeCount = trajetsTermines.reduce((acc, e) => {
         const t = e.route.route_type;
         acc[t] = (acc[t] || 0) + 1;
         return acc;
@@ -58,7 +87,7 @@ export default function ProfilePage() {
     const prefType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
 
     const statsData = [
-        { label: "Trajets effectués", value: totalTrajets, icon: "bicycle-outline", color: "#3d46f6" },
+        { label: "Trajets terminés", value: totalTrajets, icon: "bicycle-outline", color: "#3d46f6" },
         { label: "Distance totale", value: `${totalDist.toFixed(1)} km`, icon: "navigate-outline", color: "#10B981" },
         { label: "Temps total", value: `${Math.floor(totalTime / 60)}h ${Math.round(totalTime % 60)}min`, icon: "time-outline", color: "#F59E0B" },
         { label: "Type préféré", value: prefType ? typeLabels[prefType[0]] : `--`, icon: "heart-outline", color: "#EC4899" },
@@ -245,6 +274,55 @@ export default function ProfilePage() {
 
                 <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                     <View style={styles.sectionTitleRow}>
+                        <Ionicons name="trophy-outline" size={24} color={colors.textMain} />
+                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes badges</Text>
+                    </View>
+
+                    {badgesLoading ? (
+                        <ActivityIndicator color={colors.primary} style={{ paddingVertical: 20 }} />
+                    ) : badges.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                            <Ionicons name="trophy-outline" size={40} color={colors.borderStrong} />
+                            <Text style={{ color: colors.textSecondary, marginTop: 10 }}>Aucun badge disponible</Text>
+                        </View>
+                    ) : (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.badgesRow}
+                        >
+                            {badges.map((badge) => {
+                                const unlocked = !!badge.obtained_at;
+                                return (
+                                    <View
+                                        key={badge.id}
+                                        style={[
+                                            styles.badgeCard,
+                                            { borderColor: colors.borderLight, opacity: unlocked ? 1 : 0.45 },
+                                        ]}
+                                    >
+                                        <Ionicons
+                                            name={badge.icon || 'trophy'}
+                                            size={20}
+                                            color={unlocked ? colors.primary : colors.textSecondary}
+                                        />
+                                        <Text style={[styles.statValue, { color: colors.textMain }]} numberOfLines={2}>
+                                            {badge.name}
+                                        </Text>
+                                        <Text style={[styles.statLabel, { color: unlocked ? '#10B981' : colors.textSecondary }]}>
+                                            {unlocked
+                                                ? 'Débloqué'
+                                                : `${formatProgress(badge.progress, badge.criteria)}/${badge.goal_value}`}
+                                        </Text>
+                                    </View>
+                                );
+                            })}
+                        </ScrollView>
+                    )}
+                </View>
+
+                <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
+                    <View style={styles.sectionTitleRow}>
                         <Ionicons name="time-outline" size={24} color={colors.textMain} />
                         <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mon historique</Text>
                         {trajets.length > 0 && (
@@ -393,6 +471,20 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         marginBottom: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    badgesRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 5,
+        paddingBottom: 5,
+    },
+    badgeCard: {
+        width: 110,
+        padding: 12,
+        borderRadius: 12,
+        borderWidth: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },

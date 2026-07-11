@@ -101,6 +101,10 @@ export async function adminDeleteUser(token, userId) {
     return apiFetch(`/users/${userId}`, { method: "DELETE" }, token);
 }
 
+export async function getUserBadges(token, userId) {
+    return apiFetch(`/badges/user/${userId}`, { method: "GET" }, token);
+}
+
 // --- Signalements (modération) ---
 
 export async function getReportsAdmin(token) {
