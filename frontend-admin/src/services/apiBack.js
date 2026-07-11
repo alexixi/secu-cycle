@@ -202,3 +202,26 @@ export async function updateTag(token, tagId, updates) {
 export async function deleteTag(token, tagId) {
     return apiFetch(`/tags/${tagId}`, { method: "DELETE" }, token);
 }
+
+export async function getPoiStats(token) {
+    return apiFetch("/pois/admin/stats", { method: "GET" }, token);
+}
+
+export async function triggerPoiSync(token) {
+    return apiFetch("/pois/admin/sync", { method: "POST" }, token);
+}
+
+export async function getPoiSyncRuns(token, limit = 20) {
+    return apiFetch(`/pois/admin/runs?limit=${limit}`, { method: "GET" }, token);
+}
+
+export async function getPoiSyncSettings(token) {
+    return apiFetch("/pois/admin/settings", { method: "GET" }, token);
+}
+
+export async function updatePoiSyncSettings(token, updates) {
+    return apiFetch("/pois/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}

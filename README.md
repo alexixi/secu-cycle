@@ -81,6 +81,31 @@ make prod
 
 `make prod` lance la commande production du backend qui construit les conteneurs en mode production (plus de restrictions sur les ports) et la commande déploiement du frontend web qui fait un build du projet via Vite, deplace le build au bon endroit et donne les bonnes permissions pour que Nginx puisse y accéder.
 
+### Points d'intérêt (POI)
+Les POI (eau, toilettes, stationnement, réparation) sont stockés en base et servis par `GET /pois/` :
+la carte ne dépend donc jamais d'Overpass à l'exécution. La table `map_pois` est créée automatiquement
+par les migrations Alembic au démarrage du conteneur, mais **son remplissage n'est pas automatique**.
+
+Tout se pilote depuis la page **Points d'intérêt** du dashboard admin : nombre de POI par catégorie,
+bouton « Synchroniser maintenant », réglage de l'intervalle de synchronisation automatique (0 = désactivé)
+et historique des récupérations (manuelle ou automatique, date, nombre de POI, nouveaux, supprimés, échecs).
+Après un premier déploiement, il faut donc lancer une synchro depuis cette page pour peupler la carte.
+
+La synchro interroge Overpass sur l'emprise du profil `GRAPH_PROFILE` actif (quelques minutes), met à jour
+les POI existants et purge ceux qui ont disparu d'OSM. Elle est idempotente, tourne en tâche de fond et ne
+nécessite aucun redémarrage. En cas d'échec Overpass, rien n'est écrit : la base reste inchangée et le run
+apparaît en échec dans l'historique.
+
+En recours (dashboard inaccessible), la synchro reste lançable en ligne de commande :
+
+```sh
+# Stack lancée par le compose du dépôt
+make sync-pois
+
+# Stack gérée par Coolify (le conteneur n'appartient pas au projet compose local)
+docker exec <conteneur_api> python -m pois.sync
+```
+
 ### Sécurité : limitation du débit (rate-limiting)
 L'API limite déjà le débit des tentatives de connexion (`5/minute` par IP via `slowapi`).
 En production, l'API tourne derrière Nginx avec plusieurs workers : le stockage en mémoire de

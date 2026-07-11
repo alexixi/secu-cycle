@@ -1,5 +1,11 @@
 from fastapi import FastAPI
 import asyncio
+from datetime import timedelta
+from sqlalchemy import select
+from sqlalchemy.sql import func
+from database import SessionLocal
+from models.poi_sync import PoiSyncRun
+from pois import runner as poi_runner
 from routers import user
 from routers import route
 from routers import history
@@ -35,6 +41,45 @@ async def periodic_traffic_update(app: FastAPI):
             app.state.G = await asyncio.to_thread(update_graph_with_traffic, app.state.G)
             route_cache.invalidate()
 
+
+POI_SYNC_CHECK_INTERVAL = 60
+
+
+def poi_sync_is_due() -> bool:
+    """La synchro auto est-elle activée et son échéance passée ?"""
+    db = SessionLocal()
+    try:
+        interval_hours = poi_runner.get_settings(db).interval_hours
+        if not interval_hours:
+            return False
+        if poi_runner.is_running(db):
+            return False
+
+        recent = db.execute(
+            select(PoiSyncRun.id)
+            .where(PoiSyncRun.started_at >= func.now() - timedelta(hours=interval_hours))
+            .limit(1)
+        ).first()
+        return recent is None
+    finally:
+        db.close()
+
+
+async def periodic_poi_sync():
+    """
+    Boucle infinie qui s'exécute en arrière-plan.
+    Resynchronise les POI depuis OSM à l'intervalle réglé par les admins.
+    """
+    while True:
+        await asyncio.sleep(POI_SYNC_CHECK_INTERVAL)
+        try:
+            if await asyncio.to_thread(poi_sync_is_due):
+                print("[Background Task] Synchronisation automatique des POI...", flush=True)
+                await asyncio.to_thread(poi_runner.run_sync, "auto")
+        except Exception as exc:
+            # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
+            print(f"[Background Task] Échec de la synchro POI : {exc}", flush=True)
+
 seed_home_cases()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -50,17 +95,24 @@ async def lifespan(app: FastAPI):
 
     print("Graphe chargé et prêt !")
 
+    stale = await asyncio.to_thread(poi_runner.fail_stale_runs)
+    if stale:
+        print(f"{stale} synchro(s) POI interrompue(s) marquée(s) en échec.", flush=True)
+
     traffic_task = asyncio.create_task(periodic_traffic_update(app))
+    poi_task = asyncio.create_task(periodic_poi_sync())
 
     yield
 
     print("Shutdown serveur en cours...")
 
     traffic_task.cancel()
-    try:
-        await traffic_task
-    except asyncio.CancelledError:
-        pass
+    poi_task.cancel()
+    for task in (traffic_task, poi_task):
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
     print("Shutdown terminé")
 

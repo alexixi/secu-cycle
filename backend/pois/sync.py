@@ -117,6 +117,21 @@ def _rows_from_gdf(gdf) -> list[dict]:
     return list(rows.values())
 
 
+def _count_created(db, rows) -> int:
+    """Nombre de POI absents de la base avant l'upsert.
+
+    `ON CONFLICT DO UPDATE` ne distingue pas insertion et mise à jour : on
+    compare donc les clés OSM à celles déjà présentes.
+    """
+    existing = set(
+        db.execute(select(MapPoi.osm_type, MapPoi.osm_id, MapPoi.category)).all()
+    )
+    return sum(
+        1 for row in rows
+        if (row["osm_type"], row["osm_id"], row["category"]) not in existing
+    )
+
+
 def _upsert(db, rows):
     for start in range(0, len(rows), UPSERT_CHUNK_SIZE):
         chunk = rows[start:start + UPSERT_CHUNK_SIZE]
@@ -134,7 +149,13 @@ def _upsert(db, rows):
         db.execute(stmt)
 
 
-def sync():
+def sync() -> dict:
+    """Synchronise la base avec OSM et renvoie les compteurs du run.
+
+    Retourne {"total", "created", "deleted"} : respectivement le nombre de POI
+    en base à l'issue du run, ceux qui n'y étaient pas, et ceux qui ont disparu
+    d'OSM. Ces compteurs alimentent l'historique des synchros (`poi_sync_runs`).
+    """
     profile = load_graph_profile()
     communes = profile["communes"]
 
@@ -143,14 +164,16 @@ def sync():
     rows = _rows_from_gdf(gdf)
     print(f"[sync-pois] {len(gdf)} objets OSM reçus, {len(rows)} POI retenus.", flush=True)
 
-    if not rows:
-        print("[sync-pois] Aucun POI retenu : la base est laissée inchangée.", flush=True)
-        return
-
     db = SessionLocal()
     try:
+        if not rows:
+            total = db.execute(select(func.count(MapPoi.id))).scalar_one()
+            print("[sync-pois] Aucun POI retenu : la base est laissée inchangée.", flush=True)
+            return {"total": total, "created": 0, "deleted": 0}
 
         run_start: datetime = db.execute(select(func.now())).scalar_one()
+
+        created = _count_created(db, rows)
 
         _upsert(db, rows)
 
@@ -159,7 +182,12 @@ def sync():
         ).rowcount
         db.commit()
 
-        print(f"[sync-pois] {len(rows)} POI enregistrés, {purged} obsolètes purgés.", flush=True)
+        print(
+            f"[sync-pois] {len(rows)} POI enregistrés ({created} nouveaux), "
+            f"{purged} obsolètes purgés.",
+            flush=True,
+        )
+        return {"total": len(rows), "created": created, "deleted": purged}
     except Exception:
         db.rollback()
         raise

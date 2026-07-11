@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -6,7 +7,17 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
+from dependencies import require_admin
 from models.poi import MapPoi, POI_CATEGORIES, parking_type_of, toilet_fee_of, repair_kind_of
+from models.poi_sync import PoiSyncRun
+from models.user import User
+from pois import runner
+from schemas.poi import (
+    PoiStatsRead,
+    PoiSyncRunRead,
+    PoiSyncSettingsRead,
+    PoiSyncSettingsUpdate,
+)
 
 router = APIRouter(prefix="/pois", tags=["POIs"])
 
@@ -99,3 +110,90 @@ def get_pois(
         {"type": "FeatureCollection", "features": features},
         headers=headers,
     )
+
+
+_background_tasks = set()
+
+
+@router.get("/admin/stats", response_model=PoiStatsRead)
+def get_poi_stats(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Comptage des POI par catégorie et date de la dernière mise à jour."""
+    counts = dict(
+        db.query(MapPoi.category, func.count(MapPoi.id)).group_by(MapPoi.category).all()
+    )
+    by_category = {category: counts.get(category, 0) for category in POI_CATEGORIES}
+    return PoiStatsRead(
+        by_category=by_category,
+        total=sum(by_category.values()),
+        last_sync=db.query(func.max(MapPoi.updated_at)).scalar(),
+    )
+
+
+@router.post("/admin/sync", response_model=PoiSyncRunRead, status_code=202)
+async def trigger_poi_sync(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Déclenche une synchronisation OSM en tâche de fond.
+
+    La réponse n'attend pas la fin (Overpass prend quelques minutes) : elle
+    renvoie le run « en cours », dont l'issue se lit via `/pois/admin/runs`.
+
+    `async def` est nécessaire : `asyncio.create_task` exige un event loop, or
+    un endpoint synchrone s'exécuterait dans un thread du pool.
+    """
+    if runner.is_running(db):
+        raise HTTPException(status_code=409, detail="Une synchronisation est déjà en cours.")
+
+    run = runner.create_run(db, "manual")
+
+    task = asyncio.create_task(asyncio.to_thread(runner.execute_run, run.id))
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+
+    return run
+
+
+@router.get("/admin/runs", response_model=list[PoiSyncRunRead])
+def list_poi_sync_runs(
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Historique des synchronisations, de la plus récente à la plus ancienne."""
+    return (
+        db.query(PoiSyncRun)
+        .order_by(PoiSyncRun.started_at.desc(), PoiSyncRun.id.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+@router.get("/admin/settings", response_model=PoiSyncSettingsRead)
+def get_poi_sync_settings(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    return runner.get_settings(db)
+
+
+@router.patch("/admin/settings", response_model=PoiSyncSettingsRead)
+def update_poi_sync_settings(
+    updates: PoiSyncSettingsUpdate,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Règle l'intervalle de synchronisation automatique (0 ou null = désactivé)."""
+    update_data = updates.model_dump(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+
+    settings = runner.get_settings(db)
+    for field, value in update_data.items():
+        setattr(settings, field, value)
+    db.commit()
+    db.refresh(settings)
+    return settings

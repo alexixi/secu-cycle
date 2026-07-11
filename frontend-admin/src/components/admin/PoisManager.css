@@ -1,0 +1,136 @@
+.pois-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.pois-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background: var(--bg-surface);
+}
+
+.pois-stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0.35rem;
+  border-radius: 8px;
+  background: var(--primary-transparent);
+  color: var(--primary-hover);
+}
+
+.pois-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.pois-stat-label {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.pois-settings {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  margin-bottom: 1.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background: var(--bg-tertiary);
+}
+
+.pois-settings-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.pois-settings-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.pois-settings-input input {
+  width: 5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.pois-settings-input input:focus {
+  border-color: var(--primary);
+}
+
+.pois-settings-hint {
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.pois-section-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.pois-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+
+.pois-status-success {
+  background: var(--primary-transparent);
+  color: var(--green-color);
+}
+
+.pois-status-failed {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.pois-error {
+  margin: 0.35rem 0 0;
+  color: var(--error);
+  font-size: 0.78rem;
+  max-width: 22rem;
+}
+
+.users-manager .users-table tbody tr:has(.pois-status) {
+  cursor: default;
+}
+
+.pois-card {
+  align-items: flex-start;
+  cursor: default;
+}

@@ -11,6 +11,7 @@ from models import (  # noqa: F401
     history,
     home_case,
     poi,
+    poi_sync,
     report,
     route,
     tag,
