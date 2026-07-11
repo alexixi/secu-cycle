@@ -80,4 +80,9 @@ regen-graph:
 	@echo "    L'API ne répondra qu'à la fin du chargement. Suivi des logs (Ctrl-C = quitter le suivi, la régen continue) :"
 	$(COMPOSE_PROD) logs -f api
 
-.PHONY: all api api-background api-build api-stop web web-docker web-install mobile mobile-install appli install logs shell stop down clean prod deploy deploy-static regen-graph
+sync-pois:
+	@test -n "$(GRAPH_PROFILE_ACTIVE)" || { echo "❌ GRAPH_PROFILE introuvable dans backend/.env"; exit 1; }
+	@echo "🚰 Synchronisation des POI OSM pour le profil '$(GRAPH_PROFILE_ACTIVE)' (Overpass, qq min)..."
+	$(COMPOSE) exec api python -m pois.sync
+
+.PHONY: all api api-background api-build api-stop web web-docker web-install mobile mobile-install appli install logs shell stop down clean prod deploy deploy-static regen-graph sync-pois

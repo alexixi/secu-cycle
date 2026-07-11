@@ -5,6 +5,7 @@ from routers import route
 from routers import history
 from routers import bike
 from routers import report
+from routers import poi
 from routers import navigation
 from routers import traffic
 from routers import home_case
@@ -15,6 +16,7 @@ from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic, 
 from graph.route_cache import route_cache
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from limiter import limiter
@@ -67,6 +69,8 @@ app = FastAPI(title="Sécu Cycle", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 
 @app.get("/health")
 def health():
@@ -77,6 +81,7 @@ app.include_router(route.router)
 app.include_router(history.router)
 app.include_router(bike.router)
 app.include_router(report.router)
+app.include_router(poi.router)
 app.include_router(navigation.router)
 app.include_router(traffic.router)
 app.include_router(home_case.router)

@@ -349,6 +349,15 @@ export async function createReport(token, reportType, description, latitude, lon
     }
 }
 
+export async function getPois(category) {
+    try {
+        const data = await apiFetch(`/pois/?categories=${encodeURIComponent(category)}`, { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function getTraffic() {
     try {
         const data = await apiFetch("/traffic/", { method: "GET" });

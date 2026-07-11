@@ -45,13 +45,27 @@ démarrage du conteneur l'appliquera.
 
 ### Bascule d'une base existante vers Alembic (une seule fois)
 Une base créée avant Alembic (par l'ancien `Base.metadata.create_all`) contient
-déjà les tables mais pas la table `alembic_version`. Il faut la marquer au
-baseline sans rejouer les `CREATE TABLE` :
+déjà des tables mais pas la table `alembic_version`. Sans rien faire, le
+conteneur crashe au démarrage sur `relation "..." already exists` : Alembic croit
+la base vierge et rejoue la baseline. Le plus simple, si les données ne sont pas
+précieuses, est de repartir de zéro avec `make clean`.
+
+Sinon, il faut la marquer au baseline sans rejouer les `CREATE TABLE`, **puis**
+rattraper la dérive :
 ```sh
 make shell
 alembic stamp head
-alembic check   # doit afficher "No new upgrade operations detected."
+alembic check
 ```
-Si `alembic check` signale des colonnes manquantes, c'est de la dérive laissée
-par `create_all` (qui n'a jamais su modifier une table existante) : les ajouter
-à la main en SQL, puis relancer `alembic check` jusqu'à ce qu'il soit propre.
+`stamp head` déclare la base à jour, mais ne vérifie rien : elle peut très bien
+être en retard sur les modèles. C'est `alembic check` qui le dit, et il faut
+corriger jusqu'à obtenir `No new upgrade operations detected.` :
+
+- **table manquante** (`add_table`) : `create_all` ne crée que ce qui manque, sans
+  toucher à l'existant.
+  ```sh
+  python -c "import models; from database import Base, engine; Base.metadata.create_all(bind=engine)"
+  ```
+- **colonne manquante** (`add_column`) : `create_all` n'a jamais su modifier une
+  table existante — c'est justement l'origine de la dérive. Il faut du SQL, par
+  exemple `ALTER TABLE tasks ADD COLUMN IF NOT EXISTS priority VARCHAR(20);`

@@ -194,6 +194,7 @@ export default function ItinerairePage() {
                     isReportMode={isReportMode}
                     onToggleReportMode={() => token && setIsReportMode(prev => !prev)}
                     canReport={!!token}
+                    onNavigateToPoi={handleEndSelect}
                     littleMap={false}
                 />
             </div>

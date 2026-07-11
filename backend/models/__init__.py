@@ -10,6 +10,7 @@ from models import (  # noqa: F401
     email_verification,
     history,
     home_case,
+    poi,
     report,
     route,
     tag,
