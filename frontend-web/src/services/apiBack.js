@@ -144,6 +144,24 @@ export async function resendVerification(email) {
     }
 }
 
+export async function sendContactMessage(firstName, lastName, email, subject, message) {
+    try {
+        const data = await apiFetch("/contact/", {
+            method: "POST",
+            body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                subject: subject,
+                message: message,
+            })
+        }, null);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function register(firstName, lastName, birthdate, email, password) {
     try {
         const data = await apiFetch("/users/", {

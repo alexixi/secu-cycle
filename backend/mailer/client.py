@@ -16,6 +16,7 @@ def send_email(
     html: str,
     text: str | None = None,
     from_addr: str | None = None,
+    reply_to: str | None = None,
 ) -> None:
     """Envoie un e-mail via Resend.
 
@@ -24,6 +25,7 @@ def send_email(
     :param html: corps HTML.
     :param text: corps texte brut (fallback), optionnel.
     :param from_addr: expéditeur. Par défaut `RESEND_FROM_EMAIL`.
+    :param reply_to: adresse de réponse, optionnel.
     :raises httpx.HTTPError: si l'appel à Resend échoue (quand une clé est configurée).
     """
     api_key = os.getenv("RESEND_API_KEY")
@@ -49,6 +51,8 @@ def send_email(
     }
     if text is not None:
         payload["text"] = text
+    if reply_to is not None:
+        payload["reply_to"] = reply_to
 
     with httpx.Client(timeout=30) as client:
         resp = client.post(
