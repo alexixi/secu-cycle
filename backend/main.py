@@ -11,6 +11,7 @@ from routers import traffic
 from routers import home_case
 from routers import task
 from routers import tag
+from routers import contact
 from routers import badge
 from seed_home_cases import seed_home_cases
 from seed_badges import seed_badges
@@ -90,6 +91,7 @@ app.include_router(traffic.router)
 app.include_router(home_case.router)
 app.include_router(task.router)
 app.include_router(tag.router)
+app.include_router(contact.router)
 app.include_router(badge.router)
 
 origins_str = os.getenv("CORS_ORIGINS", "")
