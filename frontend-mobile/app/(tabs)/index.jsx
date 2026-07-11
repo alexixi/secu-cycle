@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text, Alert } from 'react-native';
 import MapComponent from '../../components/MapComponent';
 import SearchContainer from '../../components/SearchContainer';
 import { calculateItineraries } from "../../services/apiBack";
@@ -22,6 +22,7 @@ export default function Index() {
     const [maxDuration, setMaxDuration] = useState(null);
     const [errorPath, setErrorPath] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
+    const [pendingPoiRoute, setPendingPoiRoute] = useState(false);
 
     const { token, user, bikes } = useAuth();
     const { colors, typography } = useTheme();
@@ -97,6 +98,29 @@ export default function Index() {
         }
     }, [startPoint, endPoint, selectedBike, maxDuration, token]);
 
+    const handleNavigateToPoi = React.useCallback((poi) => {
+        if (!startPoint && !currentPosition) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            Alert.alert(
+                "Position introuvable",
+                "Veuillez patienter pendant la recherche de votre position GPS.",
+            );
+            return;
+        }
+        if (!startPoint) {
+            setStartPoint({ lat: currentPosition.lat, lon: currentPosition.lon, name: 'Ma position actuelle' });
+        }
+        setEndPoint({ lat: poi.lat, lon: poi.lon, name: poi.name });
+        setPendingPoiRoute(true);
+    }, [startPoint, currentPosition]);
+
+    useEffect(() => {
+        if (pendingPoiRoute && startPoint && endPoint) {
+            setPendingPoiRoute(false);
+            handleCalculate();
+        }
+    }, [pendingPoiRoute, startPoint, endPoint, handleCalculate]);
+
     return (
         <View style={styles.container}>
             <MapComponent
@@ -108,6 +132,7 @@ export default function Index() {
                 currentPosition={currentPosition}
                 isNavigating={isNavigating}
                 canReport={!!token}
+                onNavigateToPoi={handleNavigateToPoi}
                 miniMap={false}
             />
 
