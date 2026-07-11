@@ -293,3 +293,28 @@
     margin-right: 0;
   }
 }
+
+/* Badges : toujours sur une seule ligne. Les cartes se partagent la largeur à égalité
+   et ne descendent jamais sous 120px — en dessous, la ligne défile horizontalement
+   plutôt que de se replier. */
+.badges-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 14px;
+  padding: 10px 3%;
+  overflow-x: auto;
+}
+
+.badges-grid .stat-card {
+  flex: 1 0 120px;
+}
+
+/* Un badge verrouillé reste lisible mais visiblement en retrait. */
+.badge-locked {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.badge-name {
+  font-size: 1rem;
+}

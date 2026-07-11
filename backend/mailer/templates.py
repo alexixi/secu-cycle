@@ -5,6 +5,8 @@ consommé par `mailer.send_email`. Ajouter un nouveau type de mail = ajouter
 une fonction ici, sans toucher au transport.
 """
 
+from html import escape
+
 
 def verification_email(code: str) -> tuple[str, str, str]:
     """E-mail de validation de compte contenant le code à 6 chiffres."""
@@ -28,3 +30,40 @@ def verification_email(code: str) -> tuple[str, str, str]:
     )
 
     return subject, html, text
+
+
+def contact_email(
+    first_name: str,
+    last_name: str,
+    email: str,
+    subject: str,
+    message: str,
+) -> tuple[str, str, str]:
+    """Message envoyé depuis le formulaire de contact, à destination de l'équipe.
+
+    Les champs proviennent d'un visiteur non authentifié : ils sont échappés
+    avant d'être injectés dans le corps HTML.
+    """
+    sender = f"{first_name} {last_name}"
+    mail_subject = f"[Contact] {subject}"
+
+    html = f"""\
+<div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #1a1a1a;">
+  <h2 style="margin-bottom: 8px;">Nouveau message depuis le formulaire de contact</h2>
+  <p style="color: #555; margin-top: 0;">
+    <strong>De&nbsp;:</strong> {escape(sender)}
+    &lt;<a href="mailto:{escape(email, quote=True)}">{escape(email)}</a>&gt;<br>
+    <strong>Sujet&nbsp;:</strong> {escape(subject)}
+  </p>
+  <div style="white-space: pre-wrap; background: #f5f5f5; border-left: 4px solid #0a7d3f;
+              border-radius: 8px; padding: 16px; margin-top: 16px;">{escape(message)}</div>
+</div>"""
+
+    text = (
+        "Nouveau message depuis le formulaire de contact\n\n"
+        f"De : {sender} <{email}>\n"
+        f"Sujet : {subject}\n\n"
+        f"{message}"
+    )
+
+    return mail_subject, html, text
