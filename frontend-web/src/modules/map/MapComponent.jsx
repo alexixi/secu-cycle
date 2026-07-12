@@ -1,10 +1,13 @@
-import { useRef, useEffect, useMemo, useState } from 'react';
+import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import Map, { Marker, Popup, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import Button from '../../components/ui/Button';
 import ThemeToggle from '../../components/ui/ThemeToggle';
+import MapContextMenu, { formatCoords } from './MapContextMenu';
 import { useTheme } from '../../context/ThemeContext';
 import { getPois } from '../../services/apiBack';
+import { getAddressFromCoordinates } from '../../services/geocodingService';
+import { trackEvent } from '../../services/analytics';
 
 import { IoMdPin } from "react-icons/io";
 import { FaLayerGroup } from "react-icons/fa";
@@ -50,8 +53,6 @@ const REPORT_TYPE_META = {
 
 const REPORT_AGE_RTF = new Intl.RelativeTimeFormat('fr-FR', { numeric: 'auto' });
 
-// « Signalé il y a 2 h » ; bascule sur une date courte au-delà d'une semaine.
-// Renvoie null si la date est absente ou invalide.
 const formatReportAge = (createdAt) => {
     if (!createdAt) return null;
     const then = new Date(createdAt).getTime();
@@ -66,8 +67,6 @@ const formatReportAge = (createdAt) => {
     return `Signalé le ${new Date(createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
 };
 
-// Sous-familles calculées par le backend. `subTypeProp` désigne la propriété
-// GeoJSON portée par chaque feature. À garder synchronisé avec models/poi.py.
 const PARKING_TYPES = [
     { id: 'stands', label: 'Arceaux', color: '#22C55E' },
     { id: 'racks', label: 'Râteliers, pince-roues', color: '#0D9488' },
@@ -93,19 +92,14 @@ const POI_CATEGORIES = [
     { id: 'repair', label: 'Réparation', color: '#F97316', subTypes: REPAIR_TYPES, subTypeProp: 'repair_kind' },
 ];
 
-// Défaut : toutes les sous-familles activées, indexées par catégorie.
 const DEFAULT_SUB_TYPES = Object.fromEntries(
     POI_CATEGORIES.filter(c => c.subTypes).map(c => [c.id, Object.fromEntries(c.subTypes.map(t => [t.id, true]))])
 );
 
-// Fusionne une préférence enregistrée avec les défauts : toute sous-famille
-// ajoutée depuis reste activée par défaut.
 const mergeSubTypes = (saved) => Object.fromEntries(
     Object.entries(DEFAULT_SUB_TYPES).map(([cat, defaults]) => [cat, { ...defaults, ...(saved?.[cat] || {}) }])
 );
 
-// Images enregistrées dans le style MapLibre. Parking et toilettes se déclinent
-// par sous-famille (une icône chacune), les autres catégories ont une seule icône.
 const POI_IMAGE_ASSETS = [
     { key: 'poi-water', src: poiWaterIcon },
     { key: 'poi-toilets-free', src: poiToiletsFreeIcon },
@@ -123,8 +117,6 @@ const POI_LAYER_ID = 'pois-symbol';
 
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
-// `except` masque le champ pour une catégorie (le tag brut `fee` fait doublon
-// avec le champ « Accès » synthétique des toilettes).
 const POI_DETAIL_FIELDS = [
     {
         key: 'parking_type',
@@ -158,7 +150,7 @@ const formatPoiTag = (value) => {
 
 const isRouteFeature = (feature) => feature?.layer?.id?.startsWith('route-hitbox-');
 
-export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, isReportMode, onToggleReportMode, canReport, trafficPoints = [], showTraffic = false, onToggleTraffic, onNavigateToPoi, littleMap = false }) {
+export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, isReportMode, onToggleReportMode, canReport, trafficPoints = [], showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
 
     const mapRef = useRef();
     const { effectiveTheme } = useTheme();
@@ -179,6 +171,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [poiData, setPoiData] = useState({});
     const [activePoi, setActivePoi] = useState(null);
     const [arePoiImagesReady, setArePoiImagesReady] = useState(false);
+    const [contextMenu, setContextMenu] = useState(null);
+    const [contextAddress, setContextAddress] = useState(null);
+    const [isContextAddressLoading, setIsContextAddressLoading] = useState(false);
+    const contextGeocodeRef = useRef(null);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem('userMapThemeMode');
@@ -251,9 +247,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
 
     const poiImagesRef = useRef({});
 
-    // Les icônes ne font pas partie du sprite MapTiler : on les enregistre nous-mêmes.
-    // `setStyle` (changement de fond de carte) purge les images du style, d'où la
-    // réinscription sur l'évènement `styledata`.
     useEffect(() => {
         if (littleMap || !isMapLoaded || !mapRef.current) return;
         const map = mapRef.current.getMap();
@@ -343,7 +336,71 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         );
     };
 
+    const closeContextMenu = useCallback(() => setContextMenu(null), []);
+
+    const onContextMenu = (event) => {
+        setActivePoi(null);
+        setActiveReport(null);
+        setActiveTraffic(null);
+        setHoverInfo(null);
+        setContextMenu({
+            x: event.point.x,
+            y: event.point.y,
+            lat: event.lngLat.lat,
+            lon: event.lngLat.lng
+        });
+    };
+
+    useEffect(() => {
+        if (!contextMenu) {
+            setContextAddress(null);
+            setIsContextAddressLoading(false);
+            contextGeocodeRef.current = null;
+            return;
+        }
+
+        let cancelled = false;
+        setContextAddress(null);
+        setIsContextAddressLoading(true);
+
+        const request = getAddressFromCoordinates(contextMenu.lat, contextMenu.lon).catch(() => null);
+        contextGeocodeRef.current = request;
+
+        request.then((result) => {
+            if (cancelled) return;
+            setContextAddress(result);
+            setIsContextAddressLoading(false);
+        });
+
+        return () => { cancelled = true; };
+    }, [contextMenu]);
+
+    const handleContextAction = (action) => {
+        if (!contextMenu) return;
+        const { lat, lon } = contextMenu;
+        const pendingAddress = contextGeocodeRef.current;
+        const name = contextAddress?.display_name || formatCoords(lat, lon);
+
+        trackEvent("map_context_action", { action });
+
+        if (action === "start" || action === "end") {
+            const setPoint = action === "start" ? onSetStart : onSetEnd;
+            setPoint?.({ lat, lon, name });
+
+            if (!contextAddress && pendingAddress) {
+                pendingAddress.then((result) => {
+                    if (result?.display_name) setPoint?.({ lat, lon, name: result.display_name });
+                });
+            }
+        }
+        else if (action === "report") onReportAt?.({ lat, lon });
+        else if (action === "center") mapRef.current?.getMap().flyTo({ center: [lon, lat], zoom: 17, duration: 800 });
+
+        setContextMenu(null);
+    };
+
     const onClick = (event) => {
+        setContextMenu(null);
         const features = event.features || [];
 
         const poiFeature = features.find(f => f.layer?.id === POI_LAYER_ID);
@@ -575,6 +632,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 ]}
                 onClick={onClick}
                 onMouseMove={onHover}
+                onContextMenu={littleMap ? undefined : onContextMenu}
+                onMoveStart={closeContextMenu}
                 onLoad={() => setIsMapLoaded(true)}
                 style={{ width: '100%', height: '100%' }}
             >
@@ -832,6 +891,23 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 )}
 
             </Map>
+
+            {!littleMap && contextMenu && (
+                <MapContextMenu
+                    x={contextMenu.x}
+                    y={contextMenu.y}
+                    lat={contextMenu.lat}
+                    lon={contextMenu.lon}
+                    address={contextAddress}
+                    isAddressLoading={isContextAddressLoading}
+                    canReport={canReport && !!onReportAt}
+                    onClose={closeContextMenu}
+                    onSetStart={() => handleContextAction("start")}
+                    onSetEnd={() => handleContextAction("end")}
+                    onReport={() => handleContextAction("report")}
+                    onCenter={() => handleContextAction("center")}
+                />
+            )}
         </div>
     );
 }
