@@ -81,6 +81,66 @@ make prod
 
 `make prod` lance la commande production du backend qui construit les conteneurs en mode production (plus de restrictions sur les ports) et la commande déploiement du frontend web qui fait un build du projet via Vite, deplace le build au bon endroit et donne les bonnes permissions pour que Nginx puisse y accéder.
 
+### Points d'intérêt (POI)
+Les POI (eau, toilettes, stationnement, réparation) sont stockés en base et servis par `GET /pois/` :
+la carte ne dépend donc jamais d'Overpass à l'exécution. La table `map_pois` est créée automatiquement
+par les migrations Alembic au démarrage du conteneur, mais **son remplissage n'est pas automatique**.
+
+Tout se pilote depuis la page **Points d'intérêt** du dashboard admin : nombre de POI par catégorie,
+bouton « Synchroniser maintenant », réglage de l'intervalle de synchronisation automatique (0 = désactivé)
+et historique des récupérations (manuelle ou automatique, date, nombre de POI, nouveaux, supprimés, échecs).
+Après un premier déploiement, il faut donc lancer une synchro depuis cette page pour peupler la carte.
+
+La synchro interroge Overpass sur l'emprise du profil `GRAPH_PROFILE` actif (quelques minutes), met à jour
+les POI existants et purge ceux qui ont disparu d'OSM. Elle est idempotente, tourne en tâche de fond et ne
+nécessite aucun redémarrage. En cas d'échec Overpass, rien n'est écrit : la base reste inchangée et le run
+apparaît en échec dans l'historique.
+
+En recours (dashboard inaccessible), la synchro reste lançable en ligne de commande :
+
+```sh
+# Stack lancée par le compose du dépôt
+make sync-pois
+
+# Stack gérée par Coolify (le conteneur n'appartient pas au projet compose local)
+docker exec <conteneur_api> python -m pois.sync
+```
+
+### Graphe de routage et profils
+
+Les profils de graphe (nom + liste de communes) sont **stockés en base**. L'ancien `backend/graphs.json` a
+été supprimé : embarqué dans l'image Docker, il aurait fait disparaître à chaque déploiement les profils
+créés en production. Les profils historiques sont repris par la migration `15a5aa55f3f1`, qui les contient
+en dur — une base neuve (prod, poste d'un coéquipier) est donc peuplée automatiquement.
+
+C'est le profil marqué **par défaut** en base qui est chargé au démarrage. `GRAPH_PROFILE` ne sert plus que
+d'amorçage, si aucun profil n'est marqué par défaut : la régler n'a plus d'effet en fonctionnement normal,
+et une valeur laissée dans un `.env` est simplement ignorée. Sans cette priorité, un profil activé depuis le
+dashboard serait silencieusement annulé au redémarrage suivant.
+
+Tout se pilote depuis la page **Graphe** du dashboard admin : nombre de nœuds et d'arêtes du graphe chargé,
+taille sur disque, carte de l'emprise (contours des communes), création de profils, ajout/retrait de
+communes, génération du graphe et activation d'un profil.
+
+Deux comportements à connaître :
+
+- **Générer** un graphe supprime son `.graphml` avant de le reconstruire. C'est nécessaire : le chargement
+  réutilise le fichier existant sans jamais comparer sa liste de communes, donc modifier un profil sans
+  régénérer n'a aucun effet. La génération prend plusieurs minutes (Overpass puis altitudes IGN) et
+  consomme beaucoup de mémoire. Le cache d'altitudes est conservé par défaut (c'est le poste le plus long).
+- **Activer** un profil recharge le graphe à chaud, sans redémarrage. L'ancien graphe est libéré *avant* le
+  chargement du nouveau, pour ne jamais en tenir deux en mémoire : en contrepartie, le calcul d'itinéraire
+  répond `503` pendant 1 à 2 minutes.
+
+Un profil peut couvrir **plusieurs zones sans continuité routière** entre elles. Overpass est alors interrogé
+une fois par zone contiguë, et les graphes sont composés. C'est indispensable : osmnx n'envoie à Overpass
+qu'une seule partie d'un MultiPolygon, si bien qu'un profil aux communes non limitrophes voyait toutes ses
+zones disparaître sauf une, **sans le moindre avertissement**. Un itinéraire demandé d'une zone à l'autre
+échoue proprement (« Aucun itinéraire trouvé »), ce qui est le comportement attendu. À l'intérieur de chaque
+zone, seules les composantes fortement connexes d'au moins 500 nœuds sont gardées : cela écarte les îlots
+parasites (impasses en sens unique, parkings isolés) sur lesquels un itinéraire pourrait s'accrocher sans
+pouvoir en repartir.
+
 ### Sécurité : limitation du débit (rate-limiting)
 L'API limite déjà le débit des tentatives de connexion (`5/minute` par IP via `slowapi`).
 En production, l'API tourne derrière Nginx avec plusieurs workers : le stockage en mémoire de

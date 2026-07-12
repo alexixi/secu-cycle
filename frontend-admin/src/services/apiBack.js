@@ -101,6 +101,10 @@ export async function adminDeleteUser(token, userId) {
     return apiFetch(`/users/${userId}`, { method: "DELETE" }, token);
 }
 
+export async function getUserBadges(token, userId) {
+    return apiFetch(`/badges/user/${userId}`, { method: "GET" }, token);
+}
+
 // --- Signalements (modération) ---
 
 export async function getReportsAdmin(token) {
@@ -201,4 +205,72 @@ export async function updateTag(token, tagId, updates) {
 
 export async function deleteTag(token, tagId) {
     return apiFetch(`/tags/${tagId}`, { method: "DELETE" }, token);
+}
+
+export async function getPoiStats(token) {
+    return apiFetch("/pois/admin/stats", { method: "GET" }, token);
+}
+
+export async function triggerPoiSync(token) {
+    return apiFetch("/pois/admin/sync", { method: "POST" }, token);
+}
+
+export async function getPoiSyncRuns(token, limit = 20) {
+    return apiFetch(`/pois/admin/runs?limit=${limit}`, { method: "GET" }, token);
+}
+
+export async function getPoiSyncSettings(token) {
+    return apiFetch("/pois/admin/settings", { method: "GET" }, token);
+}
+
+export async function updatePoiSyncSettings(token, updates) {
+    return apiFetch("/pois/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}
+
+
+export async function getGraphStats(token) {
+    return apiFetch("/graph/admin/stats", { method: "GET" }, token);
+}
+
+export async function getGraphProfiles(token) {
+    return apiFetch("/graph/admin/profiles", { method: "GET" }, token);
+}
+
+export async function createGraphProfile(token, body) {
+    return apiFetch("/graph/admin/profiles", {
+        method: "POST",
+        body: JSON.stringify(body),
+    }, token);
+}
+
+export async function updateGraphProfile(token, profileId, updates) {
+    return apiFetch(`/graph/admin/profiles/${profileId}`, {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}
+
+export async function deleteGraphProfile(token, profileId) {
+    return apiFetch(`/graph/admin/profiles/${profileId}`, { method: "DELETE" }, token);
+}
+
+export async function getGraphProfileExtent(token, profileId) {
+    return apiFetch(`/graph/admin/profiles/${profileId}/extent`, { method: "GET" }, token);
+}
+
+export async function buildGraphProfile(token, profileId, wipeIgn = false) {
+    return apiFetch(`/graph/admin/profiles/${profileId}/build?wipe_ign=${wipeIgn}`, {
+        method: "POST",
+    }, token);
+}
+
+export async function activateGraphProfile(token, profileId) {
+    return apiFetch(`/graph/admin/profiles/${profileId}/activate`, { method: "POST" }, token);
+}
+
+export async function getGraphBuilds(token, limit = 20) {
+    return apiFetch(`/graph/admin/builds?limit=${limit}`, { method: "GET" }, token);
 }

@@ -1,0 +1,376 @@
+.graph-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 980px) {
+  .graph-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.graph-panel {
+  min-width: 0;
+}
+
+/* --- Bandeaux d'information --- */
+.graph-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.graph-notice-warn {
+  border-color: var(--error);
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.graph-notice-build {
+  align-items: flex-start;
+}
+
+/* --- Barre de progression d'une génération --- */
+.graph-progress-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.graph-progress-label {
+  font-size: 0.85rem;
+}
+
+.graph-progress {
+  position: relative;
+  height: 6px;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+.graph-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: width 0.4s ease;
+}
+
+/* Étape non mesurable (appel Overpass) : une navette, pas un faux pourcentage. */
+.graph-progress.indeterminate .graph-progress-fill {
+  width: 35%;
+  animation: graph-progress-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes graph-progress-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+.users-table .graph-progress {
+  margin-top: 0.4rem;
+  max-width: 9rem;
+}
+
+/* --- Liste des profils --- */
+.graph-profiles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.graph-profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.graph-profile:hover {
+  background: var(--bg-surface-hover);
+}
+
+.graph-profile.selected {
+  border-color: var(--primary);
+}
+
+.graph-profile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.graph-profile-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.graph-profile-sub {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.graph-profile-actions {
+  display: flex;
+  gap: 0.15rem;
+  white-space: nowrap;
+}
+
+.row-action.graph-star-on {
+  color: var(--primary);
+  cursor: default;
+}
+
+.row-action.graph-star-on:hover:not(:disabled) {
+  background: transparent;
+  color: var(--primary);
+}
+
+.graph-profile-new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-style: dashed;
+  border-color: var(--border-strong);
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-height: 62px;
+}
+
+.graph-profile-new:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-transparent);
+}
+
+/* --- Ajout d'une commune --- */
+.graph-add-commune {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+}
+
+.graph-add-commune input {
+  flex: 1;
+  min-width: 10rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.88rem;
+  outline: none;
+}
+
+.graph-add-commune input:focus {
+  border-color: var(--primary);
+}
+
+/* --- Communes du profil --- */
+.graph-communes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
+
+.graph-commune {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.35rem 0.25rem 0.6rem;
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  background: var(--bg-tertiary);
+  font-size: 0.8rem;
+}
+
+.graph-commune-toggle {
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  border-color: var(--primary);
+  background: var(--primary-transparent);
+  color: var(--primary);
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.graph-commune-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.graph-commune-remove:hover:not(:disabled) {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.graph-commune-remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- Carte d'emprise --- */
+.graph-map,
+.graph-map-fallback {
+  position: relative;
+  width: 100%;
+  min-height: 340px;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.graph-map-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+/* --- Modal de création de profil --- */
+.graph-modal {
+  max-width: 560px;
+}
+
+.graph-modal h2 {
+  margin: 0 0 1.25rem;
+  font-size: 1.2rem;
+}
+
+.graph-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.graph-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.graph-modal-field > span {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.graph-modal-field small {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.graph-modal-field > input[type="text"] {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.graph-modal-field > input[type="text"]:focus {
+  border-color: var(--primary);
+}
+
+.graph-modal-bases {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.graph-modal-bases label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.graph-modal-bases label:hover {
+  background: var(--bg-surface-hover);
+}
+
+.graph-modal-bases input[type="checkbox"] {
+  accent-color: var(--primary);
+}
+
+.graph-modal-base-name {
+  font-weight: 600;
+}
+
+.graph-modal-base-sub {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.graph-modal-summary {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.graph-modal .graph-add-commune {
+  margin-top: 0;
+}

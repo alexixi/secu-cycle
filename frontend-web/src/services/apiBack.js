@@ -144,6 +144,24 @@ export async function resendVerification(email) {
     }
 }
 
+export async function sendContactMessage(firstName, lastName, email, subject, message) {
+    try {
+        const data = await apiFetch("/contact/", {
+            method: "POST",
+            body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                subject: subject,
+                message: message,
+            })
+        }, null);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function register(firstName, lastName, birthdate, email, password) {
     try {
         const data = await apiFetch("/users/", {
@@ -296,6 +314,15 @@ export async function getUserHistoric(token) {
     }
 }
 
+export async function getBadges(token) {
+    try {
+        const data = await apiFetch("/badges/", { method: "GET" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function deleteAllHistoric(token) {
     try {
         const data = await apiFetch("/history/", { method: "DELETE" }, token);
@@ -343,6 +370,15 @@ export async function createReport(token, reportType, description, latitude, lon
                 longitude,
             }),
         }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getPois(category) {
+    try {
+        const data = await apiFetch(`/pois/?categories=${encodeURIComponent(category)}`, { method: "GET" });
         return data;
     } catch (error) {
         throw error;

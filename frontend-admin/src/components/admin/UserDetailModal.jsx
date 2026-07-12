@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { LuShieldCheck, LuShieldOff, LuTrash2 } from "react-icons/lu";
+import { LuAward, LuShieldCheck, LuShieldOff, LuTrash2 } from "react-icons/lu";
+import { useAuth } from "../../context/AuthContext";
+import { getUserBadges } from "../../services/apiBack";
 import Button from "../ui/Button";
 import "../ui/PopUp.css";
 import "./UserDetailModal.css";
@@ -13,11 +15,25 @@ const FIELDS = [
 ];
 
 export default function UserDetailModal({ user, currentUserId, onClose, onSave, onDelete }) {
+  const { token } = useAuth();
   const [isAdmin, setIsAdmin] = useState(() => !!user.is_admin);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [badges, setBadges] = useState(null); // null = chargement en cours
 
   const isSelf = user.id === currentUserId;
+
+  useEffect(() => {
+    let cancelled = false;
+    getUserBadges(token, user.id)
+      .then((data) => !cancelled && setBadges(data))
+      // Les badges sont une information secondaire : leur échec ne doit pas bloquer
+      // l'édition de la fiche, on retombe simplement sur une liste vide.
+      .catch(() => !cancelled && setBadges([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [token, user.id]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -73,6 +89,31 @@ export default function UserDetailModal({ user, currentUserId, onClose, onSave, 
                 <p className="user-detail-value">{user[key] || "—"}</p>
               </div>
             ))}
+          </div>
+
+          <div className="user-detail-badges">
+            <span className="user-detail-badges-title">
+              Badges obtenus
+              {badges && badges.length > 0 && <em> ({badges.length})</em>}
+            </span>
+
+            {badges === null ? (
+              <p className="user-detail-badges-empty">Chargement…</p>
+            ) : badges.length === 0 ? (
+              <p className="user-detail-badges-empty">Aucun badge obtenu.</p>
+            ) : (
+              <ul className="user-detail-badges-list">
+                {badges.map((badge) => (
+                  <li key={badge.id} className="user-detail-badge" title={badge.description || ""}>
+                    <LuAward size={15} />
+                    <span className="user-detail-badge-name">{badge.name}</span>
+                    <span className="user-detail-badge-date">
+                      {new Date(badge.obtained_at).toLocaleDateString("fr-FR")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <label className={`user-detail-toggle ${isAdmin ? "on" : ""}`}>

@@ -6,10 +6,14 @@ proposerait de la supprimer. Importer le package suffit à les enregistrer.
 """
 
 from models import (  # noqa: F401
+    badge,
     bike,
     email_verification,
+    graph_profile,
     history,
     home_case,
+    poi,
+    poi_sync,
     report,
     route,
     tag,

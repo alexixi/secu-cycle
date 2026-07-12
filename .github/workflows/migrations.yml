@@ -1,0 +1,68 @@
+name: Migrations
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+  push:
+    branches: [dev, main]
+    paths:
+      - "backend/**"
+
+jobs:
+  alembic:
+    name: Migrations Alembic
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Une seule tête de migration
+
+        run: |
+          heads=$(alembic heads | grep -c '(head)')
+          if [ "$heads" -ne 1 ]; then
+            echo "::error::$heads têtes Alembic au lieu d'une seule."
+            alembic heads
+            echo "Deux migrations descendent du même parent. Créez une révision de"
+            echo "fusion : alembic merge -m 'fusion' <tête1> <tête2>"
+            exit 1
+          fi
+
+      - name: Migrer une base vide
+        run: alembic upgrade head
+
+      - name: Le schéma correspond aux modèles
+        run: alembic check

@@ -6,47 +6,86 @@ import json
 import time
 
 
-def load_graph_profile():
+def backend_dir():
+    """Racine du backend, à laquelle les chemins de graphes sont relatifs."""
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+
+def profile_paths(name):
+    """Chemins absolus des fichiers d'un profil, dérivés de son nom.
+
+    La convention `graphs/<nom>.graphml` est celle que suppose déjà
+    `make regen-graph`, et que respectent les profils historiques.
     """
-    Charge le profil de graphe actif depuis le fichier de configuration JSON.
-
-    Le fichier est désigné par la variable d'environnement GRAPH_CONFIG
-    (défaut : graphs.json à la racine du backend). Le profil actif est
-    désigné par GRAPH_PROFILE (défaut : la clé "default_profile" du fichier).
-
-    Retourne un dict avec des chemins absolus :
-        {"graph_file": ..., "ign_cache_file": ..., "communes": [...]}.
-    Les chemins du fichier de config sont résolus relativement au dossier de
-    ce fichier, pour rester stables quel que soit le répertoire courant.
-    """
-    default_config = os.path.join(os.path.dirname(__file__), "..", "graphs.json")
-    config_path = os.path.abspath(os.getenv("GRAPH_CONFIG", default_config))
-
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = json.load(f)
-
-    name = os.getenv("GRAPH_PROFILE") or config.get("default_profile")
-    profiles = config.get("profiles", {})
-    if name not in profiles:
-        raise RuntimeError(
-            f"Profil de graphe '{name}' introuvable dans {config_path}. "
-            f"Profils disponibles : {', '.join(profiles) or 'aucun'}."
-        )
-
-    profile = profiles[name]
-    print(f"Profil de graphe actif : '{name}' "
-          f"({len(profile['communes'])} communes, fichier : {profile['graph_file']})",
-          flush=True)
-    base = os.path.dirname(config_path)
+    base = backend_dir()
     return {
-        "graph_file": os.path.join(base, profile["graph_file"]),
-        "ign_cache_file": os.path.join(base, profile["ign_cache_file"]),
-        "communes": profile["communes"],
+        "graph_file": os.path.join(base, "graphs", f"{name}.graphml"),
+        "ign_cache_file": os.path.join(base, "graphs", f"{name}.ign.json"),
     }
 
 
-def create_ign_data_file(filepath_graph, filepath_json):
-    """Télécharge et lisse les altitudes IGN le plus rapidement possible."""
+def load_graph_profile():
+    """
+    Charge le profil de graphe actif, lu en base.
+
+    Les profils sont administrés depuis le dashboard : **la base fait autorité**.
+    Le profil marqué par défaut l'emporte, si bien qu'un profil activé depuis le
+    dashboard le reste après un redémarrage.
+
+    `GRAPH_PROFILE` n'est plus qu'un filet d'amorçage : elle désigne le profil à
+    charger tant qu'aucun n'est marqué par défaut (cas qui ne devrait pas se
+    produire, la migration en installant un).
+
+    Retourne un dict avec des chemins absolus :
+        {"name": ..., "graph_file": ..., "ign_cache_file": ..., "communes": [...]}.
+    """
+    from database import SessionLocal
+    from models.graph_profile import GraphProfile
+
+    db = SessionLocal()
+    try:
+        profile = db.query(GraphProfile).filter(GraphProfile.is_default.is_(True)).first()
+
+        if profile is None:
+            name = os.getenv("GRAPH_PROFILE")
+            if name:
+                profile = db.query(GraphProfile).filter(GraphProfile.name == name).first()
+                if profile is None:
+                    raise RuntimeError(
+                        f"GRAPH_PROFILE désigne le profil '{name}', absent de la base."
+                    )
+            else:
+                raise RuntimeError(
+                    "Aucun profil de graphe en base. Créez-en un depuis le dashboard "
+                    "d'administration, ou vérifiez que les migrations sont appliquées."
+                )
+
+        result = {
+            "name": profile.name,
+            **profile_paths(profile.name),
+            "communes": list(profile.communes or []),
+        }
+    finally:
+        db.close()
+
+    print(f"Profil de graphe actif : '{result['name']}' "
+          f"({len(result['communes'])} communes, fichier : {result['graph_file']})",
+          flush=True)
+    return result
+
+
+def create_ign_data_file(filepath_graph, filepath_json, on_progress=None):
+    """Télécharge et lisse les altitudes IGN le plus rapidement possible.
+
+    `on_progress(step, done, total)` est appelé au fil des lots, pour alimenter
+    la barre de progression du dashboard. `total` vaut None quand l'étape n'est
+    pas mesurable.
+    """
+    def progress(step, done=None, total=None):
+        if on_progress is not None:
+            on_progress(step, done, total)
+
+    progress("Lecture du graphe")
     G = ox.load_graphml(filepath_graph)
     nodes = list(G.nodes(data=True))
 
@@ -69,6 +108,7 @@ def create_ign_data_file(filepath_graph, filepath_json):
         for i in range(0, len(nodes_to_fetch), chunk_size):
             lot_actuel = (i // chunk_size) + 1
             print(f"-> Traitement du lot {lot_actuel}/{total_chunks}...")
+            progress("Altitudes IGN", lot_actuel, total_chunks)
 
             chunk = nodes_to_fetch[i:i + chunk_size]
             lons = [str(data['x']) for node_id, data in chunk]
@@ -97,6 +137,7 @@ def create_ign_data_file(filepath_graph, filepath_json):
             time.sleep(0.1)
 
     print("Vérification et lissage des données manquantes...")
+    progress("Lissage des altitudes")
 
     for node_id in list(ign_data.keys()):
         if ign_data[node_id] == 0.0:
@@ -223,20 +264,92 @@ def add_contraflow_edges(G):
     return G
 
 
-def create_graph(filename, filepath_json, communes):
+MIN_COMPONENT_NODES = 500
+
+
+def contiguous_zones(communes):
+    """Regroupe les communes en zones d'un seul tenant, et renvoie leurs polygones.
+
+    Indispensable : osmnx n'envoie à Overpass qu'**une seule** partie d'un
+    MultiPolygon (`_make_overpass_polygon_coord_strs` en renvoie une seule
+    chaîne). Passer d'un coup des communes non limitrophes ferait donc
+    silencieusement disparaître toutes les zones sauf une — vérifié : un profil
+    « Antoing + Leuze-en-Hainaut » ne téléchargeait que Leuze.
+
+    On interroge donc Overpass une fois par zone contiguë, avec un polygone
+    simple à chaque fois. Découper commune par commune ne conviendrait pas : les
+    routes traversant une frontière communale seraient coupées, créant des
+    ruptures artificielles à l'intérieur d'une même agglomération.
+    """
+    from shapely.ops import unary_union
+
+    gdf = ox.geocode_to_gdf(communes)
+    merged = unary_union(list(gdf.geometry))
+    zones = list(merged.geoms) if merged.geom_type == "MultiPolygon" else [merged]
+
+    print(f"[Graphe] {len(communes)} commune(s) réparties en {len(zones)} zone(s) contiguë(s).",
+          flush=True)
+    return zones
+
+
+def keep_strong_components(G, min_nodes=MIN_COMPONENT_NODES):
+    """Conserve toutes les composantes fortement connexes d'au moins `min_nodes` nœuds.
+
+    On ne garde pas que la plus grande : un profil peut couvrir plusieurs zones
+    sans continuité routière entre elles (Bordeaux et Tournai, par exemple).
+    Un trajet demandé d'une zone à l'autre échoue proprement — `get_optimal_routes`
+    renvoie « Aucun itinéraire trouvé » —, ce qui est le comportement attendu.
+
+    La connexité *forte* reste exigée à l'intérieur de chaque composante : elle
+    élimine les nœuds où l'on peut entrer sans pouvoir ressortir (impasses en
+    sens unique), dans lesquels un itinéraire pourrait sinon s'engager.
+
+    Si aucune composante n'atteint le seuil, on garde la plus grande : mieux vaut
+    un petit graphe qu'un graphe vide (cas d'une commune minuscule).
+    """
+    import networkx as nx
+
+    components = [c for c in nx.strongly_connected_components(G) if len(c) >= min_nodes]
+
+    if not components:
+        largest = max(nx.strongly_connected_components(G), key=len, default=set())
+        if not largest:
+            return G
+        components = [largest]
+
+    kept = set().union(*components)
+    removed = G.number_of_nodes() - len(kept)
+    print(
+        f"[Graphe] {len(components)} zone(s) conservée(s), "
+        f"{len(kept)} nœuds ; {removed} nœuds isolés écartés.",
+        flush=True,
+    )
+    return G.subgraph(kept).copy()
+
+
+def create_graph(filename, filepath_json, communes, on_progress=None):
     """
     Charge le graphe ou le crée s'il n'existe pas,
     puis met à jour automatiquement les données IGN.
 
     `communes` : liste des communes (format Nominatim "Nom, France") utilisée
     uniquement à la génération si le fichier `filename` n'existe pas encore.
+
+    `on_progress(step, done, total)` : facultatif, alimente la barre de
+    progression du dashboard. `total` est None pour les étapes non mesurables
+    (l'appel Overpass est un bloc opaque, on ne peut qu'annoncer qu'il tourne).
     """
+    def progress(step, done=None, total=None):
+        if on_progress is not None:
+            on_progress(step, done, total)
+
     if os.path.exists(filename):
         print("Chargement du graphe depuis le fichier local...")
+        progress("Lecture du graphe")
         G = ox.load_graphml(filepath=filename)
         if not os.path.exists(filepath_json):
             print("Cache d'altitudes IGN absent : (re)génération en cours...")
-            create_ign_data_file(filename, filepath_json)
+            create_ign_data_file(filename, filepath_json, on_progress)
     else:
         print("Création du graphe complet de la métropole en cours (cela peut prendre quelques minutes)...")
 
@@ -248,17 +361,29 @@ def create_graph(filename, filepath_json, communes):
         ]
         ox.settings.useful_tags_way = list(set(ox.settings.useful_tags_way + extra_tags))
 
-        G = ox.graph_from_place(communes, network_type='bike',
-                                custom_filter=_bike_network_filters())
-        G = ox.truncate.largest_component(G, strongly=True)
+        import networkx as nx
+
+        zones = contiguous_zones(communes)
+        graphs = []
+        for i, zone in enumerate(zones, start=1):
+            progress("Téléchargement OpenStreetMap", i - 1, len(zones))
+            print(f"[Graphe] Téléchargement de la zone {i}/{len(zones)}...", flush=True)
+            graphs.append(ox.graph_from_polygon(
+                zone, network_type='bike', custom_filter=_bike_network_filters()))
+
+        G = graphs[0] if len(graphs) == 1 else nx.compose_all(graphs)
+        G = keep_strong_components(G)
+
+        progress("Ajout des contre-sens cyclables")
         G = add_contraflow_edges(G)
 
+        progress("Enregistrement du graphe")
         os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
         ox.save_graphml(G, filepath=filename)
         print("Graphe téléchargé et sauvegardé avec succès.")
 
         print("Lancement de la mise à jour des altitudes IGN...")
-        create_ign_data_file(filename, filepath_json)
+        create_ign_data_file(filename, filepath_json, on_progress)
 
     return G
 

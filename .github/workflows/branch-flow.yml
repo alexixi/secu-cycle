@@ -1,0 +1,21 @@
+name: Flux des branches
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  source:
+    name: Origine de la PR vers main
+    runs-on: ubuntu-latest
+    steps:
+      - name: main ne reçoit que dev
+        env:
+          SOURCE: ${{ github.head_ref }}
+        run: |
+          case "$SOURCE" in
+            dev|hotfix/*) exit 0 ;;
+          esac
+          echo "::error::Une PR vers main doit venir de dev (ou d'une branche hotfix/*), pas de '$SOURCE'."
+          echo "Fusionnez d'abord '$SOURCE' dans dev, puis ouvrez une PR dev -> main."
+          exit 1

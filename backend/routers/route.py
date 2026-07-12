@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 import asyncio
 import osmnx as ox
 from typing import List
 from database import get_db
 from schemas.route import RouteCreate, RouteRead, ComputeRoutesResponse, ComputeRouteRequest
+from schemas.badge import CompleteRouteResponse
 from models.route import Route
+from utils.badges import evaluate_badges
 from dependencies import get_current_user, get_current_user_optional
 from graph.routing import get_optimal_routes
 from models.bike import Bike
@@ -135,6 +138,9 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
             )
             db.add(db_route)
             db.flush()
+            # Le front en a besoin pour appeler /complete sur la variante réellement suivie.
+            # Muter route_info est sans risque : route_cache deepcopy en get comme en set.
+            route_info["route_id"] = db_route.id
             db.add(UserHistory(
                 user_id=current_user.id,
                 route_id=db_route.id,
@@ -144,3 +150,32 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
         db.commit()
 
     return result
+
+
+@router.post("/{route_id}/complete", response_model=CompleteRouteResponse)
+def complete_route(route_id: int, db: Session = Depends(get_db),
+                   current_user=Depends(get_current_user)):
+    """Marque un trajet comme terminé (appelé à l'arrivée) et débloque les badges atteints."""
+    # Un seul UPDATE : appartenance (anti-IDOR), idempotence et pose du timestamp.
+    updated = db.execute(text("""
+        UPDATE routes SET completed_at = now()
+        WHERE id = :rid AND user_id = :uid AND completed_at IS NULL
+        RETURNING id
+    """), {"rid": route_id, "uid": current_user.id}).first()
+
+    if updated is None:
+        # Aucune ligne touchée : soit la route n'existe pas / n'est pas la sienne,
+        # soit elle était déjà terminée (rejeu du même appel).
+        already_mine = db.execute(text(
+            "SELECT 1 FROM routes WHERE id = :rid AND user_id = :uid"
+        ), {"rid": route_id, "uid": current_user.id}).first()
+        db.commit()
+        if already_mine is None:
+            raise HTTPException(status_code=404, detail="Route introuvable")
+        return CompleteRouteResponse(completed=False, newly_unlocked=[])
+
+    db.commit()
+    return CompleteRouteResponse(
+        completed=True,
+        newly_unlocked=evaluate_badges(db, current_user),
+    )

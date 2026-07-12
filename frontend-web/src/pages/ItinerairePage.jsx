@@ -88,6 +88,12 @@ export default function ItinerairePage() {
         setIsReportModalOpen(true);
     };
 
+    const handleReportAt = (coords) => {
+        if (!token) return;
+        setReportCoords(coords);
+        setIsReportModalOpen(true);
+    };
+
     const handleDeleteReport = async (reportId) => {
         try {
             await deleteReport(token, reportId);
@@ -194,6 +200,10 @@ export default function ItinerairePage() {
                     isReportMode={isReportMode}
                     onToggleReportMode={() => token && setIsReportMode(prev => !prev)}
                     canReport={!!token}
+                    onNavigateToPoi={handleEndSelect}
+                    onSetStart={handleStartSelect}
+                    onSetEnd={handleEndSelect}
+                    onReportAt={token ? handleReportAt : null}
                     littleMap={false}
                 />
             </div>

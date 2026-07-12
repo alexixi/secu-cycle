@@ -131,3 +131,176 @@
     margin-left: 0;
     margin-bottom: 0.3em;
 }
+
+/* Formulaire de contact */
+.contact-form {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 1.6em;
+    margin: 1.8em 0;
+}
+
+.contact-form-row {
+    display: flex;
+    gap: 1.2em;
+}
+
+.contact-form-row .input-group {
+    flex: 1;
+    min-width: 0;
+}
+
+.contact-form .input-group {
+    align-items: stretch;
+    margin-bottom: 1.2em;
+}
+
+.contact-form .input-group label {
+    font-size: 1rem;
+}
+
+.contact-form .input {
+    width: 100%;
+}
+
+.contact-textarea {
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.contact-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.contact-select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8em;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text-main);
+    font-family: inherit;
+}
+
+/* Le libellé d'invite reste grisé tant qu'aucun objet n'est choisi. */
+.contact-select-empty {
+    color: var(--text-secondary);
+}
+
+.contact-select-chevron {
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.contact-select:hover .contact-select-chevron {
+    color: var(--primary);
+}
+
+.contact-select-chevron-open {
+    transform: rotate(180deg);
+    color: var(--primary);
+}
+
+.input-error .contact-select-chevron {
+    color: var(--error);
+}
+
+/* `.legal-content ul` impose un padding-left : on le neutralise avec la même spécificité. */
+.legal-content .contact-options {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0.25em;
+    list-style: none;
+    background-color: var(--bg-surface);
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+    animation: fadeIn 0.15s ease-in;
+}
+
+.contact-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8em;
+    padding: 0.4em 0.6em;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    line-height: 1.4;
+    text-align: left;
+    margin-bottom: 0;
+    transition: background-color 0.15s ease;
+}
+
+.contact-option-active {
+    background-color: var(--bg-surface-hover);
+}
+
+.contact-option-selected {
+    background-color: var(--primary-transparent);
+    color: var(--primary-hover);
+    font-weight: 600;
+}
+
+.contact-form-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.contact-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background-color: var(--primary);
+    color: var(--text-inverse);
+    font-weight: 600;
+}
+
+.contact-submit:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+    color: var(--text-inverse);
+}
+
+.contact-submit:disabled:hover {
+    background-color: var(--primary);
+}
+
+.contact-feedback {
+    margin: 1.2em 0 0 0;
+    padding: 0.8em 1em;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 1rem;
+}
+
+.contact-feedback-success {
+    background-color: color-mix(in srgb, var(--green-color) 12%, transparent);
+    border-left: 4px solid var(--green-color);
+}
+
+.contact-feedback-error {
+    background-color: var(--error-bg);
+    border-left: 4px solid var(--error);
+}
+
+.contact-form .error-text {
+    text-align: left;
+}
+
+@media (max-width: 600px) {
+    .contact-form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}

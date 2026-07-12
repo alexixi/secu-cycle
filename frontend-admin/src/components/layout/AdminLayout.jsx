@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { LuUsers, LuChartBar, LuLogOut, LuMenu, LuShieldCheck, LuLayoutGrid, LuCalendarDays, LuTriangleAlert } from "react-icons/lu";
+import { LuUsers, LuChartBar, LuLogOut, LuMenu, LuShieldCheck, LuLayoutGrid, LuCalendarDays, LuTriangleAlert, LuMapPin, LuWaypoints } from "react-icons/lu";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import ThemeToggle from "../ui/ThemeToggle";
@@ -11,6 +11,8 @@ const NAV = [
     { to: "/reports", label: "Signalements", icon: LuTriangleAlert },
     { to: "/planning", label: "Planning", icon: LuCalendarDays },
     { to: "/cases", label: "Page d'accueil", icon: LuLayoutGrid },
+    { to: "/pois", label: "Points d'intérêt", icon: LuMapPin },
+    { to: "/graph", label: "Graphe", icon: LuWaypoints },
     { to: "/stats", label: "Statistiques", icon: LuChartBar, disabled: true },
 ];
 

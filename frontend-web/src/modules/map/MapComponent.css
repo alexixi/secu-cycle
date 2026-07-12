@@ -2,26 +2,77 @@
     border-radius: 12px;
 }
 
+/* Les popups vivent sur la carte, qui a son propre thème (indépendant de celui
+   de l'app) : on rattache leurs couleurs à `.map-dark` via ces variables locales,
+   pour qu'un popup soit sombre sur carte sombre et clair sur carte claire. */
+.map-container {
+    --map-popup-surface: #ffffff;
+    --map-popup-text: #1e2030;
+    --map-popup-muted: #6b7280;
+    --map-popup-border: rgba(0, 0, 0, 0.12);
+}
+
+.map-container.map-dark {
+    --map-popup-surface: #242533;
+    --map-popup-text: #f2f3f6;
+    --map-popup-muted: #9aa0b4;
+    --map-popup-border: rgba(255, 255, 255, 0.14);
+}
+
 .maplibregl-popup-content {
     padding: 0 !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
-    border: 2px solid var(--primary);
+    border-radius: 10px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
+    border: 1px solid var(--map-popup-border);
     overflow: hidden;
 }
 
+/* La flèche du popup doit épouser la couleur du corps (sinon elle reste blanche
+   sur un popup sombre). Une seule bordure est colorée selon l'ancrage. */
+.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+    border-bottom-color: var(--map-popup-surface);
+}
+
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+    border-top-color: var(--map-popup-surface);
+}
+
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+    border-right-color: var(--map-popup-surface);
+}
+
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+    border-left-color: var(--map-popup-surface);
+}
+
+/* L'accent vient de l'en-tête coloré : la croix est blanche pour rester lisible dessus. */
 .maplibregl-popup-close-button {
-    font-size: 1.2rem;
-    padding: 2px 6px;
-    color: var(--text-main);
+    font-size: 1.15rem;
+    line-height: 1;
+    width: 26px;
+    height: 26px;
+    top: 6px;
+    right: 6px;
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.18);
+    transition: background 0.15s ease;
+}
+
+.maplibregl-popup-close-button:hover {
+    background: rgba(0, 0, 0, 0.35);
 }
 
 .itineraire-tooltip {
     padding: 10px 15px;
     text-align: center;
     font-size: 1.1em;
-    background-color: var(--bg-surface);
-    color: var(--text-main);
+    background-color: var(--map-popup-surface);
+    color: var(--map-popup-text);
 }
 
 .itineraire-tooltip strong {
@@ -35,29 +86,82 @@
     opacity: 0.9;
 }
 
-.report-popup {
-    padding: 15px 25px 15px 15px;
-    background-color: var(--bg-surface);
-    color: var(--text-main);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 160px;
-    max-width: 250px;
+/* Carte popup commune aux POI, signalements et points de trafic :
+   en-tête coloré (accent) / corps / pied d'action. */
+.map-popup {
+    background-color: var(--map-popup-surface);
+    color: var(--map-popup-text);
+    min-width: 190px;
+    max-width: 260px;
 }
 
-.report-popup-title {
-    margin: 0;
-    font-size: 1.2em;
+.map-popup-header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
+    padding: 10px 40px 10px 13px;
+    color: #fff;
 }
 
-.report-popup-desc {
-    margin: 0;
-    font-size: 1em;
+.map-popup-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+.map-popup-header-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.map-popup-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    overflow-wrap: anywhere;
+}
+
+.map-popup-subtitle {
+    font-size: 0.78rem;
+    font-weight: 500;
     opacity: 0.9;
+    line-height: 1.2;
+}
+
+.map-popup-body {
+    padding: 11px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.map-popup-desc {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.map-popup-line {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.map-popup-meta {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--map-popup-muted);
+}
+
+.map-popup-footer {
+    padding: 0 15px 13px;
+}
+
+.map-popup-footer > * {
+    width: 100%;
 }
 
 .map-layer-control {
@@ -166,6 +270,72 @@
     justify-content: center;
     gap: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.map-poi-control {
+    position: absolute;
+    bottom: 145px;
+    right: 15px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.map-poi-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.map-poi-item:hover {
+    background-color: var(--primary-transparent);
+}
+
+.map-poi-label {
+    flex: 1;
+}
+
+.map-poi-subitem {
+    padding-left: 34px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.map-poi-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.map-poi-badge {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.map-poi-hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    padding: 6px 10px 2px;
+}
+
+.map-popup-detail {
+    font-size: 0.85rem;
+    color: var(--map-popup-muted);
+    margin: 0;
 }
 
 .map-locate-control {

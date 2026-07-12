@@ -1,18 +1,109 @@
 import { useRef, useState, useEffect, useMemo, use } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, Text, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, useColorScheme } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, Text, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, NativeUserLocation } from '@maplibre/maplibre-react-native';
+import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { getReports, createReport, deleteReport } from '../services/apiBack';
+import { getReports, getPois, createReport, deleteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 
+// Familles d'aménagement des parkings vélo, calculées par le backend
+// (propriété `parking_type`). À garder synchronisé avec models/poi.py.
+// Sous-familles calculées par le backend. `subTypeProp` désigne la propriété
+// GeoJSON portée par chaque feature. À garder synchronisé avec models/poi.py.
+const PARKING_TYPES = [
+    { id: 'stands', label: 'Arceaux', color: '#22C55E' },
+    { id: 'racks', label: 'Râteliers, pince-roues', color: '#0D9488' },
+    { id: 'shelter', label: 'Abris et consignes', color: '#15803D' },
+    { id: 'other', label: 'Autres, non précisé', color: '#9CA3AF' },
+];
+
+const TOILET_TYPES = [
+    { id: 'free', label: 'Gratuites', color: '#EC4899' },
+    { id: 'paid', label: 'Payantes', color: '#9F1239' },
+    { id: 'unknown', label: 'Non précisé', color: '#8B5CF6' },
+];
+
+const REPAIR_TYPES = [
+    { id: 'selfservice', label: 'Libre-service', color: '#F97316' },
+    { id: 'shop', label: 'Atelier / magasin', color: '#C2410C' },
+];
+
+const POI_CATEGORIES = [
+    { id: 'water', label: "Points d'eau", icon: 'water', color: '#0EA5E9' },
+    { id: 'toilets', label: 'Toilettes', icon: 'toilet', color: '#8B5CF6', subTypes: TOILET_TYPES, subTypeProp: 'toilet_fee' },
+    { id: 'parking', label: 'Parkings vélo', icon: 'bicycle', color: '#22C55E', subTypes: PARKING_TYPES, subTypeProp: 'parking_type' },
+    { id: 'repair', label: 'Réparation', icon: 'wrench', color: '#F97316', subTypes: REPAIR_TYPES, subTypeProp: 'repair_kind' },
+];
+
+// Défaut : toutes les sous-familles activées, indexées par catégorie.
+const DEFAULT_SUB_TYPES = Object.fromEntries(
+    POI_CATEGORIES.filter(c => c.subTypes).map(c => [c.id, Object.fromEntries(c.subTypes.map(t => [t.id, true]))])
+);
+
+// Fusionne une préférence enregistrée avec les défauts : toute sous-famille
+// ajoutée depuis reste activée par défaut.
+const mergeSubTypes = (saved) => Object.fromEntries(
+    Object.entries(DEFAULT_SUB_TYPES).map(([cat, defaults]) => [cat, { ...defaults, ...(saved?.[cat] || {}) }])
+);
+
+const POI_IMAGES = {
+    'poi-water': require('../assets/poi/water.png'),
+    'poi-toilets-free': require('../assets/poi/toilets-free.png'),
+    'poi-toilets-paid': require('../assets/poi/toilets-paid.png'),
+    'poi-toilets-unknown': require('../assets/poi/toilets-unknown.png'),
+    'poi-parking-stands': require('../assets/poi/parking-stands.png'),
+    'poi-parking-racks': require('../assets/poi/parking-racks.png'),
+    'poi-parking-shelter': require('../assets/poi/parking-shelter.png'),
+    'poi-parking-other': require('../assets/poi/parking-other.png'),
+    'poi-repair-selfservice': require('../assets/poi/repair-selfservice.png'),
+    'poi-repair-shop': require('../assets/poi/repair-shop.png'),
+};
+
+const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
+
+// Tags OSM affichés dans la fiche d'un POI, quand ils sont renseignés.
+// `except` masque le champ pour une catégorie (le tag brut `fee` fait doublon
+// avec le champ « Accès » synthétique des toilettes).
+const POI_DETAIL_FIELDS = [
+    {
+        key: 'parking_type',
+        label: 'Aménagement',
+        format: (value) => PARKING_TYPES.find(t => t.id === value)?.label || value,
+    },
+    {
+        key: 'toilet_fee',
+        label: 'Tarif',
+        format: (value) => TOILET_FEE_LABELS[value] || value,
+    },
+    {
+        key: 'repair_kind',
+        label: 'Type',
+        format: (value) => REPAIR_TYPES.find(t => t.id === value)?.label || value,
+    },
+    { key: 'opening_hours', label: 'Horaires' },
+    { key: 'fee', label: 'Payant', except: 'toilets' },
+    { key: 'capacity', label: 'Capacité' },
+    { key: 'covered', label: 'Couvert' },
+    { key: 'access', label: 'Accès' },
+    { key: 'wheelchair', label: 'Accessible PMR' },
+    { key: 'seasonal', label: 'Saisonnier' },
+];
+
+const formatPoiTag = (value) => {
+    if (value === 'yes') return 'Oui';
+    if (value === 'no') return 'Non';
+    return String(value);
+};
+
+const EMPTY_FEATURE_COLLECTION = { type: 'FeatureCollection', features: [] };
+
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
     setSelectedItineraire, currentPosition, isNavigating,
-    canReport, miniMap = false
+    canReport, onNavigateToPoi, miniMap = false
 }) {
     const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
     if (!MAPTILER_KEY) {
@@ -47,6 +138,14 @@ export default function MapComponent({
     const [reportDescription, setReportDescription] = useState("");
     const [reports, setReports] = useState([]);
     const [activeReport, setActiveReport] = useState(null);
+    const [isPoiSheetVisible, setPoiSheetVisible] = useState(false);
+    const [enabledPoiCats, setEnabledPoiCats] = useState({});
+    // { toilets: {free,paid,unknown}, parking: {stands,...} }
+    const [enabledSubTypes, setEnabledSubTypes] = useState(DEFAULT_SUB_TYPES);
+    // Une catégorie n'est téléchargée qu'une fois, à sa première activation.
+    const poiCacheRef = useRef({});
+    const [poiData, setPoiData] = useState({});
+    const [activePoi, setActivePoi] = useState(null);
     const [mapHeight, setMapHeight] = useState(0);
     const [recenterTrigger, setRecenterTrigger] = useState(0);
     const [hasCenteredOnce, setHasCenteredOnce] = useState(false);
@@ -158,11 +257,42 @@ export default function MapComponent({
         const loadSavedPreferences = async () => {
             const savedBase = await AsyncStorage.getItem('userMapBaseStyle');
             const savedTheme = await AsyncStorage.getItem('userMapThemeMode');
+            const savedPois = await AsyncStorage.getItem('userMapPois');
+            const savedSubTypes = await AsyncStorage.getItem('userMapSubTypes');
             if (savedBase) setActiveBaseStyle(savedBase);
             if (savedTheme) setMapThemeMode(savedTheme);
+            if (savedPois) {
+                try {
+                    setEnabledPoiCats(JSON.parse(savedPois));
+                } catch {
+                    // Préférence corrompue : on repart sur tout désactivé.
+                }
+            }
+            if (savedSubTypes) {
+                try {
+                    setEnabledSubTypes(mergeSubTypes(JSON.parse(savedSubTypes)));
+                } catch {
+                    // Préférence corrompue : on garde toutes les sous-familles.
+                }
+            }
         };
         loadSavedPreferences();
     }, []);
+
+    // Télécharge les catégories nouvellement activées, une seule fois chacune.
+    useEffect(() => {
+        if (miniMap) return;
+        POI_CATEGORIES.forEach(({ id }) => {
+            if (!enabledPoiCats[id] || poiCacheRef.current[id]) return;
+            poiCacheRef.current[id] = true;
+            getPois(id)
+                .then(collection => setPoiData(prev => ({ ...prev, [id]: collection })))
+                .catch(error => {
+                    poiCacheRef.current[id] = false;  // autorise une nouvelle tentative
+                    console.error(`Erreur chargement POI ${id}:`, error);
+                });
+        });
+    }, [enabledPoiCats, miniMap]);
 
     const handleRecenter = () => {
         if (!currentPosition || !cameraRef.current) {
@@ -194,6 +324,35 @@ export default function MapComponent({
         setMapThemeMode(theme);
         await AsyncStorage.setItem('userMapThemeMode', theme);
     };
+
+    const handlePoiCategoryToggle = async (id) => {
+        const next = { ...enabledPoiCats, [id]: !enabledPoiCats[id] };
+        setEnabledPoiCats(next);
+        await AsyncStorage.setItem('userMapPois', JSON.stringify(next));
+    };
+
+    const handleSubTypeToggle = async (catId, subId) => {
+        const next = {
+            ...enabledSubTypes,
+            [catId]: { ...enabledSubTypes[catId], [subId]: !enabledSubTypes[catId]?.[subId] },
+        };
+        setEnabledSubTypes(next);
+        await AsyncStorage.setItem('userMapSubTypes', JSON.stringify(next));
+    };
+
+    // Une seule source pour les 4 catégories : l'icône est choisie par expression
+    // sur `category`, et un unique layer symbol gère la collision globale.
+    // Les sous-familles (parking, toilettes) se filtrent ici, sans nouvelle requête.
+    const poisGeoJSON = useMemo(() => {
+        const features = POI_CATEGORIES
+            .filter(({ id }) => enabledPoiCats[id] && poiData[id])
+            .flatMap((cat) => (
+                cat.subTypes
+                    ? poiData[cat.id].features.filter(f => enabledSubTypes[cat.id]?.[f.properties[cat.subTypeProp]])
+                    : poiData[cat.id].features
+            ));
+        return features.length ? { type: 'FeatureCollection', features } : EMPTY_FEATURE_COLLECTION;
+    }, [enabledPoiCats, enabledSubTypes, poiData]);
 
     const routesGeoJSON = useMemo(() => {
         if (!itineraires) return null;
@@ -284,6 +443,14 @@ export default function MapComponent({
         if (id) { setSelectedItineraire(id); }
     };
 
+    const onPoiPress = (event) => {
+        Haptics.selectionAsync().catch(() => { });
+        const feature = event?.nativeEvent?.features?.[0];
+        if (!feature) return;
+        const [lon, lat] = feature.geometry.coordinates;
+        setActivePoi({ ...feature.properties, lat, lon });
+    };
+
     const screenHeight = Dimensions.get('window').height;
     const slideAnim = useRef(new Animated.Value(screenHeight)).current;
 
@@ -309,6 +476,17 @@ export default function MapComponent({
         }
     }, [isReportMenuVisible]);
 
+    useEffect(() => {
+        if (isPoiSheetVisible) {
+            Animated.spring(slideAnim, {
+                toValue: 0,
+                useNativeDriver: true,
+                tension: 50,
+                friction: 7
+            }).start();
+        }
+    }, [isPoiSheetVisible]);
+
     const closeMenu = (handleClose) => {
         Animated.timing(slideAnim, {
             toValue: screenHeight,
@@ -321,6 +499,18 @@ export default function MapComponent({
 
     const closeLayerMenu = () => closeMenu(setLayerMenuVisible);
     const closeReportMenu = () => closeMenu(setIsReportMenuVisible);
+    const closePoiSheet = () => closeMenu(setPoiSheetVisible);
+
+    const handleNavigateToPoi = () => {
+        if (!activePoi || !onNavigateToPoi) return;
+        Haptics.selectionAsync().catch(() => { });
+        onNavigateToPoi({
+            lat: activePoi.lat,
+            lon: activePoi.lon,
+            name: activePoi.name || POI_CATEGORIES.find(c => c.id === activePoi.category)?.label,
+        });
+        setActivePoi(null);
+    };
 
     const handleDeleteReport = async (reportId) => {
         try {
@@ -396,6 +586,62 @@ export default function MapComponent({
                         mode="heading"
                         androidPreferredFramesPerSecond={30}
                     />
+                )}
+
+                {/* Déclarée avant la source des itinéraires : les POI passent donc
+                    sous les tracés. Les signalements, eux, sont des ViewAnnotation,
+                    toujours au-dessus du canvas. */}
+                {!miniMap && poisGeoJSON.features.length > 0 && (
+                    <>
+                        <Images images={POI_IMAGES} />
+                        <GeoJSONSource id="pois" data={poisGeoJSON} onPress={onPoiPress}>
+                            <Layer
+                                id="pois-symbol"
+                                type="symbol"
+                                minzoom={10}
+                                layout={{
+                                    iconImage: ['match', ['get', 'category'],
+                                        'water', 'poi-water',
+                                        // Les toilettes se déclinent selon la gratuité.
+                                        'toilets', ['match', ['get', 'toilet_fee'],
+                                            'free', 'poi-toilets-free',
+                                            'paid', 'poi-toilets-paid',
+                                            'poi-toilets-unknown'],
+                                        // Le parking se décline par famille d'aménagement.
+                                        'parking', ['match', ['get', 'parking_type'],
+                                            'stands', 'poi-parking-stands',
+                                            'racks', 'poi-parking-racks',
+                                            'shelter', 'poi-parking-shelter',
+                                            'poi-parking-other'],
+                                        // La réparation distingue libre-service et atelier.
+                                        'repair', ['match', ['get', 'repair_kind'],
+                                            'shop', 'poi-repair-shop',
+                                            'poi-repair-selfservice'],
+                                        'poi-water'],
+                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.22, 13, 0.42, 17, 0.8],
+                                    // Dédensification : le moteur masque les icônes qui se chevauchent.
+                                    iconAllowOverlap: false,
+                                    // Priorité de placement : les parkings (très nombreux) cèdent la
+                                    // place aux catégories rares (toilettes, réparation), sinon
+                                    // écrasées par collision. Sort-key bas = placé en premier.
+                                    symbolSortKey: ['match', ['get', 'category'], 'parking', 1, 0],
+                                    textField: ['step', ['zoom'], '', 16, ['coalesce', ['get', 'name'], '']],
+                                    textSize: 11,
+                                    textAnchor: 'top',
+                                    textOffset: [0, 1.7],
+                                    textAllowOverlap: false,
+                                    // En cas de collision, on sacrifie le libellé avant l'icône.
+                                    textOptional: true,
+                                }}
+                                paint={{
+                                    iconOpacity: ['interpolate', ['linear'], ['zoom'], 10, 0.45, 13, 0.7, 15, 1],
+                                    textColor: colors.textMain,
+                                    textHaloColor: colors.bgMain,
+                                    textHaloWidth: 1.2,
+                                }}
+                            />
+                        </GeoJSONSource>
+                    </>
                 )}
 
                 {routesGeoJSON && (
@@ -503,6 +749,75 @@ export default function MapComponent({
                                 </Text>
                             </TouchableOpacity>
                         ))}
+                    </Animated.View>
+                </TouchableOpacity>
+            </Modal>
+
+            {!miniMap && (
+                <TouchableOpacity
+                    style={[styles.mapButton, styles.poiButton, { backgroundColor: colors.bgSurface }]}
+                    onPress={() => {
+                        Haptics.selectionAsync();
+                        setPoiSheetVisible(true);
+                    }}
+                >
+                    <MaterialCommunityIcons name="map-marker-multiple-outline" size={26} color={colors.textMain} />
+                </TouchableOpacity>
+            )}
+
+            <Modal
+                visible={isPoiSheetVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={closePoiSheet}
+            >
+                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closePoiSheet}>
+                    <Animated.View style={[styles.modalContent, { transform: [{ translateY: slideAnim }], backgroundColor: colors.bgMain }]}>
+
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>{"Points d'intérêt"}</Text>
+
+                        {POI_CATEGORIES.map((category) => (
+                            <View key={category.id} style={{ width: '100%' }}>
+                                <View style={styles.poiOption}>
+                                    <View style={[styles.poiBadge, { backgroundColor: category.color }]}>
+                                        <MaterialCommunityIcons name={category.icon} size={18} color="#FFF" />
+                                    </View>
+                                    <Text style={[styles.layerText, typography.body, { flex: 1, color: colors.textMain }]}>
+                                        {category.label}
+                                    </Text>
+                                    <Switch
+                                        value={!!enabledPoiCats[category.id]}
+                                        onValueChange={() => {
+                                            Haptics.selectionAsync();
+                                            handlePoiCategoryToggle(category.id);
+                                        }}
+                                        trackColor={{ true: colors.primary }}
+                                    />
+                                </View>
+
+                                {category.subTypes && enabledPoiCats[category.id] && category.subTypes.map((subType) => (
+                                    <View key={subType.id} style={styles.poiSubOption}>
+                                        <View style={[styles.poiSubDot, { backgroundColor: subType.color }]} />
+                                        <Text style={[typography.body, { flex: 1, fontSize: 14, color: colors.textSecondary }]}>
+                                            {subType.label}
+                                        </Text>
+                                        <Switch
+                                            value={!!enabledSubTypes[category.id]?.[subType.id]}
+                                            onValueChange={() => {
+                                                Haptics.selectionAsync();
+                                                handleSubTypeToggle(category.id, subType.id);
+                                            }}
+                                            trackColor={{ true: colors.primary }}
+                                            style={{ transform: [{ scale: 0.8 }] }}
+                                        />
+                                    </View>
+                                ))}
+                            </View>
+                        ))}
+
+                        <Text style={[typography.body, { fontSize: 12, color: colors.textSecondary, marginTop: 10 }]}>
+                            {"Zoomez pour faire apparaître les points d'intérêt."}
+                        </Text>
                     </Animated.View>
                 </TouchableOpacity>
             </Modal>
@@ -653,6 +968,67 @@ export default function MapComponent({
                     </View>
                 </TouchableOpacity>
             </Modal>
+
+            <Modal
+                visible={!!activePoi}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setActivePoi(null)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setActivePoi(null)}
+                >
+                    <View style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
+                        {activePoi && (() => {
+                            const category = POI_CATEGORIES.find(c => c.id === activePoi.category);
+                            const details = POI_DETAIL_FIELDS
+                                .filter(field => field.except !== activePoi.category
+                                    && activePoi[field.key] !== undefined && activePoi[field.key] !== null)
+                                .map(field => `${field.label} : ${(field.format || formatPoiTag)(activePoi[field.key])}`);
+                            return (
+                                <>
+                                    <View style={styles.header}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
+                                            <View style={[styles.poiBadge, { backgroundColor: category?.color }]}>
+                                                <MaterialCommunityIcons name={category?.icon} size={18} color="#FFF" />
+                                            </View>
+                                            <Text style={[typography.h1, { fontSize: 18, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
+                                                {activePoi.name || category?.label}
+                                            </Text>
+                                        </View>
+                                        <TouchableOpacity onPress={() => setActivePoi(null)}>
+                                            <Ionicons name="close" size={28} color={colors.textMain} />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    <Text style={[typography.body, { color: colors.textSecondary, marginBottom: details.length ? 8 : 20 }]}>
+                                        {category?.label}
+                                    </Text>
+
+                                    {details.map(detail => (
+                                        <Text key={detail} style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
+                                            {detail}
+                                        </Text>
+                                    ))}
+
+                                    {onNavigateToPoi && (
+                                        <TouchableOpacity
+                                            style={[styles.submitButton, { backgroundColor: colors.primary, marginTop: 16 }]}
+                                            onPress={handleNavigateToPoi}
+                                        >
+                                            <Text style={[typography.body, { color: '#FFF', fontWeight: 'bold' }]}>
+                                                Y aller
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </>
+                            );
+                        })()}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </View>
     );
 }
@@ -683,9 +1059,14 @@ const styles = StyleSheet.create({
         bottom: 20,
         right: 20,
     },
-    reportButton: {
+    poiButton: {
         position: 'absolute',
         bottom: 80,
+        left: 20,
+    },
+    reportButton: {
+        position: 'absolute',
+        bottom: 140,
         left: 20,
     },
     modalOverlay: {
@@ -746,6 +1127,33 @@ const styles = StyleSheet.create({
     },
     layerEmoji: {
         fontSize: 22,
+    },
+    poiOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 10,
+        width: '100%',
+        gap: 4,
+    },
+    poiSubOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 2,
+        paddingLeft: 46,
+        width: '100%',
+    },
+    poiSubDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        marginRight: 10,
+    },
+    poiBadge: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     layerText: {
         fontSize: 16,
