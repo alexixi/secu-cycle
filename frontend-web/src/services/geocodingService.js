@@ -1,4 +1,5 @@
 const API_URL = "https://api-adresse.data.gouv.fr/search/";
+const REVERSE_API_URL = "https://api-adresse.data.gouv.fr/reverse/";
 
 export const searchAddressAutocomplete = async (query) => {
     if (!query) return [];
@@ -86,6 +87,47 @@ export const getCoordinatesFromAddress = async (address) => {
 
     } catch (error) {
         console.error("Erreur technique lors de la récupération des coordonnées : ", error);
+        return null;
+    }
+};
+
+export const getAddressFromCoordinates = async (lat, lon) => {
+    if (lat === null || lat === undefined || lon === null || lon === undefined) return null;
+
+    const params = new URLSearchParams({
+        lat: String(lat),
+        lon: String(lon),
+        limit: "1"
+    });
+
+    try {
+        const response = await fetch(`${REVERSE_API_URL}?${params}`);
+
+        if (!response.ok) {
+            console.error("Erreur HTTP API BAN (Géocodage inverse) : ", response.status);
+            return null;
+        }
+
+        const data = await response.json();
+
+        if (!data || !data.features || data.features.length === 0) {
+            return null;
+        }
+
+        const bestMatch = data.features[0];
+
+        return {
+            id: bestMatch.properties.id,
+            lat: bestMatch.geometry.coordinates[1],
+            lon: bestMatch.geometry.coordinates[0],
+            display_name: bestMatch.properties.label,
+            name: bestMatch.properties.name,
+            city: bestMatch.properties.city,
+            postcode: bestMatch.properties.postcode
+        };
+
+    } catch (error) {
+        console.error("Erreur technique lors du géocodage inverse : ", error);
         return null;
     }
 };
