@@ -12,7 +12,7 @@ export default {
         newArchEnabled: true,
         ios: {
             icon: IS_DEV ? "./assets/images/ios-icon-dev.png" : "./assets/images/ios-icon.png",
-            supportsTablet: true,
+            supportsTablet: false,
             bundleIdentifier: IS_DEV ? "com.alexixisorganization.secucycle.dev" : "com.alexixisorganization.secucycle",
             infoPlist: {
                 ITSAppUsesNonExemptEncryption: false,

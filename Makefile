@@ -3,6 +3,8 @@ COMPOSE_PROD = $(COMPOSE) -f docker-compose.yml -f docker-compose.prod.yml
 
 GRAPHS_VOLUME = secu_cycle_graphs_data
 
+SCREEN_DIR = Documentation/store-assets
+
 all: api-background web
 
 api:
@@ -83,4 +85,8 @@ sync-pois:
 	@echo "🚰 Synchronisation des POI OSM (Overpass, qq min)..."
 	$(COMPOSE) exec api python -m pois.sync
 
-.PHONY: all api api-background api-build api-stop web web-docker web-install mobile mobile-install appli install logs shell stop down clean prod deploy deploy-static regen-graph sync-pois
+screen:
+	@test -d $(SCREEN_DIR)/node_modules || npm --prefix $(SCREEN_DIR) install
+	npm --prefix $(SCREEN_DIR) run screenshots -- $(ARGS)
+
+.PHONY: all api api-background api-build api-stop web web-docker web-install mobile mobile-install appli install logs shell stop down clean prod deploy deploy-static regen-graph sync-pois screen
