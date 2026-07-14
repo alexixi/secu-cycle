@@ -124,8 +124,16 @@ export default function Index() {
         } catch (error) {
             console.error("Erreur calcul itinéraire:", error);
             setErrorPath(true);
-            trackEvent('route_calculation_failed', { bike: selectedBike });
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            if (error.code === "OUT_OF_ZONE") {
+                trackEvent('address_out_of_zone', { city: startPoint?.city || endPoint?.city || "inconnue" });
+                Alert.alert(
+                    "Hors zone couverte",
+                    error.detailMessage || "Cette adresse est en dehors de la zone couverte par Sécu-Cycle.",
+                );
+            } else {
+                trackEvent('route_calculation_failed', { bike: selectedBike });
+            }
         } finally {
             setIsLoading(false);
         }

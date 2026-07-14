@@ -74,6 +74,13 @@ export async function apiFetch(endpoint, options = {}, token = null, _retried = 
         const apiError = new Error(errorData || "Erreur lors de la requête API");
         apiError.status = response.status;
         apiError.statusText = response.statusText;
+        try {
+            const detail = JSON.parse(errorData)?.detail;
+            apiError.code = detail?.code ?? null;
+            apiError.detailMessage = detail?.message ?? null;
+        } catch {
+            apiError.code = null;
+        }
         throw apiError;
     }
 
@@ -112,6 +119,15 @@ export async function calculateItineraries(token, start, end, bikeId, maxDuratio
         return data.routes;
     } catch (error) {
         throw error;
+    }
+}
+
+export async function isCovered(lat, lon) {
+    try {
+        const data = await apiFetch(`/graph/coverage?lat=${lat}&lon=${lon}`, { method: "GET" });
+        return data.covered !== false;
+    } catch {
+        return true;
     }
 }
 
