@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 
 from database import get_db, SessionLocal
 from dependencies import require_admin
-from graph import builder, communes as communes_service
+from graph import builder, communes as communes_service, routing
 from graph.communes import CommuneNotFound
+from graph.config import MAX_SNAP_DISTANCE_M
 from graph.graph_manager import load_graph_with_ign, profile_paths, update_graph_with_traffic
 from graph.route_cache import route_cache
 from models.graph_profile import GraphBuildRun, GraphProfile
@@ -88,6 +89,34 @@ async def _validate_communes(db: Session, names) -> None:
         await asyncio.to_thread(communes_service.validate, db, names)
     except CommuneNotFound as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+# --- Couverture (public) ---
+
+@router.get("/coverage")
+def get_coverage(
+    request: Request,
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+):
+    """Ce point est-il desservi par le graphe chargé ?
+
+    Permet aux frontends d'avertir dès la saisie d'une adresse, plutôt que de
+    laisser le calcul d'itinéraire échouer (ou pire, réussir de travers).
+    """
+    G = getattr(request.app.state, "G", None)
+    if G is None:
+        raise HTTPException(status_code=503, detail="Graphe indisponible.")
+
+    distance = routing.snap_distance_m(G, lat, lon)
+    if distance is None:
+        raise HTTPException(status_code=503, detail="Graphe indisponible.")
+
+    return {
+        "covered": distance <= MAX_SNAP_DISTANCE_M,
+        "distance_m": round(distance, 1),
+        "profile": _active_name(request),
+    }
 
 
 # --- Administration du graphe ---
