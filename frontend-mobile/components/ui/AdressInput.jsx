@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, TextInput, Text, TouchableOpacity, Keyboard, Platform } from 'react-native';
 import { searchAddressAutocomplete } from '../../services/geocodingService';
+import { isCovered } from '../../services/apiBack';
+import { trackEvent } from '../../services/analytics';
 import { useTheme } from '../../hooks/useTheme';
 
-export default function AdressInput({ placeholder, onSelect, icon, defaultValue, variant = 'search', zIndex = 1000, onFocusChange }) {
+export default function AdressInput({ placeholder, onSelect, icon, defaultValue, variant = 'search', zIndex = 1000, onFocusChange, checkCoverage = false }) {
   const [query, setQuery] = useState(defaultValue || "");
   const [suggestions, setSuggestions] = useState([]);
   const [showList, setShowList] = useState(false);
+  const [outOfZone, setOutOfZone] = useState(false);
   const isTyping = React.useRef(false);
 
   const isForm = variant === 'form';
@@ -38,13 +41,24 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
     return () => clearTimeout(delayDebounceFn);
   }, [query]);
 
+  const warnIfOutOfZone = async (item) => {
+    if (!checkCoverage || item.id === "no-result") return;
+    const covered = await isCovered(item.lat, item.lon);
+    setOutOfZone(!covered);
+    if (!covered) {
+      trackEvent("address_out_of_zone", { city: item.city || "inconnue", postcode: item.postcode || "" });
+    }
+  };
+
   const handleSelect = (item) => {
     isTyping.current = false;
     setQuery(item.name);
     setSuggestions([]);
     setShowList(false);
+    setOutOfZone(false);
     Keyboard.dismiss();
     onSelect(item);
+    warnIfOutOfZone(item);
   };
 
   return (
@@ -69,6 +83,7 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
           onChangeText={(text) => {
             isTyping.current = true;
             setQuery(text);
+            setOutOfZone(false);
             if (text.trim() === "") {
               setSuggestions([]);
               setShowList(false);
@@ -85,6 +100,12 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
           onBlur={() => onFocusChange?.(false)}
         />
       </View>
+
+      {outOfZone && (
+        <Text style={[styles.warningText, { color: colors.warning, backgroundColor: colors.warningBg }]}>
+          Cette adresse est en dehors de la zone couverte par Sécu-Cycle.
+        </Text>
+      )}
 
       {showList && suggestions.length > 0 && (
         <View style={[styles.suggestionList, {
@@ -168,5 +189,14 @@ const styles = StyleSheet.create({
   },
   suggestionSubText: {
     fontSize: 13,
+  },
+  warningText: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginHorizontal: 15,
+    marginBottom: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 8,
   },
 });

@@ -18,6 +18,9 @@ export const colors = {
         error: '#ff4d4d',
         errorBg: 'rgba(255, 77, 77, 0.10)',
 
+        warning: '#b45309',
+        warningBg: 'rgba(180, 83, 9, 0.10)',
+
         activeRoute: '#3d46f6',
         inactiveRoute: '#A0AEC0',
     },
@@ -39,6 +42,9 @@ export const colors = {
 
         error: '#ff4d4d',
         errorBg: 'rgba(255, 77, 77, 0.10)',
+
+        warning: '#fbbf24',
+        warningBg: 'rgba(251, 191, 36, 0.10)',
 
         activeRoute: '#3d46f6',
         inactiveRoute: '#A0AEC0',

@@ -9,6 +9,8 @@ import { calculateItineraries, getReports, createReport, deleteReport, getTraffi
 import { trackEvent } from "../services/analytics";
 import "./ItinerairePage.css";
 
+const GENERIC_ROUTE_ERROR = "Une erreur est survenue lors de la recherche de l'itinéraire.";
+
 const bikeLabel = (bikeId) =>
     typeof bikeId === "string" && bikeId.startsWith("default-") ? bikeId.slice("default-".length) : "perso";
 
@@ -21,7 +23,7 @@ export default function ItinerairePage() {
     const [selectedItineraire, setSelectedItineraire] = useState(null);
     const [maxTime, setMaxTime] = useState(null);
     const [maxDuration, setMaxDuration] = useState(null);
-    const [errorPath, setErrorPath] = useState(false);
+    const [errorPath, setErrorPath] = useState(null);
     const [reports, setReports] = useState([]);
     const [reportCoords, setReportCoords] = useState(null);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -64,16 +66,21 @@ export default function ItinerairePage() {
         try {
             const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint.name, endPoint.name);
             if (itineraries && itineraries.length > 0) {
-                setErrorPath(false);
+                setErrorPath(null);
                 setRoutePaths(itineraries);
                 trackEvent("route_calculated", { bike: bikeLabel(selectedBike), count: itineraries.length });
             } else {
-                setErrorPath(true);
+                setErrorPath(GENERIC_ROUTE_ERROR);
                 trackEvent("route_calculation_failed", { bike: bikeLabel(selectedBike) });
             }
         } catch (error) {
-            setErrorPath(true);
-            trackEvent("route_calculation_failed", { bike: bikeLabel(selectedBike) });
+            if (error.code === "OUT_OF_ZONE") {
+                setErrorPath(error.detailMessage || GENERIC_ROUTE_ERROR);
+                trackEvent("address_out_of_zone", { city: startPoint.city || endPoint.city || "inconnue" });
+            } else {
+                setErrorPath(GENERIC_ROUTE_ERROR);
+                trackEvent("route_calculation_failed", { bike: bikeLabel(selectedBike) });
+            }
             setIsLoading(false);
             return;
         }

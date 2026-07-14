@@ -174,6 +174,24 @@ def precompute_nearest_node_index(G):
     return G
 
 
+def snap_distance_m(G, lat, lon):
+    """Distance (m) du point au nœud le plus proche du graphe. None si graphe vide.
+
+    Sert à répondre « ce point est-il dans la zone couverte ? » sans calculer
+    d'itinéraire : on compare le résultat à MAX_SNAP_DISTANCE_M.
+    """
+    if not G.graph.get('_node_index_ready'):
+        precompute_nearest_node_index(G)
+
+    node_ids = G.graph['_node_ids']
+    if len(node_ids) == 0:
+        return None
+
+    _, pos = G.graph['_node_tree'].query(np.deg2rad([[lat, lon]]), k=1)
+    node = G.nodes[int(node_ids[pos[0][0]])]
+    return float(ox.distance.great_circle(lat, lon, node['y'], node['x']))
+
+
 def _nearest_nodes(G, lons, lats):
     """Renvoie la liste des nœuds les plus proches via l'index précalculé."""
     import numpy as np
@@ -433,6 +451,16 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
         snap_e = _project_to_nearest_edge(G, end_coords[0], end_coords[1])
         if snap_s is None or snap_e is None:
             return {"success": False, "error": "Impossible d'accrocher le départ ou l'arrivée au réseau cyclable."}
+
+        # L'accroche réussit à n'importe quelle distance : sans ce seuil, un point
+        # hors du graphe chargé donnerait un itinéraire partant de très loin.
+        if snap_s['dist_m'] > MAX_SNAP_DISTANCE_M or snap_e['dist_m'] > MAX_SNAP_DISTANCE_M:
+            which = "Le départ" if snap_s['dist_m'] > MAX_SNAP_DISTANCE_M else "L'arrivée"
+            return {
+                "success": False,
+                "error_code": "OUT_OF_ZONE",
+                "error": f"{which} est en dehors de la zone couverte par Sécu-Cycle.",
+            }
 
         # Départ et arrivée sur la même arête : segment direct (pas d'aller-retour
         # jusqu'à une intersection).

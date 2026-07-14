@@ -150,6 +150,7 @@ export default function SearchContainer({
                 onSelect={onStartSelect}
                 icon={<MaterialCommunityIcons name="bike" size={20} color={colors.primary} />}
                 onFocusChange={(focused) => focused && setFocusedField('start')}
+                checkCoverage
               />
             </View>
             <View style={styles.separatorContainer}>
@@ -165,6 +166,7 @@ export default function SearchContainer({
                 }}
                 icon={<Ionicons name="location" size={20} color={colors.error} />}
                 onFocusChange={(focused) => focused && setFocusedField('end')}
+                checkCoverage
               />
             </View>
 

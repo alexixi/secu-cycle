@@ -16,8 +16,8 @@ export default function SearchAside({ startAdress, endAdress, onStartSelect, onE
         <aside className="search-aside">
             <div className="adress-input-wrapper">
                 <div className="adress-inputs">
-                    <AdressInput id="adress-input-start" placeholder="Départ" defaultValue={startAdress} onSelect={onStartSelect} showFavorite><MdDirectionsBike size={24} /></AdressInput>
-                    <AdressInput id="adress-input-end" placeholder="Destination" defaultValue={endAdress} onSelect={onEndSelect} showFavorite><FaFlagCheckered size={24} /></AdressInput>
+                    <AdressInput id="adress-input-start" placeholder="Départ" defaultValue={startAdress} onSelect={onStartSelect} showFavorite checkCoverage><MdDirectionsBike size={24} /></AdressInput>
+                    <AdressInput id="adress-input-end" placeholder="Destination" defaultValue={endAdress} onSelect={onEndSelect} showFavorite checkCoverage><FaFlagCheckered size={24} /></AdressInput>
                 </div>
                 <SwapButton onClick={onSwap} />
             </div>
@@ -35,7 +35,7 @@ export default function SearchAside({ startAdress, endAdress, onStartSelect, onE
             <BikeSelect selectedBike={selectedBike} onSelect={onBikeSelect} />
             <ItinerariesSelect itineraires={itineraires} selectedItineraire={selectedItineraire} setSelectedItineraire={setSelectedItineraire} />
             <Button id="search-button" onClick={onSearchClick} disabled={!isReady}><PiPathBold /> Calculer les itinéraires</Button>
-            {errorPath && <div className="error-text">Une erreur est survenue lors de la recherche de l'itinéraire.</div>}
+            {errorPath && <div className="error-text">{errorPath}</div>}
         </aside>
     );
 }

@@ -108,7 +108,10 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
 
 
     if not result.get("success"):
-        raise HTTPException(status_code=404, detail=result.get("error", "Calcul échoué."))
+        raise HTTPException(status_code=404, detail={
+            "code": result.get("error_code"),
+            "message": result.get("error", "Calcul échoué."),
+        })
 
     for route in result.get("routes", []):
             maneuvers = build_maneuvers(route["nodes"], G)
