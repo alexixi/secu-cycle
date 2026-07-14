@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { searchAddressAutocomplete, getCoordinatesFromAddress } from "../../services/geocodingService";
+import { isCovered } from "../../services/apiBack";
+import { trackEvent } from "../../services/analytics";
 import { useAuth } from "../../context/AuthContext";
 import "./AdressInput.css";
 import "./Input.css"
 
-export default function AdressInput({ id, placeholder, onSelect, defaultValue, autoFocus = false, showFavorite = false, children: icon }) {
+export default function AdressInput({ id, placeholder, onSelect, defaultValue, autoFocus = false, showFavorite = false, checkCoverage = false, children: icon }) {
     const { user } = useAuth();
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
     const [hasError, setHasError] = useState(false);
+    const [outOfZone, setOutOfZone] = useState(false);
     const [isValidated, setIsValidated] = useState(false);
     const [cursor, setCursor] = useState(-1);
 
@@ -70,6 +73,15 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         }
     }, [cursor]);
 
+    const warnIfOutOfZone = async ({ lat, lon, city, postcode }) => {
+        if (!checkCoverage) return;
+        const covered = await isCovered(lat, lon);
+        setOutOfZone(!covered);
+        if (!covered) {
+            trackEvent("address_out_of_zone", { city: city || "inconnue", postcode: postcode || "" });
+        }
+    };
+
     const handleSelect = async (place) => {
         if (!place || place.id === "no-result") {
             setQuery("");
@@ -83,6 +95,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         setSuggestions([]);
         setIsOpen(false);
         setHasError(false);
+        setOutOfZone(false);
         setIsValidated(true);
 
         if (place.isFavorite) {
@@ -90,6 +103,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
 
             if (coords) {
                 onSelect(coords);
+                warnIfOutOfZone(coords);
             } else {
                 setHasError(true);
             }
@@ -97,8 +111,11 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
             onSelect({
                 lat: parseFloat(place.lat),
                 lon: parseFloat(place.lon),
-                name: place.display_name
+                name: place.display_name,
+                city: place.city,
+                postcode: place.postcode
             });
+            warnIfOutOfZone(place);
         }
     };
 
@@ -115,6 +132,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         setQuery(e.target.value);
         setIsValidated(false);
         if (hasError) setHasError(false);
+        if (outOfZone) setOutOfZone(false);
 
         if (e.target.value.trim() === "") {
             onSelect(null);
@@ -159,7 +177,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
 
     return (
         <div className="adress-input-and-suggestions">
-            <div className={`input-with-icon ${hasError ? "input-error" : ""}`}>
+            <div className={`input-with-icon ${hasError ? "input-error" : ""} ${outOfZone ? "input-warning" : ""}`}>
                 <label htmlFor={id} className="input-icon">
                     {icon}
                 </label>
@@ -181,6 +199,12 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
             {hasError && (
                 <div className="error-text">
                     Adresse invalide. Veuillez choisir dans la liste.
+                </div>
+            )}
+
+            {outOfZone && !hasError && (
+                <div className="warning-text">
+                    Cette adresse est en dehors de la zone couverte par Sécu-Cycle.
                 </div>
             )}
 

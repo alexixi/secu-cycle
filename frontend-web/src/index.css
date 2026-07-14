@@ -21,6 +21,9 @@
     --error: #ff4d4d;
     --error-bg: rgb(from var(--error) r g b / 10%);
 
+    --warning: #b45309;
+    --warning-bg: rgb(from var(--warning) r g b / 10%);
+
     --green-color: #249d40;
     --red-color: #a5212e;
 
@@ -44,6 +47,9 @@
 
     --border-light: #32344a;
     --border-strong: #41445e;
+
+    --warning: #fbbf24;
+    --warning-bg: rgb(from var(--warning) r g b / 10%);
 
     --green-color: #62b174;
     --red-color: #e86572;
