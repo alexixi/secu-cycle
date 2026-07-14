@@ -1,0 +1,14 @@
+{
+    "name": "secu-cycle-store-assets",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "description": "Génération des visuels de fiche store (App Store, Play, Product Hunt, Open Graph).",
+    "scripts": {
+        "screenshots": "node generate.mjs"
+    },
+    "devDependencies": {
+        "@fontsource/inter": "^5.2.8",
+        "playwright-core": "^1.61.1"
+    }
+}

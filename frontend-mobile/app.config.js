@@ -12,8 +12,8 @@ export default {
         newArchEnabled: true,
         ios: {
             icon: IS_DEV ? "./assets/images/ios-icon-dev.png" : "./assets/images/ios-icon.png",
-            supportsTablet: true,
-            bundleIdentifier: IS_DEV ? "com.alexixisorganization.secucycle.dev" : "com.alexixisorganization.secucycle",
+            supportsTablet: false,
+            bundleIdentifier: IS_DEV ? "fr.secucycle.app.dev" : "fr.secucycle.app",
             infoPlist: {
                 ITSAppUsesNonExemptEncryption: false,
                 UIBackgroundModes: ["location"],
@@ -30,7 +30,7 @@ export default {
             edgeToEdgeEnabled: true,
             predictiveBackGestureEnabled: false,
             usesCleartextTraffic: true,
-            package: IS_DEV ? "com.alexixisorganization.secucycle.dev" : "com.alexixisorganization.secucycle",
+            package: IS_DEV ? "fr.secucycle.app.dev" : "fr.secucycle.app",
             permissions: [
                 "ACCESS_COARSE_LOCATION",
                 "ACCESS_FINE_LOCATION",
