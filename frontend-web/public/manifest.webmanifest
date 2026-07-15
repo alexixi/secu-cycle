@@ -7,10 +7,16 @@
     "scope": "/",
     "display": "standalone",
     "orientation": "portrait",
-    "theme_color": "#646cff",
+    "theme_color": "#0078bc",
     "background_color": "#e7ecfb",
     "categories": ["navigation", "sports", "travel", "fitness"],
     "icons": [
+        {
+            "src": "/favicon-96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
         {
             "src": "/pwa-192.png",
             "sizes": "192x192",
