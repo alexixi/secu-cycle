@@ -8,6 +8,7 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const ItinerairePage = lazy(() => import('./pages/ItinerairePage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ProfileCreationPage = lazy(() => import('./pages/ProfileCreationPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const ErrorPage = lazy(() => import('./pages/ErrorPage'));
@@ -49,6 +50,8 @@ function App() {
             } />
 
             <Route path="/login" element={<LoginPage />} />
+
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
             <Route path="/signin" element={<ProfileCreationPage />} />
 

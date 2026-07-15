@@ -32,6 +32,32 @@ def verification_email(code: str) -> tuple[str, str, str]:
     return subject, html, text
 
 
+def password_reset_email(code: str) -> tuple[str, str, str]:
+    """E-mail de réinitialisation de mot de passe contenant le code à 6 chiffres."""
+    subject = "Réinitialisation de votre mot de passe Sécu'Cycle"
+
+    html = f"""\
+<div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
+  <h2 style="margin-bottom: 8px;">Réinitialisation de mot de passe</h2>
+  <p>Vous avez demandé à réinitialiser votre mot de passe. Saisissez le code
+     suivant pour choisir un nouveau mot de passe&nbsp;:</p>
+  <p style="font-size: 32px; font-weight: bold; letter-spacing: 6px; text-align: center;
+            margin: 24px 0; color: #0a7d3f;">{code}</p>
+  <p style="color: #555;">Ce code est valable 15&nbsp;minutes. Si vous n'êtes pas à l'origine
+     de cette demande, ignorez cet e-mail&nbsp;: votre mot de passe reste inchangé.</p>
+</div>"""
+
+    text = (
+        "Réinitialisation de votre mot de passe Sécu'Cycle\n\n"
+        f"Votre code de réinitialisation est : {code}\n\n"
+        "Ce code est valable 15 minutes. "
+        "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : "
+        "votre mot de passe reste inchangé."
+    )
+
+    return subject, html, text
+
+
 def contact_email(
     first_name: str,
     last_name: str,

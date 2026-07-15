@@ -160,6 +160,30 @@ export async function resendVerification(email) {
     }
 }
 
+export async function forgotPassword(email) {
+    try {
+        const data = await apiFetch("/users/forgot-password", {
+            method: "POST",
+            body: JSON.stringify({ email: email })
+        }, null);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function resetPassword(email, code, newPassword) {
+    try {
+        const data = await apiFetch("/users/reset-password", {
+            method: "POST",
+            body: JSON.stringify({ email: email, code: code, new_password: newPassword })
+        }, null);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function sendContactMessage(firstName, lastName, email, subject, message) {
     try {
         const data = await apiFetch("/contact/", {
