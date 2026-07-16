@@ -168,6 +168,10 @@ export default function ItinerairePage() {
             <Meta
                 title="Sécu'Cycle | Itinéraires"
                 description="Trouvez le meilleur itinéraire à vélo en privilégiant les routes sécurisées avec Sécu'Cycle. Le calcul et le temps de parcours se base sur votre profil sportif, votre vélo, le type de route emprunté, les conditions de circulation ainsi que les variation de dénivelé."
+                preconnect={[
+                    "https://api.secu-cycle.fr",
+                    { href: "https://api.maptiler.com", crossOrigin: true },
+                ]}
             />
             <div className="main-page-itineraire">
                 <SearchAside

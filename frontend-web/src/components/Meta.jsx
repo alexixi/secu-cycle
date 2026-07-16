@@ -9,6 +9,7 @@ export default function Meta({
   name = "Sécu'Cycle",
   noindex = false,
   image = "/og-image.png",
+  preconnect = [],
 }) {
   const { pathname } = useLocation();
   const path = pathname.endsWith("/") ? pathname : `${pathname}/`;
@@ -23,6 +24,14 @@ export default function Meta({
       <link rel="canonical" href={canonical} />
       <link rel="alternate" hrefLang="fr" href={canonical} />
       <link rel="alternate" hrefLang="x-default" href={canonical} />
+
+      {preconnect.map((entry) => {
+        const href = typeof entry === "string" ? entry : entry.href;
+        const anonymous = typeof entry === "object" && entry.crossOrigin;
+        return anonymous
+          ? <link key={href} rel="preconnect" href={href} crossOrigin="" />
+          : <link key={href} rel="preconnect" href={href} />;
+      })}
 
       <meta property="og:type" content="website" />
       <meta property="og:title" content={title} />
