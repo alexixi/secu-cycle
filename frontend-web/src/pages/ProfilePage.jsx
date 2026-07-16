@@ -33,8 +33,6 @@ import IconBikeRoute from '../assets/bikes/route.svg?react';
 import { AiFillPlusCircle } from "react-icons/ai";
 import { FaHome, FaUserEdit, FaMedal } from "react-icons/fa";
 
-// Le mobile lit `badge.icon` (nom Ionicons) ; le web utilise react-icons, d'où ce mapping
-// par `code`, avec FaMedal en repli pour tout badge ajouté plus tard côté backend.
 const BADGE_ICONS = {
   first_route: MdDirectionsBike,
   routes_10: FaStar,
@@ -43,7 +41,6 @@ const BADGE_ICONS = {
   distance_200: MdStraighten,
 };
 
-// Un compteur de distance est fractionnaire, un compteur de trajets ne l'est pas.
 const formatProgress = (value, criteria) =>
   criteria === "total_distance_km" ? Number(value).toFixed(1) : Math.round(value);
 

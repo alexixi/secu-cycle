@@ -209,3 +209,44 @@ header #profile-button.active:active {
         transform: translateY(0);
     }
 }
+
+header nav .button.nav-contextual {
+    animation: navTabIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+header nav .button.nav-contextual.nav-contextual-out {
+    animation: navTabOut 0.2s cubic-bezier(0.55, 0, 1, 0.45) both;
+    pointer-events: none;
+}
+
+@keyframes navTabIn {
+    from {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes navTabOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    header nav .button.nav-contextual,
+    header nav .button.nav-contextual.nav-contextual-out {
+        animation: none;
+    }
+}
