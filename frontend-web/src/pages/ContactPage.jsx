@@ -174,7 +174,7 @@ export default function ContactPage() {
                 title="Sécu'Cycle | Contact"
                 description="Contacter l'équipe Sécu'Cycle : support, questions et exercice de vos droits sur vos données personnelles."
             />
-            <main className="legal-page">
+            <div className="legal-page">
                 <article className="legal-content">
                     <h1>Contact</h1>
 
@@ -326,7 +326,7 @@ export default function ContactPage() {
                         <Link to="/conditions-utilisation">conditions générales d'utilisation</Link>.
                     </p>
                 </article>
-            </main>
+            </div>
         </>
     );
 }

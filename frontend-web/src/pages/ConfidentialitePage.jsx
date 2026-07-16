@@ -7,9 +7,9 @@ export default function ConfidentialitePage() {
         <>
             <Meta
                 title="Sécu'Cycle | Politique de confidentialité"
-                description="Politique de confidentialité de Sécu'Cycle : données collectées par le site et l'application mobile, permissions, finalités, durées de conservation et vos droits (RGPD)."
+                description="Politique de confidentialité de Sécu'Cycle : données collectées, finalités, durée de conservation et vos droits (RGPD) sur le site et l'app mobile."
             />
-            <main className="legal-page">
+            <div className="legal-page">
                 <article className="legal-content">
                     <h1>Politique de confidentialité</h1>
                     <p className="legal-updated">Dernière mise à jour : 7 juillet 2026</p>
@@ -224,7 +224,7 @@ export default function ConfidentialitePage() {
                         réglementation. La date de dernière mise à jour figure en haut de page.
                     </p>
                 </article>
-            </main>
+            </div>
         </>
     );
 }

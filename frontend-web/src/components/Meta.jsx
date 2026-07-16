@@ -8,10 +8,12 @@ export default function Meta({
   description,
   name = "Sécu'Cycle",
   noindex = false,
-  image = "/og-image.png",
+  image = "/og-image.jpg",
+  preconnect = [],
 }) {
   const { pathname } = useLocation();
-  const canonical = `${SITE_URL}${pathname}`;
+  const path = pathname.endsWith("/") ? pathname : `${pathname}/`;
+  const canonical = `${SITE_URL}${path}`;
   const imageUrl = image.startsWith("http") ? image : `${SITE_URL}${image}`;
 
   return (
@@ -20,6 +22,16 @@ export default function Meta({
       <meta name='description' content={description} />
       {noindex && <meta name='robots' content='noindex' />}
       <link rel="canonical" href={canonical} />
+      <link rel="alternate" hrefLang="fr" href={canonical} />
+      <link rel="alternate" hrefLang="x-default" href={canonical} />
+
+      {preconnect.map((entry) => {
+        const href = typeof entry === "string" ? entry : entry.href;
+        const anonymous = typeof entry === "object" && entry.crossOrigin;
+        return anonymous
+          ? <link key={href} rel="preconnect" href={href} crossOrigin="" />
+          : <link key={href} rel="preconnect" href={href} />;
+      })}
 
       <meta property="og:type" content="website" />
       <meta property="og:title" content={title} />

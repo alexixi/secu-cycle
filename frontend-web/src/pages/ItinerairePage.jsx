@@ -167,8 +167,13 @@ export default function ItinerairePage() {
         <>
             <Meta
                 title="Sécu'Cycle | Itinéraires"
-                description="Trouvez le meilleur itinéraire à vélo en privilégiant les routes sécurisées avec Sécu'Cycle. Le calcul et le temps de parcours se base sur votre profil sportif, votre vélo, le type de route emprunté, les conditions de circulation ainsi que les variation de dénivelé."
+                description="Calculez un itinéraire à vélo sécurisé à Bordeaux, Lille et Tournai avec Sécu'Cycle : trajet adapté à votre profil, votre vélo et au type de route."
+                preconnect={[
+                    "https://api.secu-cycle.fr",
+                    { href: "https://api.maptiler.com", crossOrigin: true },
+                ]}
             />
+            <h1 className="sr-only">Calculateur d'itinéraire à vélo sécurisé à Bordeaux, Lille et Tournai</h1>
             <div className="main-page-itineraire">
                 <SearchAside
                     startAdress={startPoint ? startPoint.name : ""}

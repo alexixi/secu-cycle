@@ -87,7 +87,7 @@ export default function FaqPage() {
             <Helmet>
                 <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
             </Helmet>
-            <main className="faq-page">
+            <div className="faq-page">
                 <article className="faq-content">
                     <h1>Foire aux questions</h1>
                     <p className="faq-intro">
@@ -110,7 +110,7 @@ export default function FaqPage() {
                         ))}
                     </div>
                 </article>
-            </main>
+            </div>
         </>
     );
 }

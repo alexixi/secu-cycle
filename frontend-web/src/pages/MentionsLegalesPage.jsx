@@ -9,7 +9,7 @@ export default function MentionsLegalesPage() {
                 title="Sécu'Cycle | Mentions légales"
                 description="Mentions légales du site et de l'application Sécu'Cycle : éditeur, directeur de la publication et hébergeur."
             />
-            <main className="legal-page">
+            <div className="legal-page">
                 <article className="legal-content">
                     <h1>Mentions légales</h1>
                     <p className="legal-updated">Dernière mise à jour : 7 juillet 2026</p>
@@ -80,7 +80,7 @@ export default function MentionsLegalesPage() {
                         est régie par nos <Link to="/conditions-utilisation">conditions générales d'utilisation</Link>.
                     </p>
                 </article>
-            </main>
+            </div>
         </>
     );
 }
