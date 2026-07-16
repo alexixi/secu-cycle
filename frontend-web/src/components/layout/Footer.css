@@ -47,8 +47,12 @@
 }
 
 .footer-copy {
-    color: var(--text-secondary);
+    color: #4b4b4b;
     font-size: 0.9em;
+}
+
+:root[data-theme="dark"] .footer-copy {
+    color: var(--text-secondary);
 }
 
 @media (max-width: 700px) {

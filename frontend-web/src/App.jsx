@@ -39,6 +39,7 @@ function App() {
       <div className="app-shell">
         <Header />
         <ScrollToTop />
+        <main>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
 
@@ -78,6 +79,7 @@ function App() {
 
           </Routes>
         </Suspense>
+        </main>
         <Footer />
       </div>
   );

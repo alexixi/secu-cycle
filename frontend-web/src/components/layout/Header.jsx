@@ -44,7 +44,7 @@ const CONTEXTUAL_EXIT_MS = 200;
 
 const ProfileButton = ({ className, onClick }) => {
     return (
-        <button id="profile-button" className={className} onClick={onClick}>
+        <button id="profile-button" className={className} onClick={onClick} aria-label="Menu profil" aria-haspopup="true">
             <FaUser size={20} />
         </button>
     );
@@ -155,6 +155,8 @@ const Header = () => {
 
             <IconButton
                 className="mobile-menu-button media-small"
+                aria-label={isMobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+                aria-expanded={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
                 <LuMenu size={24} />
