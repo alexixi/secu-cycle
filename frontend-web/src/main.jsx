@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { createRoot, hydrateRoot } from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from "./context/AuthContext";
@@ -28,11 +28,7 @@ const tree = (
     </StrictMode>
 );
 
-if (root.hasChildNodes()) {
-    hydrateRoot(root, tree);
-} else {
-    createRoot(root).render(tree);
-}
+createRoot(root).render(tree);
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
