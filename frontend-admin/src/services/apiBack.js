@@ -146,6 +146,35 @@ export async function reorderHomeCases(token, ids) {
     }, token);
 }
 
+export async function getFaqs(token) {
+    return apiFetch("/faqs/admin", { method: "GET" }, token);
+}
+
+export async function createFaq(token, body) {
+    return apiFetch("/faqs/", {
+        method: "POST",
+        body: JSON.stringify(body),
+    }, token);
+}
+
+export async function updateFaq(token, faqId, updates) {
+    return apiFetch(`/faqs/${faqId}`, {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}
+
+export async function deleteFaq(token, faqId) {
+    return apiFetch(`/faqs/${faqId}`, { method: "DELETE" }, token);
+}
+
+export async function reorderFaqs(token, ids) {
+    return apiFetch("/faqs/reorder", {
+        method: "PUT",
+        body: JSON.stringify({ ids }),
+    }, token);
+}
+
 // --- Administrateurs (pour l'assignation des tâches) ---
 
 export async function getAdmins(token) {
