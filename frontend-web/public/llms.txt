@@ -10,6 +10,7 @@ Projet open source développé par 6 étudiants de l'ENSEIRB-MATMECA (Bordeaux) 
 
 - [Accueil](https://secu-cycle.fr/) : présentation du projet, des problématiques de sécurité à vélo et des sources de données.
 - [Calculateur d'itinéraire](https://secu-cycle.fr/itineraire) : calcul d'un trajet vélo sécurisé entre deux adresses selon le profil et le vélo de l'utilisateur. Page principale
+- [FAQ](https://secu-cycle.fr/faq) : foire aux questions sur le fonctionnement, le calcul des itinéraires sécurisés, les zones couvertes, l'application mobile, les comptes et les sources de données.
 
 ## Couverture géographique
 

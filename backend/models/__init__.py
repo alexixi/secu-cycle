@@ -9,6 +9,7 @@ from models import (  # noqa: F401
     badge,
     bike,
     email_verification,
+    faq,
     graph_profile,
     history,
     home_case,

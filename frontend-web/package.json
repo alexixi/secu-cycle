@@ -12,7 +12,7 @@
   },
   "reactSnap": {
     "source": "dist",
-    "include": ["/", "/itineraire", "/login", "/signin", "/mentions-legales", "/confidentialite", "/conditions-utilisation", "/contact"],
+    "include": ["/", "/itineraire", "/login", "/signin", "/mentions-legales", "/confidentialite", "/conditions-utilisation", "/contact", "/faq"],
     "inlineCss": false,
     "skipThirdPartyRequests": true,
     "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"]

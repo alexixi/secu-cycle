@@ -15,12 +15,14 @@ from routers import poi
 from routers import navigation
 from routers import traffic
 from routers import home_case
+from routers import faq
 from routers import task
 from routers import tag
 from routers import graph as graph_router
 from routers import contact
 from routers import badge
 from seed_home_cases import seed_home_cases
+from seed_faqs import seed_faqs
 from seed_badges import seed_badges
 from graph import builder as graph_builder
 from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic, load_graph_profile
@@ -86,6 +88,7 @@ async def periodic_poi_sync():
             print(f"[Background Task] Échec de la synchro POI : {exc}", flush=True)
 
 seed_home_cases()
+seed_faqs()
 seed_badges()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -149,6 +152,7 @@ app.include_router(poi.router)
 app.include_router(navigation.router)
 app.include_router(traffic.router)
 app.include_router(home_case.router)
+app.include_router(faq.router)
 app.include_router(task.router)
 app.include_router(tag.router)
 app.include_router(graph_router.router)
