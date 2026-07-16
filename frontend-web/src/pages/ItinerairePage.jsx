@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header";
 import MapComponent from "../modules/map/MapComponent";
 import SearchAside from "../components/layout/SearchAside";
 import ReportModal from "../components/layout/modals/ReportModal";
@@ -170,7 +169,6 @@ export default function ItinerairePage() {
                 title="Sécu'Cycle | Itinéraires"
                 description="Trouvez le meilleur itinéraire à vélo en privilégiant les routes sécurisées avec Sécu'Cycle. Le calcul et le temps de parcours se base sur votre profil sportif, votre vélo, le type de route emprunté, les conditions de circulation ainsi que les variation de dénivelé."
             />
-            <Header page="itineraire" />
             <div className="main-page-itineraire">
                 <SearchAside
                     startAdress={startPoint ? startPoint.name : ""}

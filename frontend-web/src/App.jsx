@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/layout/ProtectedRoute';
+import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import './App.css';
 
@@ -36,6 +37,7 @@ function ScrollToTop() {
 function App() {
   return (
       <div className="app-shell">
+        <Header />
         <ScrollToTop />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>

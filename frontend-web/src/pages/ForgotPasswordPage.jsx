@@ -3,7 +3,6 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { LuKeyRound } from "react-icons/lu";
 
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header";
 import Button from "../components/ui/Button";
 import PasswordInput from "../components/ui/PasswordInput";
 import { forgotPassword, resetPassword } from "../services/apiBack";
@@ -120,7 +119,6 @@ export default function ForgotPasswordPage() {
     return (
         <>
             <Meta title="Mot de passe oublié | Sécu'Cycle" description="Réinitialisez le mot de passe de votre compte Sécu'Cycle." noindex />
-            <Header page="login" />
             <div className="page-form-container">
                 <div className="form-container">
                     {step === 0 ? (

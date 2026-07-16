@@ -4,7 +4,6 @@ import confetti from "canvas-confetti";
 import { IoArrowBack } from "react-icons/io5";
 
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header";
 import OnboardingProgress from "../components/onboarding/OnboardingProgress";
 import StepCredentials, { MIN_PASSWORD_LENGTH } from "../components/onboarding/StepCredentials";
 import StepVerifyEmail from "../components/onboarding/StepVerifyEmail";
@@ -381,7 +380,6 @@ export default function ProfileCreationPage() {
     return (
         <>
             <Meta title="Créer un compte | Sécu'Cycle" description="Rejoignez la communauté Sécu'Cycle et roulez en toute sécurité." noindex />
-            <Header page="signin" />
             <div className="page-form-container">
                 <div className="form-container">
                     <div className="onboarding-header">

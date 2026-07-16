@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header"
 import './HomePage.css';
 import IconButton from "../components/ui/IconButton";
 import FaqRoute from "../components/home/FaqRoute";
@@ -83,7 +82,6 @@ export default function HomePage() {
     return (
         <>
             <Meta title="Sécu'Cycle | Accueil" description="Découvrez Sécu'Cycle, l'application et le site pour trouver des itinéraires à vélo sécurisés et adaptés à votre profil." />
-            <Header page="home" />
             <div id="container-top-homepage">
                 <Logo id="logo-homepage" />
                 <div>

@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header";
 import "./legal.css";
 
 export default function ConfidentialitePage() {
@@ -10,7 +9,6 @@ export default function ConfidentialitePage() {
                 title="Sécu'Cycle | Politique de confidentialité"
                 description="Politique de confidentialité de Sécu'Cycle : données collectées par le site et l'application mobile, permissions, finalités, durées de conservation et vos droits (RGPD)."
             />
-            <Header page="confidentialite" />
             <main className="legal-page">
                 <article className="legal-content">
                     <h1>Politique de confidentialité</h1>

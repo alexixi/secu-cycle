@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header";
 import "./legal.css";
 
 export default function MentionsLegalesPage() {
@@ -10,7 +9,6 @@ export default function MentionsLegalesPage() {
                 title="Sécu'Cycle | Mentions légales"
                 description="Mentions légales du site et de l'application Sécu'Cycle : éditeur, directeur de la publication et hébergeur."
             />
-            <Header page="mentions-legales" />
             <main className="legal-page">
                 <article className="legal-content">
                     <h1>Mentions légales</h1>
