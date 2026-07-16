@@ -16,6 +16,7 @@ const MentionsLegalesPage = lazy(() => import('./pages/MentionsLegalesPage'));
 const ConfidentialitePage = lazy(() => import('./pages/ConfidentialitePage'));
 const ConditionsUtilisationPage = lazy(() => import('./pages/ConditionsUtilisationPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
+const FaqPage = lazy(() => import('./pages/FaqPage'));
 
 const LoadingFallback = () => (
   <div className="loader-container">
@@ -68,6 +69,8 @@ function App() {
             <Route path="/conditions-utilisation" element={<ConditionsUtilisationPage />} />
 
             <Route path="/contact" element={<ContactPage />} />
+
+            <Route path="/faq" element={<FaqPage />} />
 
             <Route path="*" element={<ErrorPage />} />
 

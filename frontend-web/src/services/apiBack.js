@@ -442,3 +442,12 @@ export async function getHomeCases() {
         throw error;
     }
 }
+
+export async function getFaqs() {
+    try {
+        const data = await apiFetch("/faqs/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
