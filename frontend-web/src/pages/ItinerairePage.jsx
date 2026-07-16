@@ -173,6 +173,7 @@ export default function ItinerairePage() {
                     { href: "https://api.maptiler.com", crossOrigin: true },
                 ]}
             />
+            <h1 className="sr-only">Calculateur d'itinéraire à vélo sécurisé à Bordeaux, Lille et Tournai</h1>
             <div className="main-page-itineraire">
                 <SearchAside
                     startAdress={startPoint ? startPoint.name : ""}
