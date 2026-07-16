@@ -8,7 +8,7 @@ export default function Meta({
   description,
   name = "Sécu'Cycle",
   noindex = false,
-  image = "/og-image.png",
+  image = "/og-image.jpg",
   preconnect = [],
 }) {
   const { pathname } = useLocation();
