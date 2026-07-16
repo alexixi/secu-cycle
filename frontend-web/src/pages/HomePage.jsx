@@ -4,7 +4,7 @@ import './HomePage.css';
 import IconButton from "../components/ui/IconButton";
 import FaqRoute from "../components/home/FaqRoute";
 import Logo from "../assets/logo.svg?react";
-import apercuApplication from "../assets/screenshots/mobile/apercu_itineraire-left.png";
+import apercuApplication from "../assets/screenshots/mobile/apercu_itineraire-left.webp";
 import { IoIosArrowDropdown } from "react-icons/io";
 import { FaLinkedin } from "react-icons/fa";
 import { getHomeCases } from "../services/apiBack";
@@ -107,7 +107,7 @@ export default function HomePage() {
                 ))}
             </div>
             <div id="app-section">
-                <img className="app-visual" src={apercuApplication} alt="Aperçu de l'application mobile" />
+                <img className="app-visual" src={apercuApplication} alt="Aperçu de l'application mobile" width="800" height="1334" />
                 <aside>
                     <h2>Découvrez notre application mobile</h2>
                     <p>
@@ -115,11 +115,11 @@ export default function HomePage() {
                     </p>
                     <div className="store-badges">
                         <a href="#app-section">
-                            <img src="/store/appstore.svg" alt="Télécharger dans l'App Store" className="store-badge" />
+                            <img src="/store/appstore.svg" alt="Télécharger dans l'App Store" className="store-badge" width="127" height="40" />
                         </a>
 
                         <a href="#app-section">
-                            <img src="/store/googleplay.svg" alt="Disponible sur Google Play" className="store-badge" />
+                            <img src="/store/googleplay.svg" alt="Disponible sur Google Play" className="store-badge" width="239" height="71" />
                         </a>
                     </div>
                 </aside>
