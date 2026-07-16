@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header";
 import Button from "../components/ui/Button";
 import { sendContactMessage } from "../services/apiBack";
 import { trackEvent } from "../services/analytics";
@@ -175,7 +174,6 @@ export default function ContactPage() {
                 title="Sécu'Cycle | Contact"
                 description="Contacter l'équipe Sécu'Cycle : support, questions et exercice de vos droits sur vos données personnelles."
             />
-            <Header page="contact" />
             <main className="legal-page">
                 <article className="legal-content">
                     <h1>Contact</h1>
