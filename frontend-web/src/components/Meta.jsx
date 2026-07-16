@@ -11,7 +11,8 @@ export default function Meta({
   image = "/og-image.png",
 }) {
   const { pathname } = useLocation();
-  const canonical = `${SITE_URL}${pathname}`;
+  const path = pathname.endsWith("/") ? pathname : `${pathname}/`;
+  const canonical = `${SITE_URL}${path}`;
   const imageUrl = image.startsWith("http") ? image : `${SITE_URL}${image}`;
 
   return (
@@ -20,6 +21,8 @@ export default function Meta({
       <meta name='description' content={description} />
       {noindex && <meta name='robots' content='noindex' />}
       <link rel="canonical" href={canonical} />
+      <link rel="alternate" hrefLang="fr" href={canonical} />
+      <link rel="alternate" hrefLang="x-default" href={canonical} />
 
       <meta property="og:type" content="website" />
       <meta property="og:title" content={title} />
