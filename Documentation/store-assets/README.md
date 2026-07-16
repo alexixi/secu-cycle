@@ -45,7 +45,7 @@ Sortie dans `out/` (git-ignoré) :
 | `out/4-3/*.png` | 1600 × 1200 (4:3) | usage libre (voir ci-dessous) |
 | `out/square/*.png` | 1080 × 1080 | posts LinkedIn / Instagram |
 | `out/product-hunt/*.png` | 1270 × 760 | galerie Product Hunt |
-| `out/og-image.png` | 1200 × 630 | aperçu des liens partagés (`frontend-web`) |
+| `out/og-image.jpg` | 1200 × 630 | aperçu des liens partagés (`frontend-web`) |
 | `out/panorama-*.png` | vue d'ensemble | contrôle visuel — **ne pas uploader** |
 
 Les visuels `4-3/` sont en **paysage**, format demandé partout où le 9:16 des
@@ -57,10 +57,10 @@ Textes et cadrage se règlent dans l'objet `landscape` de `slides.config.mjs`.
 (Le dossier s'appelle `4-3` et non `4:3` : les deux-points cassent le montage sur
 Windows et pas mal d'outils.)
 
-`og-image.png` est à servir depuis `frontend-web` et à déclarer dans le `<head>` :
+`og-image.jpg` est à servir depuis `frontend-web` et à déclarer dans le `<head>` :
 
 ```html
-<meta property="og:image" content="https://…/og-image.png">
+<meta property="og:image" content="https://…/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
 ```
 
