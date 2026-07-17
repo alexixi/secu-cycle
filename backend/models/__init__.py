@@ -16,6 +16,7 @@ from models import (  # noqa: F401
     poi,
     poi_sync,
     report,
+    report_vote,
     route,
     tag,
     task,
