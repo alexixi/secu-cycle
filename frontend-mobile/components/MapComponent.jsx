@@ -3,9 +3,12 @@ import { StyleSheet, View, TouchableOpacity, Modal, Text, Animated, Dimensions, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { getReports, getPois, createReport, deleteReport } from '../services/apiBack';
+import { getReports, getPois, createReport, deleteReport, voteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import useHazardAlerts from '../hooks/useHazardAlerts';
+import HazardAlert from './HazardAlert';
+import { trackEvent } from '../services/analytics';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 
@@ -111,7 +114,7 @@ export default function MapComponent({
     }
 
     const { colors, typography } = useTheme();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const systemColorScheme = useColorScheme();
 
     const MAP_STYLES = [
@@ -252,6 +255,15 @@ export default function MapComponent({
     useEffect(() => {
         getReports().then(setReports).catch(console.error);
     }, []);
+
+    const activeRoute = useMemo(
+        () => itineraires?.find(it => it.id === selectedItineraire) || null,
+        [itineraires, selectedItineraire],
+    );
+
+    const { activeAlert, dismissAlert } = useHazardAlerts(
+        reports, currentPosition, activeRoute, isNavigating,
+    );
 
     useEffect(() => {
         const loadSavedPreferences = async () => {
@@ -522,6 +534,31 @@ export default function MapComponent({
         }
     };
 
+    const handleVoteReport = async (reportId, isPresent) => {
+        try {
+            const res = await voteReport(token, reportId, isPresent);
+            trackEvent(isPresent ? 'report_confirmed' : 'report_denied', {
+                report_id: reportId,
+            });
+            if (res?.is_disabled) {
+                setReports(prev => prev.filter(r => r.id !== reportId));
+                setActiveReport(prev => (prev?.id === reportId ? null : prev));
+            } else if (res) {
+                const patch = {
+                    confirmations_count: res.confirmations_count,
+                    denials_count: res.denials_count,
+                };
+                setReports(prev => prev.map(r => (r.id === reportId ? { ...r, ...patch } : r)));
+                setActiveReport(prev => (prev?.id === reportId ? { ...prev, ...patch } : prev));
+            }
+            return res;
+        } catch (error) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            console.error("Erreur vote signalement:", error);
+            return null;
+        }
+    };
+
     const handleReportSubmit = async ({ reportType, description, lat, lon }) => {
         try {
             const newReport = await createReport(token, reportType, description, lat, lon);
@@ -687,6 +724,16 @@ export default function MapComponent({
                     </ViewAnnotation>
                 ))}
             </Map>
+
+            {!miniMap && isNavigating && activeAlert && (
+                <HazardAlert
+                    report={activeAlert.report}
+                    distance={activeAlert.distance}
+                    canVote={!!token && activeAlert.report.user_id !== user?.id}
+                    onVote={(isPresent) => handleVoteReport(activeAlert.report.id, isPresent)}
+                    onDismiss={dismissAlert}
+                />
+            )}
 
             {!miniMap && currentPosition && (
                 <TouchableOpacity
@@ -946,12 +993,46 @@ export default function MapComponent({
                         </View>
 
                         {activeReport?.report_description ? (
-                            <Text style={[typography.body, { color: colors.textSecondary, marginBottom: 20 }]}>
+                            <Text style={[typography.body, { color: colors.textSecondary, marginBottom: 12 }]}>
                                 {activeReport.report_description}
                             </Text>
                         ) : null}
 
-                        {handleDeleteReport && (
+                        <View style={{ flexDirection: 'row', gap: 20, marginBottom: 16 }}>
+                            <Text style={[typography.body, { color: colors.textSecondary }]}>
+                                👍 {activeReport?.confirmations_count ?? 0} là
+                            </Text>
+                            <Text style={[typography.body, { color: colors.textSecondary }]}>
+                                👎 {activeReport?.denials_count ?? 0} pas là
+                            </Text>
+                        </View>
+
+                        {/* On ne vote pas sur son propre signalement : l'auteur voit
+                            « Supprimer », les autres voient les boutons de vote. */}
+                        {token && activeReport && activeReport.user_id !== user?.id && (
+                            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                                <TouchableOpacity
+                                    style={[styles.submitButton, { flex: 1, backgroundColor: '#2f9e44' }]}
+                                    onPress={() => {
+                                        Haptics.selectionAsync();
+                                        handleVoteReport(activeReport.id, true);
+                                    }}
+                                >
+                                    <Text style={[typography.body, { color: '#FFF', fontWeight: 'bold' }]}>Confirmer</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.submitButton, { flex: 1, backgroundColor: colors.bgSurface, borderWidth: 2, borderColor: colors.error }]}
+                                    onPress={() => {
+                                        Haptics.selectionAsync();
+                                        handleVoteReport(activeReport.id, false);
+                                    }}
+                                >
+                                    <Text style={[typography.body, { color: colors.error, fontWeight: 'bold' }]}>Pas là</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
+                        {activeReport && activeReport.user_id === user?.id && (
                             <TouchableOpacity
                                 style={[styles.submitButton, { backgroundColor: colors.error }]}
                                 onPress={() => {
