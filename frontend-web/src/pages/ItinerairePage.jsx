@@ -4,7 +4,7 @@ import Meta from "../components/Meta";
 import MapComponent from "../modules/map/MapComponent";
 import SearchAside from "../components/layout/SearchAside";
 import ReportModal from "../components/layout/modals/ReportModal";
-import { calculateItineraries, getReports, createReport, deleteReport, getTraffic } from "../services/apiBack";
+import { calculateItineraries, getReports, createReport, deleteReport, getTraffic, voteReport } from "../services/apiBack";
 import { trackEvent } from "../services/analytics";
 import "./ItinerairePage.css";
 
@@ -30,7 +30,7 @@ export default function ItinerairePage() {
     const [trafficPoints, setTrafficPoints] = useState([]);
     const [showTraffic, setShowTraffic] = useState(false);
 
-    const { token } = useAuth();
+    const { token, user } = useAuth();
 
     useEffect(() => {
         getReports().then(setReports).catch(console.error);
@@ -106,6 +106,24 @@ export default function ItinerairePage() {
             setReports(prev => prev.filter(r => r.id !== reportId));
         } catch (error) {
             console.error("Erreur suppression signalement:", error);
+        }
+    };
+
+    const handleVoteReport = async (reportId, isPresent) => {
+        try {
+            const res = await voteReport(token, reportId, isPresent);
+            trackEvent(isPresent ? "report_confirmed" : "report_denied", { report_id: reportId });
+            if (res?.is_disabled) {
+                setReports(prev => prev.filter(r => r.id !== reportId));
+            } else if (res) {
+                setReports(prev => prev.map(r => (r.id === reportId
+                    ? { ...r, confirmations_count: res.confirmations_count, denials_count: res.denials_count }
+                    : r)));
+            }
+            return res;
+        } catch (error) {
+            console.error("Erreur vote signalement:", error);
+            return null;
         }
     };
 
@@ -207,6 +225,9 @@ export default function ItinerairePage() {
                     reports={reports}
                     onMapClick={handleMapClick}
                     onDeleteReport={token ? handleDeleteReport : null}
+                    onVote={token ? handleVoteReport : null}
+                    canVote={!!token}
+                    currentUserId={user?.id}
                     isReportMode={isReportMode}
                     onToggleReportMode={() => token && setIsReportMode(prev => !prev)}
                     canReport={!!token}

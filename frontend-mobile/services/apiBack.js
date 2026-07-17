@@ -427,6 +427,18 @@ export async function createReport(token, reportType, description, latitude, lon
     }
 }
 
+export async function voteReport(token, reportId, isPresent) {
+    try {
+        const data = await apiFetch(`/reports/${reportId}/vote`, {
+            method: "POST",
+            body: JSON.stringify({ is_present: isPresent }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function updateNavigation(lat, lon, stepIdx, routeNodes, maneuvers, path = null) {
     try {
         const body = {

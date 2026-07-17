@@ -281,6 +281,56 @@
   color: var(--text-secondary);
 }
 
+.status-badge.disabled {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+}
+
+.status-badge.verified {
+  background: rgba(37, 99, 235, 0.15);
+  color: #2563eb;
+}
+
+.report-verified-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  line-height: 1.35;
+}
+
+.report-verified-toggle input {
+  margin-top: 0.15rem;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.report-verified-toggle em {
+  color: var(--text-secondary);
+  font-style: normal;
+}
+
+.vote-counts {
+  display: inline-flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.vote-count {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.vote-count.vote-yes {
+  color: #16a34a;
+}
+
+.vote-count.vote-no {
+  color: #dc2626;
+}
+
 /* --- Cartes mobiles --- */
 .reports-cards {
   display: none;
