@@ -9,9 +9,6 @@ import { IoIosArrowDropdown } from "react-icons/io";
 import { FaLinkedin } from "react-icons/fa";
 import { getHomeCases } from "../services/apiBack";
 
-// Contenu par défaut des cases : sert d'état initial (préserve le rendu
-// prérendu par react-snap et fournit un repli si l'API est indisponible).
-// Texte en clair : les liens et emphases d'origine sont aplatis.
 const DEFAULT_CASES = [
     {
         title: "Qu'est-ce que Sécu'Cycle ?",
@@ -44,7 +41,6 @@ export default function HomePage() {
                 }
             })
             .catch(() => {
-                // On garde le contenu par défaut en cas d'erreur.
             });
         return () => {
             active = false;
@@ -93,6 +89,7 @@ export default function HomePage() {
                         () => document.getElementById("home-faq-section").scrollIntoView({ behavior: "smooth", block: "start" })
                     }
                     className="scroll-button"
+                    aria-label="Découvrir le projet"
                 >
                     <IoIosArrowDropdown size={40} className="arrow-down" />
                 </IconButton>

@@ -4,12 +4,17 @@ import { MdOutlineReportProblem } from "react-icons/md";
 import "../../ui/Input.css";
 import "../../ui/PopUp.css";
 import "../../ui/Form.css";
+import "./ReportModal.css";
+import accidentIcon from "../../../assets/reports/accident.png";
+import travauxIcon from "../../../assets/reports/travaux.png";
+import dangerIcon from "../../../assets/reports/danger.png";
+import obstacleIcon from "../../../assets/reports/obstacle.png";
 
 const REPORT_TYPES = [
-    { value: "accident", label: "🚨 Accident" },
-    { value: "travaux", label: "🚧 Travaux" },
-    { value: "danger", label: "⚠️ Danger" },
-    { value: "obstacle", label: "🪨 Obstacle" },
+    { value: "accident", label: "Accident", icon: accidentIcon },
+    { value: "travaux", label: "Travaux", icon: travauxIcon },
+    { value: "danger", label: "Danger", icon: dangerIcon },
+    { value: "obstacle", label: "Obstacle", icon: obstacleIcon },
 ];
 
 export default function ReportModal({ isOpen, onClose, onConfirm, coords }) {
@@ -61,15 +66,20 @@ export default function ReportModal({ isOpen, onClose, onConfirm, coords }) {
                     <div className="input-container">
                         <div className="input-group">
                             <label>Type de signalement</label>
-                            <select
-                                className="input"
-                                value={reportType}
-                                onChange={(e) => setReportType(e.target.value)}
-                            >
+                            <div className="report-type-grid">
                                 {REPORT_TYPES.map(t => (
-                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                    <button
+                                        type="button"
+                                        key={t.value}
+                                        className={`report-type-card${reportType === t.value ? " selected" : ""}`}
+                                        onClick={() => setReportType(t.value)}
+                                        aria-pressed={reportType === t.value}
+                                    >
+                                        <img src={t.icon} alt="" className="report-type-icon" />
+                                        <span>{t.label}</span>
+                                    </button>
                                 ))}
-                            </select>
+                            </div>
                         </div>
                         <div className="input-group">
                             <label>Description (optionnel)</label>

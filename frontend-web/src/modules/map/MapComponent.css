@@ -110,6 +110,13 @@
     filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
 }
 
+.map-popup-icon-img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display: block;
+}
+
 .map-popup-header-text {
     display: flex;
     flex-direction: column;
