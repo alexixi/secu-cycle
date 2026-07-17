@@ -177,10 +177,10 @@ export default function MapComponent({
     ];
 
     const REPORT_TYPES = [
-        { id: 'accident', label: 'Accident', icon: '🚨' },
-        { id: 'travaux', label: 'Travaux', icon: '🚧' },
-        { id: 'danger', label: 'Danger', icon: '⚠️' },
-        { id: 'obstacle', label: 'Obstacle', icon: '🪨' },
+        { id: 'accident', label: 'Accident' },
+        { id: 'travaux', label: 'Travaux' },
+        { id: 'danger', label: 'Danger' },
+        { id: 'obstacle', label: 'Obstacle' },
     ];
 
     const [activeBaseStyle, setActiveBaseStyle] = useState("base");
@@ -731,7 +731,7 @@ export default function MapComponent({
                                             '-paid',
                                             ['==', ['get', 'access'], 'customers'], '-customers',
                                             '']],
-                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.22, 13, 0.42, 17, 0.8],
+                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.16, 13, 0.3, 17, 0.58],
                                     iconAllowOverlap: false,
                                     symbolSortKey: ['match', ['get', 'category'], 'parking', 1, 0],
                                     textField: ['step', ['zoom'], '', 16, ['coalesce', ['get', 'name'], '']],
@@ -792,7 +792,7 @@ export default function MapComponent({
                                         'danger', 'report-danger',
                                         'obstacle', 'report-obstacle',
                                         'report-danger'],
-                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.3, 13, 0.58, 17, 1.1],
+                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.18, 13, 0.34, 17, 0.66],
                                     iconAllowOverlap: true,
                                 }}
                                 paint={{
@@ -1009,8 +1009,12 @@ export default function MapComponent({
                                         Haptics.selectionAsync();
                                     }}
                                 >
-                                    <Text style={styles.typeIcon}>{type.icon}</Text>
-                                    <Text style={[typography.body, { fontSize: 14, color: selectedReportType === type.id ? colors.primary : colors.textMain }]}>
+                                    <Image
+                                        source={REPORT_IMAGES[`report-${type.id}`]}
+                                        style={styles.typeIcon}
+                                        resizeMode="contain"
+                                    />
+                                    <Text style={[typography.body, { fontSize: 14, fontWeight: selectedReportType === type.id ? 'bold' : 'normal', color: colors.textMain }]}>
                                         {type.label}
                                     </Text>
                                 </TouchableOpacity>
@@ -1364,7 +1368,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     typeIcon: {
-        fontSize: 32,
+        width: 40,
+        height: 40,
         marginBottom: 5
     },
     input: {
