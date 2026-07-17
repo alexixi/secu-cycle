@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header";
 import MapComponent from "../modules/map/MapComponent";
 import SearchAside from "../components/layout/SearchAside";
 import ReportModal from "../components/layout/modals/ReportModal";
-import { calculateItineraries, getReports, createReport, deleteReport, getTraffic } from "../services/apiBack";
+import { calculateItineraries, getReports, createReport, deleteReport, getTraffic, voteReport } from "../services/apiBack";
 import { trackEvent } from "../services/analytics";
 import "./ItinerairePage.css";
+
+const GENERIC_ROUTE_ERROR = "Une erreur est survenue lors de la recherche de l'itinéraire.";
 
 const bikeLabel = (bikeId) =>
     typeof bikeId === "string" && bikeId.startsWith("default-") ? bikeId.slice("default-".length) : "perso";
@@ -21,7 +22,7 @@ export default function ItinerairePage() {
     const [selectedItineraire, setSelectedItineraire] = useState(null);
     const [maxTime, setMaxTime] = useState(null);
     const [maxDuration, setMaxDuration] = useState(null);
-    const [errorPath, setErrorPath] = useState(false);
+    const [errorPath, setErrorPath] = useState(null);
     const [reports, setReports] = useState([]);
     const [reportCoords, setReportCoords] = useState(null);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function ItinerairePage() {
     const [trafficPoints, setTrafficPoints] = useState([]);
     const [showTraffic, setShowTraffic] = useState(false);
 
-    const { token } = useAuth();
+    const { token, user } = useAuth();
 
     useEffect(() => {
         getReports().then(setReports).catch(console.error);
@@ -64,16 +65,21 @@ export default function ItinerairePage() {
         try {
             const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint.name, endPoint.name);
             if (itineraries && itineraries.length > 0) {
-                setErrorPath(false);
+                setErrorPath(null);
                 setRoutePaths(itineraries);
                 trackEvent("route_calculated", { bike: bikeLabel(selectedBike), count: itineraries.length });
             } else {
-                setErrorPath(true);
+                setErrorPath(GENERIC_ROUTE_ERROR);
                 trackEvent("route_calculation_failed", { bike: bikeLabel(selectedBike) });
             }
         } catch (error) {
-            setErrorPath(true);
-            trackEvent("route_calculation_failed", { bike: bikeLabel(selectedBike) });
+            if (error.code === "OUT_OF_ZONE") {
+                setErrorPath(error.detailMessage || GENERIC_ROUTE_ERROR);
+                trackEvent("address_out_of_zone", { city: startPoint.city || endPoint.city || "inconnue" });
+            } else {
+                setErrorPath(GENERIC_ROUTE_ERROR);
+                trackEvent("route_calculation_failed", { bike: bikeLabel(selectedBike) });
+            }
             setIsLoading(false);
             return;
         }
@@ -100,6 +106,24 @@ export default function ItinerairePage() {
             setReports(prev => prev.filter(r => r.id !== reportId));
         } catch (error) {
             console.error("Erreur suppression signalement:", error);
+        }
+    };
+
+    const handleVoteReport = async (reportId, isPresent) => {
+        try {
+            const res = await voteReport(token, reportId, isPresent);
+            trackEvent(isPresent ? "report_confirmed" : "report_denied", { report_id: reportId });
+            if (res?.is_disabled) {
+                setReports(prev => prev.filter(r => r.id !== reportId));
+            } else if (res) {
+                setReports(prev => prev.map(r => (r.id === reportId
+                    ? { ...r, confirmations_count: res.confirmations_count, denials_count: res.denials_count }
+                    : r)));
+            }
+            return res;
+        } catch (error) {
+            console.error("Erreur vote signalement:", error);
+            return null;
         }
     };
 
@@ -161,9 +185,13 @@ export default function ItinerairePage() {
         <>
             <Meta
                 title="Sécu'Cycle | Itinéraires"
-                description="Trouvez le meilleur itinéraire à vélo en privilégiant les routes sécurisées avec Sécu'Cycle. Le calcul et le temps de parcours se base sur votre profil sportif, votre vélo, le type de route emprunté, les conditions de circulation ainsi que les variation de dénivelé."
+                description="Calculez un itinéraire à vélo sécurisé à Bordeaux, Lille et Tournai avec Sécu'Cycle : trajet adapté à votre profil, votre vélo et au type de route."
+                preconnect={[
+                    "https://api.secu-cycle.fr",
+                    { href: "https://api.maptiler.com", crossOrigin: true },
+                ]}
             />
-            <Header page="itineraire" />
+            <h1 className="sr-only">Calculateur d'itinéraire à vélo sécurisé à Bordeaux, Lille et Tournai</h1>
             <div className="main-page-itineraire">
                 <SearchAside
                     startAdress={startPoint ? startPoint.name : ""}
@@ -197,6 +225,9 @@ export default function ItinerairePage() {
                     reports={reports}
                     onMapClick={handleMapClick}
                     onDeleteReport={token ? handleDeleteReport : null}
+                    onVote={token ? handleVoteReport : null}
+                    canVote={!!token}
+                    currentUserId={user?.id}
                     isReportMode={isReportMode}
                     onToggleReportMode={() => token && setIsReportMode(prev => !prev)}
                     canReport={!!token}

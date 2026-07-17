@@ -14,6 +14,7 @@ from graph.routing import get_optimal_routes
 from models.bike import Bike
 from models.history import UserHistory
 from models.report import Report
+from reports_lifecycle import compute_status, load_votes_by_report
 from datetime import datetime, timedelta
 from graph.guidance import build_maneuvers
 router = APIRouter(prefix="/routes", tags=["Routes"])
@@ -62,7 +63,17 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
                 bike_type = bike.type or "standard"
 
     limite_temps = datetime.now() - timedelta(hours=48)
-    recent_reports = db.query(Report).filter(Report.created_at >= limite_temps).all()
+    candidate_reports = db.query(Report).filter(Report.created_at >= limite_temps).all()
+
+    now_utc = datetime.utcnow()
+    votes_by_report = load_votes_by_report(db, [r.id for r in candidate_reports])
+    recent_reports = [
+        r for r in candidate_reports
+        if not (
+            (status := compute_status(r, votes_by_report.get(r.id, []), now_utc))["is_expired"]
+            or status["is_disabled"]
+        )
+    ]
 
     reported_edges = {}
 
@@ -108,7 +119,10 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
 
 
     if not result.get("success"):
-        raise HTTPException(status_code=404, detail=result.get("error", "Calcul échoué."))
+        raise HTTPException(status_code=404, detail={
+            "code": result.get("error_code"),
+            "message": result.get("error", "Calcul échoué."),
+        })
 
     for route in result.get("routes", []):
             maneuvers = build_maneuvers(route["nodes"], G)

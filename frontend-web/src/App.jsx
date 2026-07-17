@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/layout/ProtectedRoute';
+import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import './App.css';
 
@@ -8,6 +9,7 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const ItinerairePage = lazy(() => import('./pages/ItinerairePage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ProfileCreationPage = lazy(() => import('./pages/ProfileCreationPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const ErrorPage = lazy(() => import('./pages/ErrorPage'));
@@ -15,6 +17,7 @@ const MentionsLegalesPage = lazy(() => import('./pages/MentionsLegalesPage'));
 const ConfidentialitePage = lazy(() => import('./pages/ConfidentialitePage'));
 const ConditionsUtilisationPage = lazy(() => import('./pages/ConditionsUtilisationPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
+const FaqPage = lazy(() => import('./pages/FaqPage'));
 
 const LoadingFallback = () => (
   <div className="loader-container">
@@ -34,7 +37,9 @@ function ScrollToTop() {
 function App() {
   return (
       <div className="app-shell">
+        <Header />
         <ScrollToTop />
+        <main>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
 
@@ -49,6 +54,8 @@ function App() {
             } />
 
             <Route path="/login" element={<LoginPage />} />
+
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
             <Route path="/signin" element={<ProfileCreationPage />} />
 
@@ -66,10 +73,13 @@ function App() {
 
             <Route path="/contact" element={<ContactPage />} />
 
+            <Route path="/faq" element={<FaqPage />} />
+
             <Route path="*" element={<ErrorPage />} />
 
           </Routes>
         </Suspense>
+        </main>
         <Footer />
       </div>
   );

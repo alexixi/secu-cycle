@@ -184,8 +184,8 @@ async function main() {
         await page.setViewportSize({ width, height });
         await page.setContent(buildFeatureGraphic(fg, icon, width, height, font), { waitUntil: 'load' });
         await page.evaluate(() => document.fonts.ready);
-        await page.screenshot({ path: join(OUT, 'og-image.png') });
-        console.log(`✓ Open Graph — ${width}×${height} -> out/og-image.png`);
+        await page.screenshot({ path: join(OUT, 'og-image.jpg'), type: 'jpeg', quality: 85 });
+        console.log(`✓ Open Graph — ${width}×${height} -> out/og-image.jpg`);
     }
 
     await browser.close();

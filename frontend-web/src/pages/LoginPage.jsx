@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header";
 import LinkButton from "../components/ui/LinkButton";
 import Button from "../components/ui/Button";
 import PasswordInput from "../components/ui/PasswordInput";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { login, getUserProfile, getUserBikes } from "../services/apiBack";
 import { getUserHistoric } from "../services/apiBack";
 import { useAuth } from "../context/AuthContext";
@@ -60,7 +59,6 @@ export default function Login() {
     return (
         <>
             <Meta title="Connexion | Sécu'Cycle" description="Connectez-vous à votre compte Sécu'Cycle pour accéder à vos vélos et vos adresses enregistrées." noindex />
-            <Header page="login" />
             <div className="page-form-container">
                 {errorMessage && (
                     <div className="info-box">
@@ -120,6 +118,13 @@ export default function Login() {
                                     Adresse mail ou mot de passe incorrect.<br /> Veuillez réessayer.
                                 </div>
                             )}
+                            <Link
+                                to="/forgot-password"
+                                state={{ email }}
+                                className="forgot-password-link"
+                            >
+                                Mot de passe oublié ?
+                            </Link>
                         </div>
 
                         <Button type="submit" id="login-button" disabled={!email || !password || hasError}> Se connecter <LuLogIn /></Button>

@@ -9,7 +9,7 @@ import {
   LuOctagonX,
 } from "react-icons/lu";
 import { useAuth } from "../../context/AuthContext";
-import { getReportsAdmin, deleteReport, adminUpdateUser } from "../../services/apiBack";
+import { getReportsAdmin, deleteReport, adminUpdateUser, setReportVerified } from "../../services/apiBack";
 import ReportDetailModal from "./ReportDetailModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import "./ReportsManager.css";
@@ -75,8 +75,9 @@ export default function ReportsManager() {
     const q = search.trim().toLowerCase();
     return reports.filter((r) => {
       if (typeFilter !== "all" && r.report_type !== typeFilter) return false;
-      if (statusFilter === "active" && r.is_expired) return false;
+      if (statusFilter === "active" && (r.is_expired || r.is_disabled)) return false;
       if (statusFilter === "expired" && !r.is_expired) return false;
+      if (statusFilter === "disabled" && !r.is_disabled) return false;
       if (!q) return true;
       return [r.report_description, r.author_email, r.author_name, r.report_type]
         .filter(Boolean)
@@ -84,7 +85,8 @@ export default function ReportsManager() {
     });
   }, [reports, search, typeFilter, statusFilter]);
 
-  const activeCount = reports.filter((r) => !r.is_expired).length;
+  const activeCount = reports.filter((r) => !r.is_expired && !r.is_disabled).length;
+  const disabledCount = reports.filter((r) => r.is_disabled).length;
 
   // Applique une sanction (is_banned / reports_blocked) à l'auteur d'un signalement
   // et répercute le nouvel état sur tous ses signalements listés.
@@ -112,6 +114,14 @@ export default function ReportsManager() {
     return updatedUser;
   };
 
+  const handleSetVerified = async (reportId, isVerified) => {
+    setActionError(null);
+    const updated = await setReportVerified(token, reportId, isVerified);
+    setReports((prev) => prev.map((r) => (r.id === reportId ? updated : r)));
+    if (selected && selected.id === reportId) setSelected(updated);
+    return updated;
+  };
+
   const handleDelete = async () => {
     if (!toDelete) return;
     setActionError(null);
@@ -130,6 +140,23 @@ export default function ReportsManager() {
     return <span className={`type-badge ${meta.className}`}>{meta.label}</span>;
   };
 
+  const renderStatus = (r) => {
+    if (r.is_verified) return <span className="status-badge verified">Vérifié</span>;
+    if (r.is_disabled) return <span className="status-badge disabled">Désactivé</span>;
+    return (
+      <span className={`status-badge ${r.is_expired ? "expired" : "active"}`}>
+        {r.is_expired ? "Expiré" : "Actif"}
+      </span>
+    );
+  };
+
+  const renderVotes = (r) => (
+    <span className="vote-counts">
+      <span className="vote-count vote-yes" title="Là">👍 {r.confirmations_count ?? 0}</span>
+      <span className="vote-count vote-no" title="Pas là">👎 {r.denials_count ?? 0}</span>
+    </span>
+  );
+
   return (
     <div className="reports-manager">
       <header className="reports-manager-head">
@@ -138,6 +165,7 @@ export default function ReportsManager() {
           <p className="reports-manager-sub">
             {reports.length} signalement{reports.length > 1 ? "s" : ""} · {activeCount} actif
             {activeCount > 1 ? "s" : ""}
+            {disabledCount > 0 && ` · ${disabledCount} désactivé${disabledCount > 1 ? "s" : ""}`}
           </p>
         </div>
         <button className="reports-refresh" onClick={loadReports} disabled={loading} title="Actualiser">
@@ -168,6 +196,7 @@ export default function ReportsManager() {
           <option value="all">Tous les statuts</option>
           <option value="active">Actifs</option>
           <option value="expired">Expirés</option>
+          <option value="disabled">Désactivés</option>
         </select>
       </div>
 
@@ -190,6 +219,7 @@ export default function ReportsManager() {
                   <th>Description</th>
                   <th>Auteur</th>
                   <th>Date</th>
+                  <th>Votes</th>
                   <th>Statut</th>
                   <th className="col-actions">Actions</th>
                 </tr>
@@ -217,11 +247,8 @@ export default function ReportsManager() {
                       )}
                     </td>
                     <td>{formatDateTime(r.created_at)}</td>
-                    <td>
-                      <span className={`status-badge ${r.is_expired ? "expired" : "active"}`}>
-                        {r.is_expired ? "Expiré" : "Actif"}
-                      </span>
-                    </td>
+                    <td>{renderVotes(r)}</td>
+                    <td>{renderStatus(r)}</td>
                     <td className="col-actions" onClick={(e) => e.stopPropagation()}>
                       <a
                         className="row-action"
@@ -255,15 +282,14 @@ export default function ReportsManager() {
               <li key={r.id} className="report-card" onClick={() => setSelected(r)}>
                 <div className="report-card-top">
                   {renderType(r.report_type)}
-                  <span className={`status-badge ${r.is_expired ? "expired" : "active"}`}>
-                    {r.is_expired ? "Expiré" : "Actif"}
-                  </span>
+                  {renderStatus(r)}
                 </div>
                 <p className="report-card-desc">{r.report_description || "—"}</p>
                 <div className="report-card-meta">
                   <span>{authorLabel(r)}</span>
                   <span>{formatDateTime(r.created_at)}</span>
                 </div>
+                <div className="report-card-meta">{renderVotes(r)}</div>
               </li>
             ))}
           </ul>
@@ -277,6 +303,7 @@ export default function ReportsManager() {
           onClose={() => setSelected(null)}
           onDeleteReport={(r) => setToDelete(r)}
           onSanction={handleSanction}
+          onSetVerified={handleSetVerified}
         />
       )}
 

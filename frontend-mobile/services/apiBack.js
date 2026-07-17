@@ -74,6 +74,13 @@ export async function apiFetch(endpoint, options = {}, token = null, _retried = 
         const apiError = new Error(errorData || "Erreur lors de la requête API");
         apiError.status = response.status;
         apiError.statusText = response.statusText;
+        try {
+            const detail = JSON.parse(errorData)?.detail;
+            apiError.code = detail?.code ?? null;
+            apiError.detailMessage = detail?.message ?? null;
+        } catch {
+            apiError.code = null;
+        }
         throw apiError;
     }
 
@@ -112,6 +119,15 @@ export async function calculateItineraries(token, start, end, bikeId, maxDuratio
         return data.routes;
     } catch (error) {
         throw error;
+    }
+}
+
+export async function isCovered(lat, lon) {
+    try {
+        const data = await apiFetch(`/graph/coverage?lat=${lat}&lon=${lon}`, { method: "GET" });
+        return data.covered !== false;
+    } catch {
+        return true;
     }
 }
 
@@ -172,6 +188,36 @@ export async function resendVerification(email) {
             method: "POST",
             body: JSON.stringify({
                 email: email,
+            })
+        }, null);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function forgotPassword(email) {
+    try {
+        const data = await apiFetch("/users/forgot-password", {
+            method: "POST",
+            body: JSON.stringify({
+                email: email,
+            })
+        }, null);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function resetPassword(email, code, newPassword) {
+    try {
+        const data = await apiFetch("/users/reset-password", {
+            method: "POST",
+            body: JSON.stringify({
+                email: email,
+                code: code,
+                new_password: newPassword,
             })
         }, null);
         return data;
@@ -374,6 +420,18 @@ export async function createReport(token, reportType, description, latitude, lon
                 latitude,
                 longitude,
             }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function voteReport(token, reportId, isPresent) {
+    try {
+        const data = await apiFetch(`/reports/${reportId}/vote`, {
+            method: "POST",
+            body: JSON.stringify({ is_present: isPresent }),
         }, token);
         return data;
     } catch (error) {

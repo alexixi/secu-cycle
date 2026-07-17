@@ -86,6 +86,13 @@ export default function Login() {
                     <PasswordInput password={password} setPassword={setPassword} hasError={hasError} setHasError={setHasError} />
                 </View>
 
+                <TouchableOpacity
+                    style={styles.forgotLink}
+                    onPress={() => router.push({ pathname: "/forgotpassword", params: { email } })}
+                >
+                    <Text style={[typography.link, { color: colors.primary }]}>Mot de passe oublié ?</Text>
+                </TouchableOpacity>
+
                 {hasError && (
                     <Text style={[styles.errorText, { color: colors.error, textAlign: 'center', marginBottom: 15 }]}>
                         Adresse mail ou mot de passe incorrect.{"\n"}Veuillez réessayer.
@@ -152,6 +159,13 @@ const styles = StyleSheet.create({
         fontSize: 12,
         marginTop: 5,
         marginLeft: 4,
+    },
+    forgotLink: {
+        alignSelf: 'center',
+        marginTop: -8,
+        marginBottom: 15,
+        paddingVertical: 4,
+        paddingHorizontal: 4,
     },
     submitButton: {
         flexDirection: 'row',

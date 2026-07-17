@@ -13,21 +13,22 @@
                  font-src 'self' data: https://*.maptiler.com;
                  object-src 'none';
                  base-uri 'self';" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#646cff" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0078bc" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Sécu'Cycle" />
-    <meta name="keywords" content="vélo, sécurité, itinéraires, gps, cyclisme, trajets, mobilité douce, Bordeaux" />
+    <meta name="keywords" content="vélo, sécurité, itinéraires, gps, cyclisme, trajets, mobilité douce, Bordeaux, Lille, Tournai" />
     <meta name="author"
         content="Alexis Gaudray Bouju, Matheline Chevalier, Khaoula Najmeddine, Angelo Thunney, Joan Dumarchat, Léia Daragnès" />
 
-    <link rel="preconnect" href="https://api.secu-cycle.fr" />
-    <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
+    <link rel="preconnect" href="https://analytics.secu-cycle.fr" />
 
     <script type="application/ld+json">
     {
@@ -41,10 +42,6 @@
           "applicationCategory": "TravelApplication",
           "operatingSystem": "Web",
           "inLanguage": "fr",
-          "areaServed": {
-            "@type": "City",
-            "name": "Bordeaux Métropole"
-          },
           "offers": {
             "@type": "Offer",
             "price": "0",
@@ -57,7 +54,12 @@
           "@id": "https://secu-cycle.fr/#organization",
           "name": "Sécu'Cycle",
           "url": "https://secu-cycle.fr",
-          "logo": "https://secu-cycle.fr/apple-touch-icon.png"
+          "logo": "https://secu-cycle.fr/apple-touch-icon.png",
+          "areaServed": [
+            { "@type": "City", "name": "Bordeaux Métropole" },
+            { "@type": "City", "name": "Lille" },
+            { "@type": "City", "name": "Tournai" }
+          ]
         }
       ]
     }

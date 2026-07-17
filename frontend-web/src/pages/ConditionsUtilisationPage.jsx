@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header";
 import "./legal.css";
 
 export default function ConditionsUtilisationPage() {
@@ -10,8 +9,7 @@ export default function ConditionsUtilisationPage() {
                 title="Sécu'Cycle | Conditions générales d'utilisation"
                 description="Conditions générales d'utilisation du site et de l'application Sécu'Cycle : accès au service, obligations, avertissement de sécurité et responsabilité."
             />
-            <Header page="conditions-utilisation" />
-            <main className="legal-page">
+            <div className="legal-page">
                 <article className="legal-content">
                     <h1>Conditions générales d'utilisation</h1>
                     <p className="legal-updated">Dernière mise à jour : 7 juillet 2026</p>
@@ -113,7 +111,7 @@ export default function ConditionsUtilisationPage() {
                         <Link to="/mentions-legales">mentions légales</Link>.
                     </p>
                 </article>
-            </main>
+            </div>
         </>
     );
 }

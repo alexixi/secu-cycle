@@ -1,6 +1,6 @@
 # Sécu'Cycle
 
-> Application web et mobile (android et ios) open source qui calcule des itinéraires à vélo sécurisés, personnalisés et adaptés au profil de l'utilisateur. Le calcul privilégie la sécurité du cycliste plutôt que la seule vitesse, en s'adaptant au profil sportif, au type de vélo et au type d'aménagement, au type de sol, à la vitesse des automobiliste, aux embouteillages et à l'éclairage public. Couverture principale : métropole de Bordeaux et le sud Bordeaux pour le moment, en voie à s'aggrandir.
+> Application web et mobile (android et ios) open source qui calcule des itinéraires à vélo sécurisés, personnalisés et adaptés au profil de l'utilisateur. Le calcul privilégie la sécurité du cycliste plutôt que la seule vitesse, en s'adaptant au profil sportif, au type de vélo et au type d'aménagement, au type de sol, à la vitesse des automobiliste, aux embouteillages et à l'éclairage public. Zones couvertes : la métropole de Bordeaux et le sud Bordeaux, ainsi que Lille, Tournai et leurs communes environnantes (secteur transfrontalier France–Belgique) ; couverture en cours d'extension.
 
 Sécu'Cycle propose plusieurs itinéraires (rapide, sécurisé, compromis) en s'appuyant sur des données de trafic temps réel, des données topographiques et des signalements de dangers remontés par la communauté. L'application gère les profils utilisateurs, plusieurs vélos (standard ou électrique), l'historique des trajets et la navigation guidée.
 
@@ -10,10 +10,12 @@ Projet open source développé par 6 étudiants de l'ENSEIRB-MATMECA (Bordeaux) 
 
 - [Accueil](https://secu-cycle.fr/) : présentation du projet, des problématiques de sécurité à vélo et des sources de données.
 - [Calculateur d'itinéraire](https://secu-cycle.fr/itineraire) : calcul d'un trajet vélo sécurisé entre deux adresses selon le profil et le vélo de l'utilisateur. Page principale
+- [FAQ](https://secu-cycle.fr/faq) : foire aux questions sur le fonctionnement, le calcul des itinéraires sécurisés, les zones couvertes, l'application mobile, les comptes et les sources de données.
 
 ## Couverture géographique
 
-- Principale : Bordeaux, Bordeaux Métropole et le sud Bordeaux (45 communes).
+- Bordeaux, Bordeaux Métropole et le sud Bordeaux (45 communes).
+- Lille, Tournai et les communes environnantes (secteur transfrontalier France–Belgique).
 
 ## Sources de données
 

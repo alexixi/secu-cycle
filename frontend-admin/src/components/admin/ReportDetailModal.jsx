@@ -21,11 +21,26 @@ export default function ReportDetailModal({
   onClose,
   onDeleteReport,
   onSanction,
+  onSetVerified,
 }) {
   const [banReason, setBanReason] = useState(report.ban_reason || "");
   const [busy, setBusy] = useState(null); // "block" | "ban" | null
   const [confirmBan, setConfirmBan] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState(null);
+
+  const toggleVerified = async () => {
+    if (!onSetVerified) return;
+    setError(null);
+    setVerifying(true);
+    try {
+      await onSetVerified(report.id, !report.is_verified);
+    } catch (err) {
+      setError(err.message || "Action impossible.");
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   const hasAuthor = !!report.user_id;
   const isBanned = report.author_is_banned;
@@ -83,8 +98,8 @@ export default function ReportDetailModal({
           <div className="user-detail-meta">
             <span>Signalement #{report.id}</span>
             <span>{formatDateTime(report.created_at)}</span>
-            <span className={`status-badge ${report.is_expired ? "expired" : "active"}`}>
-              {report.is_expired ? "Expiré" : "Actif"}
+            <span className={`status-badge ${report.is_disabled ? "disabled" : report.is_expired ? "expired" : "active"}`}>
+              {report.is_disabled ? "Désactivé" : report.is_expired ? "Expiré" : "Actif"}
             </span>
           </div>
         </div>
@@ -95,6 +110,31 @@ export default function ReportDetailModal({
               <div className="user-detail-field">
                 <span>Description</span>
                 <p className="user-detail-value">{report.report_description || "—"}</p>
+              </div>
+
+              <div className="user-detail-field">
+                <span>Votes de la communauté</span>
+                <p className="user-detail-value vote-counts">
+                  <span className="vote-count vote-yes">👍 {report.confirmations_count ?? 0} là</span>
+                  <span className="vote-count vote-no">👎 {report.denials_count ?? 0} pas là</span>
+                </p>
+              </div>
+
+              <div className="user-detail-field">
+                <label className="report-verified-toggle">
+                  <input
+                    type="checkbox"
+                    checked={!!report.is_verified}
+                    disabled={verifying}
+                    onChange={toggleVerified}
+                  />
+                  <span>
+                    <strong>Signalement vérifié</strong>
+                    <em>
+                      {" "}— reste actif quels que soient les votes et l'expiration.
+                    </em>
+                  </span>
+                </label>
               </div>
 
               <div className="user-detail-field">

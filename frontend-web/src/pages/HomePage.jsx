@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import Meta from "../components/Meta";
-import Header from "../components/layout/Header"
 import './HomePage.css';
 import IconButton from "../components/ui/IconButton";
 import FaqRoute from "../components/home/FaqRoute";
 import Logo from "../assets/logo.svg?react";
-import apercuApplication from "../assets/screenshots/mobile/apercu_itineraire-left.png";
+import apercuApplication from "../assets/screenshots/mobile/apercu_itineraire-left.webp";
 import { IoIosArrowDropdown } from "react-icons/io";
 import { FaLinkedin } from "react-icons/fa";
 import { getHomeCases } from "../services/apiBack";
@@ -16,7 +15,7 @@ import { getHomeCases } from "../services/apiBack";
 const DEFAULT_CASES = [
     {
         title: "Qu'est-ce que Sécu'Cycle ?",
-        text: "Sécu'Cycle est un projet développé par 6 étudiants de l'ENSEIRB-MATMECA dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous nous sommes focalisés sur la zone de Bordeaux et de notre campus universitaire pour affiner les résultats avec nos connaissances locales du terrain.",
+        text: "Sécu'Cycle est un projet développé par 6 étudiants de l'ENSEIRB-MATMECA dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous avons d'abord affiné les résultats sur la zone de Bordeaux et de notre campus universitaire grâce à nos connaissances locales du terrain, et la couverture s'étend désormais à Lille, Tournai et leurs environs.",
     },
     {
         title: "Problématiques",
@@ -83,7 +82,6 @@ export default function HomePage() {
     return (
         <>
             <Meta title="Sécu'Cycle | Accueil" description="Découvrez Sécu'Cycle, l'application et le site pour trouver des itinéraires à vélo sécurisés et adaptés à votre profil." />
-            <Header page="home" />
             <div id="container-top-homepage">
                 <Logo id="logo-homepage" />
                 <div>
@@ -109,7 +107,7 @@ export default function HomePage() {
                 ))}
             </div>
             <div id="app-section">
-                <img className="app-visual" src={apercuApplication} alt="Aperçu de l'application mobile" />
+                <img className="app-visual" src={apercuApplication} alt="Aperçu de l'application mobile" width="800" height="1334" />
                 <aside>
                     <h2>Découvrez notre application mobile</h2>
                     <p>
@@ -117,11 +115,11 @@ export default function HomePage() {
                     </p>
                     <div className="store-badges">
                         <a href="#app-section">
-                            <img src="/store/appstore.svg" alt="Télécharger dans l'App Store" className="store-badge" />
+                            <img src="/store/appstore.svg" alt="Télécharger dans l'App Store" className="store-badge" width="127" height="40" />
                         </a>
 
                         <a href="#app-section">
-                            <img src="/store/googleplay.svg" alt="Disponible sur Google Play" className="store-badge" />
+                            <img src="/store/googleplay.svg" alt="Disponible sur Google Play" className="store-badge" width="239" height="71" />
                         </a>
                     </div>
                 </aside>

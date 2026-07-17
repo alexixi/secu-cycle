@@ -9,6 +9,7 @@ from models.user import User
 from schemas.user import (
     UserCreate, UserRead, UserLogin, UserUpdate, UserAdminUpdate, PasswordChange,
     TokenRefresh, EmailVerifyRequest, ResendVerificationRequest,
+    ForgotPasswordRequest, ResetPasswordRequest,
 )
 from fastapi import HTTPException
 from utils.security import verify_password, hash_password, create_access_token, create_refresh_token, verify_token
@@ -18,11 +19,13 @@ from admin_emails import is_user_admin
 from fastapi.security import OAuth2PasswordRequestForm
 from limiter import limiter
 import mailer
-from mailer.templates import verification_email
+from mailer.templates import verification_email, password_reset_email
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+PASSWORD_RESET_PURPOSE = "password_reset"
 
 
 def _send_verification_code(db: Session, user: User) -> None:
@@ -37,6 +40,20 @@ def _send_verification_code(db: Session, user: User) -> None:
         mailer.send_email(user.email, subject, html, text)
     except Exception:
         logger.exception("Échec de l'envoi du code de vérification à %s", user.email)
+
+
+def _send_reset_code(db: Session, user: User) -> None:
+    """Émet un code de réinitialisation de mot de passe et l'envoie par e-mail.
+
+    Les erreurs d'envoi sont loguées mais n'interrompent pas l'appelant :
+    l'utilisateur pourra toujours redemander un code via /users/forgot-password.
+    """
+    try:
+        code = issue_code(db, user, purpose=PASSWORD_RESET_PURPOSE)
+        subject, html, text = password_reset_email(code)
+        mailer.send_email(user.email, subject, html, text)
+    except Exception:
+        logger.exception("Échec de l'envoi du code de réinitialisation à %s", user.email)
 
 
 def _with_effective_admin(db: Session, user: User) -> User:
@@ -154,6 +171,37 @@ def resend_verification(
     if user is not None and not user.is_verified:
         _send_verification_code(db, user)
     return {"detail": "Si un compte non vérifié existe pour cet e-mail, un code a été envoyé."}
+
+
+@router.post("/forgot-password")
+@limiter.limit("3/hour")
+def forgot_password(
+    request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db)
+):
+    # Réponse générique dans tous les cas pour ne pas divulguer l'existence d'un compte.
+    user = db.query(User).filter(User.email == data.email).first()
+    if user is not None:
+        _send_reset_code(db, user)
+    return {"detail": "Si un compte existe pour cet e-mail, un code a été envoyé."}
+
+
+@router.post("/reset-password")
+@limiter.limit("5/minute")
+def reset_password(
+    request: Request, data: ResetPasswordRequest, db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.email == data.email).first()
+    if user is None or not verify_code(
+        db, user, data.code, purpose=PASSWORD_RESET_PURPOSE
+    ):
+        raise HTTPException(status_code=400, detail="Code invalide ou expiré.")
+
+    user.password_hash = hash_password(data.new_password)
+    # Prouver l'accès à l'e-mail vaut vérification : évite qu'un compte jamais
+    # vérifié reste bloqué au login (403 « Compte non vérifié ») après un reset.
+    user.is_verified = True
+    db.commit()
+    return {"detail": "Mot de passe réinitialisé."}
 
 
 @router.get("/me", response_model=UserRead)

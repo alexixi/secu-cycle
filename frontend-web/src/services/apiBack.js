@@ -63,6 +63,13 @@ export async function apiFetch(url, options = {}, token = null, _retried = false
         const apiError = new Error(errorData || "Erreur lors de la requête API");
         apiError.status = response.status;
         apiError.statusText = response.statusText;
+        try {
+            const detail = JSON.parse(errorData)?.detail;
+            apiError.code = detail?.code ?? null;
+            apiError.detailMessage = detail?.message ?? null;
+        } catch {
+            apiError.code = null;
+        }
         throw apiError;
     }
     if (response.status === 204) {
@@ -102,6 +109,15 @@ export async function calculateItineraries(token, start, end, bikeId, maxDuratio
     }
 }
 
+export async function isCovered(lat, lon) {
+    try {
+        const data = await apiFetch(`/graph/coverage?lat=${lat}&lon=${lon}`, { method: "GET" });
+        return data.covered !== false;
+    } catch {
+        return true;
+    }
+}
+
 export async function login(email, password) {
     try {
         const data = await apiFetch("/users/login", {
@@ -137,6 +153,30 @@ export async function resendVerification(email) {
         const data = await apiFetch("/users/resend-verification", {
             method: "POST",
             body: JSON.stringify({ email: email })
+        }, null);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function forgotPassword(email) {
+    try {
+        const data = await apiFetch("/users/forgot-password", {
+            method: "POST",
+            body: JSON.stringify({ email: email })
+        }, null);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function resetPassword(email, code, newPassword) {
+    try {
+        const data = await apiFetch("/users/reset-password", {
+            method: "POST",
+            body: JSON.stringify({ email: email, code: code, new_password: newPassword })
         }, null);
         return data;
     } catch (error) {
@@ -359,6 +399,18 @@ export async function getReports() {
     }
 }
 
+export async function voteReport(token, reportId, isPresent) {
+    try {
+        const data = await apiFetch(`/reports/${reportId}/vote`, {
+            method: "POST",
+            body: JSON.stringify({ is_present: isPresent }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function createReport(token, reportType, description, latitude, longitude) {
     try {
         const data = await apiFetch("/reports/", {
@@ -397,6 +449,15 @@ export async function getTraffic() {
 export async function getHomeCases() {
     try {
         const data = await apiFetch("/home-cases/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getFaqs() {
+    try {
+        const data = await apiFetch("/faqs/", { method: "GET" });
         return data;
     } catch (error) {
         throw error;

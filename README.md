@@ -62,24 +62,46 @@ make stop
 
 
 ## Déploiement
-Le projet est hebergé sur un VPS de la plateforme [IONOS](https://www.ionos.fr/). Le backend est déployé avec Docker et le frontend web est déployé avec Vite et hébergé via Nginx.
-La connexion au VPS se fait via SSH.
-Le site est accessible à l'adresse suivante : https://secu-cycle.fr/ (le nom de domaine a été acheté sur IONOS).
+Le projet est hébergé sur un VPS de la plateforme [IONOS](https://www.ionos.fr/), orchestré par
+[**Coolify**](https://coolify.io/) (PaaS auto-hébergé qui construit les images Docker directement à partir du
+dépôt et gère les stacks, les domaines et le TLS). Le nom de domaine `secu-cycle.fr` a été acheté sur IONOS,
+et les enregistrements DNS (dont les sous-domaines) sont gérés dans l'interface IONOS.
+
+Le site public est accessible à l'adresse https://secu-cycle.fr/.
+
+> **Note :** l'ancien flux de déploiement par `make prod` / SSH n'est **plus utilisé en production**. Les cibles
+> `make` (`make api`, `make web`, `make admin`, `make mobile`…) ne servent plus qu'au **développement local**.
+> Les cibles `prod` / `deploy` du `Makefile` sont conservées en secours mais ne reflètent plus la prod.
+
+### Organisation dans Coolify
+Chaque brique est une **ressource Coolify distincte**, avec son propre domaine, son build à partir du `Dockerfile`
+correspondant, et ses propres variables d'environnement (définies dans l'UI Coolify, pas dans un `.env` versionné) :
+
+- **API** (backend FastAPI) — `backend/Dockerfile`.
+- **Frontend web** (React/Vite servi par Nginx) — `frontend-web/Dockerfile`.
+- **Dashboard admin** (React/Vite servi par Nginx) — `frontend-admin/Dockerfile`.
+- **Umami** (mesure d'audience) — service séparé sur `analytics.secu-cycle.fr` (voir la configuration analytics).
 
 ### Mise à jour du site
-Pour mettre à jour la version du site, la démarche est la suivante :
-```sh
-# Se placer dans le dépôt du projet
-cd secu-cycle
+Le déploiement est **automatique au push Git** : Coolify écoute le dépôt via un webhook et **reconstruit puis
+relance la ressource concernée** dès qu'un commit arrive sur la branche suivie. Concrètement, mettre à jour la
+prod revient à **fusionner / pousser sur la branche de production** — il n'y a plus de commande de déploiement à
+lancer à la main.
 
-# Mettre à jour le dépôt local avec les dernières modifications du dépôt distant
-git pull
+En cas de besoin, un **redéploiement manuel** reste possible depuis l'interface Coolify (bouton *Redeploy* de la
+ressource), utile par exemple pour reconstruire le frontend sans nouveau commit.
 
-# Lancer le déploiement en production
-make prod
-```
+À savoir sur le cycle de build :
 
-`make prod` lance la commande production du backend qui construit les conteneurs en mode production (plus de restrictions sur les ports) et la commande déploiement du frontend web qui fait un build du projet via Vite, deplace le build au bon endroit et donne les bonnes permissions pour que Nginx puisse y accéder.
+- **Migrations Alembic** : elles s'appliquent **au démarrage du conteneur API** (le conteneur exécute `alembic
+  upgrade head` avant de servir). Un nouveau déploiement suffit donc à migrer le schéma ; aucune commande manuelle.
+- **Prérendu SEO (react-snap)** et **contenus bakés** : le HTML statique du frontend (ex. contenu par défaut
+  `DEFAULT_*` et balisage JSON-LD) est régénéré **au build de l'image**. Les contenus éditables depuis le dashboard
+  admin et stockés en base (cases de la page d'accueil, **FAQ**) sont servis en direct pour les visiteurs, mais ne
+  deviennent visibles pour les crawlers qu'au **prochain build/redéploiement Coolify**.
+- **API à 1 worker** : en production l'API tourne avec un seul worker uvicorn (chaque worker charge sa propre copie
+  du graphe de Bordeaux, ~0,5–1 Go ; le VPS ~3,8 Go sans swap est sensible à l'OOM). Le calcul d'itinéraire étant
+  déporté hors de l'event loop, un worker async reste réactif.
 
 ### Points d'intérêt (POI)
 Les POI (eau, toilettes, stationnement, réparation) sont stockés en base et servis par `GET /pois/` :

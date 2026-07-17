@@ -126,3 +126,6 @@ NARROW_WIDTH_PENALTY = 1.0
 MULTILANE_LANES = 3            # nb de voies à partir duquel on pénalise
 MULTILANE_PENALTY = 1.0
 CONTRAFLOW_PENALTY = 0.5        # léger malus de confort pour un contre-sens
+
+# Distance (m) au-delà de laquelle un point n'est plus considéré comme desservi par le graphe chargé
+MAX_SNAP_DISTANCE_M = 1000.0
