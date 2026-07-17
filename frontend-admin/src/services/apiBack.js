@@ -115,6 +115,13 @@ export async function deleteReport(token, reportId) {
     return apiFetch(`/reports/${reportId}`, { method: "DELETE" }, token);
 }
 
+export async function setReportVerified(token, reportId, isVerified) {
+    return apiFetch(`/reports/${reportId}/verify`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_verified: isVerified }),
+    }, token);
+}
+
 // --- Cases de la page d'accueil ---
 
 export async function getHomeCases(token) {
