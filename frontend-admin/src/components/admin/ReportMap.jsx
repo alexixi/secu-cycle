@@ -1,11 +1,31 @@
 import { useEffect, useRef, useState } from "react";
-import Map, { Marker, NavigationControl } from "react-map-gl/maplibre";
+import Map, { Source, Layer, NavigationControl } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { FaLayerGroup } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 import ThemeToggle from "../ui/ThemeToggle";
+import reportAccidentIcon from "../../assets/reports/accident.png";
+import reportTravauxIcon from "../../assets/reports/travaux.png";
+import reportDangerIcon from "../../assets/reports/danger.png";
+import reportObstacleIcon from "../../assets/reports/obstacle.png";
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
+
+const REPORT_IMAGE_ASSETS = [
+  { key: "report-accident", src: reportAccidentIcon },
+  { key: "report-travaux", src: reportTravauxIcon },
+  { key: "report-danger", src: reportDangerIcon },
+  { key: "report-obstacle", src: reportObstacleIcon },
+];
+
+const REPORT_LAYER_ID = "report-symbol";
+
+const REPORT_ICON_MATCH = ["match", ["get", "report_type"],
+  "accident", "report-accident",
+  "travaux", "report-travaux",
+  "danger", "report-danger",
+  "obstacle", "report-obstacle",
+  "report-danger"];
 
 const MAP_STYLES = [
   { id: "base", lightId: "base-v4", darkId: "base-v4-dark", label: "Basic", icon: "🍃" },
@@ -18,12 +38,15 @@ const MAP_STYLES = [
 
 const THEME_MODES = ["light", "auto", "dark"];
 
-export default function ReportMap({ latitude, longitude, icon = "📍", zoom = 16 }) {
+export default function ReportMap({ latitude, longitude, reportType, zoom = 16 }) {
   const { effectiveTheme } = useTheme();
   const [mapThemeMode, setMapThemeMode] = useState("auto");
   const [selectedMapStyle, setSelectedMapStyle] = useState("base");
   const [isMapSelectOpen, setIsMapSelectOpen] = useState(false);
+  const [imagesReady, setImagesReady] = useState(false);
   const layerControlRef = useRef(null);
+  const mapRef = useRef(null);
+  const imagesRef = useRef({});
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("userMapThemeMode");
@@ -51,6 +74,30 @@ export default function ReportMap({ latitude, longitude, icon = "📍", zoom = 1
     setSelectedMapStyle(styleId);
     localStorage.setItem("userMapBaseStyle", styleId);
     setIsMapSelectOpen(false);
+  };
+
+  const handleMapLoad = (event) => {
+    const map = event.target;
+
+    const registerImages = () => {
+      REPORT_IMAGE_ASSETS.forEach(({ key }) => {
+        const image = imagesRef.current[key];
+        if (image && !map.hasImage(key)) {
+          map.addImage(key, image, { pixelRatio: 2 });
+        }
+      });
+    };
+
+    Promise.all(REPORT_IMAGE_ASSETS.map(({ key, src }) => new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => { imagesRef.current[key] = img; resolve(); };
+      img.onerror = reject;
+      img.src = src;
+    }))).then(() => {
+      registerImages();
+      map.on("styledata", registerImages);
+      setImagesReady(true);
+    }).catch((error) => console.error("Erreur chargement des icônes de signalement:", error));
   };
 
   const hasPosition = Number.isFinite(latitude) && Number.isFinite(longitude);
@@ -99,15 +146,36 @@ export default function ReportMap({ latitude, longitude, icon = "📍", zoom = 1
       </div>
 
       <Map
+        ref={mapRef}
         initialViewState={{ longitude, latitude, zoom }}
         mapStyle={mapStyle}
         attributionControl={{ compact: true }}
         style={{ position: "absolute", inset: 0 }}
+        onLoad={handleMapLoad}
       >
         <NavigationControl position="top-right" showCompass={false} />
-        <Marker longitude={longitude} latitude={latitude} anchor="bottom">
-          <div className="report-map-pin">{icon}</div>
-        </Marker>
+        {imagesReady && (
+          <Source
+            id="report"
+            type="geojson"
+            data={{
+              type: "Feature",
+              properties: { report_type: reportType },
+              geometry: { type: "Point", coordinates: [longitude, latitude] },
+            }}
+          >
+            {/* Layer symbol : le pin suit le zoom, comme sur la carte principale. */}
+            <Layer
+              id={REPORT_LAYER_ID}
+              type="symbol"
+              layout={{
+                "icon-image": REPORT_ICON_MATCH,
+                "icon-size": ["interpolate", ["linear"], ["zoom"], 10, 0.42, 13, 0.84, 17, 1.5],
+                "icon-allow-overlap": true,
+              }}
+            />
+          </Source>
+        )}
       </Map>
     </div>
   );
