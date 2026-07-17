@@ -150,12 +150,24 @@ const formatPoiTag = (value) => {
 
 const isRouteFeature = (feature) => feature?.layer?.id?.startsWith('route-hitbox-');
 
-export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, isReportMode, onToggleReportMode, canReport, trafficPoints = [], showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
+export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, onVote, canVote, currentUserId, isReportMode, onToggleReportMode, canReport, trafficPoints = [], showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
 
     const mapRef = useRef();
     const { effectiveTheme } = useTheme();
     const [hoverInfo, setHoverInfo] = useState(null);
     const [activeReport, setActiveReport] = useState(null);
+
+    const handleVote = async (reportId, isPresent) => {
+        if (!onVote) return;
+        const res = await onVote(reportId, isPresent);
+        if (res?.is_disabled) {
+            setActiveReport(null);
+        } else if (res) {
+            setActiveReport(prev => (prev && prev.id === reportId
+                ? { ...prev, confirmations_count: res.confirmations_count, denials_count: res.denials_count }
+                : prev));
+        }
+    };
     const [activeTraffic, setActiveTraffic] = useState(null);
     const [isMapSelectOpen, setIsMapSelectOpen] = useState(false);
     const [selectedMapStyle, setSelectedMapStyle] = useState("base");
@@ -830,18 +842,48 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 {formatReportAge(activeReport.created_at) && (
                                     <p className="map-popup-meta">{formatReportAge(activeReport.created_at)}</p>
                                 )}
+                                <p className="map-popup-votes">
+                                    <span className="vote-chip vote-chip-yes">👍 {activeReport.confirmations_count ?? 0} là</span>
+                                    <span className="vote-chip vote-chip-no">👎 {activeReport.denials_count ?? 0} pas là</span>
+                                </p>
                             </div>
-                            {onDeleteReport && (
-                                <div className="map-popup-footer">
-                                    <Button
-                                        className="danger-button"
-                                        type="button"
-                                        onClick={() => { onDeleteReport(activeReport.id); setActiveReport(null); }}
-                                    >
-                                        Supprimer
-                                    </Button>
-                                </div>
-                            )}
+                            {(() => {
+                                const isOwnReport = activeReport.user_id != null && activeReport.user_id === currentUserId;
+                                const showVote = canVote && onVote && !isOwnReport;
+                                const showDelete = onDeleteReport && isOwnReport;
+                                if (!showVote && !showDelete) return null;
+                                return (
+                                    <div className="map-popup-footer">
+                                        {showVote && (
+                                            <div className="map-popup-vote-actions">
+                                                <Button
+                                                    className="vote-button-yes"
+                                                    type="button"
+                                                    onClick={() => handleVote(activeReport.id, true)}
+                                                >
+                                                    Confirmer
+                                                </Button>
+                                                <Button
+                                                    className="vote-button-no"
+                                                    type="button"
+                                                    onClick={() => handleVote(activeReport.id, false)}
+                                                >
+                                                    Pas là
+                                                </Button>
+                                            </div>
+                                        )}
+                                        {showDelete && (
+                                            <Button
+                                                className="danger-button"
+                                                type="button"
+                                                onClick={() => { onDeleteReport(activeReport.id); setActiveReport(null); }}
+                                            >
+                                                Supprimer
+                                            </Button>
+                                        )}
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </Popup>
                 )}
