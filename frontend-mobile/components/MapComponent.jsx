@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useMemo, use } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, Text, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch, useColorScheme } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
@@ -12,10 +12,6 @@ import { trackEvent } from '../services/analytics';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 
-// Familles d'aménagement des parkings vélo, calculées par le backend
-// (propriété `parking_type`). À garder synchronisé avec models/poi.py.
-// Sous-familles calculées par le backend. `subTypeProp` désigne la propriété
-// GeoJSON portée par chaque feature. À garder synchronisé avec models/poi.py.
 const PARKING_TYPES = [
     { id: 'stands', label: 'Arceaux', color: '#22C55E' },
     { id: 'racks', label: 'Râteliers, pince-roues', color: '#0D9488' },
@@ -41,13 +37,10 @@ const POI_CATEGORIES = [
     { id: 'repair', label: 'Réparation', icon: 'wrench', color: '#F97316', subTypes: REPAIR_TYPES, subTypeProp: 'repair_kind' },
 ];
 
-// Défaut : toutes les sous-familles activées, indexées par catégorie.
 const DEFAULT_SUB_TYPES = Object.fromEntries(
     POI_CATEGORIES.filter(c => c.subTypes).map(c => [c.id, Object.fromEntries(c.subTypes.map(t => [t.id, true]))])
 );
 
-// Fusionne une préférence enregistrée avec les défauts : toute sous-famille
-// ajoutée depuis reste activée par défaut.
 const mergeSubTypes = (saved) => Object.fromEntries(
     Object.entries(DEFAULT_SUB_TYPES).map(([cat, defaults]) => [cat, { ...defaults, ...(saved?.[cat] || {}) }])
 );
@@ -63,13 +56,70 @@ const POI_IMAGES = {
     'poi-parking-other': require('../assets/poi/parking-other.png'),
     'poi-repair-selfservice': require('../assets/poi/repair-selfservice.png'),
     'poi-repair-shop': require('../assets/poi/repair-shop.png'),
+    'poi-water-off': require('../assets/poi/water-off.png'),
+    'poi-toilets-free-off': require('../assets/poi/toilets-free-off.png'),
+    'poi-toilets-paid-off': require('../assets/poi/toilets-paid-off.png'),
+    'poi-toilets-unknown-off': require('../assets/poi/toilets-unknown-off.png'),
+    'poi-parking-stands-off': require('../assets/poi/parking-stands-off.png'),
+    'poi-parking-racks-off': require('../assets/poi/parking-racks-off.png'),
+    'poi-parking-shelter-off': require('../assets/poi/parking-shelter-off.png'),
+    'poi-parking-other-off': require('../assets/poi/parking-other-off.png'),
+    'poi-repair-selfservice-off': require('../assets/poi/repair-selfservice-off.png'),
+    'poi-repair-shop-off': require('../assets/poi/repair-shop-off.png'),
+    'poi-water-customers': require('../assets/poi/water-customers.png'),
+    'poi-toilets-free-customers': require('../assets/poi/toilets-free-customers.png'),
+    'poi-toilets-paid-customers': require('../assets/poi/toilets-paid-customers.png'),
+    'poi-toilets-unknown-customers': require('../assets/poi/toilets-unknown-customers.png'),
+    'poi-parking-stands-customers': require('../assets/poi/parking-stands-customers.png'),
+    'poi-parking-racks-customers': require('../assets/poi/parking-racks-customers.png'),
+    'poi-parking-shelter-customers': require('../assets/poi/parking-shelter-customers.png'),
+    'poi-parking-other-customers': require('../assets/poi/parking-other-customers.png'),
+    'poi-repair-selfservice-customers': require('../assets/poi/repair-selfservice-customers.png'),
+    'poi-repair-shop-customers': require('../assets/poi/repair-shop-customers.png'),
+    'poi-parking-stands-covered': require('../assets/poi/parking-stands-covered.png'),
+    'poi-parking-racks-covered': require('../assets/poi/parking-racks-covered.png'),
+    'poi-parking-other-covered': require('../assets/poi/parking-other-covered.png'),
+    'poi-parking-stands-covered-off': require('../assets/poi/parking-stands-covered-off.png'),
+    'poi-parking-racks-covered-off': require('../assets/poi/parking-racks-covered-off.png'),
+    'poi-parking-other-covered-off': require('../assets/poi/parking-other-covered-off.png'),
+    'poi-parking-stands-covered-customers': require('../assets/poi/parking-stands-covered-customers.png'),
+    'poi-parking-racks-covered-customers': require('../assets/poi/parking-racks-covered-customers.png'),
+    'poi-parking-other-covered-customers': require('../assets/poi/parking-other-covered-customers.png'),
+    'poi-toilets-paid-paid': require('../assets/poi/toilets-paid-paid.png'),
+    'poi-water-paid': require('../assets/poi/water-paid.png'),
+    'poi-parking-stands-paid': require('../assets/poi/parking-stands-paid.png'),
+    'poi-parking-racks-paid': require('../assets/poi/parking-racks-paid.png'),
+    'poi-parking-shelter-paid': require('../assets/poi/parking-shelter-paid.png'),
+    'poi-parking-other-paid': require('../assets/poi/parking-other-paid.png'),
+    'poi-parking-stands-covered-paid': require('../assets/poi/parking-stands-covered-paid.png'),
+    'poi-parking-racks-covered-paid': require('../assets/poi/parking-racks-covered-paid.png'),
+    'poi-parking-other-covered-paid': require('../assets/poi/parking-other-covered-paid.png'),
+    'poi-repair-selfservice-paid': require('../assets/poi/repair-selfservice-paid.png'),
+    'poi-repair-shop-paid': require('../assets/poi/repair-shop-paid.png'),
+};
+
+const RESTRICTED_ACCESS = ['private', 'no', 'permit', 'employees', 'delivery', 'military', 'agricultural', 'forestry'];
+
+const OFF_COLOR = '#9CA3AF';
+const CUSTOMERS_COLOR = '#F59E0B';
+const isPoiUnavailable = (poi) => (
+    RESTRICTED_ACCESS.includes(poi?.access)
+    || poi?.disused === 'yes'
+    || poi?.['disused:amenity'] != null
+    || ['closed', 'off'].includes(poi?.opening_hours)
+);
+const isPoiCustomers = (poi) => poi?.access === 'customers';
+const poiAccentColor = (poi, base) => (isPoiUnavailable(poi) ? OFF_COLOR : isPoiCustomers(poi) ? CUSTOMERS_COLOR : base);
+
+const REPORT_IMAGES = {
+    'report-accident': require('../assets/reports/accident.png'),
+    'report-travaux': require('../assets/reports/travaux.png'),
+    'report-danger': require('../assets/reports/danger.png'),
+    'report-obstacle': require('../assets/reports/obstacle.png'),
 };
 
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
-// Tags OSM affichés dans la fiche d'un POI, quand ils sont renseignés.
-// `except` masque le champ pour une catégorie (le tag brut `fee` fait doublon
-// avec le champ « Accès » synthétique des toilettes).
 const POI_DETAIL_FIELDS = [
     {
         key: 'parking_type',
@@ -143,9 +193,7 @@ export default function MapComponent({
     const [activeReport, setActiveReport] = useState(null);
     const [isPoiSheetVisible, setPoiSheetVisible] = useState(false);
     const [enabledPoiCats, setEnabledPoiCats] = useState({});
-    // { toilets: {free,paid,unknown}, parking: {stands,...} }
     const [enabledSubTypes, setEnabledSubTypes] = useState(DEFAULT_SUB_TYPES);
-    // Une catégorie n'est téléchargée qu'une fois, à sa première activation.
     const poiCacheRef = useRef({});
     const [poiData, setPoiData] = useState({});
     const [activePoi, setActivePoi] = useState(null);
@@ -277,21 +325,18 @@ export default function MapComponent({
                 try {
                     setEnabledPoiCats(JSON.parse(savedPois));
                 } catch {
-                    // Préférence corrompue : on repart sur tout désactivé.
                 }
             }
             if (savedSubTypes) {
                 try {
                     setEnabledSubTypes(mergeSubTypes(JSON.parse(savedSubTypes)));
                 } catch {
-                    // Préférence corrompue : on garde toutes les sous-familles.
                 }
             }
         };
         loadSavedPreferences();
     }, []);
 
-    // Télécharge les catégories nouvellement activées, une seule fois chacune.
     useEffect(() => {
         if (miniMap) return;
         POI_CATEGORIES.forEach(({ id }) => {
@@ -300,7 +345,7 @@ export default function MapComponent({
             getPois(id)
                 .then(collection => setPoiData(prev => ({ ...prev, [id]: collection })))
                 .catch(error => {
-                    poiCacheRef.current[id] = false;  // autorise une nouvelle tentative
+                    poiCacheRef.current[id] = false;
                     console.error(`Erreur chargement POI ${id}:`, error);
                 });
         });
@@ -352,9 +397,6 @@ export default function MapComponent({
         await AsyncStorage.setItem('userMapSubTypes', JSON.stringify(next));
     };
 
-    // Une seule source pour les 4 catégories : l'icône est choisie par expression
-    // sur `category`, et un unique layer symbol gère la collision globale.
-    // Les sous-familles (parking, toilettes) se filtrent ici, sans nouvelle requête.
     const poisGeoJSON = useMemo(() => {
         const features = POI_CATEGORIES
             .filter(({ id }) => enabledPoiCats[id] && poiData[id])
@@ -365,6 +407,18 @@ export default function MapComponent({
             ));
         return features.length ? { type: 'FeatureCollection', features } : EMPTY_FEATURE_COLLECTION;
     }, [enabledPoiCats, enabledSubTypes, poiData]);
+
+    const reportsGeoJSON = useMemo(() => {
+        const features = (reports || []).map((report) => ({
+            type: 'Feature',
+            properties: { id: report.id, report_type: report.report_type },
+            geometry: {
+                type: 'Point',
+                coordinates: [parseFloat(report.longitude), parseFloat(report.latitude)],
+            },
+        }));
+        return features.length ? { type: 'FeatureCollection', features } : EMPTY_FEATURE_COLLECTION;
+    }, [reports]);
 
     const routesGeoJSON = useMemo(() => {
         if (!itineraires) return null;
@@ -461,6 +515,14 @@ export default function MapComponent({
         if (!feature) return;
         const [lon, lat] = feature.geometry.coordinates;
         setActivePoi({ ...feature.properties, lat, lon });
+    };
+
+    const onReportPress = (event) => {
+        Haptics.selectionAsync().catch(() => { });
+        const feature = event?.nativeEvent?.features?.[0];
+        if (!feature) return;
+        const report = reports.find((r) => r.id === feature.properties.id);
+        if (report) setActiveReport(report);
     };
 
     const screenHeight = Dimensions.get('window').height;
@@ -625,9 +687,6 @@ export default function MapComponent({
                     />
                 )}
 
-                {/* Déclarée avant la source des itinéraires : les POI passent donc
-                    sous les tracés. Les signalements, eux, sont des ViewAnnotation,
-                    toujours au-dessus du canvas. */}
                 {!miniMap && poisGeoJSON.features.length > 0 && (
                     <>
                         <Images images={POI_IMAGES} />
@@ -637,37 +696,49 @@ export default function MapComponent({
                                 type="symbol"
                                 minzoom={10}
                                 layout={{
-                                    iconImage: ['match', ['get', 'category'],
-                                        'water', 'poi-water',
-                                        // Les toilettes se déclinent selon la gratuité.
-                                        'toilets', ['match', ['get', 'toilet_fee'],
-                                            'free', 'poi-toilets-free',
-                                            'paid', 'poi-toilets-paid',
-                                            'poi-toilets-unknown'],
-                                        // Le parking se décline par famille d'aménagement.
-                                        'parking', ['match', ['get', 'parking_type'],
-                                            'stands', 'poi-parking-stands',
-                                            'racks', 'poi-parking-racks',
-                                            'shelter', 'poi-parking-shelter',
-                                            'poi-parking-other'],
-                                        // La réparation distingue libre-service et atelier.
-                                        'repair', ['match', ['get', 'repair_kind'],
-                                            'shop', 'poi-repair-shop',
-                                            'poi-repair-selfservice'],
-                                        'poi-water'],
+                                    iconImage: ['concat',
+                                        ['match', ['get', 'category'],
+                                            'water', 'poi-water',
+                                            'toilets', ['match', ['get', 'toilet_fee'],
+                                                'free', 'poi-toilets-free',
+                                                'paid', 'poi-toilets-paid',
+                                                'poi-toilets-unknown'],
+                                            'parking', ['concat',
+                                                ['match', ['get', 'parking_type'],
+                                                    'stands', 'poi-parking-stands',
+                                                    'racks', 'poi-parking-racks',
+                                                    'shelter', 'poi-parking-shelter',
+                                                    'poi-parking-other'],
+                                                ['case',
+                                                    ['all',
+                                                        ['!=', ['get', 'parking_type'], 'shelter'],
+                                                        ['==', ['get', 'covered'], 'yes']],
+                                                    '-covered', '']],
+                                            'repair', ['match', ['get', 'repair_kind'],
+                                                'shop', 'poi-repair-shop',
+                                                'poi-repair-selfservice'],
+                                            'poi-water'],
+                                        ['case',
+                                            ['any',
+                                                ['in', ['get', 'access'], ['literal', RESTRICTED_ACCESS]],
+                                                ['==', ['get', 'disused'], 'yes'],
+                                                ['has', 'disused:amenity'],
+                                                ['in', ['get', 'opening_hours'], ['literal', ['closed', 'off']]]],
+                                            '-off',
+                                            ['any',
+                                                ['all', ['==', ['get', 'category'], 'toilets'], ['==', ['get', 'toilet_fee'], 'paid']],
+                                                ['all', ['!=', ['get', 'category'], 'toilets'], ['has', 'fee'], ['!=', ['get', 'fee'], 'no']]],
+                                            '-paid',
+                                            ['==', ['get', 'access'], 'customers'], '-customers',
+                                            '']],
                                     iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.22, 13, 0.42, 17, 0.8],
-                                    // Dédensification : le moteur masque les icônes qui se chevauchent.
                                     iconAllowOverlap: false,
-                                    // Priorité de placement : les parkings (très nombreux) cèdent la
-                                    // place aux catégories rares (toilettes, réparation), sinon
-                                    // écrasées par collision. Sort-key bas = placé en premier.
                                     symbolSortKey: ['match', ['get', 'category'], 'parking', 1, 0],
                                     textField: ['step', ['zoom'], '', 16, ['coalesce', ['get', 'name'], '']],
                                     textSize: 11,
                                     textAnchor: 'top',
                                     textOffset: [0, 1.7],
                                     textAllowOverlap: false,
-                                    // En cas de collision, on sacrifie le libellé avant l'icône.
                                     textOptional: true,
                                 }}
                                 paint={{
@@ -706,23 +777,31 @@ export default function MapComponent({
                     </GeoJSONSource>
                 )}
 
-                {!miniMap && reports && reports.map((report) => (
-                    <ViewAnnotation
-                        key={report.id}
-                        id={`report-${report.id}`}
-                        lngLat={[parseFloat(report.longitude), parseFloat(report.latitude)]}
-                        anchor="center"
-                        onPress={() => {
-                            setActiveReport(report);
-                            Haptics.selectionAsync();
-                        }}
-                        hitbox={{ width: 44, height: 44 }}
-                    >
-                        <Text style={{ fontSize: 24 }}>
-                            {REPORT_TYPES.find(t => t.id === report.report_type)?.icon || '?'}
-                        </Text>
-                    </ViewAnnotation>
-                ))}
+                {!miniMap && reportsGeoJSON.features.length > 0 && (
+                    <>
+                        <Images images={REPORT_IMAGES} />
+                        <GeoJSONSource id="reports" data={reportsGeoJSON} onPress={onReportPress}>
+                            <Layer
+                                id="reports-symbol"
+                                type="symbol"
+                                minzoom={9}
+                                layout={{
+                                    iconImage: ['match', ['get', 'report_type'],
+                                        'accident', 'report-accident',
+                                        'travaux', 'report-travaux',
+                                        'danger', 'report-danger',
+                                        'obstacle', 'report-obstacle',
+                                        'report-danger'],
+                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.3, 13, 0.58, 17, 1.1],
+                                    iconAllowOverlap: true,
+                                }}
+                                paint={{
+                                    iconOpacity: ['interpolate', ['linear'], ['zoom'], 9, 0, 10.5, 1],
+                                }}
+                            />
+                        </GeoJSONSource>
+                    </>
+                )}
             </Map>
 
             {!miniMap && isNavigating && activeAlert && (
@@ -984,9 +1063,18 @@ export default function MapComponent({
                     <View style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
 
                         <View style={styles.header}>
-                            <Text style={[typography.h1, { fontSize: 20, color: colors.textMain, textTransform: 'capitalize' }]}>
-                                {activeReport ? REPORT_TYPES.find(t => t.id === activeReport.report_type)?.icon : ''} {activeReport?.report_type}
-                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
+                                {activeReport && (
+                                    <Image
+                                        source={REPORT_IMAGES[`report-${activeReport.report_type}`] || REPORT_IMAGES['report-danger']}
+                                        style={{ width: 30, height: 30 }}
+                                        resizeMode="contain"
+                                    />
+                                )}
+                                <Text style={[typography.h1, { fontSize: 20, color: colors.textMain, textTransform: 'capitalize', flex: 1 }]}>
+                                    {activeReport?.report_type}
+                                </Text>
+                            </View>
                             <TouchableOpacity onPress={() => setActiveReport(null)}>
                                 <Ionicons name="close" size={28} color={colors.textMain} />
                             </TouchableOpacity>
@@ -1072,7 +1160,7 @@ export default function MapComponent({
                                 <>
                                     <View style={styles.header}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
-                                            <View style={[styles.poiBadge, { backgroundColor: category?.color }]}>
+                                            <View style={[styles.poiBadge, { backgroundColor: poiAccentColor(activePoi, category?.color) }]}>
                                                 <MaterialCommunityIcons name={category?.icon} size={18} color="#FFF" />
                                             </View>
                                             <Text style={[typography.h1, { fontSize: 18, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
