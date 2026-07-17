@@ -6,7 +6,7 @@ import ThemeToggle from '../../components/ui/ThemeToggle';
 import MapContextMenu, { formatCoords } from './MapContextMenu';
 import { useTheme } from '../../context/ThemeContext';
 import { getPois } from '../../services/apiBack';
-import { getAddressFromCoordinates } from '../../services/geocodingService';
+import { getAddressFromCoordinates, getApproxLocationFromIp } from '../../services/geocodingService';
 import { trackEvent } from '../../services/analytics';
 
 import { IoMdPin } from "react-icons/io";
@@ -227,6 +227,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [contextAddress, setContextAddress] = useState(null);
     const [isContextAddressLoading, setIsContextAddressLoading] = useState(false);
     const contextGeocodeRef = useRef(null);
+    const didAutoCenterRef = useRef(false);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem('userMapThemeMode');
@@ -373,6 +374,40 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             map.flyTo({ center: [end.lon, end.lat], zoom: 15, duration: 1500 });
         }
     }, [start, end, itineraires, isMapLoaded]);
+
+    useEffect(() => {
+        if (littleMap || !isMapLoaded || didAutoCenterRef.current) return;
+        if (start || end || itineraires?.[0]?.path?.length) return; // un cadrage explicite a priorité
+        didAutoCenterRef.current = true;
+
+        (async () => {
+            if (navigator.geolocation && navigator.permissions?.query) {
+                try {
+                    const perm = await navigator.permissions.query({ name: 'geolocation' });
+                    if (perm.state === 'granted') {
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                const { latitude, longitude } = pos.coords;
+                                setUserPosition({ lat: latitude, lon: longitude });
+                                mapRef.current?.getMap().flyTo({ center: [longitude, latitude], zoom: 16, duration: 1500 });
+                            },
+                            () => {},
+                            { enableHighAccuracy: true, timeout: 10000 }
+                        );
+                        return;
+                    }
+                } catch {
+                }
+            }
+
+            if (localStorage.getItem('userMapLastView')) return;
+
+            const loc = await getApproxLocationFromIp();
+            if (loc) {
+                mapRef.current?.getMap().flyTo({ center: [loc.lon, loc.lat], zoom: 11, duration: 1000 });
+            }
+        })();
+    }, [isMapLoaded, start, end, itineraires, littleMap]);
 
     const handleLocate = () => {
         if (!navigator.geolocation) {
@@ -548,6 +583,15 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         }
         if (start) return { longitude: start.lon, latitude: start.lat, zoom: 15 };
         if (end) return { longitude: end.lon, latitude: end.lat, zoom: 15 };
+        if (!littleMap) {
+            try {
+                const saved = JSON.parse(localStorage.getItem('userMapLastView'));
+                if (saved && Number.isFinite(saved.longitude) && Number.isFinite(saved.latitude)) {
+                    return { longitude: saved.longitude, latitude: saved.latitude, zoom: saved.zoom ?? 13 };
+                }
+            } catch {
+            }
+        }
         return { longitude: -0.5795, latitude: 44.8378, zoom: 13 };
     };
 
@@ -701,6 +745,15 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 onMouseMove={onHover}
                 onContextMenu={littleMap ? undefined : onContextMenu}
                 onMoveStart={closeContextMenu}
+                onMoveEnd={littleMap ? undefined : (e) => {
+                    const c = e.viewState;
+                    try {
+                        localStorage.setItem('userMapLastView', JSON.stringify({
+                            longitude: c.longitude, latitude: c.latitude, zoom: c.zoom
+                        }));
+                    } catch {
+                    }
+                }}
                 onLoad={() => setIsMapLoaded(true)}
                 style={{ width: '100%', height: '100%' }}
             >
