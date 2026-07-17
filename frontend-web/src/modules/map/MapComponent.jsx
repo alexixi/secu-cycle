@@ -12,16 +12,10 @@ import { trackEvent } from '../../services/analytics';
 import { IoMdPin } from "react-icons/io";
 import { FaLayerGroup } from "react-icons/fa";
 import { MdOutlineReportProblem, MdOutlineTraffic, MdMyLocation, MdOutlinePlace } from "react-icons/md";
-import poiWaterIcon from '../../assets/poi/water.png';
-import poiToiletsFreeIcon from '../../assets/poi/toilets-free.png';
-import poiToiletsPaidIcon from '../../assets/poi/toilets-paid.png';
-import poiToiletsUnknownIcon from '../../assets/poi/toilets-unknown.png';
-import poiParkingStandsIcon from '../../assets/poi/parking-stands.png';
-import poiParkingRacksIcon from '../../assets/poi/parking-racks.png';
-import poiParkingShelterIcon from '../../assets/poi/parking-shelter.png';
-import poiParkingOtherIcon from '../../assets/poi/parking-other.png';
-import poiRepairSelfserviceIcon from '../../assets/poi/repair-selfservice.png';
-import poiRepairShopIcon from '../../assets/poi/repair-shop.png';
+import reportAccidentIcon from '../../assets/reports/accident.png';
+import reportTravauxIcon from '../../assets/reports/travaux.png';
+import reportDangerIcon from '../../assets/reports/danger.png';
+import reportObstacleIcon from '../../assets/reports/obstacle.png';
 import './MapComponent.css';
 
 const MAP_STYLES = [
@@ -35,15 +29,6 @@ const MAP_STYLES = [
 
 const TRAFFIC_COLORS = { green: "#22c55e", orange: "#f97316", red: "#ef4444", gray: "#9ca3af" };
 
-const REPORT_ICONS = {
-    accident: "🚨",
-    travaux: "🚧",
-    danger: "⚠️",
-    obstacle: "🪨",
-};
-
-// Libellé FR + couleur d'accent par type de signalement (libellés alignés sur
-// ReportModal.jsx). Sert l'en-tête coloré du popup.
 const REPORT_TYPE_META = {
     accident: { label: 'Accident', color: '#ef4444' },
     travaux: { label: 'Travaux', color: '#f97316' },
@@ -100,20 +85,76 @@ const mergeSubTypes = (saved) => Object.fromEntries(
     Object.entries(DEFAULT_SUB_TYPES).map(([cat, defaults]) => [cat, { ...defaults, ...(saved?.[cat] || {}) }])
 );
 
-const POI_IMAGE_ASSETS = [
-    { key: 'poi-water', src: poiWaterIcon },
-    { key: 'poi-toilets-free', src: poiToiletsFreeIcon },
-    { key: 'poi-toilets-paid', src: poiToiletsPaidIcon },
-    { key: 'poi-toilets-unknown', src: poiToiletsUnknownIcon },
-    { key: 'poi-parking-stands', src: poiParkingStandsIcon },
-    { key: 'poi-parking-racks', src: poiParkingRacksIcon },
-    { key: 'poi-parking-shelter', src: poiParkingShelterIcon },
-    { key: 'poi-parking-other', src: poiParkingOtherIcon },
-    { key: 'poi-repair-selfservice', src: poiRepairSelfserviceIcon },
-    { key: 'poi-repair-shop', src: poiRepairShopIcon },
+const poiImageModules = import.meta.glob('../../assets/poi/*.png', { eager: true, import: 'default' });
+const POI_IMAGE_ASSETS = Object.entries(poiImageModules).map(([filePath, src]) => ({
+    key: `poi-${filePath.split('/').pop().replace('.png', '')}`,
+    src,
+}));
+
+const REPORT_IMAGE_ASSETS = [
+    { key: 'report-accident', src: reportAccidentIcon },
+    { key: 'report-travaux', src: reportTravauxIcon },
+    { key: 'report-danger', src: reportDangerIcon },
+    { key: 'report-obstacle', src: reportObstacleIcon },
 ];
 
+const MAP_IMAGE_ASSETS = [...POI_IMAGE_ASSETS, ...REPORT_IMAGE_ASSETS];
+
+const IMAGE_SRC_BY_KEY = Object.fromEntries(MAP_IMAGE_ASSETS.map(({ key, src }) => [key, src]));
+
+const reportIconSrc = (type) => IMAGE_SRC_BY_KEY[`report-${type}`] || IMAGE_SRC_BY_KEY['report-danger'];
+
+const RESTRICTED_ACCESS = ['private', 'no', 'permit', 'employees', 'delivery', 'military', 'agricultural', 'forestry'];
+const OFF_COLOR = '#9CA3AF';
+const CUSTOMERS_COLOR = '#F59E0B';
+
+const isPoiUnavailable = (poi) => (
+    RESTRICTED_ACCESS.includes(poi?.access)
+    || poi?.disused === 'yes'
+    || poi?.['disused:amenity'] != null
+    || ['closed', 'off'].includes(poi?.opening_hours)
+);
+
+const isPoiCustomers = (poi) => poi?.access === 'customers';
+
+const isPoiPaid = (poi) => (
+    poi?.category === 'toilets'
+        ? poi?.toilet_fee === 'paid'
+        : (poi?.fee != null && poi.fee !== 'no' && poi.fee !== '')
+);
+
+const poiStateSuffix = (poi) => (
+    isPoiUnavailable(poi) ? '-off'
+        : isPoiPaid(poi) ? '-paid'
+            : isPoiCustomers(poi) ? '-customers'
+                : ''
+);
+
+const poiAccentColor = (poi, base) => (isPoiUnavailable(poi) ? OFF_COLOR : isPoiCustomers(poi) ? CUSTOMERS_COLOR : base);
+
+const poiIconSrc = (poi) => {
+    let key;
+    switch (poi?.category) {
+        case 'toilets':
+            key = ['free', 'paid'].includes(poi.toilet_fee) ? `poi-toilets-${poi.toilet_fee}` : 'poi-toilets-unknown';
+            break;
+        case 'parking': {
+            const ptype = ['stands', 'racks', 'shelter'].includes(poi.parking_type) ? poi.parking_type : 'other';
+            key = `poi-parking-${ptype}`;
+            if (ptype !== 'shelter' && poi.covered === 'yes') key += '-covered';
+            break;
+        }
+        case 'repair':
+            key = poi.repair_kind === 'shop' ? 'poi-repair-shop' : 'poi-repair-selfservice';
+            break;
+        default:
+            key = 'poi-water';
+    }
+    return IMAGE_SRC_BY_KEY[key + poiStateSuffix(poi)];
+};
+
 const POI_LAYER_ID = 'pois-symbol';
+const REPORT_LAYER_ID = 'reports-symbol';
 
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
@@ -177,7 +218,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [isLocating, setIsLocating] = useState(false);
     const [isPoiMenuOpen, setIsPoiMenuOpen] = useState(false);
     const [enabledPoiCats, setEnabledPoiCats] = useState({});
-    // { toilets: {free,paid,unknown}, parking: {stands,...} }
     const [enabledSubTypes, setEnabledSubTypes] = useState(DEFAULT_SUB_TYPES);
     const poiCacheRef = useRef({});
     const [poiData, setPoiData] = useState({});
@@ -241,9 +281,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         localStorage.setItem('userMapSubTypes', JSON.stringify(next));
     };
 
-    // Une seule source pour les 4 catégories : l'icône est choisie par expression
-    // sur `category`, et un unique layer symbol gère la collision globale.
-    // Les sous-familles (parking, toilettes) se filtrent ici, sans nouvelle requête.
     const poisGeoJSON = useMemo(() => ({
         type: 'FeatureCollection',
         features: POI_CATEGORIES
@@ -255,7 +292,17 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             )),
     }), [enabledPoiCats, enabledSubTypes, poiData]);
 
+    const reportsGeoJSON = useMemo(() => ({
+        type: 'FeatureCollection',
+        features: (reports || []).map((report) => ({
+            type: 'Feature',
+            properties: { id: report.id, report_type: report.report_type },
+            geometry: { type: 'Point', coordinates: [report.longitude, report.latitude] },
+        })),
+    }), [reports]);
+
     const showPois = !littleMap && arePoiImagesReady && poisGeoJSON.features.length > 0;
+    const showReports = !littleMap && arePoiImagesReady && reportsGeoJSON.features.length > 0;
 
     const poiImagesRef = useRef({});
 
@@ -264,7 +311,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         const map = mapRef.current.getMap();
 
         const registerImages = () => {
-            POI_IMAGE_ASSETS.forEach(({ key }) => {
+            MAP_IMAGE_ASSETS.forEach(({ key }) => {
                 const image = poiImagesRef.current[key];
                 if (image && !map.hasImage(key)) {
                     map.addImage(key, image, { pixelRatio: 2 });
@@ -273,7 +320,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         };
 
         let cancelled = false;
-        Promise.all(POI_IMAGE_ASSETS.map(({ key, src }) => new Promise((resolve, reject) => {
+        Promise.all(MAP_IMAGE_ASSETS.map(({ key, src }) => new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => { poiImagesRef.current[key] = img; resolve(); };
             img.onerror = reject;
@@ -283,7 +330,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             registerImages();
             map.on('styledata', registerImages);
             setArePoiImagesReady(true);
-        }).catch(error => console.error("Erreur chargement des icônes POI:", error));
+        }).catch(error => console.error("Erreur chargement des icônes de la carte:", error));
 
         return () => {
             cancelled = true;
@@ -415,6 +462,17 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         setContextMenu(null);
         const features = event.features || [];
 
+        const reportFeature = features.find(f => f.layer?.id === REPORT_LAYER_ID);
+        if (reportFeature) {
+            const report = reports?.find((r) => r.id === reportFeature.properties.id);
+            if (report) {
+                setActivePoi(null);
+                setActiveTraffic(null);
+                setActiveReport(report);
+            }
+            return;
+        }
+
         const poiFeature = features.find(f => f.layer?.id === POI_LAYER_ID);
         if (poiFeature) {
             const [lon, lat] = poiFeature.geometry.coordinates;
@@ -430,8 +488,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             return;
         }
 
-        // Clic à vide : on ferme tout popup ouvert avant de déléguer au parent
-        // (mode signalement). Les markers font stopPropagation, ils n'arrivent pas ici.
         setActivePoi(null);
         setActiveReport(null);
         setActiveTraffic(null);
@@ -442,8 +498,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
 
     const onHover = (event) => {
         const features = event.features || [];
-        // Seuls les itinéraires portent une infobulle ; un POI survolé ne doit
-        // pas alimenter hoverInfo, dont le rendu lit distance/duration.
         const feature = features.find(isRouteFeature);
         if (feature) {
             setHoverInfo({
@@ -640,6 +694,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 mapStyle={currentMapStyle}
                 interactiveLayerIds={[
                     ...(itineraires ? itineraires.map((it) => `route-hitbox-${it.id}`) : []),
+                    ...(showReports ? [REPORT_LAYER_ID] : []),
                     ...(showPois ? [POI_LAYER_ID] : []),
                 ]}
                 onClick={onClick}
@@ -657,9 +712,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     </Marker>
                 )}
 
-                {/* Déclarée avant les sources d'itinéraires : les POI passent donc
-                    sous les tracés. Les signalements sont des Marker DOM, toujours
-                    au-dessus du canvas. */}
                 {showPois && (
                     <Source id="pois" type="geojson" data={poisGeoJSON}>
                         <Layer
@@ -667,37 +719,49 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                             type="symbol"
                             minzoom={10}
                             layout={{
-                                'icon-image': ['match', ['get', 'category'],
-                                    'water', 'poi-water',
-                                    // Les toilettes se déclinent selon la gratuité.
-                                    'toilets', ['match', ['get', 'toilet_fee'],
-                                        'free', 'poi-toilets-free',
-                                        'paid', 'poi-toilets-paid',
-                                        'poi-toilets-unknown'],
-                                    // Le parking se décline par famille d'aménagement.
-                                    'parking', ['match', ['get', 'parking_type'],
-                                        'stands', 'poi-parking-stands',
-                                        'racks', 'poi-parking-racks',
-                                        'shelter', 'poi-parking-shelter',
-                                        'poi-parking-other'],
-                                    // La réparation distingue libre-service et atelier.
-                                    'repair', ['match', ['get', 'repair_kind'],
-                                        'shop', 'poi-repair-shop',
-                                        'poi-repair-selfservice'],
-                                    'poi-water'],
+                                'icon-image': ['concat',
+                                    ['match', ['get', 'category'],
+                                        'water', 'poi-water',
+                                        'toilets', ['match', ['get', 'toilet_fee'],
+                                            'free', 'poi-toilets-free',
+                                            'paid', 'poi-toilets-paid',
+                                            'poi-toilets-unknown'],
+                                        'parking', ['concat',
+                                            ['match', ['get', 'parking_type'],
+                                                'stands', 'poi-parking-stands',
+                                                'racks', 'poi-parking-racks',
+                                                'shelter', 'poi-parking-shelter',
+                                                'poi-parking-other'],
+                                            ['case',
+                                                ['all',
+                                                    ['!=', ['get', 'parking_type'], 'shelter'],
+                                                    ['==', ['get', 'covered'], 'yes']],
+                                                '-covered', '']],
+                                        'repair', ['match', ['get', 'repair_kind'],
+                                            'shop', 'poi-repair-shop',
+                                            'poi-repair-selfservice'],
+                                        'poi-water'],
+                                    ['case',
+                                        ['any',
+                                            ['in', ['get', 'access'], ['literal', RESTRICTED_ACCESS]],
+                                            ['==', ['get', 'disused'], 'yes'],
+                                            ['has', 'disused:amenity'],
+                                            ['in', ['get', 'opening_hours'], ['literal', ['closed', 'off']]]],
+                                        '-off',
+                                        ['any',
+                                            ['all', ['==', ['get', 'category'], 'toilets'], ['==', ['get', 'toilet_fee'], 'paid']],
+                                            ['all', ['!=', ['get', 'category'], 'toilets'], ['has', 'fee'], ['!=', ['get', 'fee'], 'no']]],
+                                        '-paid',
+                                        ['==', ['get', 'access'], 'customers'], '-customers',
+                                        '']],
                                 'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.3, 13, 0.6, 17, 1.1],
-                                // Dédensification : le moteur masque les icônes qui se chevauchent.
                                 'icon-allow-overlap': false,
-                                // Priorité de placement : les parkings (très nombreux) cèdent la
-                                // place aux catégories rares (toilettes, réparation) qui seraient
-                                // sinon écrasées par collision. Sort-key bas = placé en premier.
                                 'symbol-sort-key': ['match', ['get', 'category'], 'parking', 1, 0],
                                 'text-field': ['step', ['zoom'], '', 16, ['coalesce', ['get', 'name'], '']],
                                 'text-size': 11,
                                 'text-anchor': 'top',
                                 'text-offset': [0, 1.7],
                                 'text-allow-overlap': false,
-                                // En cas de collision, on sacrifie le libellé avant l'icône.
                                 'text-optional': true,
                             }}
                             paint={{
@@ -764,14 +828,28 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     </Marker>
                 )}
 
-                {reports && reports.map((report) => (
-                    <Marker key={report.id} longitude={report.longitude} latitude={report.latitude} anchor="bottom">
-                        <div style={{ fontSize: "28px", lineHeight: "1", cursor: "pointer", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
-                            onClick={(e) => { e.stopPropagation(); setActivePoi(null); setActiveTraffic(null); setActiveReport(report); }}>
-                            {REPORT_ICONS[report.report_type] || "📍"}
-                        </div>
-                    </Marker>
-                ))}
+                {showReports && (
+                    <Source id="reports" type="geojson" data={reportsGeoJSON}>
+                        <Layer
+                            id={REPORT_LAYER_ID}
+                            type="symbol"
+                            minzoom={9}
+                            layout={{
+                                'icon-image': ['match', ['get', 'report_type'],
+                                    'accident', 'report-accident',
+                                    'travaux', 'report-travaux',
+                                    'danger', 'report-danger',
+                                    'obstacle', 'report-obstacle',
+                                    'report-danger'],
+                                'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.42, 13, 0.84, 17, 1.5],
+                                'icon-allow-overlap': true,
+                            }}
+                            paint={{
+                                'icon-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0, 10.5, 1],
+                            }}
+                        />
+                    </Source>
+                )}
 
                 {trafficPoints && trafficPoints.map((pt) => (
                     <Marker key={`traffic-${pt.id}`} longitude={pt.lon} latitude={pt.lat} anchor="center">
@@ -830,7 +908,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 className="map-popup-header"
                                 style={{ backgroundColor: REPORT_TYPE_META[activeReport.report_type]?.color || '#6b7280' }}
                             >
-                                <span className="map-popup-icon">{REPORT_ICONS[activeReport.report_type] || "📍"}</span>
+                                <img className="map-popup-icon map-popup-icon-img" src={reportIconSrc(activeReport.report_type)} alt="" />
                                 <span className="map-popup-title">
                                     {REPORT_TYPE_META[activeReport.report_type]?.label || activeReport.report_type}
                                 </span>
@@ -903,8 +981,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 && activePoi[field.key] !== undefined && activePoi[field.key] !== null);
                             return (
                                 <div className="map-popup">
-                                    <div className="map-popup-header" style={{ backgroundColor: category?.color || '#6b7280' }}>
-                                        <span className="map-popup-icon">📍</span>
+                                    <div className="map-popup-header" style={{ backgroundColor: poiAccentColor(activePoi, category?.color || '#6b7280') }}>
+                                        <img className="map-popup-icon map-popup-icon-img" src={poiIconSrc(activePoi)} alt="" />
                                         <span className="map-popup-header-text">
                                             <span className="map-popup-title">{activePoi.name || category?.label}</span>
                                             {activePoi.name && <span className="map-popup-subtitle">{category?.label}</span>}
