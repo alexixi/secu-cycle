@@ -27,6 +27,8 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 PASSWORD_RESET_PURPOSE = "password_reset"
 
+_DUMMY_PASSWORD_HASH = hash_password("timing-attack-equalizer")
+
 
 def _send_verification_code(db: Session, user: User) -> None:
     """Émet un code de vérification et l'envoie par e-mail.
@@ -103,6 +105,7 @@ def login(
     db_user = db.query(User).filter(User.email == form_data.username).first()
 
     if not db_user:
+        verify_password(form_data.password, _DUMMY_PASSWORD_HASH)
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if not verify_password(form_data.password, db_user.password_hash):
