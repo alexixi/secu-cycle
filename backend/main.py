@@ -131,7 +131,14 @@ async def lifespan(app: FastAPI):
 
     print("Shutdown terminé")
 
-app = FastAPI(title="Sécu Cycle", lifespan=lifespan)
+_docs_enabled = os.getenv("ENABLE_DOCS", "").lower() in {"1", "true", "yes"}
+app = FastAPI(
+    title="Sécu Cycle",
+    lifespan=lifespan,
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
+    openapi_url="/openapi.json" if _docs_enabled else None,
+)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

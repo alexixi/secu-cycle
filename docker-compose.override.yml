@@ -3,6 +3,8 @@ services:
     ports:
       - "5433:5432"
   api:
+    environment:
+      - ENABLE_DOCS=1
     ports:
       - "8000:8000"
     volumes:
