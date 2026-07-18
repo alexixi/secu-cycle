@@ -14,6 +14,7 @@ from schemas.user import (
 from fastapi import HTTPException
 from utils.security import verify_password, hash_password, create_access_token, create_refresh_token, verify_token
 from utils.verification import issue_code, verify_code
+from utils import refresh_sessions
 from dependencies import get_current_user, require_admin
 from admin_emails import is_user_admin
 from fastapi.security import OAuth2PasswordRequestForm
@@ -126,7 +127,8 @@ def login(
 
     token_data = {"sub": str(db_user.id), "tv": db_user.token_version}
     access_token = create_access_token(data=token_data)
-    refresh_token = create_refresh_token(data=token_data)
+    sid, jti = refresh_sessions.create_session(db, db_user.id)
+    refresh_token = create_refresh_token(data={**token_data, "sid": sid, "jti": jti})
 
     return {
         "access_token": access_token,
@@ -161,14 +163,23 @@ def refresh_access_token(request: Request, data: TokenRefresh, db: Session = Dep
     if payload.get("tv", 0) != (user.token_version or 0):
         raise HTTPException(status_code=401, detail="Refresh token révoqué")
 
-    access_token = create_access_token(
-        data={"sub": str(user.id), "tv": user.token_version}
-    )
+    sid = payload.get("sid")
+    jti = payload.get("jti")
+    new_jti = None
+    if sid and jti:
+        new_jti = refresh_sessions.rotate(db, sid, jti)
+        if new_jti is None:
+            raise HTTPException(status_code=401, detail="Refresh token révoqué")
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
+    token_data = {"sub": str(user.id), "tv": user.token_version}
+    access_token = create_access_token(data=token_data)
+
+    response = {"access_token": access_token, "token_type": "bearer"}
+    if new_jti is not None:
+        response["refresh_token"] = create_refresh_token(
+            data={**token_data, "sid": sid, "jti": new_jti}
+        )
+    return response
 
 
 @router.post("/verify")
