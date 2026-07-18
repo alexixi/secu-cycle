@@ -2,10 +2,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://bike_user:bike_password@localhost:5433/bike_app"
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError(
+        "La variable d'environnement DATABASE_URL est manquante. "
+        "Définissez-la, p.ex. postgresql://user:password@host:5432/db "
+        "(docker-compose l'injecte automatiquement)."
+    )
 
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
