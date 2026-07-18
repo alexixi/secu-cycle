@@ -9,6 +9,9 @@ on:
     paths:
       - "backend/**"
 
+permissions:
+  contents: read
+
 jobs:
   alembic:
     name: Migrations Alembic
