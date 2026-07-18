@@ -17,6 +17,8 @@ from models.user import User
 CODE_TTL = timedelta(minutes=15)
 DEFAULT_PURPOSE = "email_verification"
 
+MAX_ATTEMPTS = 4
+
 
 def generate_code() -> str:
     """Renvoie un code à 6 chiffres (avec zéros de tête)."""
@@ -75,6 +77,10 @@ def verify_code(
         return False
 
     if not hmac.compare_digest(entry.code_hash, _hash_code(code)):
+        entry.attempts = (entry.attempts or 0) + 1
+        if entry.attempts >= MAX_ATTEMPTS:
+            entry.consumed_at = datetime.utcnow()
+        db.commit()
         return False
 
     entry.consumed_at = datetime.utcnow()
