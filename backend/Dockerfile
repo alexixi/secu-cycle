@@ -18,4 +18,4 @@ RUN chmod +x /app/entrypoint.sh && chown -R app:app /app
 
 ENTRYPOINT ["sh", "/app/entrypoint.sh"]
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*"]

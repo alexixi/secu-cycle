@@ -69,7 +69,8 @@ def _with_effective_admin(db: Session, user: User) -> User:
     return user
 
 @router.post("/", response_model=UserRead)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("30/hour")
+def create_user(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     db_user = User(
         email=user.email,
         password_hash= hash_password(user.password),
@@ -135,7 +136,8 @@ def login(
 
 
 @router.post("/refresh")
-def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def refresh_access_token(request: Request, data: TokenRefresh, db: Session = Depends(get_db)):
     payload = verify_token(data.refresh_token, expected_type="refresh")
     if payload is None:
         raise HTTPException(status_code=401, detail="Refresh token invalide ou expiré")
