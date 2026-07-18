@@ -1,0 +1,94 @@
+name: Sécurité
+
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+  schedule:
+    - cron: "0 6 * * 1"  # lundi 6h : capte les nouvelles vulnérabilités sans commit
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: Secrets commités (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependencies:
+    name: Dépendances vulnérables
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: pip-audit (backend)
+        run: |
+          pip install pip-audit
+          pip-audit --requirement backend/requirements.txt --ignore-vuln PYSEC-2026-1325
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: npm audit — web
+        working-directory: frontend-web
+        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit — admin
+        working-directory: frontend-admin
+        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit — mobile (informatif)
+        working-directory: frontend-mobile
+        run: npm audit --omit=dev --audit-level=critical || true
+
+  sast:
+    name: SAST (semgrep)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      # semgrep via docker (le runner reste ubuntu → Node dispo pour upload-sarif).
+      # --config auto : règles communautaires, sans compte. Non bloquant : les
+      # résultats remontent dans Security > Code scanning.
+      - name: Analyse semgrep
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep \
+            semgrep scan --config auto --sarif --output /src/semgrep.sarif
+        continue-on-error: true
+      - name: Publier les résultats
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+        continue-on-error: true
+
+  image-scan:
+    name: Image & config (trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      # Scan filesystem : vulnérabilités des lockfiles, mauvaises configs
+      # Dockerfile/compose, et secrets. Rapide (pas de build d'image).
+      - name: Analyse Trivy
+        run: |
+          docker run --rm -v "$PWD:/repo" aquasec/trivy:latest fs \
+            --scanners vuln,misconfig,secret --severity HIGH,CRITICAL \
+            --format sarif --output /repo/trivy.sarif /repo
+        continue-on-error: true
+      - name: Publier les résultats
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+        continue-on-error: true
