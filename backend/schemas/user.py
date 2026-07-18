@@ -2,17 +2,19 @@ from pydantic import BaseModel, EmailStr, Field
 from datetime import date, datetime
 from typing import Optional
 
+PASSWORD_MAX = 128
+
 class UserBase(BaseModel):
     email: EmailStr
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    first_name: Optional[str] = Field(default=None, max_length=100)
+    last_name: Optional[str] = Field(default=None, max_length=100)
     birth_date: Optional[date] = None
-    sport_level: Optional[str] = None
-    home_address: Optional[str] = None
-    work_address: Optional[str] = None
+    sport_level: Optional[str] = Field(default=None, max_length=50)
+    home_address: Optional[str] = Field(default=None, max_length=500)
+    work_address: Optional[str] = Field(default=None, max_length=500)
 
 class UserCreate(UserBase):
-    password: str = Field(min_length=10)
+    password: str = Field(min_length=10, max_length=PASSWORD_MAX)
 
 class UserRead(UserBase):
     id: int
@@ -25,41 +27,41 @@ class UserRead(UserBase):
 
     class Config:
         from_attributes = True
-        
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    first_name: Optional[str] = Field(default=None, max_length=100)
+    last_name: Optional[str] = Field(default=None, max_length=100)
     birth_date: Optional[date] = None
-    sport_level: Optional[str] = None
-    home_address: Optional[str] = None
-    work_address: Optional[str] = None
+    sport_level: Optional[str] = Field(default=None, max_length=50)
+    home_address: Optional[str] = Field(default=None, max_length=500)
+    work_address: Optional[str] = Field(default=None, max_length=500)
 
 class UserAdminUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    first_name: Optional[str] = Field(default=None, max_length=100)
+    last_name: Optional[str] = Field(default=None, max_length=100)
     birth_date: Optional[date] = None
-    sport_level: Optional[str] = None
-    home_address: Optional[str] = None
-    work_address: Optional[str] = None
+    sport_level: Optional[str] = Field(default=None, max_length=50)
+    home_address: Optional[str] = Field(default=None, max_length=500)
+    work_address: Optional[str] = Field(default=None, max_length=500)
     is_admin: Optional[bool] = None
     is_banned: Optional[bool] = None
     reports_blocked: Optional[bool] = None
-    ban_reason: Optional[str] = None
+    ban_reason: Optional[str] = Field(default=None, max_length=500)
 
 class PasswordChange(BaseModel):
     old_password: str
-    new_password: str = Field(min_length=10)
+    new_password: str = Field(min_length=10, max_length=PASSWORD_MAX)
 
 class TokenRefresh(BaseModel):
     refresh_token: str
 
 class EmailVerifyRequest(BaseModel):
     email: EmailStr
-    code: str
+    code: str = Field(max_length=12)
 
 class ResendVerificationRequest(BaseModel):
     email: EmailStr
@@ -69,5 +71,5 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
-    code: str
-    new_password: str = Field(min_length=10)
+    code: str = Field(max_length=12)
+    new_password: str = Field(min_length=10, max_length=PASSWORD_MAX)

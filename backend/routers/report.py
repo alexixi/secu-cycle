@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from typing import List
@@ -19,11 +19,14 @@ from dependencies import get_current_user, require_admin
 from admin_emails import is_user_admin
 from graph.route_cache import route_cache
 from reports_lifecycle import compute_status, load_votes_by_report
+from limiter import limiter
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
 @router.post("/", response_model=ReportRead, status_code=201)
+@limiter.limit("20/minute")
 def create_report(
+    request: Request,
     report: ReportCreate,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
@@ -154,7 +157,9 @@ def get_my_reports(
     return reports
 
 @router.post("/{report_id}/vote", response_model=ReportVoteResult)
+@limiter.limit("30/minute")
 def vote_report(
+    request: Request,
     report_id: int,
     vote: ReportVoteCreate,
     db: Session = Depends(get_db),

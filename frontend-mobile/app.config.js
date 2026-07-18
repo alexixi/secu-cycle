@@ -1,4 +1,5 @@
 const IS_DEV = process.env.APP_VARIANT === 'development';
+const IS_PROD = process.env.APP_VARIANT === 'production';
 
 export default {
     expo: {
@@ -29,7 +30,7 @@ export default {
             },
             edgeToEdgeEnabled: true,
             predictiveBackGestureEnabled: false,
-            usesCleartextTraffic: true,
+            usesCleartextTraffic: !IS_PROD,
             package: IS_DEV ? "fr.secucycle.app.dev" : "fr.secucycle.app",
             permissions: [
                 "ACCESS_COARSE_LOCATION",

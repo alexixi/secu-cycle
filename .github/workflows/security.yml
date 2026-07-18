@@ -1,0 +1,80 @@
+name: Sécurité
+
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+  schedule:
+    - cron: "0 6 * * 1"  # lundi 6h : capte les nouvelles vulnérabilités sans commit
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: Secrets commités (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependencies:
+    name: Dépendances vulnérables
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: pip-audit (backend)
+        run: |
+          pip install pip-audit
+          pip-audit --requirement backend/requirements.txt --ignore-vuln PYSEC-2026-1325
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: npm audit — web
+        working-directory: frontend-web
+        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit — admin
+        working-directory: frontend-admin
+        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit — mobile (informatif)
+        working-directory: frontend-mobile
+        run: npm audit --omit=dev --audit-level=critical || true
+
+  sast:
+    name: SAST (semgrep, informatif)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      # Informatif : résultats dans les logs du job (pas d'upload SARIF → pas de
+      # gate « Code scanning results » qui bloquerait la PR sur des findings noisy).
+      - name: Analyse semgrep
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep \
+            semgrep scan --config auto
+        continue-on-error: true
+
+  image-scan:
+    name: Image & config (trivy, informatif)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      # Scan filesystem : vulnérabilités des lockfiles, mauvaises configs
+      # Dockerfile/compose, et secrets. Informatif (résultats dans les logs).
+      - name: Analyse Trivy
+        run: |
+          docker run --rm -v "$PWD:/repo" aquasec/trivy:latest fs \
+            --scanners vuln,misconfig,secret --severity HIGH,CRITICAL /repo
+        continue-on-error: true

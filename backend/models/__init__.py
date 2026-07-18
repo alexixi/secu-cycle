@@ -15,6 +15,7 @@ from models import (  # noqa: F401
     home_case,
     poi,
     poi_sync,
+    refresh_session,
     report,
     report_vote,
     route,

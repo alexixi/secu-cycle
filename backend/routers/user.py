@@ -14,6 +14,7 @@ from schemas.user import (
 from fastapi import HTTPException
 from utils.security import verify_password, hash_password, create_access_token, create_refresh_token, verify_token
 from utils.verification import issue_code, verify_code
+from utils import refresh_sessions
 from dependencies import get_current_user, require_admin
 from admin_emails import is_user_admin
 from fastapi.security import OAuth2PasswordRequestForm
@@ -26,6 +27,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/users", tags=["Users"])
 
 PASSWORD_RESET_PURPOSE = "password_reset"
+
+_DUMMY_PASSWORD_HASH = hash_password("timing-attack-equalizer")
 
 
 def _send_verification_code(db: Session, user: User) -> None:
@@ -67,7 +70,8 @@ def _with_effective_admin(db: Session, user: User) -> User:
     return user
 
 @router.post("/", response_model=UserRead)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("30/hour")
+def create_user(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     db_user = User(
         email=user.email,
         password_hash= hash_password(user.password),
@@ -103,6 +107,7 @@ def login(
     db_user = db.query(User).filter(User.email == form_data.username).first()
 
     if not db_user:
+        verify_password(form_data.password, _DUMMY_PASSWORD_HASH)
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if not verify_password(form_data.password, db_user.password_hash):
@@ -120,8 +125,10 @@ def login(
             detail="Compte suspendu. Contactez l'administration.",
         )
 
-    access_token = create_access_token(data={"sub": str(db_user.id)})
-    refresh_token = create_refresh_token(data={"sub": str(db_user.id)})
+    token_data = {"sub": str(db_user.id), "tv": db_user.token_version}
+    access_token = create_access_token(data=token_data)
+    sid, jti = refresh_sessions.create_session(db, db_user.id)
+    refresh_token = create_refresh_token(data={**token_data, "sid": sid, "jti": jti})
 
     return {
         "access_token": access_token,
@@ -131,7 +138,8 @@ def login(
 
 
 @router.post("/refresh")
-def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def refresh_access_token(request: Request, data: TokenRefresh, db: Session = Depends(get_db)):
     payload = verify_token(data.refresh_token, expected_type="refresh")
     if payload is None:
         raise HTTPException(status_code=401, detail="Refresh token invalide ou expiré")
@@ -140,16 +148,38 @@ def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
     if user_id is None:
         raise HTTPException(status_code=401, detail="Refresh token invalide")
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Refresh token invalide")
+
+    user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(status_code=401, detail="Utilisateur introuvable")
 
-    access_token = create_access_token(data={"sub": str(user.id)})
+    if user.is_banned:
+        raise HTTPException(status_code=403, detail="Compte suspendu.")
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
+    if payload.get("tv", 0) != (user.token_version or 0):
+        raise HTTPException(status_code=401, detail="Refresh token révoqué")
+
+    sid = payload.get("sid")
+    jti = payload.get("jti")
+    new_jti = None
+    if sid and jti:
+        new_jti = refresh_sessions.rotate(db, sid, jti)
+        if new_jti is None:
+            raise HTTPException(status_code=401, detail="Refresh token révoqué")
+
+    token_data = {"sub": str(user.id), "tv": user.token_version}
+    access_token = create_access_token(data=token_data)
+
+    response = {"access_token": access_token, "token_type": "bearer"}
+    if new_jti is not None:
+        response["refresh_token"] = create_refresh_token(
+            data={**token_data, "sid": sid, "jti": new_jti}
+        )
+    return response
 
 
 @router.post("/verify")
@@ -197,9 +227,8 @@ def reset_password(
         raise HTTPException(status_code=400, detail="Code invalide ou expiré.")
 
     user.password_hash = hash_password(data.new_password)
-    # Prouver l'accès à l'e-mail vaut vérification : évite qu'un compte jamais
-    # vérifié reste bloqué au login (403 « Compte non vérifié ») après un reset.
     user.is_verified = True
+    user.token_version = (user.token_version or 0) + 1
     db.commit()
     return {"detail": "Mot de passe réinitialisé."}
 
@@ -305,6 +334,8 @@ def admin_update_user(
 
     for field, value in update_data.items():
         setattr(user, field, value)
+    if update_data.get("is_banned") is True:
+        user.token_version = (user.token_version or 0) + 1
     db.commit()
     db.refresh(user)
     return _with_effective_admin(db, user)

@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 import httpx
 import asyncio
 import time
 from datetime import datetime, timedelta
+
+from limiter import limiter
 
 router = APIRouter(prefix="/traffic", tags=["Traffic"])
 
@@ -13,6 +15,10 @@ BATCH_SIZE = 200
 _countpoints_cache = None
 _countpoints_cache_time = 0
 CACHE_TTL = 3600
+
+_result_cache = None
+_result_cache_time = 0
+RESULT_CACHE_TTL = 60
 
 
 def _parse_wkt_point(wkt_str):
@@ -99,7 +105,12 @@ def _traffic_level(v, t, q):
 
 
 @router.get("/")
-async def get_traffic():
+@limiter.limit("60/minute")
+async def get_traffic(request: Request):
+    global _result_cache, _result_cache_time
+    now_ts = time.time()
+    if _result_cache is not None and (now_ts - _result_cache_time) < RESULT_CACHE_TTL:
+        return _result_cache
     try:
         countpoints = await _fetch_countpoints()
     except Exception as e:
@@ -153,4 +164,6 @@ async def get_traffic():
             "level": _traffic_level(v, t, q),
         })
 
+    _result_cache = result
+    _result_cache_time = now_ts
     return result

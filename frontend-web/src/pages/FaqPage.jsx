@@ -85,7 +85,7 @@ export default function FaqPage() {
                 description="Foire aux questions de Sécu'Cycle : itinéraires vélo sécurisés, fonctionnement, zones couvertes, application mobile, sources de données et compte utilisateur."
             />
             <Helmet>
-                <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
+                <script type="application/ld+json">{JSON.stringify(faqJsonLd).replace(/</g, "\\u003c")}</script>
             </Helmet>
             <div className="faq-page">
                 <article className="faq-content">

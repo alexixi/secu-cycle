@@ -41,7 +41,6 @@ export default function Login() {
             const userBikes = await getUserBikes(response_login.access_token);
             updateBikes(userBikes);
             const response_historic = await getUserHistoric(response_login.access_token);
-            console.log("Historic data:", response_historic);
             updateHistoric(response_historic);
             trackEvent("logged_in");
             navigate("/profil");

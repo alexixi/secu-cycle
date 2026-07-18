@@ -24,4 +24,5 @@ class EmailVerification(Base):
     purpose = Column(String(50), nullable=False, default="email_verification")
     expires_at = Column(TIMESTAMP, nullable=False)
     consumed_at = Column(TIMESTAMP, nullable=True)
+    attempts = Column(Integer, nullable=False, server_default="0", default=0)
     created_at = Column(TIMESTAMP, server_default=func.now())
