@@ -78,8 +78,10 @@ def get_pois(
     count, last_sync = apply_filters(
         db.query(func.count(MapPoi.id), func.max(MapPoi.updated_at))
     ).one()
+
     etag = 'W/"' + hashlib.md5(
-        f"{count}-{last_sync}-{','.join(cats)}-{bbox}".encode()
+        f"{count}-{last_sync}-{','.join(cats)}-{bbox}".encode(),
+        usedforsecurity=False,
     ).hexdigest() + '"'
     headers = {"ETag": etag, "Cache-Control": CACHE_CONTROL}
 
