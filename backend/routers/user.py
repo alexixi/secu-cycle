@@ -143,7 +143,12 @@ def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
     if user_id is None:
         raise HTTPException(status_code=401, detail="Refresh token invalide")
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Refresh token invalide")
+
+    user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(status_code=401, detail="Utilisateur introuvable")
 
