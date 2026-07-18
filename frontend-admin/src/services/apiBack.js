@@ -28,6 +28,9 @@ async function refreshAccessToken() {
         if (!response.ok) return null;
         const data = await response.json();
         localStorage.setItem("access_token", data.access_token);
+        if (data.refresh_token) {
+            localStorage.setItem("refresh_token", data.refresh_token);
+        }
         window.dispatchEvent(new CustomEvent("token-refreshed", { detail: data.access_token }));
         return data.access_token;
     } catch {
