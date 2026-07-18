@@ -23,5 +23,6 @@ class User(Base):
     is_banned = Column(Boolean, nullable=False, default=False, server_default="false")
     reports_blocked = Column(Boolean, nullable=False, default=False, server_default="false")
     ban_reason = Column(Text, nullable=True)
+    token_version = Column(Integer, nullable=False, server_default="0", default=0)
 
     created_at = Column(TIMESTAMP, server_default=func.now())

@@ -37,6 +37,9 @@ def get_current_user(
     if user.is_banned:
         raise HTTPException(status_code=401, detail="Compte suspendu.")
 
+    if payload.get("tv", 0) != (user.token_version or 0):
+        raise HTTPException(status_code=401, detail="Token révoqué")
+
     return user
 
 

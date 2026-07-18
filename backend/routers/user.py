@@ -123,8 +123,9 @@ def login(
             detail="Compte suspendu. Contactez l'administration.",
         )
 
-    access_token = create_access_token(data={"sub": str(db_user.id)})
-    refresh_token = create_refresh_token(data={"sub": str(db_user.id)})
+    token_data = {"sub": str(db_user.id), "tv": db_user.token_version}
+    access_token = create_access_token(data=token_data)
+    refresh_token = create_refresh_token(data=token_data)
 
     return {
         "access_token": access_token,
@@ -155,7 +156,12 @@ def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
     if user.is_banned:
         raise HTTPException(status_code=403, detail="Compte suspendu.")
 
-    access_token = create_access_token(data={"sub": str(user.id)})
+    if payload.get("tv", 0) != (user.token_version or 0):
+        raise HTTPException(status_code=401, detail="Refresh token révoqué")
+
+    access_token = create_access_token(
+        data={"sub": str(user.id), "tv": user.token_version}
+    )
 
     return {
         "access_token": access_token,
@@ -208,9 +214,8 @@ def reset_password(
         raise HTTPException(status_code=400, detail="Code invalide ou expiré.")
 
     user.password_hash = hash_password(data.new_password)
-    # Prouver l'accès à l'e-mail vaut vérification : évite qu'un compte jamais
-    # vérifié reste bloqué au login (403 « Compte non vérifié ») après un reset.
     user.is_verified = True
+    user.token_version = (user.token_version or 0) + 1
     db.commit()
     return {"detail": "Mot de passe réinitialisé."}
 
@@ -316,6 +321,8 @@ def admin_update_user(
 
     for field, value in update_data.items():
         setattr(user, field, value)
+    if update_data.get("is_banned") is True:
+        user.token_version = (user.token_version or 0) + 1
     db.commit()
     db.refresh(user)
     return _with_effective_admin(db, user)
