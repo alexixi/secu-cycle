@@ -1,5 +1,29 @@
 const API_URL = "https://api-adresse.data.gouv.fr/search/";
 const REVERSE_API_URL = "https://api-adresse.data.gouv.fr/reverse/";
+const IP_LOCATION_API_URL = "https://ipapi.co/json/";
+
+export const getApproxLocationFromIp = async () => {
+    try {
+        const response = await fetch(IP_LOCATION_API_URL);
+
+        if (!response.ok) {
+            console.error("Erreur HTTP API géoloc IP : ", response.status);
+            return null;
+        }
+
+        const data = await response.json();
+        const lat = Number(data.latitude);
+        const lon = Number(data.longitude);
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+        return { lat, lon, city: data.city };
+
+    } catch (error) {
+        console.error("Erreur technique lors de la géolocalisation IP : ", error);
+        return null;
+    }
+};
 
 export const searchAddressAutocomplete = async (query) => {
     if (!query) return [];
