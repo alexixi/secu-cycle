@@ -17,6 +17,8 @@ def profile_paths(name):
     La convention `graphs/<nom>.graphml` est celle que suppose déjà
     `make regen-graph`, et que respectent les profils historiques.
     """
+    if not name or "/" in name or "\\" in name or ".." in name or name.startswith("."):
+        raise ValueError(f"Nom de profil invalide : {name!r}")
     base = backend_dir()
     return {
         "graph_file": os.path.join(base, "graphs", f"{name}.graphml"),
