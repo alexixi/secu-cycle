@@ -152,6 +152,9 @@ def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
     if user is None:
         raise HTTPException(status_code=401, detail="Utilisateur introuvable")
 
+    if user.is_banned:
+        raise HTTPException(status_code=403, detail="Compte suspendu.")
+
     access_token = create_access_token(data={"sub": str(user.id)})
 
     return {
