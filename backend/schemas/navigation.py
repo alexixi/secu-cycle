@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 
 
@@ -21,12 +21,13 @@ class InstructionOut(BaseModel):
 
 
 class NavigationUpdateRequest(BaseModel):
-    lat: float
-    lon: float
-    step_idx: int
-    route_nodes: list[int]
-    maneuvers: list[ManeuverOut]
-    path: Optional[list] = None
+    model_config = ConfigDict(allow_inf_nan=False)
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+    step_idx: int = Field(ge=0)
+    route_nodes: list[int] = Field(max_length=100_000)
+    maneuvers: list[ManeuverOut] = Field(max_length=10_000)
+    path: Optional[list] = Field(default=None, max_length=100_000)
 
 
 class NavigationUpdateResponse(BaseModel):
