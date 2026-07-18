@@ -17,6 +17,7 @@ from models.report import Report
 from reports_lifecycle import compute_status, load_votes_by_report
 from datetime import datetime, timedelta
 from graph.guidance import build_maneuvers
+from limiter import limiter
 router = APIRouter(prefix="/routes", tags=["Routes"])
 
 @router.post("/", response_model=RouteRead)
@@ -39,6 +40,7 @@ def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends
     return route
 
 @router.post("/route", response_model=ComputeRoutesResponse)
+@limiter.limit("60/minute")
 async def compute_route(request: Request, data: ComputeRouteRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user_optional)):
     G = request.app.state.G
     if G is None:
