@@ -6,12 +6,14 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { getReports, getPois, createReport, deleteReport, voteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import { withAlpha } from '../constants/theme';
 import { useDragToDismiss } from '../hooks/useDragToDismiss';
 import useHazardAlerts from '../hooks/useHazardAlerts';
 import HazardAlert from './HazardAlert';
 import { GrabHandle } from './ui/GrabHandle';
 import { GestureHandlerRootView, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 import { trackEvent } from '../services/analytics';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
@@ -157,6 +159,17 @@ const formatPoiTag = (value) => {
 
 const EMPTY_FEATURE_COLLECTION = { type: 'FeatureCollection', features: [] };
 
+function MapButtonFrost() {
+    const { colors, isDark } = useTheme();
+    if (Platform.OS !== 'ios') return null;
+    return (
+        <View style={styles.mapButtonFrost}>
+            <BlurView intensity={40} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bgSurface, opacity: 0.22 }]} />
+        </View>
+    );
+}
+
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
     setSelectedItineraire, currentPosition, isNavigating,
@@ -168,6 +181,10 @@ export default function MapComponent({
     }
 
     const { colors, typography } = useTheme();
+
+    const androidButtonBg = Platform.OS === 'android'
+        ? { backgroundColor: withAlpha(colors.bgSurface, 0.9) }
+        : null;
     const { token, user } = useAuth();
     const systemColorScheme = useColorScheme();
 
@@ -811,20 +828,22 @@ export default function MapComponent({
 
             {!miniMap && currentPosition && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.recenterButton, { backgroundColor: colors.bgSurface, bottom: 20 + bottomInset }]}
+                    style={[styles.mapButton, styles.recenterButton, androidButtonBg, { bottom: 20 + bottomInset }]}
                     onPress={handleRecenter}
                 >
+                    <MapButtonFrost />
                     <MaterialCommunityIcons name="crosshairs-gps" size={26} color={colors.textMain} />
                 </TouchableOpacity>
             )}
 
             <TouchableOpacity
-                style={[styles.mapButton, styles.layerButton, { backgroundColor: colors.bgSurface, bottom: 20 + bottomInset }]}
+                style={[styles.mapButton, styles.layerButton, androidButtonBg, { bottom: 20 + bottomInset }]}
                 onPress={() => {
                     Haptics.selectionAsync();
                     setLayerMenuVisible(true);
                 }}
             >
+                <MapButtonFrost />
                 <MaterialCommunityIcons name="layers-outline" size={26} color={colors.textMain} />
             </TouchableOpacity>
 
@@ -876,12 +895,13 @@ export default function MapComponent({
 
             {!miniMap && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.poiButton, { backgroundColor: colors.bgSurface, bottom: 80 + bottomInset }]}
+                    style={[styles.mapButton, styles.poiButton, androidButtonBg, { bottom: 80 + bottomInset }]}
                     onPress={() => {
                         Haptics.selectionAsync();
                         setPoiSheetVisible(true);
                     }}
                 >
+                    <MapButtonFrost />
                     <MaterialCommunityIcons name="map-marker-multiple-outline" size={26} color={colors.textMain} />
                 </TouchableOpacity>
             )}
@@ -945,7 +965,7 @@ export default function MapComponent({
 
             {canReport && !miniMap && currentPosition && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.reportButton, { backgroundColor: colors.bgSurface, bottom: 140 + bottomInset }]}
+                    style={[styles.mapButton, styles.reportButton, androidButtonBg, { bottom: 140 + bottomInset }]}
                     onPress={() => {
                         if (!currentPosition) {
                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -959,6 +979,7 @@ export default function MapComponent({
                         Haptics.selectionAsync();
                     }}
                 >
+                    <MapButtonFrost />
                     <Ionicons name="warning-outline" size={26} color={colors.textMain} />
                 </TouchableOpacity>
             )}
@@ -1212,15 +1233,18 @@ const styles = StyleSheet.create({
     mapButton: {
         height: 50,
         width: 50,
-        padding: 10,
-        borderRadius: 50,
-        elevation: 5,
+        borderRadius: 25,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    mapButtonFrost: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: 25,
+        overflow: 'hidden',
     },
     layerButton: {
         position: 'absolute',

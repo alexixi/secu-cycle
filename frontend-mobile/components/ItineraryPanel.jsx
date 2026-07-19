@@ -2,6 +2,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Modal, 
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { useTheme } from '../hooks/useTheme';
+import { withAlpha } from '../constants/theme';
 import { useDragToDismiss } from '../hooks/useDragToDismiss';
 import { GrabHandle } from './ui/GrabHandle';
 import { GestureHandlerRootView, GestureDetector } from 'react-native-gesture-handler';
@@ -269,8 +270,8 @@ export default function ItineraryPanel({ itineraires, selectedItineraire, setSel
                                 key={it.id}
                                 style={[
                                     styles.card,
-                                    { backgroundColor: colors.bgSurface, borderColor: colors.borderLight },
-                                    isSelected && { borderColor: meta.color, backgroundColor: colors.bgMain }
+                                    { backgroundColor: withAlpha(colors.bgSurface, 0.92), borderColor: colors.borderLight },
+                                    isSelected && { borderColor: meta.color, backgroundColor: withAlpha(colors.bgMain, 0.92) }
                                 ]}
                                 onPress={() => setSelectedItineraire(it.id)}
                                 activeOpacity={0.8}
@@ -350,7 +351,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
-        elevation: 5,
     },
     cardHeader: {
         flexDirection: 'row',
