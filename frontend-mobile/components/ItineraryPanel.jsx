@@ -228,7 +228,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
     );
 }
 
-export default function ItineraryPanel({ itineraires, selectedItineraire, setSelectedItineraire }) {
+export default function ItineraryPanel({ itineraires, selectedItineraire, setSelectedItineraire, bottomOffset = 0 }) {
     const { colors, typography } = useTheme();
     const slideAnim = useRef(new Animated.Value(200)).current;
     const [detailItineraire, setDetailItineraire] = useState(null);
@@ -254,7 +254,7 @@ export default function ItineraryPanel({ itineraires, selectedItineraire, setSel
 
     return (
         <>
-            <Animated.View style={[styles.container, { transform: [{ translateY: slideAnim }] }]}>
+            <Animated.View style={[styles.container, { bottom: 90 + bottomOffset, transform: [{ translateY: slideAnim }] }]}>
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}

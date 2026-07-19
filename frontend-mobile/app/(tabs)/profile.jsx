@@ -2,6 +2,7 @@ import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icon
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, DangerButton, OutlineButton } from '../../components/ui/Button';
 import HistoricModal from '../../components/HistoricModal';
 import { useAuth } from '../../context/AuthContext';
@@ -16,6 +17,7 @@ export default function ProfilePage() {
 
     const router = useRouter();
     const { colors, typography } = useTheme();
+    const insets = useSafeAreaInsets();
 
     const { user, updateUser, token, bikes, updateBikes, historic, updateHistoric, logoutAuth } = useAuth();
 
@@ -126,7 +128,7 @@ export default function ProfilePage() {
     return (
         <ScrollView
             style={[styles.scrollView, { backgroundColor: colors.bgMain }]}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 86 }]}
         >
             <View style={styles.container}>
                 <View style={styles.header}>

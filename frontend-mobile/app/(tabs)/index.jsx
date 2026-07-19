@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from '../../hooks/useTheme';
 import useGuidance from '../../hooks/useGuidance';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GuidancePanel from '../../components/GuidancePanel';
 import ItineraryPanel from '../../components/ItineraryPanel';
 import BadgeUnlockedModal from '../../components/BadgeUnlockedModal';
@@ -162,6 +163,9 @@ export default function Index() {
         }
     }, [pendingPoiRoute, startPoint, endPoint, handleCalculate]);
 
+    const insets = useSafeAreaInsets();
+    const tabClear = insets.bottom + 74;
+
     return (
         <View style={styles.container}>
             <MapComponent
@@ -175,6 +179,7 @@ export default function Index() {
                 canReport={!!token}
                 onNavigateToPoi={handleNavigateToPoi}
                 miniMap={false}
+                bottomInset={tabClear}
             />
 
             {isNavigating && (
@@ -215,12 +220,13 @@ export default function Index() {
                     itineraires={routePaths}
                     selectedItineraire={selectedItineraire}
                     setSelectedItineraire={handleSelectItineraire}
+                    bottomOffset={tabClear}
                 />
             )}
 
             {isNavigating && (
                 <TouchableOpacity
-                    style={[styles.emergencyStop, { backgroundColor: colors.error }]}
+                    style={[styles.emergencyStop, { backgroundColor: colors.error, bottom: 40 + tabClear }]}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => { });
                         handleStopNavigation();
@@ -233,7 +239,7 @@ export default function Index() {
 
             {selectedItineraire && !isNavigating && !isLoading && (
                 <TouchableOpacity
-                    style={[styles.startButton, { backgroundColor: colors.primary }]}
+                    style={[styles.startButton, { backgroundColor: colors.primary, bottom: 20 + tabClear }]}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => { });
                         handleStartNavigation();

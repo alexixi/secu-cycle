@@ -160,7 +160,7 @@ const EMPTY_FEATURE_COLLECTION = { type: 'FeatureCollection', features: [] };
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
     setSelectedItineraire, currentPosition, isNavigating,
-    canReport, onNavigateToPoi, miniMap = false
+    canReport, onNavigateToPoi, miniMap = false, bottomInset = 0
 }) {
     const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
     if (!MAPTILER_KEY) {
@@ -638,7 +638,7 @@ export default function MapComponent({
                 attribution={true}
                 attributionPosition={{ bottom: 5, right: 5 }}
                 compass={!miniMap}
-                compassPosition={{ bottom: 80, right: 20 }}
+                compassPosition={{ bottom: 80 + bottomInset, right: 20 }}
                 compassHiddenFacingNorth={false}
             >
                 <Camera
@@ -811,7 +811,7 @@ export default function MapComponent({
 
             {!miniMap && currentPosition && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.recenterButton, { backgroundColor: colors.bgSurface }]}
+                    style={[styles.mapButton, styles.recenterButton, { backgroundColor: colors.bgSurface, bottom: 20 + bottomInset }]}
                     onPress={handleRecenter}
                 >
                     <MaterialCommunityIcons name="crosshairs-gps" size={26} color={colors.textMain} />
@@ -819,7 +819,7 @@ export default function MapComponent({
             )}
 
             <TouchableOpacity
-                style={[styles.mapButton, styles.layerButton, { backgroundColor: colors.bgSurface }]}
+                style={[styles.mapButton, styles.layerButton, { backgroundColor: colors.bgSurface, bottom: 20 + bottomInset }]}
                 onPress={() => {
                     Haptics.selectionAsync();
                     setLayerMenuVisible(true);
@@ -876,7 +876,7 @@ export default function MapComponent({
 
             {!miniMap && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.poiButton, { backgroundColor: colors.bgSurface }]}
+                    style={[styles.mapButton, styles.poiButton, { backgroundColor: colors.bgSurface, bottom: 80 + bottomInset }]}
                     onPress={() => {
                         Haptics.selectionAsync();
                         setPoiSheetVisible(true);
@@ -945,7 +945,7 @@ export default function MapComponent({
 
             {canReport && !miniMap && currentPosition && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.reportButton, { backgroundColor: colors.bgSurface }]}
+                    style={[styles.mapButton, styles.reportButton, { backgroundColor: colors.bgSurface, bottom: 140 + bottomInset }]}
                     onPress={() => {
                         if (!currentPosition) {
                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -1101,8 +1101,6 @@ export default function MapComponent({
                             </Text>
                         </View>
 
-                        {/* On ne vote pas sur son propre signalement : l'auteur voit
-                            « Supprimer », les autres voient les boutons de vote. */}
                         {token && activeReport && activeReport.user_id !== user?.id && (
                             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
                                 <TouchableOpacity
