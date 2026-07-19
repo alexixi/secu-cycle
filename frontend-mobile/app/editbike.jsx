@@ -9,10 +9,12 @@ import { Button, DangerButton, OutlineButton } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
 import { addBike, editBike, suppressBike } from "../services/apiBack";
+import { ScreenHeader } from "../components/ui/ScreenHeader";
+import { SwipeBackScreen } from "../components/SwipeBackScreen";
 
 export default function EditBikePage() {
     const router = useRouter();
-    const { colors, typography } = useTheme();
+    const { colors } = useTheme();
     const { token, bikes, updateBikes } = useAuth();
 
     const { bikeId, bikeName, bikeType, bikeElectric } = useLocalSearchParams();
@@ -88,18 +90,18 @@ export default function EditBikePage() {
     };
 
     return (
+        <SwipeBackScreen background={colors.bgMain}>
+        {(close) => (
         <KeyboardAwareScrollView
             style={[styles.container, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContainer}
         >
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={28} color={colors.textMain} />
-            </TouchableOpacity>
+            <ScreenHeader
+                title={isEditing ? "Modifier mon vélo" : "Ajouter un vélo"}
+                onBack={close}
+            />
 
             <View style={styles.formContainer}>
-                <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>
-                    {isEditing ? "Modifier mon vélo" : "Ajouter un vélo"}
-                </Text>
 
                 <View style={[styles.preview, { backgroundColor: colors.bgSurface, borderColor: colors.borderLight }]}>
                     <MaterialCommunityIcons
@@ -214,7 +216,7 @@ export default function EditBikePage() {
                     />
                     <OutlineButton
                         title="Annuler"
-                        onPress={() => router.back()}
+                        onPress={close}
                     />
                     {isEditing && (
                         <DangerButton
@@ -227,15 +229,15 @@ export default function EditBikePage() {
                 </View>
             </View>
         </KeyboardAwareScrollView>
+        )}
+        </SwipeBackScreen>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
     scrollContainer: { flexGrow: 1, padding: 20, paddingBottom: 50 },
-    backButton: { marginTop: 40, marginBottom: 10 },
     formContainer: { width: '100%' },
-    title: { textAlign: 'center', fontSize: 24, fontWeight: 'bold', marginBottom: 30 },
     preview: {
         alignItems: 'center',
         justifyContent: 'center',

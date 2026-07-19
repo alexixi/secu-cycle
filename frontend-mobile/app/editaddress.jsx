@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useRouter } from 'expo-router';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
@@ -8,11 +8,13 @@ import { useAuth } from '../context/AuthContext';
 import { Button, OutlineButton } from '../components/ui/Button';
 import { changeAddress } from '../services/apiBack';
 import AdressInput from '../components/ui/AdressInput';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { SwipeBackScreen } from '../components/SwipeBackScreen';
 import * as Haptics from 'expo-haptics';
 
 export default function EditAddressPage() {
     const router = useRouter();
-    const { colors, typography } = useTheme();
+    const { colors } = useTheme();
     const { user, updateUser, token } = useAuth();
 
     const [home, setHome] = useState(user?.home_address || "");
@@ -34,17 +36,16 @@ export default function EditAddressPage() {
     };
 
     return (
+        <SwipeBackScreen background={colors.bgMain}>
+        {(close) => (
         <KeyboardAwareScrollView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={[styles.container, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContainer}
         >
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={28} color={colors.textMain} />
-            </TouchableOpacity>
+            <ScreenHeader title="Mes adresses" onBack={close} />
 
             <View style={styles.formContainer}>
-                <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Mes adresses</Text>
 
                 <View style={[styles.inputGroup, { zIndex: 2000 }]}>
                     <Text style={[styles.label, { color: colors.textSecondary }]}>Domicile</Text>
@@ -81,12 +82,14 @@ export default function EditAddressPage() {
                     <View style={{ marginTop: 15 }}>
                         <OutlineButton
                             title="Annuler"
-                            onPress={() => router.back()}
+                            onPress={close}
                         />
                     </View>
                 </View>
             </View>
         </KeyboardAwareScrollView>
+        )}
+        </SwipeBackScreen>
     );
 }
 
@@ -99,18 +102,8 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingBottom: 50
     },
-    backButton: {
-        marginTop: 40,
-        marginBottom: 10
-    },
     formContainer: {
         width: '100%'
-    },
-    title: {
-        textAlign: 'center',
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 30
     },
     inputGroup: {
         width: '100%',

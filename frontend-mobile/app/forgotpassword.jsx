@@ -10,6 +10,7 @@ import EmailInput from "../components/ui/EmailInput";
 import PasswordInput from "../components/ui/PasswordInput";
 import { useTheme } from "../hooks/useTheme";
 import { forgotPassword, resetPassword } from "../services/apiBack";
+import { SwipeBackScreen } from "../components/SwipeBackScreen";
 
 const CODE_LENGTH = 6;
 const MIN_PASSWORD_LENGTH = 10;
@@ -134,6 +135,7 @@ export default function ForgotPassword() {
             : "Renvoyer le code";
 
     return (
+        <SwipeBackScreen background={colors.bgMain}>
         <KeyboardAwareScrollView
             style={[styles.container, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContainer}
@@ -142,7 +144,7 @@ export default function ForgotPassword() {
             keyboardShouldPersistTaps="handled"
         >
             <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                <Ionicons name="arrow-back" size={28} color={colors.textMain} />
+                <Ionicons name="chevron-back" size={28} color={colors.textMain} />
             </TouchableOpacity>
 
             <View style={styles.formContainer}>
@@ -260,6 +262,7 @@ export default function ForgotPassword() {
                 )}
             </View>
         </KeyboardAwareScrollView>
+        </SwipeBackScreen>
     );
 }
 
