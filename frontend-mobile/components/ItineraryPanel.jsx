@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Modal, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
 import { useDragToDismiss } from '../hooks/useDragToDismiss';
@@ -229,10 +229,9 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
     );
 }
 
-export default function ItineraryPanel({ itineraires, selectedItineraire, setSelectedItineraire, bottomOffset = 0 }) {
+export default function ItineraryPanel({ itineraires, selectedItineraire, setSelectedItineraire, bottomOffset = 0, detailItineraire = null, setDetailItineraire = () => { } }) {
     const { colors, typography } = useTheme();
     const slideAnim = useRef(new Animated.Value(200)).current;
-    const [detailItineraire, setDetailItineraire] = useState(null);
 
     useEffect(() => {
         if (itineraires?.length > 0) {

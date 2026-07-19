@@ -173,7 +173,7 @@ function MapButtonFrost() {
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
     setSelectedItineraire, currentPosition, isNavigating,
-    canReport, onNavigateToPoi, miniMap = false, bottomInset = 0
+    canReport, onNavigateToPoi, miniMap = false, bottomInset = 0, hideControls = false
 }) {
     const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
     if (!MAPTILER_KEY) {
@@ -826,7 +826,7 @@ export default function MapComponent({
                 />
             )}
 
-            {!miniMap && currentPosition && (
+            {!miniMap && !hideControls && currentPosition && (
                 <TouchableOpacity
                     style={[styles.mapButton, styles.recenterButton, androidButtonBg, { bottom: 20 + bottomInset }]}
                     onPress={handleRecenter}
@@ -836,6 +836,7 @@ export default function MapComponent({
                 </TouchableOpacity>
             )}
 
+            {!hideControls && (
             <TouchableOpacity
                 style={[styles.mapButton, styles.layerButton, androidButtonBg, { bottom: 20 + bottomInset }]}
                 onPress={() => {
@@ -846,6 +847,7 @@ export default function MapComponent({
                 <MapButtonFrost />
                 <MaterialCommunityIcons name="layers-outline" size={26} color={colors.textMain} />
             </TouchableOpacity>
+            )}
 
             <Modal
                 visible={isLayerMenuVisible}
@@ -893,7 +895,7 @@ export default function MapComponent({
                 </TouchableOpacity>
             </Modal>
 
-            {!miniMap && (
+            {!miniMap && !hideControls && (
                 <TouchableOpacity
                     style={[styles.mapButton, styles.poiButton, androidButtonBg, { bottom: 80 + bottomInset }]}
                     onPress={() => {
@@ -963,7 +965,7 @@ export default function MapComponent({
                 </TouchableOpacity>
             </Modal>
 
-            {canReport && !miniMap && currentPosition && (
+            {canReport && !miniMap && !hideControls && currentPosition && (
                 <TouchableOpacity
                     style={[styles.mapButton, styles.reportButton, androidButtonBg, { bottom: 140 + bottomInset }]}
                     onPress={() => {

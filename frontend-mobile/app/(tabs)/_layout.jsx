@@ -8,8 +8,13 @@ import { useTheme } from '../../hooks/useTheme';
 function FloatingTabBar({ state, descriptors, navigation }) {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const focusedOptions = descriptors[state.routes[state.index]?.key]?.options;
+  const hidden = focusedOptions?.tabBarStyle?.display === 'none';
+
   const overMap = state.routes[state.index]?.name === 'index';
   const veilOpacity = Platform.OS === 'android' && overMap ? 0.55 : 0.22;
+
+  if (hidden) return null;
 
   return (
     <View style={[styles.wrap, { bottom: insets.bottom + 12 }]} pointerEvents="box-none">
