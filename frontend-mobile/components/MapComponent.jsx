@@ -823,6 +823,7 @@ export default function MapComponent({
                     canVote={!!token && activeAlert.report.user_id !== user?.id}
                     onVote={(isPresent) => handleVoteReport(activeAlert.report.id, isPresent)}
                     onDismiss={dismissAlert}
+                    bottomOffset={bottomInset}
                 />
             )}
 

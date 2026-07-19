@@ -254,7 +254,7 @@ export default function Index() {
 
             {isNavigating && (
                 <TouchableOpacity
-                    style={[styles.emergencyStop, { backgroundColor: colors.error, bottom: 40 + tabClear }]}
+                    style={[styles.emergencyStop, { backgroundColor: colors.error, bottom: 20 + tabClear }]}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => { });
                         handleStopNavigation();
