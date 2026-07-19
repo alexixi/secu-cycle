@@ -2,6 +2,10 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Modal, 
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { useTheme } from '../hooks/useTheme';
+import { useDragToDismiss } from '../hooks/useDragToDismiss';
+import { GrabHandle } from './ui/GrabHandle';
+import { GestureHandlerRootView, GestureDetector } from 'react-native-gesture-handler';
+import Reanimated from 'react-native-reanimated';
 import { VictoryArea, VictoryChart, VictoryAxis, VictoryTooltip, VictoryVoronoiContainer } from 'victory-native';
 
 const ROUTE_LABELS = {
@@ -12,19 +16,7 @@ const ROUTE_LABELS = {
 
 function DetailModal({ itineraire, visible, onClose, colors, typography }) {
     const screenWidth = Dimensions.get('window').width;
-    const screenHeight = Dimensions.get('window').height;
-    const slideAnim = useRef(new Animated.Value(screenHeight)).current;
-
-    useEffect(() => {
-        if (visible) {
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                useNativeDriver: true,
-                tension: 50,
-                friction: 7
-            }).start();
-        }
-    }, [visible]);
+    const { gesture, sheetStyle, close } = useDragToDismiss({ visible, onClose });
 
     const elevationData = useMemo(() => {
         if (!itineraire?.path) return [];
@@ -44,38 +36,30 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
     const minEle = elevationData.length > 0 ? Math.min(...elevationData.map(d => d.y)) : 0;
     const maxEle = elevationData.length > 0 ? Math.max(...elevationData.map(d => d.y)) : 0;
 
-    const handleClose = () => {
-        Animated.timing(slideAnim, {
-            toValue: screenHeight,
-            duration: 300,
-            useNativeDriver: true,
-        }).start(() => {
-            onClose();
-        });
-    };
-
     return (
         <Modal
             visible={visible}
             transparent
             animationType="fade"
-            onRequestClose={handleClose}
+            onRequestClose={close}
         >
+            <GestureHandlerRootView style={{ flex: 1 }}>
             <TouchableOpacity
                 style={styles.modalOverlay}
                 activeOpacity={1}
-                onPress={handleClose}
+                onPress={close}
             >
-                <Animated.View
+                <Reanimated.View
                     style={[
                         styles.modalContent,
-                        {
-                            backgroundColor: colors.bgSurface,
-                            transform: [{ translateY: slideAnim }]
-                        }
+                        { backgroundColor: colors.bgSurface },
+                        sheetStyle,
                     ]}
                 >
-                    <View style={styles.modalHeader}>
+                    <GestureDetector gesture={gesture}>
+                    <View>
+                        <GrabHandle />
+                        <View style={styles.modalHeader}>
                         <View style={styles.modalTitleRow}>
                             <View style={[styles.iconBadge, { backgroundColor: meta.color + '22' }]}>
                                 <MaterialCommunityIcons name={meta.icon} size={20} color={meta.color} />
@@ -84,10 +68,12 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                                 {meta.label}
                             </Text>
                         </View>
-                        <TouchableOpacity onPress={handleClose}>
+                        <TouchableOpacity onPress={close}>
                             <Ionicons name="close" size={26} color={colors.textSecondary} />
                         </TouchableOpacity>
+                        </View>
                     </View>
+                    </GestureDetector>
 
                     <View style={[styles.mainStatsRow, { borderColor: colors.borderLight }]}>
                         <View style={styles.mainStat}>
@@ -235,8 +221,9 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                             </View>
                         </View>
                     )}
-                </Animated.View>
+                </Reanimated.View>
             </TouchableOpacity>
+            </GestureHandlerRootView>
         </Modal >
     );
 }

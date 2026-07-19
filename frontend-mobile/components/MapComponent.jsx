@@ -6,8 +6,12 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { getReports, getPois, createReport, deleteReport, voteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import { useDragToDismiss } from '../hooks/useDragToDismiss';
 import useHazardAlerts from '../hooks/useHazardAlerts';
 import HazardAlert from './HazardAlert';
+import { GrabHandle } from './ui/GrabHandle';
+import { GestureHandlerRootView, GestureDetector } from 'react-native-gesture-handler';
+import Reanimated from 'react-native-reanimated';
 import { trackEvent } from '../services/analytics';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
@@ -540,17 +544,6 @@ export default function MapComponent({
     }, [isLayerMenuVisible]);
 
     useEffect(() => {
-        if (isReportMenuVisible) {
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                useNativeDriver: true,
-                tension: 50,
-                friction: 7
-            }).start();
-        }
-    }, [isReportMenuVisible]);
-
-    useEffect(() => {
         if (isPoiSheetVisible) {
             Animated.spring(slideAnim, {
                 toValue: 0,
@@ -572,8 +565,10 @@ export default function MapComponent({
     };
 
     const closeLayerMenu = () => closeMenu(setLayerMenuVisible);
-    const closeReportMenu = () => closeMenu(setIsReportMenuVisible);
     const closePoiSheet = () => closeMenu(setPoiSheetVisible);
+
+    const { gesture: reportGesture, sheetStyle: reportSheetStyle, close: closeReport } =
+        useDragToDismiss({ visible: isReportMenuVisible, onClose: () => setIsReportMenuVisible(false) });
 
     const handleNavigateToPoi = () => {
         if (!activePoi || !onNavigateToPoi) return;
@@ -627,7 +622,7 @@ export default function MapComponent({
             setReports(prev => [...prev, newReport]);
             setSelectedReportType(null);
             setReportDescription("");
-            closeReportMenu();
+            closeReport();
         } catch (error) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             console.error("Erreur signalement:", error);
@@ -972,27 +967,33 @@ export default function MapComponent({
                 visible={isReportMenuVisible}
                 animationType="fade"
                 transparent={true}
-                onRequestClose={closeReportMenu}
+                onRequestClose={closeReport}
             >
+                <GestureHandlerRootView style={{ flex: 1 }}>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.reportOverlay}>
 
                     <TouchableOpacity
                         style={StyleSheet.absoluteFill}
                         activeOpacity={1}
-                        onPress={closeReportMenu}
+                        onPress={closeReport}
                     />
 
-                    <Animated.View style={[styles.modalContainer, { backgroundColor: colors.bgSurface, transform: [{ translateY: slideAnim }] }]}>
+                    <Reanimated.View style={[styles.modalContainer, { backgroundColor: colors.bgSurface }, reportSheetStyle]}>
 
-                        <View style={styles.header}>
-                            <Text style={[typography.h1, { fontSize: 20, color: colors.textMain }]}>Signaler un incident</Text>
-                            <TouchableOpacity onPress={closeReportMenu}>
-                                <Ionicons name="close" size={28} color={colors.textMain} />
-                            </TouchableOpacity>
+                        <GestureDetector gesture={reportGesture}>
+                        <View>
+                            <GrabHandle />
+                            <View style={styles.header}>
+                                <Text style={[typography.h1, { fontSize: 20, color: colors.textMain }]}>Signaler un incident</Text>
+                                <TouchableOpacity onPress={closeReport}>
+                                    <Ionicons name="close" size={28} color={colors.textMain} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
+                        </GestureDetector>
 
                         <Text style={[typography.body, { color: colors.textSecondary, marginBottom: 15 }]}>
-                            Quel type d'incident rencontrez-vous ?
+                            {"Quel type d'incident rencontrez-vous ?"}
                         </Text>
 
                         <View style={styles.grid}>
@@ -1049,8 +1050,9 @@ export default function MapComponent({
                             </Text>
                         </TouchableOpacity>
 
-                    </Animated.View>
+                    </Reanimated.View>
                 </KeyboardAvoidingView>
+                </GestureHandlerRootView>
             </Modal>
 
             <Modal
