@@ -7,7 +7,7 @@ import { Button, OutlineButton } from "../components/ui/Button";
 import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
-import { changeProfileInfo } from "../services/apiBack";
+import { changePassword } from "../services/apiBack";
 import { ScreenHeader } from "../components/ui/ScreenHeader";
 import { SwipeBackScreen } from "../components/SwipeBackScreen";
 
@@ -45,10 +45,12 @@ export default function ChangePasswordPage() {
         setError(null);
 
         try {
-            await changeProfileInfo(token, null, null, null, null, newPassword, null);
+            await changePassword(token, oldPassword, newPassword);
             router.back();
         } catch (err) {
-            setError("Une erreur est survenue lors de la modification.");
+            setError(err?.status === 401
+                ? "Ancien mot de passe incorrect."
+                : "Une erreur est survenue lors de la modification.");
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
         } finally {
             setIsLoading(false);
