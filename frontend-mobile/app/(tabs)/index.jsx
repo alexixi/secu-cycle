@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text, Alert } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text, Alert, BackHandler } from 'react-native';
 import MapComponent from '../../components/MapComponent';
 import SearchContainer from '../../components/SearchContainer';
 import { calculateItineraries, completeRoute } from "../../services/apiBack";
@@ -8,7 +8,7 @@ import { useTheme } from '../../hooks/useTheme';
 import useGuidance from '../../hooks/useGuidance';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useFocusEffect } from 'expo-router';
 import { withAlpha } from '../../constants/theme';
 import GuidancePanel from '../../components/GuidancePanel';
 import ItineraryPanel from '../../components/ItineraryPanel';
@@ -197,6 +197,40 @@ export default function Index() {
         setDetailItineraire(null);
         setErrorPath(false);
     };
+
+    const backActionRef = useRef(null);
+    backActionRef.current = () => {
+        if (isNavigating) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => { });
+            handleStopNavigation();
+            return true;
+        }
+        if (hasResults) {
+            handleCloseResults();
+            return true;
+        }
+        if (endPoint) {
+            Haptics.selectionAsync().catch(() => { });
+            setEndPoint(null);
+            return true;
+        }
+        if (startPoint) {
+            Haptics.selectionAsync().catch(() => { });
+            setStartPoint(null);
+            return true;
+        }
+        return false;
+    };
+
+    useFocusEffect(
+        React.useCallback(() => {
+            const sub = BackHandler.addEventListener(
+                'hardwareBackPress',
+                () => backActionRef.current?.() ?? false,
+            );
+            return () => sub.remove();
+        }, []),
+    );
 
     return (
         <View style={styles.container}>

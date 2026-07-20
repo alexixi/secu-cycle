@@ -147,7 +147,7 @@ export default function SearchContainer({
             <View style={{ zIndex: 2, position: 'relative' }}>
               <AdressInput
                 placeholder="Départ"
-                defaultValue={start?.name}
+                defaultValue={start?.name ?? ''}
                 onSelect={onStartSelect}
                 icon={<MaterialCommunityIcons name="bike" size={20} color={colors.primary} />}
                 onFocusChange={(focused) => focused && setFocusedField('start')}
@@ -160,7 +160,7 @@ export default function SearchContainer({
             <View style={{ zIndex: 1, position: 'relative' }}>
               <AdressInput
                 placeholder="Destination"
-                defaultValue={end?.name}
+                defaultValue={end?.name ?? ''}
                 onSelect={(val) => {
                   Haptics.selectionAsync().catch(() => { });
                   onEndSelect(val);
