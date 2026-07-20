@@ -73,3 +73,22 @@ class ResetPasswordRequest(BaseModel):
     email: EmailStr
     code: str = Field(max_length=12)
     new_password: str = Field(min_length=10, max_length=PASSWORD_MAX)
+
+class EmailChangeRequest(BaseModel):
+    new_email: EmailStr
+    password: str = Field(max_length=PASSWORD_MAX)
+
+class EmailChangeConfirm(BaseModel):
+    code: str = Field(max_length=12)
+
+class EmailChangeRequested(BaseModel):
+    detail: str
+    pending_email: EmailStr
+
+class EmailChangeResult(BaseModel):
+    """Le changement d'adresse révoque les jetons existants : une paire fraîche
+    est renvoyée pour que l'appareil courant reste connecté."""
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    user: UserRead
