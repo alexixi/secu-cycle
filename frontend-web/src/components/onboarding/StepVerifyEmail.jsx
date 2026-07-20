@@ -1,10 +1,9 @@
 import Button from "../ui/Button";
+import CodeInput, { CODE_LENGTH } from "../ui/CodeInput";
 import { FaCheckCircle } from "react-icons/fa";
 import "../ui/Input.css";
 import "../ui/Form.css";
 import "./Onboarding.css";
-
-const CODE_LENGTH = 6;
 
 export default function StepVerifyEmail({
     email,
@@ -26,11 +25,6 @@ export default function StepVerifyEmail({
             ? `Renvoyer le code (${cooldown}s)`
             : "Renvoyer le code";
 
-    const handleChange = (e) => {
-        const digitsOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH);
-        setCode(digitsOnly);
-    };
-
     const handleSubmit = (e) => {
         e.preventDefault();
         onSubmit();
@@ -46,18 +40,7 @@ export default function StepVerifyEmail({
 
             <div className={`input-group ${error ? "input-error" : ""}`}>
                 <label htmlFor="code">Code de vérification</label>
-                <input
-                    className="input onboarding-code-input"
-                    type="text"
-                    inputMode="numeric"
-                    id="code"
-                    value={code}
-                    onChange={handleChange}
-                    maxLength={CODE_LENGTH}
-                    placeholder="––––––"
-                    autoComplete="one-time-code"
-                    autoFocus
-                />
+                <CodeInput value={code} onChange={setCode} autoFocus required={false} />
                 {error && <div className="error-text">{error}</div>}
             </div>
 

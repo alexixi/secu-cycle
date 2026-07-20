@@ -30,6 +30,28 @@ async function refreshAccessToken() {
     }
 }
 
+// Messages renvoyés par get_current_user quand c'est la SESSION qui est morte.
+// Les autres 401 sont métier (mot de passe erroné dans le corps de la requête)
+// et ne doivent surtout pas déclencher de déconnexion.
+const SESSION_INVALID_DETAILS = [
+    "Invalid token",
+    "Invalid token payload",
+    "Token révoqué",
+    "Compte suspendu.",
+];
+
+function isSessionInvalid(errorData) {
+    let detail = errorData;
+    try {
+        const parsed = JSON.parse(errorData)?.detail;
+        if (typeof parsed === "string") detail = parsed;
+    } catch {
+        // Corps non-JSON : on retombe sur le texte brut.
+    }
+    return typeof detail === "string"
+        && SESSION_INVALID_DETAILS.some((message) => detail.includes(message));
+}
+
 export async function apiFetch(url, options = {}, token = null, _retried = false) {
     const headers = {
         "Content-Type": "application/json",
@@ -50,7 +72,7 @@ export async function apiFetch(url, options = {}, token = null, _retried = false
     if (!response.ok) {
         const errorData = await response.text();
         const isAuthEndpoint = url.toString().includes("/login") || url.toString().includes("/refresh");
-        if (response.status === 401 && !isAuthEndpoint) {
+        if (response.status === 401 && !isAuthEndpoint && isSessionInvalid(errorData)) {
             if (!_retried) {
                 const newToken = await refreshAccessToken();
                 if (newToken) {
@@ -268,6 +290,31 @@ export async function changePassword(token, oldPassword, newPassword) {
     }
 }
 
+
+export async function requestEmailChange(token, newEmail, password) {
+    try {
+        const data = await apiFetch("/users/me/email", {
+            method: "POST",
+            body: JSON.stringify({ new_email: newEmail, password: password }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+// L'adresse cible n'est pas renvoyée : elle est scellée côté serveur avec le code.
+export async function confirmEmailChange(token, code) {
+    try {
+        const data = await apiFetch("/users/me/email/confirm", {
+            method: "POST",
+            body: JSON.stringify({ code: code }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
 
 export async function changeAddress(token, homeAddress, workAddress) {
     try {

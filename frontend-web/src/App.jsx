@@ -10,6 +10,7 @@ const ItinerairePage = lazy(() => import('./pages/ItinerairePage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ChangeEmailPage = lazy(() => import('./pages/ChangeEmailPage'));
 const ProfileCreationPage = lazy(() => import('./pages/ProfileCreationPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const ErrorPage = lazy(() => import('./pages/ErrorPage'));
@@ -50,6 +51,12 @@ function App() {
             <Route path="/profil" element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/profil/email" element={
+              <ProtectedRoute>
+                <ChangeEmailPage />
               </ProtectedRoute>
             } />
 

@@ -4,12 +4,11 @@ import { LuKeyRound } from "react-icons/lu";
 
 import Meta from "../components/Meta";
 import Button from "../components/ui/Button";
+import CodeInput, { CODE_LENGTH } from "../components/ui/CodeInput";
 import PasswordInput from "../components/ui/PasswordInput";
 import { forgotPassword, resetPassword } from "../services/apiBack";
 import "../components/ui/Input.css";
 import "../components/ui/Form.css";
-
-const CODE_LENGTH = 6;
 const MIN_PASSWORD_LENGTH = 10;
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -104,11 +103,6 @@ export default function ForgotPasswordPage() {
         }
     };
 
-    const handleCodeChange = (e) => {
-        setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH));
-        setResetError("");
-    };
-
     const resendDisabled = isResending || resendCooldown > 0;
     const resendLabel = isResending
         ? "Envoi…"
@@ -190,18 +184,9 @@ export default function ForgotPasswordPage() {
                             <div className="input-container">
                                 <div className={"input-group" + (resetError ? " input-error" : "")}>
                                     <label htmlFor="code">Code de réinitialisation</label>
-                                    <input
-                                        className="input"
-                                        type="text"
-                                        inputMode="numeric"
-                                        id="code"
-                                        name="code"
+                                    <CodeInput
                                         value={code}
-                                        onChange={handleCodeChange}
-                                        placeholder="––––––"
-                                        maxLength={CODE_LENGTH}
-                                        autoComplete="one-time-code"
-                                        required
+                                        onChange={(v) => { setCode(v); setResetError(""); }}
                                     />
                                 </div>
 

@@ -112,6 +112,12 @@ export default function SettingsPage() {
                                 colors={colors}
                             />
                             <LinkRow
+                                icon="mail-outline"
+                                label="Modifier mon adresse mail"
+                                onPress={() => router.push('/editemail')}
+                                colors={colors}
+                            />
+                            <LinkRow
                                 icon="lock-closed-outline"
                                 label="Changer le mot de passe"
                                 onPress={() => router.push('/editpassword')}
