@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Modal, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Pressable, StyleSheet, Animated, Modal, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useRef, useEffect, useMemo } from 'react';
 import { useTheme } from '../hooks/useTheme';
@@ -45,11 +45,9 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
             onRequestClose={close}
         >
             <GestureHandlerRootView style={{ flex: 1 }}>
-            <TouchableOpacity
-                style={styles.modalOverlay}
-                activeOpacity={1}
-                onPress={close}
-            >
+            <View style={styles.modalOverlay}>
+                <Pressable style={StyleSheet.absoluteFill} onPress={close} />
+
                 <Reanimated.View
                     style={[
                         styles.modalContent,
@@ -223,7 +221,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                         </View>
                     )}
                 </Reanimated.View>
-            </TouchableOpacity>
+            </View>
             </GestureHandlerRootView>
         </Modal >
     );
