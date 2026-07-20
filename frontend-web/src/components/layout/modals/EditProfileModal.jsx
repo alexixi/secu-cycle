@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import Button from "../../ui/Button";
-import IconButton from "../../ui/IconButton";
-import { FaUserEdit, FaPen } from "react-icons/fa";
+import { FaUserEdit, FaEnvelope, FaLock, FaChevronRight } from "react-icons/fa";
 import EditPasswordModal from "./EditPasswordModal"
 import { changePassword } from "../../../services/apiBack";
 
@@ -12,12 +12,12 @@ import "../../ui/Form.css"
 
 export default function EditProfileModal({ isOpen, hasError, onClose, userData, onConfirm }) {
     const { token } = useAuth();
+    const navigate = useNavigate();
     const [passwordError, setPasswordError] = useState(false);
     const [generalError, setGeneralError] = useState(false);
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
-        email: "",
         birthDate: "",
         level: "intermediaire",
     });
@@ -124,18 +124,6 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                         </div>
 
                         <div className="input-group">
-                            <label htmlFor="email">Adresse mail</label>
-                            <input
-                                className="input"
-                                type="email"
-                                name="email"
-                                id="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="input-group">
                             <label htmlFor="birthDate">Date de naissance</label>
                             <input
                                 className="input"
@@ -164,7 +152,35 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
 
                     </div>
 
-                    <IconButton type="button" className="button-change-password" onClick={() => setIsModalOpenPassword(true)} >Modifier le mot de passe <FaPen size={13} /></IconButton>
+                    <div className="modal-secondary-actions">
+                        {/* La modale doit se fermer avant la navigation, sinon
+                            l'overlay persiste par-dessus la nouvelle page. */}
+                        <button
+                            type="button"
+                            className="secondary-action-card"
+                            onClick={() => { onClose(); navigate("/profil/email"); }}
+                        >
+                            <FaEnvelope className="secondary-action-icon" size={18} />
+                            <span className="secondary-action-text">
+                                <strong>Adresse mail</strong>
+                                <small>{userData?.email || "Non renseignée"}</small>
+                            </span>
+                            <FaChevronRight className="secondary-action-chevron" size={13} />
+                        </button>
+
+                        <button
+                            type="button"
+                            className="secondary-action-card"
+                            onClick={() => setIsModalOpenPassword(true)}
+                        >
+                            <FaLock className="secondary-action-icon" size={18} />
+                            <span className="secondary-action-text">
+                                <strong>Mot de passe</strong>
+                                <small>Modifier votre mot de passe</small>
+                            </span>
+                            <FaChevronRight className="secondary-action-chevron" size={13} />
+                        </button>
+                    </div>
 
                     <div className="modal-actions">
                         <Button type="button" onClick={onClose}>Annuler</Button>

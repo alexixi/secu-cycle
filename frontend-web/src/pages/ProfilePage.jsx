@@ -152,23 +152,16 @@ export default function ProfilePage() {
 
   const handleSubmitInfo = async (updatedData) => {
     try {
-      await changeProfileInfo(
+      const updated = await changeProfileInfo(
         token,
         updatedData.firstName,
         updatedData.lastName,
-        updatedData.email,
+        null,
         updatedData.birthDate,
         updatedData.level
       );
 
-      updateUser({
-        ...user,
-        first_name: updatedData.firstName,
-        last_name: updatedData.lastName,
-        email: updatedData.email,
-        birth_date: updatedData.birthDate,
-        sport_level: updatedData.level
-      });
+      updateUser({ ...user, ...updated });
 
       setIsModalOpenInfo(false);
       setHasError(false);

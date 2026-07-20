@@ -86,15 +86,49 @@ export async function getUserProfile(token) {
     return userProfile;
 }
 
-export async function changeProfileInfo(token, firstName, lastName, email, birthDate, password, level) {
+// `email` est ignoré : le changement d'adresse passe par requestEmailChange.
+export async function changeProfileInfo(token, firstName, lastName, email, birthDate, level) {
     await new Promise(resolve => setTimeout(resolve, 250));
     userProfile = JSON.parse(localStorage.getItem("user")) || userProfile;
     userProfile.first_name = firstName;
     userProfile.last_name = lastName;
     userProfile.birth_date = birthDate;
-    userProfile.email = email;
     userProfile.sport_level = level;
     localStorage.setItem("user", JSON.stringify(userProfile));
+    return userProfile;
+}
+
+let pendingEmailChange = null;
+
+export async function requestEmailChange(token, newEmail, password) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    if (newEmail === "taken@example.com") {
+        const error = new Error("Adresse déjà utilisée");
+        error.status = 409;
+        throw error;
+    }
+    pendingEmailChange = newEmail;
+    console.log("[mock] code de confirmation : 123456");
+    return { detail: "Code envoyé.", pending_email: newEmail };
+}
+
+export async function confirmEmailChange(token, code) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    if (code !== "123456") {
+        const error = new Error("Code invalide ou expiré.");
+        error.status = 400;
+        throw error;
+    }
+    userProfile = JSON.parse(localStorage.getItem("user")) || userProfile;
+    userProfile.email = pendingEmailChange;
+    localStorage.setItem("user", JSON.stringify(userProfile));
+    pendingEmailChange = null;
+    return {
+        access_token: "mock-access-token",
+        refresh_token: "mock-refresh-token",
+        token_type: "bearer",
+        user: userProfile,
+    };
 }
 
 export async function changePassword(token, oldPassword, newPassword) {
