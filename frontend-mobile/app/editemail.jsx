@@ -210,6 +210,7 @@ export default function EditEmailPage() {
                                         setEmailError={setEmailError}
                                         hasError={hasError}
                                         setHasError={setHasError}
+                                        textContentType="emailAddress"
                                     />
                                     {isSameAsCurrent && newEmail.length > 0 && (
                                         <Text style={[styles.hint, { color: colors.textSecondary }]}>
@@ -227,6 +228,7 @@ export default function EditEmailPage() {
                                         setPassword={(v) => { setPassword(v); setError(null); }}
                                         hasError={hasError}
                                         setHasError={setHasError}
+                                        autoComplete="current-password"
                                     />
                                     <Text style={[styles.hint, { color: colors.textSecondary }]}>
                                         Demandé pour confirmer que c&apos;est bien vous.

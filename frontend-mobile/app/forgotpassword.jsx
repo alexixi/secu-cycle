@@ -197,6 +197,7 @@ export default function ForgotPassword() {
                                 setPassword={setPassword}
                                 hasError={!!resetError}
                                 setHasError={() => setResetError(null)}
+                                autoComplete="new-password"
                             />
                             <Text style={[styles.hint, { color: colors.textSecondary }]}>
                                 Au moins {MIN_PASSWORD_LENGTH} caractères.
@@ -210,6 +211,7 @@ export default function ForgotPassword() {
                                 setPassword={setPassword2}
                                 hasError={!!resetError || (password2.length > 0 && password2 !== password)}
                                 setHasError={() => setResetError(null)}
+                                autoComplete="new-password"
                             />
                         </View>
 

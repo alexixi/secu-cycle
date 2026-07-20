@@ -60,6 +60,7 @@ export default function StepCredentials({
                     setPassword={setPassword}
                     hasError={passwordMismatch || passwordTooShort}
                     setHasError={() => setPasswordMismatch(false)}
+                    autoComplete="new-password"
                 />
                 <Text style={[styles.hintText, { color: colors.textSecondary }]}>Au moins {MIN_PASSWORD_LENGTH} caractères.</Text>
                 {passwordTooShort && (
@@ -76,6 +77,7 @@ export default function StepCredentials({
                     setPassword={setPassword2}
                     hasError={passwordMismatch}
                     setHasError={() => setPasswordMismatch(false)}
+                    autoComplete="new-password"
                 />
                 {passwordMismatch && (
                     <Text style={[styles.errorText, { color: colors.error, marginTop: 5 }]}>
