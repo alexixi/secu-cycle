@@ -9,7 +9,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../hooks/useTheme';
 import { getUserHistoric, deleteHistoricEntry, getBadges } from '../../services/apiBack';
 
-// Un compteur de distance est fractionnaire, un compteur de trajets ne l'est pas.
 const formatProgress = (value, criteria) =>
     criteria === 'total_distance_km' ? Number(value).toFixed(1) : Math.round(value);
 
@@ -54,7 +53,6 @@ export default function ProfilePage() {
     }, [token]);
 
     useEffect(() => {
-        // /badges/ exige un token : sans lui on coupe le spinner au lieu de le laisser tourner.
         if (!token) {
             setBadgesLoading(false);
             return;
@@ -72,10 +70,7 @@ export default function ProfilePage() {
         loadBadges();
     }, [token]);
 
-    // L'historique liste toutes les entrées, y compris les itinéraires seulement calculés.
     const trajets = userHistoric.filter(e => e.route);
-    // Les stats ne comptent que les trajets réellement parcourus : une recherche persiste
-    // 2 à 3 variantes (rapide / sécurisé / compromis) dont une seule est complétée.
     const trajetsTermines = trajets.filter(e => e.route.completed_at);
     const totalTrajets = trajetsTermines.length;
     const totalDist = trajetsTermines.reduce((s, e) => s + (e.route.distance_km || 0), 0);
@@ -98,6 +93,16 @@ export default function ProfilePage() {
     if (!user) {
         return (
             <View style={[styles.container, { backgroundColor: colors.bgMain, justifyContent: 'center' }]}>
+                <TouchableOpacity
+                    style={[styles.settingsButton, { top: insets.top + 10 }]}
+                    onPress={() => router.push("/settings")}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Paramètres"
+                >
+                    <Ionicons name="settings-outline" size={26} color={colors.textMain} />
+                </TouchableOpacity>
+
                 <Ionicons name="person-circle-outline" size={100} color={colors.textSecondary} />
 
                 <Text style={[typography.h1, { color: colors.textMain, marginTop: 20, textAlign: 'center' }]}>
@@ -131,6 +136,16 @@ export default function ProfilePage() {
             contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 86 }]}
         >
             <View style={styles.container}>
+                <TouchableOpacity
+                    style={[styles.settingsButton, { top: insets.top + 10 }]}
+                    onPress={() => router.push("/settings")}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Paramètres"
+                >
+                    <Ionicons name="settings-outline" size={26} color={colors.textMain} />
+                </TouchableOpacity>
+
                 <View style={styles.header}>
                     <Ionicons name="person-circle" size={100} color={colors.primary} />
                     {user.first_name || user.last_name ? (
@@ -339,7 +354,7 @@ export default function ProfilePage() {
 
                     <View style={styles.sectionContent}>
                         {trajets && trajets.length > 0 ? (
-                            trajets.slice(0, 5).map((item) => (
+                            trajets.slice(0, 3).map((item) => (
                                 <TouchableOpacity
                                     key={item.id}
                                     style={[styles.historyItem, { borderBottomColor: colors.borderLight }]}
@@ -378,15 +393,31 @@ export default function ProfilePage() {
                             </View>
                         )}
                     </View>
+
+                    {trajets.length > 3 && (
+                        <TouchableOpacity
+                            style={styles.seeMoreButton}
+                            onPress={() => router.push("/historic")}
+                            accessibilityRole="button"
+                        >
+                            <Text style={[styles.seeMoreText, { color: colors.primary }]}>Voir plus</Text>
+                            <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+                        </TouchableOpacity>
+                    )}
                 </View>
 
-                <View style={styles.buttonsContainer}>
-                    <OutlineButton
-                        title="Modifier mon profil"
-                        iconName="create-outline"
-                        onPress={() => router.push("/editprofil")}
-                    />
+                <TouchableOpacity
+                    style={[styles.section, styles.settingsRow, { backgroundColor: colors.bgSurface }]}
+                    onPress={() => router.push("/settings")}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
+                        <Ionicons name="settings-outline" size={24} color={colors.textMain} />
+                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Paramètres</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                </TouchableOpacity>
 
+                <View style={styles.buttonsContainer}>
                     <DangerButton
                         title="Se déconnecter"
                         iconName="log-out-outline"
@@ -442,6 +473,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 15,
         gap: 10,
+    },
+    settingsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    settingsButton: {
+        position: 'absolute',
+        right: 20,
+        zIndex: 10,
+        padding: 5,
     },
     sectionTitle: {
         fontSize: 20,
@@ -500,6 +542,18 @@ const styles = StyleSheet.create({
         fontSize: 11,
         textAlign: 'center',
         marginTop: 2,
+    },
+    seeMoreButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+        paddingVertical: 12,
+        marginTop: 8,
+    },
+    seeMoreText: {
+        fontSize: 14,
+        fontWeight: '600',
     },
     historyItem: {
         flexDirection: 'row',

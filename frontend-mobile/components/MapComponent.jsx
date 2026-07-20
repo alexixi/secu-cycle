@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useMemo, use } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch, useColorScheme } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
@@ -181,13 +181,12 @@ export default function MapComponent({
         console.warn("⚠️ EXPO_PUBLIC_MAPTILER_KEY n'est pas défini ! Assurez-vous de l'avoir dans votre .env");
     }
 
-    const { colors, typography } = useTheme();
+    const { colors, typography, isDark } = useTheme();
 
     const androidButtonBg = Platform.OS === 'android'
         ? { backgroundColor: withAlpha(colors.bgSurface, 0.9) }
         : null;
     const { token, user } = useAuth();
-    const systemColorScheme = useColorScheme();
 
     const MAP_STYLES = [
         { id: "base", lightId: "base-v4", darkId: "base-v4-dark", label: "Basic", icon: "🍃" },
@@ -230,11 +229,11 @@ export default function MapComponent({
     const navigationStartTimeRef = useRef(null);
 
     const mapStyleUrl = useMemo(() => {
-        const resolvedTheme = mapThemeMode === "auto" ? (systemColorScheme || "light") : mapThemeMode;
+        const resolvedTheme = mapThemeMode === "auto" ? (isDark ? "dark" : "light") : mapThemeMode;
         const styleConfig = MAP_STYLES.find(s => s.id === activeBaseStyle) || MAP_STYLES[0];
         const styleIdToUse = resolvedTheme === "dark" ? styleConfig.darkId : styleConfig.lightId;
         return `https://api.maptiler.com/maps/${styleIdToUse}/style.json?key=${MAPTILER_KEY}`;
-    }, [activeBaseStyle, mapThemeMode, systemColorScheme, MAPTILER_KEY]);
+    }, [activeBaseStyle, mapThemeMode, isDark, MAPTILER_KEY]);
 
     useEffect(() => {
         isNavigatingRef.current = isNavigating;

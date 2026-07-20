@@ -152,14 +152,6 @@ export default function EditProfilePage() {
                     </View>
                 </View>
 
-                <View style={{ marginVertical: 20 }}>
-                    <OutlineButton
-                        title="Changer le mot de passe"
-                        iconName="lock-closed-outline"
-                        onPress={() => router.push("/editpassword")}
-                    />
-                </View>
-
                 <View style={styles.buttonWrapper}>
                     <Button
                         title="Enregistrer les modifications"
