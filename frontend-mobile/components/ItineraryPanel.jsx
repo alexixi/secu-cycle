@@ -1,7 +1,12 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Modal, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Pressable, StyleSheet, Animated, Modal, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { useTheme } from '../hooks/useTheme';
+import { withAlpha } from '../constants/theme';
+import { useDragToDismiss } from '../hooks/useDragToDismiss';
+import { GrabHandle } from './ui/GrabHandle';
+import { GestureHandlerRootView, GestureDetector } from 'react-native-gesture-handler';
+import Reanimated from 'react-native-reanimated';
 import { VictoryArea, VictoryChart, VictoryAxis, VictoryTooltip, VictoryVoronoiContainer } from 'victory-native';
 
 const ROUTE_LABELS = {
@@ -12,19 +17,7 @@ const ROUTE_LABELS = {
 
 function DetailModal({ itineraire, visible, onClose, colors, typography }) {
     const screenWidth = Dimensions.get('window').width;
-    const screenHeight = Dimensions.get('window').height;
-    const slideAnim = useRef(new Animated.Value(screenHeight)).current;
-
-    useEffect(() => {
-        if (visible) {
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                useNativeDriver: true,
-                tension: 50,
-                friction: 7
-            }).start();
-        }
-    }, [visible]);
+    const { gesture, sheetStyle, close } = useDragToDismiss({ visible, onClose });
 
     const elevationData = useMemo(() => {
         if (!itineraire?.path) return [];
@@ -44,38 +37,28 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
     const minEle = elevationData.length > 0 ? Math.min(...elevationData.map(d => d.y)) : 0;
     const maxEle = elevationData.length > 0 ? Math.max(...elevationData.map(d => d.y)) : 0;
 
-    const handleClose = () => {
-        Animated.timing(slideAnim, {
-            toValue: screenHeight,
-            duration: 300,
-            useNativeDriver: true,
-        }).start(() => {
-            onClose();
-        });
-    };
-
     return (
         <Modal
             visible={visible}
             transparent
             animationType="fade"
-            onRequestClose={handleClose}
+            onRequestClose={close}
         >
-            <TouchableOpacity
-                style={styles.modalOverlay}
-                activeOpacity={1}
-                onPress={handleClose}
-            >
-                <Animated.View
+            <GestureHandlerRootView style={{ flex: 1 }}>
+            <View style={styles.modalOverlay}>
+                <Pressable style={StyleSheet.absoluteFill} onPress={close} />
+
+                <Reanimated.View
                     style={[
                         styles.modalContent,
-                        {
-                            backgroundColor: colors.bgSurface,
-                            transform: [{ translateY: slideAnim }]
-                        }
+                        { backgroundColor: colors.bgSurface },
+                        sheetStyle,
                     ]}
                 >
-                    <View style={styles.modalHeader}>
+                    <GestureDetector gesture={gesture}>
+                    <View>
+                        <GrabHandle />
+                        <View style={styles.modalHeader}>
                         <View style={styles.modalTitleRow}>
                             <View style={[styles.iconBadge, { backgroundColor: meta.color + '22' }]}>
                                 <MaterialCommunityIcons name={meta.icon} size={20} color={meta.color} />
@@ -84,10 +67,12 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                                 {meta.label}
                             </Text>
                         </View>
-                        <TouchableOpacity onPress={handleClose}>
+                        <TouchableOpacity onPress={close}>
                             <Ionicons name="close" size={26} color={colors.textSecondary} />
                         </TouchableOpacity>
+                        </View>
                     </View>
+                    </GestureDetector>
 
                     <View style={[styles.mainStatsRow, { borderColor: colors.borderLight }]}>
                         <View style={styles.mainStat}>
@@ -235,16 +220,16 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                             </View>
                         </View>
                     )}
-                </Animated.View>
-            </TouchableOpacity>
+                </Reanimated.View>
+            </View>
+            </GestureHandlerRootView>
         </Modal >
     );
 }
 
-export default function ItineraryPanel({ itineraires, selectedItineraire, setSelectedItineraire }) {
+export default function ItineraryPanel({ itineraires, selectedItineraire, setSelectedItineraire, bottomOffset = 0, detailItineraire = null, setDetailItineraire = () => { } }) {
     const { colors, typography } = useTheme();
     const slideAnim = useRef(new Animated.Value(200)).current;
-    const [detailItineraire, setDetailItineraire] = useState(null);
 
     useEffect(() => {
         if (itineraires?.length > 0) {
@@ -267,7 +252,7 @@ export default function ItineraryPanel({ itineraires, selectedItineraire, setSel
 
     return (
         <>
-            <Animated.View style={[styles.container, { transform: [{ translateY: slideAnim }] }]}>
+            <Animated.View style={[styles.container, { bottom: 90 + bottomOffset, transform: [{ translateY: slideAnim }] }]}>
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -282,8 +267,8 @@ export default function ItineraryPanel({ itineraires, selectedItineraire, setSel
                                 key={it.id}
                                 style={[
                                     styles.card,
-                                    { backgroundColor: colors.bgSurface, borderColor: colors.borderLight },
-                                    isSelected && { borderColor: meta.color, backgroundColor: colors.bgMain }
+                                    { backgroundColor: withAlpha(colors.bgSurface, 0.92), borderColor: colors.borderLight },
+                                    isSelected && { borderColor: meta.color, backgroundColor: withAlpha(colors.bgMain, 0.92) }
                                 ]}
                                 onPress={() => setSelectedItineraire(it.id)}
                                 activeOpacity={0.8}
@@ -363,7 +348,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
-        elevation: 5,
     },
     cardHeader: {
         flexDirection: 'row',

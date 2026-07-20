@@ -1,26 +1,72 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
 
-export default function TabLayout() {
-  const { colors } = useTheme();
+function FloatingTabBar({ state, descriptors, navigation }) {
+  const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+  const focusedOptions = descriptors[state.routes[state.index]?.key]?.options;
+  const hidden = focusedOptions?.tabBarStyle?.display === 'none';
+
+  const overMap = state.routes[state.index]?.name === 'index';
+  const veilOpacity = Platform.OS === 'android' && overMap ? 0.55 : 0.22;
+
+  if (hidden) return null;
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: colors.bgSurface,
-          borderTopColor: colors.borderLight,
-          height: 90,
-          paddingTop: 10,
-          paddingBottom: 10,
-        },
-      }}
-    >
+    <View style={[styles.wrap, { bottom: insets.bottom + 12 }]} pointerEvents="box-none">
+      <View style={styles.shadow}>
+        <View style={[styles.pill, { borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)' }]}>
+          <BlurView
+            intensity={40}
+            tint={isDark ? 'dark' : 'light'}
+            experimentalBlurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bgSurface, opacity: veilOpacity }]} />
 
+          <View style={styles.row}>
+          {state.routes.map((route, index) => {
+            const { options } = descriptors[route.key];
+            const label = options.title ?? route.name;
+            const isFocused = state.index === index;
+            const color = isFocused ? colors.primary : colors.textSecondary;
+
+            const onPress = () => {
+              const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+              if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
+            };
+
+            return (
+              <TouchableOpacity
+                key={route.key}
+                onPress={onPress}
+                style={styles.item}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : {}}
+              >
+                {options.tabBarIcon?.({ color, size: 24, focused: isFocused })}
+                <Text style={[styles.label, { color }]}>{label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+export default function TabLayout() {
+  return (
+    <Tabs
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <FloatingTabBar {...props} />}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -39,3 +85,43 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  shadow: {
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  pill: {
+    borderRadius: 30,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    height: 60,
+    paddingHorizontal: 16,
+  },
+  item: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+    paddingVertical: 8,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+});

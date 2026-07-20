@@ -4,6 +4,7 @@ import { searchAddressAutocomplete } from '../../services/geocodingService';
 import { isCovered } from '../../services/apiBack';
 import { trackEvent } from '../../services/analytics';
 import { useTheme } from '../../hooks/useTheme';
+import { withAlpha } from '../../constants/theme';
 
 export default function AdressInput({ placeholder, onSelect, icon, defaultValue, variant = 'search', zIndex = 1000, onFocusChange, checkCoverage = false }) {
   const [query, setQuery] = useState(defaultValue || "");
@@ -67,7 +68,7 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
       { zIndex: zIndex },
       isForm && [styles.formContainer, {
         borderColor: colors.borderStrong,
-        backgroundColor: colors.bgSurface,
+        backgroundColor: withAlpha(colors.bgSurface, 0.92),
       }]
     ]}>
       <View style={styles.inputRow}>
@@ -109,7 +110,7 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
 
       {showList && suggestions.length > 0 && (
         <View style={[styles.suggestionList, {
-          backgroundColor: colors.bgSurface,
+          backgroundColor: withAlpha(colors.bgSurface, 0.92),
           borderColor: colors.borderStrong,
           shadowColor: colors.textMain
         }]}>

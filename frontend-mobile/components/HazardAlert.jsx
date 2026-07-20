@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+    runOnJS,
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withTiming,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 const REPORT_META = {
@@ -10,7 +18,7 @@ const REPORT_META = {
     obstacle: { icon: '🪨', label: 'Obstacle' },
 };
 
-export default function HazardAlert({ report, distance, canVote, onVote, onDismiss }) {
+export default function HazardAlert({ report, distance, canVote, onVote, onDismiss, bottomOffset = 0 }) {
     const [busy, setBusy] = useState(false);
     const [voted, setVoted] = useState(false);
     const [counts, setCounts] = useState({
@@ -19,6 +27,32 @@ export default function HazardAlert({ report, distance, canVote, onVote, onDismi
     });
 
     const meta = REPORT_META[report.report_type] || { icon: '⚠️', label: 'Danger' };
+
+    const { width } = useWindowDimensions();
+    const translateX = useSharedValue(0);
+
+    const swipe = Gesture.Pan()
+        .activeOffsetX([-20, 20])
+        .failOffsetY([-15, 15])
+        .onUpdate((e) => {
+            translateX.value = e.translationX;
+        })
+        .onEnd((e) => {
+            const threshold = Math.min(120, width * 0.3);
+            if (Math.abs(e.translationX) > threshold || Math.abs(e.velocityX) > 800) {
+                const target = e.translationX > 0 ? width : -width;
+                translateX.value = withTiming(target, { duration: 180 }, (finished) => {
+                    if (finished) runOnJS(onDismiss)();
+                });
+            } else {
+                translateX.value = withSpring(0, { damping: 22, stiffness: 220 });
+            }
+        });
+
+    const swipeStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: translateX.value }],
+        opacity: 1 - Math.min(Math.abs(translateX.value) / width, 1),
+    }));
 
     const handleVote = async (isPresent) => {
         if (busy || voted) return;
@@ -39,7 +73,8 @@ export default function HazardAlert({ report, distance, canVote, onVote, onDismi
     };
 
     return (
-        <View style={styles.container}>
+        <GestureDetector gesture={swipe}>
+        <Animated.View style={[styles.container, { bottom: 80 + bottomOffset }, swipeStyle]}>
             <View style={styles.row}>
                 <Text style={styles.icon}>{meta.icon}</Text>
                 <View style={{ flex: 1 }}>
@@ -73,7 +108,8 @@ export default function HazardAlert({ report, distance, canVote, onVote, onDismi
                     </TouchableOpacity>
                 </View>
             ) : null}
-        </View>
+        </Animated.View>
+        </GestureDetector>
     );
 }
 

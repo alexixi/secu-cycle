@@ -15,6 +15,7 @@ import StepAddresses from "../components/onboarding/StepAddresses";
 import StepBikes from "../components/onboarding/StepBikes";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
+import { SwipeBackScreen } from "../components/SwipeBackScreen";
 import {
     addBike,
     changeAddress,
@@ -376,6 +377,7 @@ export default function OnboardingScreen() {
     };
 
     return (
+        <SwipeBackScreen background={colors.bgMain}>
         <KeyboardAwareScrollView
             style={[styles.container, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContainer}
@@ -385,13 +387,14 @@ export default function OnboardingScreen() {
             keyboardShouldPersistTaps="handled"
         >
             <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                <Ionicons name="arrow-back" size={28} color={colors.textMain} />
+                <Ionicons name="chevron-back" size={28} color={colors.textMain} />
             </TouchableOpacity>
 
             <OnboardingProgress current={step} total={TOTAL_STEPS} />
 
             {renderStep()}
         </KeyboardAwareScrollView>
+        </SwipeBackScreen>
     );
 }
 

@@ -1,13 +1,19 @@
 import { useRef, useState, useEffect, useMemo, use } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch, useColorScheme } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { getReports, getPois, createReport, deleteReport, voteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import { withAlpha } from '../constants/theme';
+import { useDragToDismiss } from '../hooks/useDragToDismiss';
 import useHazardAlerts from '../hooks/useHazardAlerts';
 import HazardAlert from './HazardAlert';
+import { GrabHandle } from './ui/GrabHandle';
+import { GestureHandlerRootView, GestureDetector } from 'react-native-gesture-handler';
+import Reanimated from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 import { trackEvent } from '../services/analytics';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
@@ -153,19 +159,34 @@ const formatPoiTag = (value) => {
 
 const EMPTY_FEATURE_COLLECTION = { type: 'FeatureCollection', features: [] };
 
+function MapButtonFrost() {
+    const { colors, isDark } = useTheme();
+    if (Platform.OS !== 'ios') return null;
+    return (
+        <View style={styles.mapButtonFrost}>
+            <BlurView intensity={40} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bgSurface, opacity: 0.22 }]} />
+        </View>
+    );
+}
+
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
     setSelectedItineraire, currentPosition, isNavigating,
-    canReport, onNavigateToPoi, miniMap = false
+    canReport, onNavigateToPoi, miniMap = false, bottomInset = 0, hideControls = false,
+    cameraPadding = { top: 200, right: 80, bottom: 200, left: 80 }
 }) {
     const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
     if (!MAPTILER_KEY) {
         console.warn("⚠️ EXPO_PUBLIC_MAPTILER_KEY n'est pas défini ! Assurez-vous de l'avoir dans votre .env");
     }
 
-    const { colors, typography } = useTheme();
+    const { colors, typography, isDark } = useTheme();
+
+    const androidButtonBg = Platform.OS === 'android'
+        ? { backgroundColor: withAlpha(colors.bgSurface, 0.9) }
+        : null;
     const { token, user } = useAuth();
-    const systemColorScheme = useColorScheme();
 
     const MAP_STYLES = [
         { id: "base", lightId: "base-v4", darkId: "base-v4-dark", label: "Basic", icon: "🍃" },
@@ -208,11 +229,11 @@ export default function MapComponent({
     const navigationStartTimeRef = useRef(null);
 
     const mapStyleUrl = useMemo(() => {
-        const resolvedTheme = mapThemeMode === "auto" ? (systemColorScheme || "light") : mapThemeMode;
+        const resolvedTheme = mapThemeMode === "auto" ? (isDark ? "dark" : "light") : mapThemeMode;
         const styleConfig = MAP_STYLES.find(s => s.id === activeBaseStyle) || MAP_STYLES[0];
         const styleIdToUse = resolvedTheme === "dark" ? styleConfig.darkId : styleConfig.lightId;
         return `https://api.maptiler.com/maps/${styleIdToUse}/style.json?key=${MAPTILER_KEY}`;
-    }, [activeBaseStyle, mapThemeMode, systemColorScheme, MAPTILER_KEY]);
+    }, [activeBaseStyle, mapThemeMode, isDark, MAPTILER_KEY]);
 
     useEffect(() => {
         isNavigatingRef.current = isNavigating;
@@ -482,7 +503,7 @@ export default function MapComponent({
                     Math.max(...lons),
                     Math.max(...lats),
                 ],
-                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : { top: 200, right: 80, bottom: (!itineraires ? 0 : 200), left: 80 },
+                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : cameraPadding,
                 duration: 1000,
                 easing: "fly",
                 pitch: 0,
@@ -499,7 +520,7 @@ export default function MapComponent({
             };
         }
         return {};
-    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger, mapHeight, hasCenteredOnce]);
+    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger, mapHeight, hasCenteredOnce, cameraPadding]);
 
     const onRoutePress = (event) => {
         Haptics.selectionAsync().catch(() => { });
@@ -540,17 +561,6 @@ export default function MapComponent({
     }, [isLayerMenuVisible]);
 
     useEffect(() => {
-        if (isReportMenuVisible) {
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                useNativeDriver: true,
-                tension: 50,
-                friction: 7
-            }).start();
-        }
-    }, [isReportMenuVisible]);
-
-    useEffect(() => {
         if (isPoiSheetVisible) {
             Animated.spring(slideAnim, {
                 toValue: 0,
@@ -572,8 +582,10 @@ export default function MapComponent({
     };
 
     const closeLayerMenu = () => closeMenu(setLayerMenuVisible);
-    const closeReportMenu = () => closeMenu(setIsReportMenuVisible);
     const closePoiSheet = () => closeMenu(setPoiSheetVisible);
+
+    const { gesture: reportGesture, sheetStyle: reportSheetStyle, close: closeReport } =
+        useDragToDismiss({ visible: isReportMenuVisible, onClose: () => setIsReportMenuVisible(false) });
 
     const handleNavigateToPoi = () => {
         if (!activePoi || !onNavigateToPoi) return;
@@ -627,7 +639,7 @@ export default function MapComponent({
             setReports(prev => [...prev, newReport]);
             setSelectedReportType(null);
             setReportDescription("");
-            closeReportMenu();
+            closeReport();
         } catch (error) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             console.error("Erreur signalement:", error);
@@ -643,7 +655,7 @@ export default function MapComponent({
                 attribution={true}
                 attributionPosition={{ bottom: 5, right: 5 }}
                 compass={!miniMap}
-                compassPosition={{ bottom: 80, right: 20 }}
+                compassPosition={{ bottom: 80 + bottomInset, right: 20 }}
                 compassHiddenFacingNorth={false}
             >
                 <Camera
@@ -811,27 +823,32 @@ export default function MapComponent({
                     canVote={!!token && activeAlert.report.user_id !== user?.id}
                     onVote={(isPresent) => handleVoteReport(activeAlert.report.id, isPresent)}
                     onDismiss={dismissAlert}
+                    bottomOffset={bottomInset}
                 />
             )}
 
-            {!miniMap && currentPosition && (
+            {!miniMap && !hideControls && currentPosition && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.recenterButton, { backgroundColor: colors.bgSurface }]}
+                    style={[styles.mapButton, styles.recenterButton, androidButtonBg, { bottom: 20 + bottomInset }]}
                     onPress={handleRecenter}
                 >
+                    <MapButtonFrost />
                     <MaterialCommunityIcons name="crosshairs-gps" size={26} color={colors.textMain} />
                 </TouchableOpacity>
             )}
 
+            {!hideControls && (
             <TouchableOpacity
-                style={[styles.mapButton, styles.layerButton, { backgroundColor: colors.bgSurface }]}
+                style={[styles.mapButton, styles.layerButton, androidButtonBg, { bottom: 20 + bottomInset }]}
                 onPress={() => {
                     Haptics.selectionAsync();
                     setLayerMenuVisible(true);
                 }}
             >
+                <MapButtonFrost />
                 <MaterialCommunityIcons name="layers-outline" size={26} color={colors.textMain} />
             </TouchableOpacity>
+            )}
 
             <Modal
                 visible={isLayerMenuVisible}
@@ -879,14 +896,15 @@ export default function MapComponent({
                 </TouchableOpacity>
             </Modal>
 
-            {!miniMap && (
+            {!miniMap && !hideControls && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.poiButton, { backgroundColor: colors.bgSurface }]}
+                    style={[styles.mapButton, styles.poiButton, androidButtonBg, { bottom: 80 + bottomInset }]}
                     onPress={() => {
                         Haptics.selectionAsync();
                         setPoiSheetVisible(true);
                     }}
                 >
+                    <MapButtonFrost />
                     <MaterialCommunityIcons name="map-marker-multiple-outline" size={26} color={colors.textMain} />
                 </TouchableOpacity>
             )}
@@ -948,9 +966,9 @@ export default function MapComponent({
                 </TouchableOpacity>
             </Modal>
 
-            {canReport && !miniMap && currentPosition && (
+            {canReport && !miniMap && !hideControls && currentPosition && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.reportButton, { backgroundColor: colors.bgSurface }]}
+                    style={[styles.mapButton, styles.reportButton, androidButtonBg, { bottom: 140 + bottomInset }]}
                     onPress={() => {
                         if (!currentPosition) {
                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -964,6 +982,7 @@ export default function MapComponent({
                         Haptics.selectionAsync();
                     }}
                 >
+                    <MapButtonFrost />
                     <Ionicons name="warning-outline" size={26} color={colors.textMain} />
                 </TouchableOpacity>
             )}
@@ -972,27 +991,33 @@ export default function MapComponent({
                 visible={isReportMenuVisible}
                 animationType="fade"
                 transparent={true}
-                onRequestClose={closeReportMenu}
+                onRequestClose={closeReport}
             >
+                <GestureHandlerRootView style={{ flex: 1 }}>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.reportOverlay}>
 
                     <TouchableOpacity
                         style={StyleSheet.absoluteFill}
                         activeOpacity={1}
-                        onPress={closeReportMenu}
+                        onPress={closeReport}
                     />
 
-                    <Animated.View style={[styles.modalContainer, { backgroundColor: colors.bgSurface, transform: [{ translateY: slideAnim }] }]}>
+                    <Reanimated.View style={[styles.modalContainer, { backgroundColor: colors.bgSurface }, reportSheetStyle]}>
 
-                        <View style={styles.header}>
-                            <Text style={[typography.h1, { fontSize: 20, color: colors.textMain }]}>Signaler un incident</Text>
-                            <TouchableOpacity onPress={closeReportMenu}>
-                                <Ionicons name="close" size={28} color={colors.textMain} />
-                            </TouchableOpacity>
+                        <GestureDetector gesture={reportGesture}>
+                        <View>
+                            <GrabHandle />
+                            <View style={styles.header}>
+                                <Text style={[typography.h1, { fontSize: 20, color: colors.textMain }]}>Signaler un incident</Text>
+                                <TouchableOpacity onPress={closeReport}>
+                                    <Ionicons name="close" size={28} color={colors.textMain} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
+                        </GestureDetector>
 
                         <Text style={[typography.body, { color: colors.textSecondary, marginBottom: 15 }]}>
-                            Quel type d'incident rencontrez-vous ?
+                            {"Quel type d'incident rencontrez-vous ?"}
                         </Text>
 
                         <View style={styles.grid}>
@@ -1049,8 +1074,9 @@ export default function MapComponent({
                             </Text>
                         </TouchableOpacity>
 
-                    </Animated.View>
+                    </Reanimated.View>
                 </KeyboardAvoidingView>
+                </GestureHandlerRootView>
             </Modal>
 
             <Modal
@@ -1099,8 +1125,6 @@ export default function MapComponent({
                             </Text>
                         </View>
 
-                        {/* On ne vote pas sur son propre signalement : l'auteur voit
-                            « Supprimer », les autres voient les boutons de vote. */}
                         {token && activeReport && activeReport.user_id !== user?.id && (
                             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
                                 <TouchableOpacity
@@ -1212,15 +1236,18 @@ const styles = StyleSheet.create({
     mapButton: {
         height: 50,
         width: 50,
-        padding: 10,
-        borderRadius: 50,
-        elevation: 5,
+        borderRadius: 25,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    mapButtonFrost: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: 25,
+        overflow: 'hidden',
     },
     layerButton: {
         position: 'absolute',

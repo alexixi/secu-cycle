@@ -70,7 +70,7 @@ export default function Login() {
         >
 
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={28} color={colors.textMain} />
+                <Ionicons name="chevron-back" size={28} color={colors.textMain} />
             </TouchableOpacity>
 
             <View style={styles.formContainer}>

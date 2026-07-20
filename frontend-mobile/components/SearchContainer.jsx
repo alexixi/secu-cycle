@@ -3,6 +3,7 @@ import { StyleSheet, View, Platform, TouchableOpacity, Text, ScrollView, TextInp
 import AdressInput from './ui/AdressInput';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
+import { withAlpha } from '../constants/theme';
 import * as Haptics from 'expo-haptics';
 import { searchAddressAutocomplete } from '../services/geocodingService';
 
@@ -140,13 +141,13 @@ export default function SearchContainer({
         />
       )}
 
-      <View style={[styles.card, { backgroundColor: colors.bgMain }]}>
+      <View style={[styles.card, { backgroundColor: withAlpha(colors.bgMain, 0.95) }]}>
         <View style={styles.topSection}>
           <View style={styles.inputsColumn}>
             <View style={{ zIndex: 2, position: 'relative' }}>
               <AdressInput
                 placeholder="Départ"
-                defaultValue={start?.name}
+                defaultValue={start?.name ?? ''}
                 onSelect={onStartSelect}
                 icon={<MaterialCommunityIcons name="bike" size={20} color={colors.primary} />}
                 onFocusChange={(focused) => focused && setFocusedField('start')}
@@ -159,7 +160,7 @@ export default function SearchContainer({
             <View style={{ zIndex: 1, position: 'relative' }}>
               <AdressInput
                 placeholder="Destination"
-                defaultValue={end?.name}
+                defaultValue={end?.name ?? ''}
                 onSelect={(val) => {
                   Haptics.selectionAsync().catch(() => { });
                   onEndSelect(val);
@@ -180,7 +181,7 @@ export default function SearchContainer({
                 {quickSuggestions.map((suggestion) => (
                   <TouchableOpacity
                     key={suggestion.id}
-                    style={[styles.chip, { backgroundColor: colors.bgSurface, borderColor: colors.borderLight }]}
+                    style={[styles.chip, { backgroundColor: withAlpha(colors.bgSurface, 0.95), borderColor: colors.borderLight }]}
                     onPress={() => handleQuickSuggestion(suggestion, focusedField)}
                   >
                     <Text style={styles.chipIcon}>{suggestion.icon}</Text>
@@ -227,7 +228,7 @@ export default function SearchContainer({
                       key={bike.id}
                       style={[
                         styles.bikeOption,
-                        { borderColor: colors.borderStrong, backgroundColor: colors.bgSurface },
+                        { borderColor: colors.borderStrong, backgroundColor: withAlpha(colors.bgSurface, 0.95) },
                         isSelected && { borderColor: colors.primary, backgroundColor: colors.primaryLight }
                       ]}
                       onPress={() => {
@@ -248,9 +249,9 @@ export default function SearchContainer({
               </ScrollView>
             )}
 
-            <Text style={[styles.settingLabel, { color: colors.textSecondary, marginTop: 15 }]}>Heure d'arrivée max. (Optionnel)</Text>
+            <Text style={[styles.settingLabel, { color: colors.textSecondary, marginTop: 15 }]}>{"Heure d'arrivée max. (Optionnel)"}</Text>
             <TextInput
-              style={[styles.timeInput, { borderColor: colors.borderStrong, color: colors.textMain, backgroundColor: colors.bgSurface }]}
+              style={[styles.timeInput, { borderColor: colors.borderStrong, color: colors.textMain, backgroundColor: withAlpha(colors.bgSurface, 0.95) }]}
               placeholder="ex: 18:30"
               placeholderTextColor={colors.textSecondary}
               value={maxDuration}
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.15,
         shadowRadius: 10,
       },
-      android: { elevation: 8 },
+      android: {},
     }),
   },
   topSection: {

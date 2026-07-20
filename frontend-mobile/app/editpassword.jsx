@@ -1,7 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import { Button, OutlineButton } from "../components/ui/Button";
@@ -9,6 +8,8 @@ import PasswordInput from "../components/ui/PasswordInput";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
 import { changeProfileInfo } from "../services/apiBack";
+import { ScreenHeader } from "../components/ui/ScreenHeader";
+import { SwipeBackScreen } from "../components/SwipeBackScreen";
 
 import * as Haptics from 'expo-haptics';
 
@@ -16,7 +17,7 @@ const MIN_PASSWORD_LENGTH = 10;
 
 export default function ChangePasswordPage() {
     const router = useRouter();
-    const { colors, typography } = useTheme();
+    const { colors } = useTheme();
     const { token } = useAuth();
 
     const [oldPassword, setOldPassword] = useState("");
@@ -55,18 +56,15 @@ export default function ChangePasswordPage() {
     };
 
     return (
+        <SwipeBackScreen background={colors.bgMain}>
+        {(close) => (
         <KeyboardAwareScrollView
             style={[styles.container, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContainer}
         >
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={28} color={colors.textMain} />
-            </TouchableOpacity>
+            <ScreenHeader title="Modifier le mot de passe" onBack={close} />
 
             <View style={styles.formContainer}>
-                <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>
-                    Modifier le mot de passe
-                </Text>
 
                 <View style={styles.inputGroup}>
                     <Text style={[styles.label, { color: colors.textSecondary }]}>Ancien mot de passe</Text>
@@ -112,14 +110,14 @@ export default function ChangePasswordPage() {
                 </View>
             </View>
         </KeyboardAwareScrollView>
+        )}
+        </SwipeBackScreen>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
     scrollContainer: { padding: 20, flexGrow: 1 },
-    backButton: { marginTop: 40, marginBottom: 10 },
-    title: { textAlign: 'center', marginBottom: 30 },
     inputGroup: { marginBottom: 20 },
     label: { fontSize: 14, fontWeight: 'bold', marginBottom: 8, marginLeft: 4 },
     helpText: { fontSize: 12, marginTop: 5, marginLeft: 4 },
