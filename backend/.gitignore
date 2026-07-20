@@ -1,4 +1,5 @@
 cache/
+.mail-preview/
 *.pyc
 *.pyo
 *.pyd
