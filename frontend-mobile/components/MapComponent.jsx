@@ -173,7 +173,8 @@ function MapButtonFrost() {
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
     setSelectedItineraire, currentPosition, isNavigating,
-    canReport, onNavigateToPoi, miniMap = false, bottomInset = 0, hideControls = false
+    canReport, onNavigateToPoi, miniMap = false, bottomInset = 0, hideControls = false,
+    cameraPadding = { top: 200, right: 80, bottom: 200, left: 80 }
 }) {
     const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
     if (!MAPTILER_KEY) {
@@ -503,7 +504,7 @@ export default function MapComponent({
                     Math.max(...lons),
                     Math.max(...lats),
                 ],
-                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : { top: 200, right: 80, bottom: (!itineraires ? 0 : 200), left: 80 },
+                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : cameraPadding,
                 duration: 1000,
                 easing: "fly",
                 pitch: 0,
@@ -520,7 +521,7 @@ export default function MapComponent({
             };
         }
         return {};
-    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger, mapHeight, hasCenteredOnce]);
+    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger, mapHeight, hasCenteredOnce, cameraPadding]);
 
     const onRoutePress = (event) => {
         Haptics.selectionAsync().catch(() => { });

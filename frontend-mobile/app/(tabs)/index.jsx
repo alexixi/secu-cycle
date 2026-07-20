@@ -183,6 +183,13 @@ export default function Index() {
     // Sans navbar, les panneaux et les boutons du bas peuvent descendre.
     const tabClear = insets.bottom + (immersive ? 12 : 74);
 
+    const cameraPadding = React.useMemo(() => ({
+        top: insets.top + 220,
+        bottom: tabClear + (hasResults ? 250 : 60),
+        left: 60,
+        right: 60,
+    }), [insets.top, tabClear, hasResults]);
+
     const handleCloseResults = () => {
         Haptics.selectionAsync().catch(() => { });
         setRoutePaths(null);
@@ -206,6 +213,7 @@ export default function Index() {
                 miniMap={false}
                 bottomInset={tabClear}
                 hideControls={immersive}
+                cameraPadding={cameraPadding}
             />
 
             {isNavigating && (
