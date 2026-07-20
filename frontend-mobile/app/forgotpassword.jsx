@@ -1,18 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import * as Haptics from "expo-haptics";
 
 import { Button } from "../components/ui/Button";
+import CodeInput, { CODE_LENGTH } from "../components/ui/CodeInput";
 import EmailInput from "../components/ui/EmailInput";
 import PasswordInput from "../components/ui/PasswordInput";
 import { useTheme } from "../hooks/useTheme";
 import { forgotPassword, resetPassword } from "../services/apiBack";
 import { SwipeBackScreen } from "../components/SwipeBackScreen";
 
-const CODE_LENGTH = 6;
 const MIN_PASSWORD_LENGTH = 10;
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -96,11 +96,6 @@ export default function ForgotPassword() {
         } finally {
             setIsResending(false);
         }
-    };
-
-    const handleCodeChange = (text) => {
-        setCode(text.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH));
-        setResetError(null);
     };
 
     const handleReset = async () => {
@@ -188,25 +183,10 @@ export default function ForgotPassword() {
 
                         <View style={styles.inputGroup}>
                             <Text style={[styles.label, { color: colors.textSecondary }]}>Code de réinitialisation</Text>
-                            <TextInput
-                                style={[
-                                    styles.codeInput,
-                                    {
-                                        backgroundColor: colors.bgSurface,
-                                        color: colors.textMain,
-                                        borderColor: resetError ? colors.error : colors.borderStrong,
-                                    },
-                                ]}
+                            <CodeInput
                                 value={code}
-                                onChangeText={handleCodeChange}
-                                keyboardType="number-pad"
-                                maxLength={CODE_LENGTH}
-                                placeholder="––––––"
-                                placeholderTextColor={colors.textSecondary}
-                                autoFocus
-                                textAlign="center"
-                                autoComplete="sms-otp"
-                                textContentType="oneTimeCode"
+                                onChange={(v) => { setCode(v); setResetError(null); }}
+                                hasError={!!resetError}
                             />
                         </View>
 
@@ -308,15 +288,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         marginTop: 6,
         marginLeft: 4,
-    },
-    codeInput: {
-        borderWidth: 1,
-        borderRadius: 12,
-        paddingHorizontal: 15,
-        paddingVertical: 16,
-        fontSize: 28,
-        letterSpacing: 12,
-        fontWeight: 'bold',
     },
     errorText: {
         fontSize: 12,
