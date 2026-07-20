@@ -288,6 +288,30 @@ export async function changePassword(token, oldPassword, newPassword) {
     }
 }
 
+export async function requestEmailChange(token, newEmail, password) {
+    try {
+        const data = await apiFetch("/users/me/email", {
+            method: "POST",
+            body: JSON.stringify({ new_email: newEmail, password: password }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function confirmEmailChange(token, code) {
+    try {
+        const data = await apiFetch("/users/me/email/confirm", {
+            method: "POST",
+            body: JSON.stringify({ code: code }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function changeAddress(token, homeAddress, workAddress) {
     try {
         const data = await apiFetch("/users/me", {
