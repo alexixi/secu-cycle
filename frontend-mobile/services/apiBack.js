@@ -43,6 +43,24 @@ async function refreshAccessToken() {
     }
 }
 
+const SESSION_INVALID_DETAILS = [
+    "Invalid token",
+    "Invalid token payload",
+    "Token révoqué",
+    "Compte suspendu.",
+];
+
+function isSessionInvalid(errorData) {
+    let detail = errorData;
+    try {
+        const parsed = JSON.parse(errorData)?.detail;
+        if (typeof parsed === "string") detail = parsed;
+    } catch {
+    }
+    return typeof detail === "string"
+        && SESSION_INVALID_DETAILS.some((message) => detail.includes(message));
+}
+
 export async function apiFetch(endpoint, options = {}, token = null, _retried = false) {
     const headers = {
         "Content-Type": "application/json",
@@ -60,7 +78,7 @@ export async function apiFetch(endpoint, options = {}, token = null, _retried = 
     if (!response.ok) {
         const errorData = await response.text();
         const isAuthEndpoint = url.includes("/login") || url.includes("/refresh");
-        if (response.status === 401 && !isAuthEndpoint && errorData.includes("token")) {
+        if (response.status === 401 && !isAuthEndpoint && isSessionInvalid(errorData)) {
             if (!_retried) {
                 const newToken = await refreshAccessToken();
                 if (newToken) {
