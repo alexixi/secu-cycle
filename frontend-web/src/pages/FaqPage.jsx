@@ -38,7 +38,7 @@ const DEFAULT_FAQS = [
     {
         question: "D'où proviennent les données utilisées ?",
         answer:
-            "Sécu'Cycle combine plusieurs sources ouvertes : OpenStreetMap (openstreetmap.fr) pour la carte des routes et pistes cyclables, l'IGN (ign.fr) pour les données topographiques, la Base Adresse Nationale (adresse.data.gouv.fr) pour les adresses, le projet AVATAR du Cerema (avatar.cerema.fr) pour le trafic routier, et MapTiler (maptiler.com) pour l'affichage des fonds de carte.",
+            "Sécu'Cycle combine plusieurs sources ouvertes : OpenStreetMap (openstreetmap.fr) pour la carte des routes et pistes cyclables, l'IGN (ign.fr) pour les données topographiques, la Base Adresse Nationale (adresse.data.gouv.fr) pour les adresses françaises, le projet AVATAR du Cerema (avatar.cerema.fr) pour le trafic routier, et MapTiler (maptiler.com) pour l'affichage des fonds de carte ainsi que pour la recherche des lieux et des adresses situés hors de France, en Belgique notamment.",
     },
     {
         question: "Comment signaler un problème ou un danger sur un itinéraire ?",
