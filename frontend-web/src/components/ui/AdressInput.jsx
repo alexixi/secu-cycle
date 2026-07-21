@@ -14,6 +14,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
     const [hasError, setHasError] = useState(false);
     const [outOfZone, setOutOfZone] = useState(false);
     const [isValidated, setIsValidated] = useState(false);
+    const [noResults, setNoResults] = useState(false);
     const [cursor, setCursor] = useState(-1);
 
     const suggestionRefs = useRef([]);
@@ -54,13 +55,15 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
             if (query && !isValidated && query.length >= 3) {
                 const results = await searchAddressAutocomplete(query);
                 setSuggestions(results);
+                setNoResults(results.length === 0);
                 setIsOpen(true);
                 setCursor(-1);
             } else if (!showFavorite && (!query || query.length < 3)) {
                 setSuggestions([]);
+                setNoResults(false);
                 setIsOpen(false);
             }
-        }, 300);
+        }, 400);
         return () => clearTimeout(delayDebounceFn);
     }, [query, isValidated, showFavorite]);
 
@@ -83,7 +86,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
     };
 
     const handleSelect = async (place) => {
-        if (!place || place.id === "no-result") {
+        if (!place) {
             setQuery("");
             setSuggestions([]);
             setIsOpen(false);
@@ -93,6 +96,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         }
         setQuery(place.display_name);
         setSuggestions([]);
+        setNoResults(false);
         setIsOpen(false);
         setHasError(false);
         setOutOfZone(false);
@@ -138,6 +142,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
             onSelect(null);
             setIsValidated(true);
             setSuggestions([]);
+            setNoResults(false);
             setIsOpen(false);
             return;
         }
@@ -206,6 +211,14 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
                 <div className="warning-text">
                     Cette adresse est en dehors de la zone couverte par Sécu-Cycle.
                 </div>
+            )}
+
+            {isOpen && noResults && suggestions.length === 0 && (
+                <ul className="autocomplete-list">
+                    <li className="autocomplete-empty" aria-disabled="true">
+                        Aucun résultat trouvé
+                    </li>
+                </ul>
             )}
 
             {isOpen && suggestions.length > 0 && (

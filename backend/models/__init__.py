@@ -10,6 +10,7 @@ from models import (  # noqa: F401
     bike,
     email_verification,
     faq,
+    geocode_cache,
     graph_profile,
     history,
     home_case,

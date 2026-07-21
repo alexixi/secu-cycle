@@ -56,3 +56,14 @@
 .autocomplete-list li.active small {
     color: var(--text-primary);
 }
+
+.autocomplete-list li.autocomplete-empty {
+    cursor: default;
+    color: var(--text-secondary);
+    border-bottom: none;
+    font-size: 0.9rem;
+}
+
+.autocomplete-list li.autocomplete-empty:hover {
+    background-color: var(--bg-surface);
+}

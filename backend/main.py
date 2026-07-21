@@ -19,6 +19,7 @@ from routers import faq
 from routers import task
 from routers import tag
 from routers import graph as graph_router
+from routers import geo
 from routers import contact
 from routers import badge
 from seed_home_cases import seed_home_cases
@@ -163,6 +164,7 @@ app.include_router(faq.router)
 app.include_router(task.router)
 app.include_router(tag.router)
 app.include_router(graph_router.router)
+app.include_router(geo.router)
 app.include_router(contact.router)
 app.include_router(badge.router)
 
