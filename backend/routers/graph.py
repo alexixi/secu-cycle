@@ -13,6 +13,7 @@ from graph.communes import CommuneNotFound
 from graph.config import MAX_SNAP_DISTANCE_M
 from graph.graph_manager import load_graph_with_ign, profile_paths, update_graph_with_traffic
 from graph.route_cache import route_cache
+from limiter import limiter
 from models.graph_profile import GraphBuildRun, GraphProfile
 from models.user import User
 from schemas.graph_profile import (
@@ -94,6 +95,7 @@ async def _validate_communes(db: Session, names) -> None:
 # --- Couverture (public) ---
 
 @router.get("/coverage")
+@limiter.limit("120/minute")
 def get_coverage(
     request: Request,
     lat: float = Query(..., ge=-90, le=90),
