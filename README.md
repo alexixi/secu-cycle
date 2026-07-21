@@ -163,6 +163,41 @@ zone, seules les composantes fortement connexes d'au moins 500 nœuds sont gard�
 parasites (impasses en sens unique, parkings isolés) sur lesquels un itinéraire pourrait s'accrocher sans
 pouvoir en repartir.
 
+### Recherche d'adresses (géocodage)
+
+L'autocomplétion d'adresses passe par l'API (`GET /geo/search`, `GET /geo/reverse`) et non plus par des
+appels directs des clients à la BAN. Ce détour permet de servir plusieurs pays, de garder la clé MapTiler
+hors des bundles web et mobile, et de mutualiser un cache entre les deux.
+
+Deux sources, choisies d'après les pays du profil de graphe actif (déduits du suffixe des communes,
+« Tournai, Belgium » → `be`) :
+
+- la **BAN** pour les adresses françaises : gratuite, sans quota, et faisant autorité ;
+- **MapTiler** pour les lieux (« ENSEIRB-MATMECA », « CHU Pellegrin », absents d'un référentiel
+  d'adresses) et pour les pays que la BAN ne couvre pas, dont la Belgique.
+
+Les résultats sont **filtrés sur l'emprise du graphe chargé**, et non sur un seuil de pertinence.
+Interrogée sur un lieu, la BAN ne répond pas « rien » mais renvoie du bruit à des centaines de kilomètres,
+que son score ne permet pas d'isoler (« rue des lil » sort à 0.602 et est légitime, « Gare Saint-Jean » à
+0.620 et ne l'est pas). La géographie, elle, tranche nettement — et un résultat hors du graphe est de toute
+façon inutilisable, puisqu'on ne sait pas y calculer d'itinéraire.
+
+Sur un profil **transfrontalier** (le profil `tournai` couvre Tournai et Mouscron, mais aussi Lille et
+Roubaix), les deux sources sont interrogées puis **entrelacées**. Les concaténer avant de tronquer ne
+marcherait pas : la BAN remplit à elle seule les cinq places et les résultats MapTiler seraient payés puis
+jetés. Le score de la BAN sert alors, et seulement alors, à décider qui mène la liste — élevé (~0.98) elle a
+reconnu l'adresse et passe devant, bas (~0.5) elle répond à côté et recule.
+
+Les réponses sont mises en cache en base (`geocode_cache`, un an par défaut) : les préfixes tapés sont très
+largement partagés d'un utilisateur à l'autre, ce qui fait tomber le nombre d'appels facturés. Une réponse
+produite alors que MapTiler était indisponible ou hors budget n'est jamais mémorisée, pour qu'elle ne
+survive pas à la remise à zéro du quota. La consommation mensuelle est comptée dans `geocode_usage` et
+plafonnée par `MAPTILER_GEOCODING_BUDGET` : au-delà, la recherche se dégrade en « BAN seule » plutôt que
+d'épuiser un quota **partagé avec les tuiles de la carte**, dont l'épuisement éteindrait la carte elle-même.
+
+Variables d'environnement associées (backend) : `MAPTILER_KEY`, `MAPTILER_GEOCODING_BUDGET`,
+`GEOCODE_CACHE_TTL_DAYS`. Sans clé, la recherche reste fonctionnelle en France mais se limite aux adresses.
+
 ### Sécurité : limitation du débit (rate-limiting)
 L'API limite déjà le débit des tentatives de connexion (`5/minute` par IP via `slowapi`).
 En production, l'API tourne derrière Nginx avec plusieurs workers : le stockage en mémoire de
