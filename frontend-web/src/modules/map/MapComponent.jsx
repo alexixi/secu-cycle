@@ -568,6 +568,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             if (report) {
                 setActivePoi(null);
                 setActiveTraffic(null);
+                setActiveAccident(null);
                 setActiveReport(report);
             }
             return;
@@ -578,6 +579,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             const [lon, lat] = poiFeature.geometry.coordinates;
             setActiveReport(null);
             setActiveTraffic(null);
+            setActiveAccident(null);
             setActivePoi({ ...poiFeature.properties, lat, lon });
             return;
         }
