@@ -353,9 +353,12 @@ def calculate_infra_stats(G, route):
         elif lit not in ('no',) and h_type in ('residential', 'primary', 'secondary', 'tertiary', 'living_street', 'cycleway'):
             lit_length += length * 0.85
 
+    from graph.accidents import route_accident_stats
+
     if total_length == 0:
         return {"pct_cyclable": 0.0, "pct_low_speed": 0.0, "pct_lit": 0.0,
-                "pct_smooth": 0.0, "pct_contraflow": 0.0}
+                "pct_smooth": 0.0, "pct_contraflow": 0.0,
+                "accidents_count": 0, "pct_accident_free": 100.0}
 
     return {
         "pct_cyclable": round(cyclable_length / total_length * 100, 1),
@@ -363,4 +366,5 @@ def calculate_infra_stats(G, route):
         "pct_lit": round(lit_length / total_length * 100, 1),
         "pct_smooth": round(smooth_length / total_length * 100, 1),
         "pct_contraflow": round(contraflow_length / total_length * 100, 1),
+        **route_accident_stats(G, route),
     }

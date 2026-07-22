@@ -81,6 +81,29 @@ REPORT_PENALTIES = {
     'default': 2.0
 }
 
+# Distance (m) au-delà de laquelle un accident n'est plus considéré comme attaché à une arête du graphe
+ACCIDENT_SNAP_RADIUS_M = 25.0
+
+# Demi-vie de l'ancienneté d'un accident : au bout de ce délai, il ne pèse plus que moitié
+ACCIDENT_HALF_LIFE_YEARS = 5.0
+
+# Longueur de référence de la densité d'accidents (accidents pour 100 m).
+ACCIDENT_REFERENCE_LENGTH_M = 100.0
+
+# Plafond du malus, en points sur 10. Volontairement bas : l'accidentologie
+# corrige la note d'infrastructure, elle ne la remplace pas. Les données ne
+# comportent aucun dénominateur d'exposition (nombre de cyclistes passés), si
+# bien qu'un axe cyclable très fréquenté cumule des accidents sans être plus
+# dangereux au kilomètre parcouru. Un malus non plafonné pénaliserait donc les
+# grands axes aménagés au profit de rues résidentielles désertes.
+ACCIDENT_MAX_MALUS = 1.5
+# Calibré pour qu'un seul accident, même mortel, n'atteigne pas le plafond : sans
+# quoi tous les points noirs seraient à égalité et le score cesserait de les
+# distinguer. Ordre de grandeur obtenu sur un segment de 100 m : un blessé léger
+# récent coûte 0,3 pt, un mort 1,1 pt, un carrefour cumulant plusieurs drames
+# atteint le plafond.
+ACCIDENT_MALUS_K = 0.5
+
 ELEVATION_DIVISOR = 30.0
 DEFAULT_SAFETY_PENALTY = 30.0
 TRAFFIC_BASE_PENALTY = 50.0
