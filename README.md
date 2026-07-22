@@ -128,6 +128,83 @@ make sync-pois
 docker exec <conteneur_api> python -m pois.sync
 ```
 
+### Accidents de la route
+
+Le score de sécurité d'un segment était jusqu'ici entièrement déduit d'OpenStreetMap : il décrivait ce à
+quoi la rue **ressemble**, jamais ce qui s'y est réellement produit. Les accidents corporels officiellement
+recensés apportent ce second signal. Ils sont stockés en base (`road_accidents`) et servis par
+`GET /accidents/` en GeoJSON, comme les POI : la carte ne dépend jamais des sources amont à l'exécution.
+
+Deux sources, choisies d'après les pays du profil de graphe actif (même détection que le géocodage,
+« Tournai, Belgium » → `be`) :
+
+- **France** — le dérivé [« Accidents de vélo »](https://www.data.gouv.fr/datasets/accidents-de-velo) des
+  bases **BAAC** de l'ONISR (Licence Ouverte 2.0). On branche ce dérivé plutôt que les quatre CSV bruts :
+  la jointure caractéristiques/lieux/véhicules/usagers et le filtrage « au moins un vélo » y sont déjà faits,
+  les coordonnées sont déjà décimales, et son API accepte un filtre `bbox`.
+- **Belgique** — [Statbel, « Géolocalisation des accidents de la circulation »](https://statbel.fgov.be/fr/open-data/geolocalisation-des-accidents-de-la-circulation-2017-2024)
+  (CC BY 4.0), filtré sur les collisions impliquant une bicyclette. Coordonnées publiées en **Lambert 72**,
+  reprojetées en WGS84 à l'ingestion.
+
+Tout se pilote depuis la page **Accidents** du dashboard admin : comptage par source et par gravité,
+millésimes couverts, bouton « Synchroniser maintenant », intervalle de synchronisation automatique
+(en **jours** — ces bases ne sont republiées qu'une fois par an) et historique des récupérations.
+Comme pour les POI, **le remplissage n'est pas automatique** : après un premier déploiement, il faut lancer
+une synchro depuis cette page. En recours :
+
+```sh
+make sync-accidents
+# ou, sous Coolify :
+docker exec <conteneur_api> python -m accidents.sync
+```
+
+Trois partis pris méritent d'être connus, parce qu'ils sont contre-intuitifs :
+
+- **La fenêtre temporelle est large (2015+), pas courte.** La tentation serait de ne garder que les années
+  récentes. Mais la couverture du géocodage BAAC varie énormément d'une année à l'autre : sur Bordeaux
+  intra-rocade, le dérivé compte 176 accidents géolocalisés en 2015 contre 15 en 2019, 4 en 2020 et 3 en
+  2021 — sans qu'il se soit rien passé de tel sur le terrain. Une fenêtre courte ne donnerait pas une donnée
+  « plus fraîche » mais un échantillon de quelques dizaines de points, dont la géographie refléterait surtout
+  les aléas de saisie. C'est la **décroissance exponentielle** (demi-vie de 5 ans) qui fait le travail de
+  recence, sans falaise arbitraire.
+- **Le malus est plafonné à 1,5 point sur 10.** Les données ne comportent aucun dénominateur d'exposition
+  (combien de cyclistes sont passés) : un axe cyclable très fréquenté cumule mécaniquement des accidents sans
+  être plus dangereux au kilomètre parcouru. Un malus non plafonné pénaliserait donc les grands axes aménagés
+  au profit de rues résidentielles désertes — l'inverse de l'effet recherché. Le malus est en outre normalisé
+  par la longueur du segment et compressé logarithmiquement.
+- **Le malus est soustractif, jamais un bonus.** Un segment sans accident recensé — ou situé dans une zone
+  qu'aucune source ne couvre — garde exactement sa note d'infrastructure. Il n'y a donc aucun avantage à ne
+  pas être couvert, ce qui serait le cas avec une normalisation entre segments.
+
+Les deux sources sortent au même format après ingestion, mais **ne sont pas équivalentes** :
+
+| | France (BAAC) | Belgique (Statbel) |
+| --- | --- | --- |
+| Période retenue | 2015 – 2023 | 2022 – 2024 |
+| Date | jour exact | mois seulement (champ `date_precision`) |
+| Granularité amont | une ligne par victime, regroupée sur `Num_Acc` | une ligne par accident, sans nombre de victimes |
+| Filtre vélo | jeu déjà filtré, code VAE distinct | deux emplacements d'usager seulement, pas de code VAE |
+| Identifiant | `Num_Acc` stable | aucun — empreinte SHA-1 synthétisée |
+| Récupération | API avec filtre `bbox` | ZIP de 8 Mo, Lambert 72 à reprojeter |
+
+La conséquence à connaître : les fenêtres temporelles différant, **un accident belge pèse en moyenne 2,1 fois
+un accident français** (0,84 contre 0,40 après décroissance) — non parce qu'il serait plus grave (la gravité
+moyenne belge est même légèrement inférieure), mais parce que les données belges sont toutes récentes. La
+France accumule en retour trois fois plus d'années par segment, ce qui compense en partie. Les échelles de
+malus ne sont donc pas strictement comparables d'un pays à l'autre ; le classement *à l'intérieur* d'un pays,
+seul à piloter le routage, reste juste. Normaliser par pays corrigerait l'écart, mais récompenserait les pays
+dont les données sont les plus lacunaires — c'est précisément ce qu'on cherche à éviter.
+
+Le rattachement aux arêtes se fait au chargement du graphe (`graph/accidents.py`), avec un rayon de
+tolérance de 25 m : au-delà, l'accident concerne une autre rue. Un accident accroché à `u→v` pénalise aussi
+`v→u`, sans quoi le score dépendrait du sens de parcours. Une synchro réussie réactualise le graphe déjà
+chargé et vide le cache d'itinéraires — pas de redémarrage nécessaire.
+
+Enfin, ces données ne recensent que les **accidents corporels déclarés aux forces de l'ordre**. Les chutes
+sans tiers sont très largement sous-déclarées, et le géocodage est plus lacunaire hors agglomération : le
+signal est structurellement plus fiable en ville. La carte le dit explicitement à l'utilisateur plutôt que de
+le masquer.
+
 ### Graphe de routage et profils
 
 Les profils de graphe (nom + liste de communes) sont **stockés en base**. L'ancien `backend/graphs.json` a

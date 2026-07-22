@@ -217,6 +217,18 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                                         Éclairé
                                     </Text>
                                 </View>
+                                {itineraire.infra_stats.accidents_count > 0 && (
+                                    <View style={[styles.infraCard, { backgroundColor: '#DC262615', borderColor: '#DC262630' }]}>
+                                        <MaterialCommunityIcons name="alert-octagon" size={20} color="#DC2626" />
+                                        <Text style={[styles.infraValue, { color: '#DC2626' }]}>
+                                            {itineraire.infra_stats.accidents_count}
+                                        </Text>
+                                        <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
+                                            {itineraire.infra_stats.accidents_count > 1
+                                                ? 'Accidents recensés' : 'Accident recensé'}
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
                         </View>
                     )}

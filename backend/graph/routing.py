@@ -125,6 +125,12 @@ def precompute_static_costs(G):
 
     for u, v, k, data in G.edges(keys=True, data=True):
         score_on, score_off, roughness = _edge_quality(data)
+
+        malus = float(data.get('_accident_malus', 0.0))
+        if malus:
+            score_on = max(0.0, score_on - malus)
+            score_off = max(0.0, score_off - malus)
+
         data['_s_on'], data['_s_off'] = score_on, score_off
         data['_roughness'] = roughness
 

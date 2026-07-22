@@ -6,6 +6,8 @@ proposerait de la supprimer. Importer le package suffit à les enregistrer.
 """
 
 from models import (  # noqa: F401
+    accident,
+    accident_sync,
     badge,
     bike,
     email_verification,

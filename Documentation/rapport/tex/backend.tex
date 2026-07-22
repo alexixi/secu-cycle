@@ -43,6 +43,7 @@ Voici le rôle de chaque table dans la base de données :
     \item \textbf{Table \texttt{routes}} : Enregistre les trajets calculés avec leurs coordonnées, distance, durée estimée et indice de sécurité.
     \item \textbf{Table \texttt{user\_history}} : Retrace l'activité de navigation en associant chaque trajet effectué à un horodatage.
     \item \textbf{Table \texttt{reports}} : Conserve les signalements géolocalisés émis par la communauté (accidents, travaux, obstacles).
+    \item \textbf{Table \texttt{road\_accidents}} : Recense les accidents corporels géolocalisés publiés par les sources officielles (BAAC en France, Statbel en Belgique), à ne pas confondre avec \texttt{reports} : les premiers sont des faits historiques établis, les seconds des signalements ponctuels d'utilisateurs. Ils corrigent la note de sécurité des segments concernés (cf. Section~\ref{sec:accidentologie}).
     \item \textbf{Tables \texttt{badges} et \texttt{user\_badges}} : Posent les bases d'un système de gamification prévu pour une version ultérieure.
 \end{itemize}
 

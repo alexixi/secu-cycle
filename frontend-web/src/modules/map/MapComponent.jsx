@@ -5,7 +5,7 @@ import Button from '../../components/ui/Button';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 import MapContextMenu, { formatCoords } from './MapContextMenu';
 import { useTheme } from '../../context/ThemeContext';
-import { getPois } from '../../services/apiBack';
+import { getPois, getAccidents } from '../../services/apiBack';
 import { getAddressFromCoordinates, getApproxLocationFromIp } from '../../services/geocodingService';
 import { trackEvent } from '../../services/analytics';
 
@@ -155,6 +155,42 @@ const poiIconSrc = (poi) => {
 
 const POI_LAYER_ID = 'pois-symbol';
 const REPORT_LAYER_ID = 'reports-symbol';
+const ACCIDENT_HEAT_LAYER_ID = 'accidents-heat';
+const ACCIDENT_POINT_LAYER_ID = 'accidents-point';
+
+const ACCIDENT_SWITCH_ZOOM = 13.5;
+
+const ACCIDENT_SEVERITY_COLOR = [
+    'match', ['get', 'severity'],
+    10, '#7f1d1d',
+    3, '#dc2626',
+    1, '#f97316',
+    '#fbbf24',
+];
+
+const ACCIDENT_LEGEND = [
+    { label: 'Accident mortel', color: '#7f1d1d' },
+    { label: 'Blessé hospitalisé', color: '#dc2626' },
+    { label: 'Blessé léger', color: '#f97316' },
+];
+
+const formatAccidentDate = (properties) => {
+    if (!properties?.date) return null;
+    const parsed = new Date(properties.date);
+    if (Number.isNaN(parsed.getTime())) return properties.date;
+    const options = properties.date_precision === 'month'
+        ? { month: 'long', year: 'numeric' }
+        : { day: 'numeric', month: 'long', year: 'numeric' };
+    return parsed.toLocaleDateString('fr-FR', options);
+};
+
+const ACCIDENT_DETAIL_FIELDS = [
+    { key: 'light', label: 'Luminosité' },
+    { key: 'weather', label: 'Météo' },
+    { key: 'collision', label: 'Type de collision' },
+    { key: 'road_type', label: 'Type de voie' },
+    { key: 'intersection', label: 'Intersection' },
+];
 
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
@@ -223,6 +259,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [poiData, setPoiData] = useState({});
     const [activePoi, setActivePoi] = useState(null);
     const [arePoiImagesReady, setArePoiImagesReady] = useState(false);
+    const [showAccidents, setShowAccidents] = useState(false);
+    const [accidentData, setAccidentData] = useState(null);
+    const [activeAccident, setActiveAccident] = useState(null);
+    const accidentCacheRef = useRef(false);
     const [contextMenu, setContextMenu] = useState(null);
     const [contextAddress, setContextAddress] = useState(null);
     const [isContextAddressLoading, setIsContextAddressLoading] = useState(false);
@@ -243,6 +283,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             } catch {
             }
         }
+
+        setShowAccidents(localStorage.getItem('userMapAccidents') === 'true');
 
         const savedSubTypes = localStorage.getItem('userMapSubTypes');
         if (savedSubTypes) {
@@ -266,6 +308,27 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 });
         });
     }, [enabledPoiCats, littleMap]);
+
+    useEffect(() => {
+        if (littleMap || !showAccidents || accidentCacheRef.current) return;
+        accidentCacheRef.current = true;
+        getAccidents()
+            .then(collection => {
+                setAccidentData(collection);
+                if (!collection?.features?.length) accidentCacheRef.current = false;
+            })
+            .catch(error => {
+                accidentCacheRef.current = false;  // autorise une nouvelle tentative
+                console.error("Erreur chargement des accidents :", error);
+            });
+    }, [showAccidents, littleMap]);
+
+    const handleAccidentsToggle = () => {
+        const next = !showAccidents;
+        setShowAccidents(next);
+        if (!next) setActiveAccident(null);
+        localStorage.setItem('userMapAccidents', String(next));
+    };
 
     const handlePoiCategoryToggle = (id) => {
         const next = { ...enabledPoiCats, [id]: !enabledPoiCats[id] };
@@ -301,6 +364,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             geometry: { type: 'Point', coordinates: [report.longitude, report.latitude] },
         })),
     }), [reports]);
+
+    const showAccidentLayers = !littleMap && showAccidents && !!accidentData;
 
     const showPois = !littleMap && arePoiImagesReady && poisGeoJSON.features.length > 0;
     const showReports = !littleMap && arePoiImagesReady && reportsGeoJSON.features.length > 0;
@@ -517,6 +582,16 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             return;
         }
 
+        const accidentFeature = features.find(f => f.layer?.id === ACCIDENT_POINT_LAYER_ID);
+        if (accidentFeature) {
+            const [lon, lat] = accidentFeature.geometry.coordinates;
+            setActivePoi(null);
+            setActiveReport(null);
+            setActiveTraffic(null);
+            setActiveAccident({ ...accidentFeature.properties, lat, lon });
+            return;
+        }
+
         const routeFeature = features.find(isRouteFeature);
         if (routeFeature) {
             setSelectedItineraire(routeFeature.properties.id);
@@ -526,6 +601,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         setActivePoi(null);
         setActiveReport(null);
         setActiveTraffic(null);
+        setActiveAccident(null);
         if (onMapClick) {
             onMapClick({ lat: event.lngLat.lat, lon: event.lngLat.lng });
         }
@@ -687,6 +763,36 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 </div>
                             ))}
                             <div className="map-poi-hint">Zoomez pour les faire apparaître.</div>
+
+                            <div className="map-style-menu-title map-poi-section">Accidentologie</div>
+                            <label className="map-poi-item">
+                                <span className="map-poi-badge" style={{ backgroundColor: '#dc2626' }} />
+                                <span className="map-poi-label">Accidents à vélo</span>
+                                <input
+                                    type="checkbox"
+                                    checked={showAccidents}
+                                    onChange={handleAccidentsToggle}
+                                />
+                            </label>
+                            {showAccidents && (
+                                <>
+                                    {ACCIDENT_LEGEND.map(item => (
+                                        <span key={item.label} className="map-poi-item map-poi-subitem">
+                                            <span className="map-poi-dot" style={{ backgroundColor: item.color }} />
+                                            <span className="map-poi-label">{item.label}</span>
+                                        </span>
+                                    ))}
+                                    <div className="map-poi-hint">
+                                        Accidents déclarés aux forces de l'ordre : l'absence de point
+                                        ne signifie pas l'absence de danger.
+                                    </div>
+                                    {accidentData?.attributions?.length > 0 && (
+                                        <div className="map-poi-hint map-poi-source">
+                                            {accidentData.attributions.join(' · ')}
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
                     )}
 
@@ -740,6 +846,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     ...(itineraires ? itineraires.map((it) => `route-hitbox-${it.id}`) : []),
                     ...(showReports ? [REPORT_LAYER_ID] : []),
                     ...(showPois ? [POI_LAYER_ID] : []),
+                    ...(showAccidentLayers ? [ACCIDENT_POINT_LAYER_ID] : []),
                 ]}
                 onClick={onClick}
                 onMouseMove={onHover}
@@ -763,6 +870,46 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     <Marker longitude={userPosition.lon} latitude={userPosition.lat} anchor="center">
                         <div className="user-position-dot" />
                     </Marker>
+                )}
+
+                {showAccidentLayers && (
+                    <Source id="accidents" type="geojson" data={accidentData}>
+                        <Layer
+                            id={ACCIDENT_HEAT_LAYER_ID}
+                            type="heatmap"
+                            maxzoom={ACCIDENT_SWITCH_ZOOM + 1}
+                            paint={{
+                                'heatmap-weight': ['interpolate', ['linear'], ['get', 'severity'],
+                                    0, 0.3, 1, 0.5, 3, 0.8, 10, 1],
+                                'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 8, 1, 14, 3],
+                                'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+                                    0, 'rgba(0,0,0,0)',
+                                    0.2, 'rgba(254,240,138,0.5)',
+                                    0.4, 'rgba(251,146,60,0.6)',
+                                    0.7, 'rgba(220,38,38,0.75)',
+                                    1, 'rgba(127,29,29,0.9)'],
+                                'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 8, 10, 14, 28],
+                                'heatmap-opacity': ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0.85, ACCIDENT_SWITCH_ZOOM + 1, 0],
+                            }}
+                        />
+                        <Layer
+                            id={ACCIDENT_POINT_LAYER_ID}
+                            type="circle"
+                            minzoom={ACCIDENT_SWITCH_ZOOM}
+                            paint={{
+                                'circle-radius': ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 4, 17, 10],
+                                'circle-color': ACCIDENT_SEVERITY_COLOR,
+                                'circle-stroke-width': 1.5,
+                                'circle-stroke-color': '#ffffff',
+                                'circle-opacity': ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0, ACCIDENT_SWITCH_ZOOM + 1, 0.9],
+                                'circle-stroke-opacity': ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0, ACCIDENT_SWITCH_ZOOM + 1, 1],
+                            }}
+                        />
+                    </Source>
                 )}
 
                 {showPois && (
@@ -1057,6 +1204,49 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                             </Button>
                                         </div>
                                     )}
+                                </div>
+                            );
+                        })()}
+                    </Popup>
+                )}
+
+                {activeAccident && (
+                    <Popup
+                        longitude={activeAccident.lon}
+                        latitude={activeAccident.lat}
+                        onClose={() => setActiveAccident(null)}
+                        closeOnClick={false}
+                        anchor="bottom"
+                        offset={[0, -12]}
+                    >
+                        {(() => {
+                            const details = ACCIDENT_DETAIL_FIELDS.filter(
+                                field => activeAccident[field.key]);
+                            const date = formatAccidentDate(activeAccident);
+                            return (
+                                <div className="map-popup">
+                                    <div
+                                        className="map-popup-header"
+                                        style={{ backgroundColor: activeAccident.severity >= 10 ? '#7f1d1d'
+                                            : activeAccident.severity >= 3 ? '#dc2626' : '#f97316' }}
+                                    >
+                                        <span className="map-popup-header-text">
+                                            <span className="map-popup-title">Accident à vélo</span>
+                                            {date && <span className="map-popup-subtitle">{date}</span>}
+                                        </span>
+                                    </div>
+                                    <div className="map-popup-body">
+                                        {activeAccident.severity_label && (
+                                            <p className="map-popup-detail">
+                                                Gravité : <strong>{activeAccident.severity_label}</strong>
+                                            </p>
+                                        )}
+                                        {details.map(field => (
+                                            <p key={field.key} className="map-popup-detail">
+                                                {field.label} : <strong>{activeAccident[field.key]}</strong>
+                                            </p>
+                                        ))}
+                                    </div>
                                 </div>
                             );
                         })()}

@@ -3,7 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimen
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { getReports, getPois, createReport, deleteReport, voteReport } from '../services/apiBack';
+import { getReports, getPois, getAccidents, createReport, deleteReport, voteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
@@ -159,6 +159,40 @@ const formatPoiTag = (value) => {
 
 const EMPTY_FEATURE_COLLECTION = { type: 'FeatureCollection', features: [] };
 
+const ACCIDENT_SWITCH_ZOOM = 13.5;
+
+const ACCIDENT_SEVERITY_COLOR = [
+    'match', ['get', 'severity'],
+    10, '#7f1d1d',
+    3, '#dc2626',
+    1, '#f97316',
+    '#fbbf24',
+];
+
+const ACCIDENT_LEGEND = [
+    { label: 'Accident mortel', color: '#7f1d1d' },
+    { label: 'Blessé hospitalisé', color: '#dc2626' },
+    { label: 'Blessé léger', color: '#f97316' },
+];
+
+const ACCIDENT_DETAIL_FIELDS = [
+    { key: 'light', label: 'Luminosité' },
+    { key: 'weather', label: 'Météo' },
+    { key: 'collision', label: 'Type de collision' },
+    { key: 'road_type', label: 'Type de voie' },
+    { key: 'intersection', label: 'Intersection' },
+];
+
+const formatAccidentDate = (properties) => {
+    if (!properties?.date) return null;
+    const parsed = new Date(properties.date);
+    if (Number.isNaN(parsed.getTime())) return properties.date;
+    const options = properties.date_precision === 'month'
+        ? { month: 'long', year: 'numeric' }
+        : { day: 'numeric', month: 'long', year: 'numeric' };
+    return parsed.toLocaleDateString('fr-FR', options);
+};
+
 function MapButtonFrost() {
     const { colors, isDark } = useTheme();
     if (Platform.OS !== 'ios') return null;
@@ -218,6 +252,10 @@ export default function MapComponent({
     const poiCacheRef = useRef({});
     const [poiData, setPoiData] = useState({});
     const [activePoi, setActivePoi] = useState(null);
+    const [showAccidents, setShowAccidents] = useState(false);
+    const [accidentData, setAccidentData] = useState(null);
+    const [activeAccident, setActiveAccident] = useState(null);
+    const accidentCacheRef = useRef(false);
     const [mapHeight, setMapHeight] = useState(0);
     const [recenterTrigger, setRecenterTrigger] = useState(0);
     const [hasCenteredOnce, setHasCenteredOnce] = useState(false);
@@ -340,8 +378,10 @@ export default function MapComponent({
             const savedTheme = await AsyncStorage.getItem('userMapThemeMode');
             const savedPois = await AsyncStorage.getItem('userMapPois');
             const savedSubTypes = await AsyncStorage.getItem('userMapSubTypes');
+            const savedAccidents = await AsyncStorage.getItem('userMapAccidents');
             if (savedBase) setActiveBaseStyle(savedBase);
             if (savedTheme) setMapThemeMode(savedTheme);
+            setShowAccidents(savedAccidents === 'true');
             if (savedPois) {
                 try {
                     setEnabledPoiCats(JSON.parse(savedPois));
@@ -371,6 +411,30 @@ export default function MapComponent({
                 });
         });
     }, [enabledPoiCats, miniMap]);
+
+    useEffect(() => {
+        if (miniMap || !showAccidents || accidentCacheRef.current) return;
+        accidentCacheRef.current = true;
+        getAccidents()
+            .then(collection => {
+                setAccidentData(collection);
+                // Une collection vide n'est pas un succès à mémoriser : c'est le cas
+                // d'un profil pas encore synchronisé. Sans cette remise à zéro, il
+                // faudrait relancer l'appli pour revoir la couche après la synchro.
+                if (!collection?.features?.length) accidentCacheRef.current = false;
+            })
+            .catch(error => {
+                accidentCacheRef.current = false;  // autorise une nouvelle tentative
+                console.error("Erreur chargement des accidents :", error);
+            });
+    }, [showAccidents, miniMap]);
+
+    const handleAccidentsToggle = () => {
+        const next = !showAccidents;
+        setShowAccidents(next);
+        if (!next) setActiveAccident(null);
+        AsyncStorage.setItem('userMapAccidents', String(next));
+    };
 
     const handleRecenter = () => {
         if (!currentPosition || !cameraRef.current) {
@@ -538,6 +602,13 @@ export default function MapComponent({
         setActivePoi({ ...feature.properties, lat, lon });
     };
 
+    const onAccidentPress = (event) => {
+        Haptics.selectionAsync().catch(() => { });
+        const feature = event?.nativeEvent?.features?.[0];
+        if (!feature) return;
+        setActiveAccident(feature.properties);
+    };
+
     const onReportPress = (event) => {
         Haptics.selectionAsync().catch(() => { });
         const feature = event?.nativeEvent?.features?.[0];
@@ -697,6 +768,50 @@ export default function MapComponent({
                         mode="heading"
                         androidPreferredFramesPerSecond={30}
                     />
+                )}
+
+                {!miniMap && showAccidents && !!accidentData && (
+                    <GeoJSONSource id="accidents" data={accidentData} onPress={onAccidentPress}>
+                        {/* Densité aux zooms larges : plusieurs centaines de points
+                            se recouvrent et ne disent plus rien un par un. */}
+                        <Layer
+                            id="accidents-heat"
+                            type="heatmap"
+                            maxzoom={ACCIDENT_SWITCH_ZOOM + 1}
+                            paint={{
+                                heatmapWeight: ['interpolate', ['linear'], ['get', 'severity'],
+                                    0, 0.3, 1, 0.5, 3, 0.8, 10, 1],
+                                heatmapIntensity: ['interpolate', ['linear'], ['zoom'], 8, 1, 14, 3],
+                                heatmapColor: ['interpolate', ['linear'], ['heatmap-density'],
+                                    0, 'rgba(0,0,0,0)',
+                                    0.2, 'rgba(254,240,138,0.5)',
+                                    0.4, 'rgba(251,146,60,0.6)',
+                                    0.7, 'rgba(220,38,38,0.75)',
+                                    1, 'rgba(127,29,29,0.9)'],
+                                heatmapRadius: ['interpolate', ['linear'], ['zoom'], 8, 10, 14, 28],
+                                // Disparaît quand les points prennent le relais.
+                                heatmapOpacity: ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0.85, ACCIDENT_SWITCH_ZOOM + 1, 0],
+                            }}
+                        />
+                        <Layer
+                            id="accidents-point"
+                            type="circle"
+                            minzoom={ACCIDENT_SWITCH_ZOOM}
+                            paint={{
+                                circleRadius: ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 4, 17, 10],
+                                circleColor: ACCIDENT_SEVERITY_COLOR,
+                                circleStrokeWidth: 1.5,
+                                circleStrokeColor: '#ffffff',
+                                circleOpacity: ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0, ACCIDENT_SWITCH_ZOOM + 1, 0.9],
+                                circleStrokeOpacity: ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0, ACCIDENT_SWITCH_ZOOM + 1, 1],
+                            }}
+                            hitbox={{ width: 44, height: 44 }}
+                        />
+                    </GeoJSONSource>
                 )}
 
                 {!miniMap && poisGeoJSON.features.length > 0 && (
@@ -962,6 +1077,53 @@ export default function MapComponent({
                         <Text style={[typography.body, { fontSize: 12, color: colors.textSecondary, marginTop: 10 }]}>
                             {"Zoomez pour faire apparaître les points d'intérêt."}
                         </Text>
+
+                        {/* Séparé des POI : ce ne sont ni des équipements, ni des
+                            signalements d'utilisateurs, mais des accidents
+                            officiellement recensés. Les confondre induirait en erreur. */}
+                        <View style={[styles.divider, { marginTop: 14 }]} />
+
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>
+                            Accidentologie
+                        </Text>
+
+                        <View style={styles.poiOption}>
+                            <View style={[styles.poiBadge, { backgroundColor: '#dc2626' }]}>
+                                <MaterialCommunityIcons name="alert-octagon" size={18} color="#FFF" />
+                            </View>
+                            <Text style={[styles.layerText, typography.body, { flex: 1, color: colors.textMain }]}>
+                                Accidents à vélo
+                            </Text>
+                            <Switch
+                                value={showAccidents}
+                                onValueChange={() => {
+                                    Haptics.selectionAsync();
+                                    handleAccidentsToggle();
+                                }}
+                                trackColor={{ true: colors.primary }}
+                            />
+                        </View>
+
+                        {showAccidents && (
+                            <>
+                                {ACCIDENT_LEGEND.map((item) => (
+                                    <View key={item.label} style={styles.poiSubOption}>
+                                        <View style={[styles.poiSubDot, { backgroundColor: item.color }]} />
+                                        <Text style={[typography.body, { flex: 1, fontSize: 14, color: colors.textSecondary }]}>
+                                            {item.label}
+                                        </Text>
+                                    </View>
+                                ))}
+                                <Text style={[typography.body, { fontSize: 12, color: colors.textSecondary, marginTop: 10 }]}>
+                                    {"Accidents déclarés aux forces de l'ordre : l'absence de point ne signifie pas l'absence de danger."}
+                                </Text>
+                                {accidentData?.attributions?.length > 0 && (
+                                    <Text style={[typography.body, { fontSize: 11, color: colors.textSecondary, marginTop: 6, opacity: 0.75 }]}>
+                                        {accidentData.attributions.join(' · ')}
+                                    </Text>
+                                )}
+                            </>
+                        )}
                     </Animated.View>
                 </TouchableOpacity>
             </Modal>
@@ -1220,6 +1382,65 @@ export default function MapComponent({
                                             </Text>
                                         </TouchableOpacity>
                                     )}
+                                </>
+                            );
+                        })()}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
+            <Modal
+                visible={!!activeAccident}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setActiveAccident(null)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setActiveAccident(null)}
+                >
+                    <View style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
+                        {activeAccident && (() => {
+                            const date = formatAccidentDate(activeAccident);
+                            const details = ACCIDENT_DETAIL_FIELDS
+                                .filter(field => activeAccident[field.key])
+                                .map(field => `${field.label} : ${activeAccident[field.key]}`);
+                            const color = activeAccident.severity >= 10 ? '#7f1d1d'
+                                : activeAccident.severity >= 3 ? '#dc2626' : '#f97316';
+                            return (
+                                <>
+                                    <View style={styles.header}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
+                                            <View style={[styles.poiBadge, { backgroundColor: color }]}>
+                                                <MaterialCommunityIcons name="alert-octagon" size={18} color="#FFF" />
+                                            </View>
+                                            <Text style={[typography.h1, { fontSize: 18, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
+                                                Accident à vélo
+                                            </Text>
+                                        </View>
+                                        <TouchableOpacity onPress={() => setActiveAccident(null)}>
+                                            <Ionicons name="close" size={28} color={colors.textMain} />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {date && (
+                                        <Text style={[typography.body, { color: colors.textSecondary, marginBottom: 8 }]}>
+                                            {date}
+                                        </Text>
+                                    )}
+
+                                    {activeAccident.severity_label && (
+                                        <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
+                                            {`Gravité : ${activeAccident.severity_label}`}
+                                        </Text>
+                                    )}
+
+                                    {details.map(detail => (
+                                        <Text key={detail} style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
+                                            {detail}
+                                        </Text>
+                                    ))}
                                 </>
                             );
                         })()}

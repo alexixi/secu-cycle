@@ -246,6 +246,29 @@ export async function deleteTag(token, tagId) {
     return apiFetch(`/tags/${tagId}`, { method: "DELETE" }, token);
 }
 
+export async function getAccidentStats(token) {
+    return apiFetch("/accidents/admin/stats", { method: "GET" }, token);
+}
+
+export async function triggerAccidentSync(token) {
+    return apiFetch("/accidents/admin/sync", { method: "POST" }, token);
+}
+
+export async function getAccidentSyncRuns(token, limit = 20) {
+    return apiFetch(`/accidents/admin/runs?limit=${limit}`, { method: "GET" }, token);
+}
+
+export async function getAccidentSyncSettings(token) {
+    return apiFetch("/accidents/admin/settings", { method: "GET" }, token);
+}
+
+export async function updateAccidentSyncSettings(token, updates) {
+    return apiFetch("/accidents/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}
+
 export async function getPoiStats(token) {
     return apiFetch("/pois/admin/stats", { method: "GET" }, token);
 }

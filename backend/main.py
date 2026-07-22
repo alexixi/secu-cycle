@@ -4,8 +4,11 @@ from datetime import timedelta
 from sqlalchemy import select
 from sqlalchemy.sql import func
 from database import SessionLocal
+from models.accident_sync import AccidentSyncRun
 from models.poi_sync import PoiSyncRun
+from accidents import runner as accident_runner
 from pois import runner as poi_runner
+from routers import accident
 from routers import user
 from routers import route
 from routers import history
@@ -88,6 +91,45 @@ async def periodic_poi_sync():
             # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
             print(f"[Background Task] Échec de la synchro POI : {exc}", flush=True)
 
+ACCIDENT_SYNC_CHECK_INTERVAL = 3600
+
+
+def accident_sync_is_due() -> bool:
+    """La synchro auto des accidents est-elle activée et son échéance passée ?"""
+    db = SessionLocal()
+    try:
+        interval_days = accident_runner.get_settings(db).interval_days
+        if not interval_days:
+            return False
+        if accident_runner.is_running(db):
+            return False
+
+        recent = db.execute(
+            select(AccidentSyncRun.id)
+            .where(AccidentSyncRun.started_at >= func.now() - timedelta(days=interval_days))
+            .limit(1)
+        ).first()
+        return recent is None
+    finally:
+        db.close()
+
+
+async def periodic_accident_sync(app: FastAPI):
+    """
+    Boucle infinie qui s'exécute en arrière-plan.
+    Reprend les accidents auprès des sources officielles à l'intervalle réglé
+    par les admins. Contrôle horaire : ces bases ne bougent qu'une fois l'an.
+    """
+    while True:
+        await asyncio.sleep(ACCIDENT_SYNC_CHECK_INTERVAL)
+        try:
+            if await asyncio.to_thread(accident_sync_is_due):
+                print("[Background Task] Synchronisation automatique des accidents...", flush=True)
+                await asyncio.to_thread(accident_runner.run_sync, "auto", app)
+        except Exception as exc:
+            print(f"[Background Task] Échec de la synchro accidents : {exc}", flush=True)
+
+
 seed_home_cases()
 seed_faqs()
 seed_badges()
@@ -115,8 +157,13 @@ async def lifespan(app: FastAPI):
     if stale_builds:
         print(f"{stale_builds} génération(s) de graphe interrompue(s) marquée(s) en échec.", flush=True)
 
+    stale_accidents = await asyncio.to_thread(accident_runner.fail_stale_runs)
+    if stale_accidents:
+        print(f"{stale_accidents} synchro(s) d'accidents interrompue(s) marquée(s) en échec.", flush=True)
+
     traffic_task = asyncio.create_task(periodic_traffic_update(app))
     poi_task = asyncio.create_task(periodic_poi_sync())
+    accident_task = asyncio.create_task(periodic_accident_sync(app))
 
     yield
 
@@ -124,7 +171,8 @@ async def lifespan(app: FastAPI):
 
     traffic_task.cancel()
     poi_task.cancel()
-    for task in (traffic_task, poi_task):
+    accident_task.cancel()
+    for task in (traffic_task, poi_task, accident_task):
         try:
             await task
         except asyncio.CancelledError:
@@ -157,6 +205,7 @@ app.include_router(history.router)
 app.include_router(bike.router)
 app.include_router(report.router)
 app.include_router(poi.router)
+app.include_router(accident.router)
 app.include_router(navigation.router)
 app.include_router(traffic.router)
 app.include_router(home_case.router)

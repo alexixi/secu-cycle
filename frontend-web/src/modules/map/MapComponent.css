@@ -389,6 +389,22 @@
     font-size: 0.75rem;
     color: var(--text-secondary);
     padding: 6px 10px 2px;
+    line-height: 1.35;
+}
+
+.map-poi-control .map-style-menu {
+    max-width: 250px;
+}
+
+.map-poi-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border, rgba(128, 128, 128, 0.3));
+}
+
+.map-poi-source {
+    font-size: 0.68rem;
+    opacity: 0.75;
 }
 
 .map-popup-detail {
