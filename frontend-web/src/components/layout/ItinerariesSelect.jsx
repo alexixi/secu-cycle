@@ -3,7 +3,7 @@ import './ItinerariesSelect.css';
 import { useState } from "react";
 import { FaArrowTrendUp, FaArrowTrendDown, FaBicycle } from "react-icons/fa6";
 import { PiPathBold } from "react-icons/pi";
-import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline } from "react-icons/md";
+import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdOutlineReportProblem } from "react-icons/md";
 
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
@@ -28,6 +28,14 @@ function buildSafetyExplanation(id, stats) {
 
     if (stats.pct_lit >= 70) {
         points.push(`${stats.pct_lit}% du trajet est éclairé, assurant une bonne visibilité de nuit.`);
+    }
+
+    if (stats.accidents_count === 0) {
+        points.push("Aucun accident à vélo n'a été officiellement recensé le long de ce trajet.");
+    } else if (stats.accidents_count > 0) {
+        points.push(`${stats.accidents_count} accident${stats.accidents_count > 1 ? 's' : ''} à vélo `
+            + `${stats.accidents_count > 1 ? 'ont' : 'a'} été recensé${stats.accidents_count > 1 ? 's' : ''} `
+            + `le long de ce trajet ; ces segments voient leur note de sécurité abaissée.`);
     }
 
     if (id === "safe") {
@@ -78,6 +86,11 @@ function InfraStats({ stats }) {
             <span className="infra-badge badge-yellow">
                 <MdLightbulbOutline /> {stats.pct_lit}% éclairé
             </span>
+            {stats.accidents_count > 0 && (
+                <span className="infra-badge badge-red">
+                    <MdOutlineReportProblem /> {stats.accidents_count} accident{stats.accidents_count > 1 ? 's' : ''} recensé{stats.accidents_count > 1 ? 's' : ''}
+                </span>
+            )}
         </div>
     );
 }

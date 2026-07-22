@@ -487,6 +487,15 @@ export async function getPois(category) {
     }
 }
 
+export async function getAccidents() {
+    try {
+        const data = await apiFetch("/accidents/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function getTraffic() {
     try {
         const data = await apiFetch("/traffic/", { method: "GET" });
