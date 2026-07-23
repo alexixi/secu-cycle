@@ -10,6 +10,7 @@ chemin d'une requête utilisateur : `/traffic/` sert `snapshot()`, qui ne fait
 que lire.
 """
 
+import asyncio
 import logging
 import math
 from datetime import datetime, timezone
@@ -84,8 +85,8 @@ def providers_for(bbox) -> list[str]:
         return []
     return [
         name
-        for name, coverage in config.PROVIDER_COVERAGE.items()
-        if _overlaps(bbox, coverage)
+        for name, spec in config.PROVIDERS.items()
+        if _overlaps(bbox, spec["coverage"])
     ]
 
 
@@ -213,18 +214,29 @@ async def refresh(G) -> bool:
         _state.updated_at = datetime.now(timezone.utc)
         return False
 
-    try:
-        segments = await providers.bordeaux_segments(bbox)
-    except Exception as exc:
+    results = await asyncio.gather(
+        *(providers.fetch(config.PROVIDERS[name], bbox) for name in names),
+        return_exceptions=True,
+    )
+
+    segments, ok_providers = [], []
+    for name, result in zip(names, results):
+        if isinstance(result, Exception):
+            logger.warning("[trafic] %s en échec : %s", name, result)
+        else:
+            segments.extend(result)
+            ok_providers.append(name)
+
+    if not ok_providers:
         _state.stale = True
-        logger.warning("[trafic] collecte en échec, dernier état conservé : %s", exc)
+        logger.warning("[trafic] toutes les sources en échec, dernier état conservé.")
         return False
 
     edge_count, key = _apply_to_graph(G, segments)
 
     _state.available = bool(segments)
     _state.features = [_feature(s) for s in segments]
-    _state.providers = names
+    _state.providers = ok_providers
     _state.segments = len(segments)
     _state.congested_edges = edge_count
     _state.updated_at = datetime.now(timezone.utc)

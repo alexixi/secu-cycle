@@ -4,8 +4,10 @@ Un provider renvoie une liste de tronçons normalisés :
 
     {"id": str, "level": str, "etat": str, "commune": str, "coordinates": [[lon, lat], ...]}
 
-Charge au service d'en faire une couche d'affichage et un ensemble d'arêtes
-pénalisées.
+Toutes les sources parlent la même API Opendatasoft `explore/v2.1` ; un seul
+fetch générique, paramétré par le descriptif de source (`config.PROVIDERS`),
+les couvre. Charge au service d'en faire une couche d'affichage et un ensemble
+d'arêtes pénalisées.
 """
 
 import logging
@@ -17,12 +19,23 @@ from traffic import config
 logger = logging.getLogger(__name__)
 
 
-def _level_of(etat: str) -> str:
-    return config.LEVEL_BY_ETAT.get((etat or "").upper(), config.DEFAULT_LEVEL)
+def _first_id(record: dict, id_fields) -> str:
+    """Premier identifiant présent parmi `id_fields`, en chaîne."""
+    for field in id_fields:
+        value = record.get(field)
+        if value:
+            return str(value)
+    return ""
 
 
-def _normalise(record: dict) -> dict | None:
-    """Un enregistrement `ci_trafi_l` → tronçon normalisé, ou None s'il est inexploitable."""
+def _normalise(record: dict, spec: dict) -> dict | None:
+    """Un enregistrement brut → tronçon normalisé, ou None s'il est inexploitable."""
+    prefix_field = spec.get("exclude_prefix_field")
+    if prefix_field:
+        value = record.get(prefix_field) or ""
+        if str(value).lower().startswith(spec["exclude_prefix"]):
+            return None
+
     geometry = (record.get("geo_shape") or {}).get("geometry") or {}
     if geometry.get("type") != "LineString":
         return None
@@ -31,40 +44,42 @@ def _normalise(record: dict) -> dict | None:
     if len(coordinates) < 2:
         return None
 
-    etat = record.get("etat") or "INCONNU"
+    etat = record.get(spec["level_field"])
+    level = spec["level_map"].get(str(etat), config.DEFAULT_LEVEL)
+
+    commune_field = spec.get("commune_field")
     return {
-        "id": record.get("gml_id") or str(record.get("gid")),
-        "level": _level_of(etat),
+        "id": _first_id(record, spec["id_fields"]),
+        "level": level,
         "etat": etat,
-        "commune": record.get("commune") or "",
+        "commune": (record.get(commune_field) or "") if commune_field else "",
         "coordinates": coordinates,
     }
 
 
-async def bordeaux_segments(bbox=None) -> list[dict]:
-    """Tous les tronçons publiés par Bordeaux Métropole, paginés.
+async def fetch(spec: dict, bbox=None) -> list[dict]:
+    """Tous les tronçons d'une source, paginés puis filtrés sur l'emprise.
 
-    `bbox` (w, s, e, n) filtre côté client sur l'emprise du graphe chargé : le
-    jeu couvre 17 communes de la métropole, un profil plus étroit n'a que faire
-    du reste. Un bbox absent laisse tout passer.
+    `bbox` (w, s, e, n) restreint côté client aux tronçons touchant l'emprise du
+    graphe chargé ; un bbox absent laisse tout passer.
     """
     segments = []
 
     async with httpx.AsyncClient(timeout=config.HTTP_TIMEOUT_S) as client:
         for page in range(config.MAX_PAGES):
             response = await client.get(
-                config.BORDEAUX_METROPOLE_URL,
+                spec["url"],
                 params={
                     "limit": config.PAGE_SIZE,
                     "offset": page * config.PAGE_SIZE,
-                    "select": "gml_id,gid,etat,commune,geo_shape",
+                    "select": spec["select"],
                 },
             )
             response.raise_for_status()
             records = response.json().get("results", [])
 
             for record in records:
-                segment = _normalise(record)
+                segment = _normalise(record, spec)
                 if segment is not None:
                     segments.append(segment)
 
@@ -72,8 +87,8 @@ async def bordeaux_segments(bbox=None) -> list[dict]:
                 break
         else:
             logger.warning(
-                "[trafic] pagination interrompue à %d pages : le jeu de données "
-                "est plus gros que prévu, la couverture est partielle.",
+                "[trafic] %s : pagination interrompue à %d pages, couverture partielle.",
+                spec["url"],
                 config.MAX_PAGES,
             )
 
