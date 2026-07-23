@@ -86,7 +86,7 @@ La distance perçue finale de l'arête ($W$), qui sera soumise à l'algorithme A
 \begin{equation}
     W = \left[ D_{réelle} \times (1 + M_{risque} + M_{effort}) \right] + C_{trafic} + C_{signalements}
 \end{equation}
-Les coûts d'impédance dynamiques ($C_{trafic}$ et $C_{signalements}$) sont des mètres virtuels ajoutés de manière additive (ex: + 50 mètres pour un embouteillage, + 10\,000 mètres pour un accident bloquant). 
+Les coûts d'impédance dynamiques ($C_{trafic}$ et $C_{signalements}$) sont des mètres virtuels ajoutés de manière additive. Le coût de trafic dépend de la sévérité (axe dense ou embouteillé) et de la position du curseur rapidité/sécurité : de 20 à 170 mètres virtuels par tronçon (cf. Section~\ref{sec:backend}). Un signalement bloquant, lui, peut ajouter jusqu'à 10\,000 mètres.
 Cette méthode additive garantit que le GPS cherchera à contourner le segment impacté sans gonfler proportionnellement sa longueur réelle.
 
 \subsubsection{Choix des poids}
