@@ -192,6 +192,21 @@ const ACCIDENT_DETAIL_FIELDS = [
     { key: 'intersection', label: 'Intersection' },
 ];
 
+const TRAFFIC_LAYER_ID = 'traffic-line';
+const TRAFFIC_HITBOX_LAYER_ID = 'traffic-hitbox';
+
+const TRAFFIC_LABELS = {
+    green: 'Circulation fluide',
+    orange: 'Circulation dense',
+    red: 'Axe embouteillé',
+    gray: 'État inconnu',
+};
+
+const TRAFFIC_CYCLIST_HINT = {
+    orange: '🚲 Trafic ralenti : dépassements serrés et portières, restez visible.',
+    red: '🚲 Axe évité par nos itinéraires sécurisés dès que possible.',
+};
+
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
 const POI_DETAIL_FIELDS = [
@@ -227,7 +242,7 @@ const formatPoiTag = (value) => {
 
 const isRouteFeature = (feature) => feature?.layer?.id?.startsWith('route-hitbox-');
 
-export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, onVote, canVote, currentUserId, isReportMode, onToggleReportMode, canReport, trafficPoints = [], showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
+export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, onVote, canVote, currentUserId, isReportMode, onToggleReportMode, canReport, traffic = null, trafficError = null, showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
 
     const mapRef = useRef();
     const { effectiveTheme } = useTheme();
@@ -474,6 +489,18 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         })();
     }, [isMapLoaded, start, end, itineraires, littleMap]);
 
+    const trafficGeoJSON = useMemo(
+        () => traffic?.geojson || { type: 'FeatureCollection', features: [] },
+        [traffic]
+    );
+
+    const trafficUpdatedAt = useMemo(() => {
+        if (!traffic?.updated_at) return null;
+        const date = new Date(traffic.updated_at);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }, [traffic]);
+
     const handleLocate = () => {
         if (!navigator.geolocation) {
             alert("La géolocalisation n'est pas disponible sur ce navigateur.");
@@ -571,6 +598,19 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 setActiveAccident(null);
                 setActiveReport(report);
             }
+            return;
+        }
+
+        const trafficFeature = features.find(f => f.layer?.id === TRAFFIC_HITBOX_LAYER_ID);
+        if (trafficFeature) {
+            setActivePoi(null);
+            setActiveReport(null);
+            setActiveAccident(null);
+            setActiveTraffic({
+                ...trafficFeature.properties,
+                lat: event.lngLat.lat,
+                lon: event.lngLat.lng,
+            });
             return;
         }
 
@@ -689,27 +729,30 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 </div>
             )}
 
-            {!littleMap && onToggleTraffic && (
+            {!littleMap && onToggleTraffic && traffic?.available !== false && (
                 <div
                     className="map-traffic-control"
                     style={{ bottom: canReport ? "95px" : "45px" }}
                 >
+                    {showTraffic && (
+                        <div className="traffic-legend">
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.green }} />Fluide</span>
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.orange }} />Dense</span>
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.red }} />Embouteillé</span>
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.gray }} />Inconnu</span>
+                            {trafficError
+                                ? <span className="traffic-legend-time">{trafficError}</span>
+                                : trafficUpdatedAt && <span className="traffic-legend-time">Relevé de {trafficUpdatedAt}</span>}
+                        </div>
+                    )}
                     <Button
                         onClick={onToggleTraffic}
-                        className={showTraffic ? "report-button-active" : "report-button"}
+                        className="traffic-button"
                         title="Trafic en temps réel"
                     >
                         <MdOutlineTraffic size={18} />
                         <span className="map-btn-label">{showTraffic ? "Masquer le trafic" : "Trafic en temps réel"}</span>
                     </Button>
-                    {showTraffic && (
-                        <div className="traffic-legend">
-                            <span className="traffic-legend-item"><span className="traffic-dot" style={{ backgroundColor: "#22c55e" }} />Route fluide</span>
-                            <span className="traffic-legend-item"><span className="traffic-dot" style={{ backgroundColor: "#f97316" }} />Route ralentie</span>
-                            <span className="traffic-legend-item"><span className="traffic-dot" style={{ backgroundColor: "#ef4444" }} />Route bloquée</span>
-                            <span className="traffic-legend-item"><span className="traffic-dot" style={{ backgroundColor: "#9ca3af" }} />Inconnu</span>
-                        </div>
-                    )}
                 </div>
             )}
 
@@ -849,6 +892,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     ...(showReports ? [REPORT_LAYER_ID] : []),
                     ...(showPois ? [POI_LAYER_ID] : []),
                     ...(showAccidentLayers ? [ACCIDENT_POINT_LAYER_ID] : []),
+                    ...(showTraffic ? [TRAFFIC_HITBOX_LAYER_ID] : []),
                 ]}
                 onClick={onClick}
                 onMouseMove={onHover}
@@ -872,6 +916,32 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     <Marker longitude={userPosition.lon} latitude={userPosition.lat} anchor="center">
                         <div className="user-position-dot" />
                     </Marker>
+                )}
+
+                {showTraffic && trafficGeoJSON.features.length > 0 && (
+                    <Source id="traffic" type="geojson" data={trafficGeoJSON}>
+                        <Layer id={TRAFFIC_HITBOX_LAYER_ID} type="line" minzoom={9} paint={{ 'line-color': 'transparent', 'line-width': 14 }} />
+                        <Layer
+                            id={TRAFFIC_LAYER_ID}
+                            type="line"
+                            minzoom={9}
+                            layout={{ 'line-join': 'round', 'line-cap': 'round' }}
+                            paint={{
+                                'line-color': ['match', ['get', 'level'],
+                                    'red', TRAFFIC_COLORS.red,
+                                    'orange', TRAFFIC_COLORS.orange,
+                                    'green', TRAFFIC_COLORS.green,
+                                    TRAFFIC_COLORS.gray],
+                                'line-width': ['interpolate', ['linear'], ['zoom'],
+                                    9, ['match', ['get', 'level'], 'red', 2, 'orange', 1.8, 1],
+                                    11, ['match', ['get', 'level'], 'red', 3, 'orange', 2.5, 1.5],
+                                    16, ['match', ['get', 'level'], 'red', 8, 'orange', 7, 4]],
+                                'line-opacity': ['interpolate', ['linear'], ['zoom'],
+                                    9, ['match', ['get', 'level'], 'red', 0.9, 'orange', 0.9, 'gray', 0.12, 0.3],
+                                    12, ['match', ['get', 'level'], 'gray', 0.35, 0.85]],
+                            }}
+                        />
+                    </Source>
                 )}
 
                 {showAccidentLayers && (
@@ -1053,23 +1123,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     </Source>
                 )}
 
-                {trafficPoints && trafficPoints.map((pt) => (
-                    <Marker key={`traffic-${pt.id}`} longitude={pt.lon} latitude={pt.lat} anchor="center">
-                        <div
-                            onClick={(e) => { e.stopPropagation(); setActivePoi(null); setActiveReport(null); setActiveTraffic(pt); }}
-                            style={{
-                                width: 14,
-                                height: 14,
-                                borderRadius: "50%",
-                                backgroundColor: TRAFFIC_COLORS[pt.level] || TRAFFIC_COLORS.gray,
-                                border: "2px solid white",
-                                boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
-                                cursor: "pointer",
-                            }}
-                        />
-                    </Marker>
-                ))}
-
                 {activeTraffic && (
                     <Popup
                         longitude={activeTraffic.lon}
@@ -1085,12 +1138,14 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 style={{ backgroundColor: TRAFFIC_COLORS[activeTraffic.level] || TRAFFIC_COLORS.gray }}
                             >
                                 <span className="map-popup-icon">🚦</span>
-                                <span className="map-popup-title">{activeTraffic.name || "Point de comptage"}</span>
+                                <span className="map-popup-title">{TRAFFIC_LABELS[activeTraffic.level] || "État inconnu"}</span>
                             </div>
                             <div className="map-popup-body">
-                                {activeTraffic.speed != null && <p className="map-popup-line">🚗 Vitesse : <strong>{activeTraffic.speed} km/h</strong></p>}
-                                {activeTraffic.flow != null && <p className="map-popup-line">🚦 Débit : <strong>{activeTraffic.flow} véh/h</strong></p>}
-                                {activeTraffic.occupancy != null && <p className="map-popup-line">📊 Occupation : <strong>{activeTraffic.occupancy}%</strong></p>}
+                                {activeTraffic.commune && <p className="map-popup-line">📍 <strong>{activeTraffic.commune}</strong></p>}
+                                {TRAFFIC_CYCLIST_HINT[activeTraffic.level] && (
+                                    <p className="map-popup-line">{TRAFFIC_CYCLIST_HINT[activeTraffic.level]}</p>
+                                )}
+                                {trafficUpdatedAt && <p className="map-popup-line map-popup-muted">Relevé {trafficUpdatedAt}</p>}
                             </div>
                         </div>
                     </Popup>
