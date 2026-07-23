@@ -3,7 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimen
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { getReports, getPois, getAccidents, createReport, deleteReport, voteReport } from '../services/apiBack';
+import { getReports, getPois, getAccidents, getTraffic, createReport, deleteReport, voteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
@@ -193,6 +193,8 @@ const formatAccidentDate = (properties) => {
     return parsed.toLocaleDateString('fr-FR', options);
 };
 
+const TRAFFIC_COLORS = { green: '#22c55e', orange: '#f97316', red: '#ef4444', gray: '#9ca3af' };
+
 function MapButtonFrost() {
     const { colors, isDark } = useTheme();
     if (Platform.OS !== 'ios') return null;
@@ -256,6 +258,8 @@ export default function MapComponent({
     const [accidentData, setAccidentData] = useState(null);
     const [activeAccident, setActiveAccident] = useState(null);
     const accidentCacheRef = useRef(false);
+    const [showTraffic, setShowTraffic] = useState(false);
+    const [traffic, setTraffic] = useState(null);
     const [mapHeight, setMapHeight] = useState(0);
     const [recenterTrigger, setRecenterTrigger] = useState(0);
     const [hasCenteredOnce, setHasCenteredOnce] = useState(false);
@@ -492,6 +496,33 @@ export default function MapComponent({
             ));
         return features.length ? { type: 'FeatureCollection', features } : EMPTY_FEATURE_COLLECTION;
     }, [enabledPoiCats, enabledSubTypes, poiData]);
+
+    const trafficGeoJSON = useMemo(
+        () => traffic?.geojson?.features?.length ? traffic.geojson : EMPTY_FEATURE_COLLECTION,
+        [traffic]
+    );
+
+    useEffect(() => {
+        if (miniMap) return;
+
+        let cancelled = false;
+        let timer = null;
+
+        const load = async () => {
+            try {
+                const data = await getTraffic();
+                if (cancelled) return;
+                setTraffic(data);
+                if (showTraffic) timer = setTimeout(load, (data?.refresh_interval_s || 300) * 1000);
+            } catch (error) {
+                if (cancelled || !showTraffic) return;
+                timer = setTimeout(load, 60000);
+            }
+        };
+        load();
+
+        return () => { cancelled = true; if (timer) clearTimeout(timer); };
+    }, [showTraffic, miniMap]);
 
     const reportsGeoJSON = useMemo(() => {
         const features = (reports || []).map((report) => ({
@@ -770,6 +801,31 @@ export default function MapComponent({
                     />
                 )}
 
+                {!miniMap && showTraffic && trafficGeoJSON.features.length > 0 && (
+                    <GeoJSONSource id="traffic" data={trafficGeoJSON}>
+                        <Layer
+                            id="traffic-line"
+                            type="line"
+                            minzoom={9}
+                            layout={{ lineJoin: 'round', lineCap: 'round' }}
+                            paint={{
+                                lineColor: ['match', ['get', 'level'],
+                                    'red', TRAFFIC_COLORS.red,
+                                    'orange', TRAFFIC_COLORS.orange,
+                                    'green', TRAFFIC_COLORS.green,
+                                    TRAFFIC_COLORS.gray],
+                                lineWidth: ['interpolate', ['linear'], ['zoom'],
+                                    9, ['match', ['get', 'level'], 'red', 2, 'orange', 1.8, 1],
+                                    11, ['match', ['get', 'level'], 'red', 3, 'orange', 2.5, 1.5],
+                                    16, ['match', ['get', 'level'], 'red', 8, 'orange', 7, 4]],
+                                lineOpacity: ['interpolate', ['linear'], ['zoom'],
+                                    9, ['match', ['get', 'level'], 'red', 0.9, 'orange', 0.9, 'gray', 0.12, 0.3],
+                                    12, ['match', ['get', 'level'], 'gray', 0.35, 0.85]],
+                            }}
+                        />
+                    </GeoJSONSource>
+                )}
+
                 {!miniMap && showAccidents && !!accidentData && (
                     <GeoJSONSource id="accidents" data={accidentData} onPress={onAccidentPress}>
                         {/* Densité aux zooms larges : plusieurs centaines de points
@@ -1007,6 +1063,28 @@ export default function MapComponent({
                                 </Text>
                             </TouchableOpacity>
                         ))}
+
+                        {traffic?.available && (
+                            <>
+                                <View style={styles.divider} />
+                                <View style={styles.poiOption}>
+                                    <Text style={styles.layerEmoji}>🚦</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={[styles.layerText, typography.body, { color: colors.textMain }]}>
+                                            Trafic automobile
+                                        </Text>
+                                        <Text style={{ fontSize: 12, lineHeight: 16, color: colors.textSecondary }}>
+                                            Axes denses et embouteillés, évités par les itinéraires sécurisés
+                                        </Text>
+                                    </View>
+                                    <Switch
+                                        value={showTraffic}
+                                        onValueChange={(value) => { Haptics.selectionAsync(); setShowTraffic(value); }}
+                                        trackColor={{ true: colors.primary }}
+                                    />
+                                </View>
+                            </>
+                        )}
                     </Animated.View>
                 </TouchableOpacity>
             </Modal>
