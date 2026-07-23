@@ -221,8 +221,9 @@ def _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light
         comfort = d.get('_roughness', DEFAULT_ROUGHNESS) * surface_sens
         footway = d.get('_footway', 0.0) * footway_avoid
         base = d['_length_f'] * (1.0 + d[risk_key] * one_minus + d['_grade_term'] * beta + comfort + footway)
-        if d.get('traffic_jam', False):
-            base += TRAFFIC_BASE_PENALTY + (TRAFFIC_SAFETY_FACTOR * one_minus)
+        traffic = d.get('traffic_factor', 0.0)
+        if traffic:
+            base += traffic * (TRAFFIC_BASE_PENALTY + TRAFFIC_SAFETY_FACTOR * one_minus)
         return base
 
     def weight(u, v, d):

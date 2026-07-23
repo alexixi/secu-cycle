@@ -71,9 +71,10 @@ Un clique sur le trajet provoque la sélection du trajet et l'apparition du desc
 
 \noindent Sur la carte se trouvent trois boutons principaux.
 
-\noindent Le bouton "Trafic en temps réel" déclenche l'apparition des points de trafic ainsi que de leur légende.
-Les données du trafic sont récupérées grâce à l'API Avatar~\cite{Avatar} proposée par le Cerema.
-Ces données sont utilisées avec une heure et demie de décalage et sont actualisées toutes les cinq minutes.\\
+\noindent Le bouton "Trafic en temps réel" déclenche l'apparition des tronçons de trafic ainsi que de leur légende.
+Les données du trafic sont récupérées auprès des open data des métropoles couvertes~\cite{TraficBM} : selon la zone de l'itinéraire, la source appropriée est interrogée automatiquement, et le bouton disparaît là où aucune n'est disponible.
+Elles sont publiées en temps quasi réel, sans décalage : l'heure du relevé est rappelée sous la légende.
+Les axes denses et embouteillés, qui sont précisément ceux que nos itinéraires sécurisés contournent, sont tracés plus épais que les axes fluides.\\
 
 \noindent On trouve aussi sur la carte le bouton "Ajouter un signalement".
 Une fois ce bouton cliqué, l'utilisateur peut cliquer à un endroit sur la carte.

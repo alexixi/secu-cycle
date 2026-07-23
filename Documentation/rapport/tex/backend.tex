@@ -49,27 +49,46 @@ Voici le rôle de chaque table dans la base de données :
 
 \subsection{Gestion du trafic en temps réel}
 
-La sécurité d'un itinéraire cyclable dépend en partie des conditions de circulation au moment du trajet. Un axe embouteillé concentre des manœuvres imprévisibles et augmente le risque d'accident pour le cycliste. Notre système intègre donc une couche de données trafic en temps réel pour adapter les informations affichées aux conditions actuelles.
+La sécurité d'un itinéraire cyclable dépend en partie des conditions de circulation au moment du trajet. Un axe embouteillé concentre des manœuvres imprévisibles et augmente le risque d'accident pour le cycliste. Notre système intègre donc une couche de données trafic en temps réel, qui alimente à la fois l'affichage sur la carte et le calcul d'itinéraire.
 
-\subsubsection{Source de données : l'API AVATAR du Cerema}
+\subsubsection{Choix de la source : une comparaison mesurée}
 
-Pour alimenter cette fonctionnalité, nous utilisons l'\textbf{API AVATAR du Cerema}, qui recense les points de comptage fixes déployés sur la métropole bordelaise, par le biais de boucles électromagnétiques et de radars. Pour chaque capteur, deux indicateurs sont disponibles : la vitesse moyenne ($v$, en km/h) et le débit horaire ($q$, en véhicules/heure). Ces données sont récupérées par le backend et exposées aux clients via l'endpoint \texttt{/traffic/}.
+Deux sources ouvertes couvrent la métropole bordelaise : l'\textbf{API AVATAR du Cerema}, qui expose les mesures brutes de points de comptage fixes (boucles électromagnétiques et radars), et l'\textbf{open data de Bordeaux Métropole} (jeu \texttt{ci\_trafi\_l}), qui publie directement l'état de congestion de chaque tronçon de voirie. Nos deux chaînes de traitement s'étaient initialement appuyées sur l'une et l'autre sans concertation ; nous les avons départagées en instrumentant les deux API.
 
-\subsubsection{Stratégie de mise à jour et gestion du cache}
+\begin{itemize}
+    \item \textbf{Latence de réponse} : 0,45\,s pour Bordeaux Métropole, contre 31\,s pour AVATAR, dont l'API n'offre aucun filtre spatial et impose donc de télécharger les 9\,754 points de comptage nationaux.
+    \item \textbf{Fraîcheur} : Bordeaux Métropole publie toutes les 5 minutes exactement, l'horodatage correspondant à l'instant de publication. Les mesures AVATAR accusent 10 à 15 minutes de retard en régime normal, et nous avons observé des interruptions de flux dépassant l'heure.
+    \item \textbf{Complétude} : sur les 602 capteurs AVATAR de la zone, 403 seulement remontent des mesures ; le taux d'occupation n'est jamais renseigné et la vitesse ne l'est que dans 21\,\% des cas — or c'était précisément la variable la plus pondérée par notre indice de danger.
+    \item \textbf{Nature de la donnée} : Bordeaux Métropole fournit un état déjà qualifié, porté par la géométrie du tronçon, là où AVATAR impose de reconstruire un score à partir de mesures ponctuelles.
+\end{itemize}
 
-La liste des capteurs Cerema est géographiquement stable : les points de comptage ne changent pas d'emplacement d'une heure à l'autre. Nous la mettons donc en cache en mémoire avec une durée de vie (\textit{TTL}) d'une heure, ce qui évite de la récupérer inutilement à chaque requête. En revanche, les mesures de trafic elles-mêmes sont interrogées dynamiquement à chaque appel, en se limitant aux données des deux dernières heures. Cette fenêtre glissante garantit que les niveaux affichés reflètent la circulation du moment, sans remonter à des mesures obsolètes.
+Nous avons donc écarté les comptages bruts au profit de l'\textbf{état de congestion déjà qualifié sur une géométrie de tronçon}, dont Bordeaux Métropole a servi de référence. La couverture nationale d'AVATAR, seul argument en sa faveur, s'est révélée trompeuse : elle ignore Toulouse, Lille et Nice, et ne dépasse pas les frontières, ce qui la rend inutile pour notre profil belge de Tournai.
 
-\subsubsection{Calcul de l'indice de danger}
+\subsubsection{Généralisation à plusieurs métropoles}
 
-À partir des mesures brutes de chaque capteur, nous calculons un score de danger $D$ selon la formule pondérée suivante :
-\begin{equation}
-    D = s_v \times 0{,}6 + s_q \times 0{,}4
-\end{equation}
-$s_v$ est le score de vitesse et $s_q$ le score de débit, tous deux normalisés entre 0 (aucun danger) et 1 (danger maximal). Les seuils sont les suivants : $s_v = 0$ si $v \geq 70$\,km/h et $s_v = 1$ si $v < 30$\,km/h, avec une interpolation linéaire entre ces deux bornes ; $s_q = 0$ si $q < 200$\,véh./h et $s_q = 1$ si $q \geq 800$\,véh./h, avec une interpolation linéaire sur cet intervalle.
+Ce format n'est pas propre à Bordeaux : plusieurs métropoles françaises publient, sur la même plateforme \textit{Opendatasoft} (API \texttt{explore/v2.1}), un jeu de tronçons routiers assortis d'un état de congestion pré-qualifié. Nous avons donc généralisé la collecte à un \textbf{registre de sources} : chaque entrée décrit une métropole par l'URL de son jeu, son emprise géographique, et la correspondance entre son vocabulaire d'état et notre échelle unique (\textit{fluide} / \textit{dense} / \textit{embouteillé} / \textit{indéterminé}). Ajouter une ville se réduit alors à une entrée de configuration.
 
-Ces seuils ont été définis à partir des caractéristiques typiques des axes couverts par les capteurs AVATAR sur la métropole bordelaise, qui sont majoritairement des voies urbaines principales. Cette approche repose sur des valeurs absolues et ne tient pas compte de la vitesse maximale autorisée ni de la capacité théorique propre à chaque route. Une amélioration possible serait de normaliser $s_v$ par rapport à la limite de vitesse réglementaire de chaque tronçon, et $s_q$ par rapport à son taux de saturation ($q/C$, où $C$ est la capacité de la voie), ce qui pourrait être intégré dans une version ultérieure.
+Quatre sources sont ainsi intégrées : \textbf{Bordeaux Métropole} (état \texttt{FLUIDE}/\texttt{DENSE}/\texttt{EMBOUTEILLE}), \textbf{Rennes Métropole} (champ \texttt{trafficstatus} au standard européen DATEX~II), \textbf{Eurométropole de Strasbourg} (système SIRAC, état codé de 0 à 3) et \textbf{Nantes Métropole} (indicateur de fluidité des axes). Un unique collecteur générique les interroge toutes, quel que soit leur vocabulaire d'origine. À l'inverse, nous avons écarté les sources qui ne publient que des comptages bruts (Paris, Lille, Toulouse), celle de Lyon dont le format n'est pas interopérable avec les précédentes, et l'ensemble des sources belges, faute d'état qualifié sur la voirie urbaine.
 
-Nous avons choisi de donner plus de poids à la vitesse (60\,\%) qu'au débit (40\,\%) car, du point de vue d'un cycliste, la vitesse des véhicules est le facteur de risque principal. Un trafic dense mais lent reste gérable ; des voitures rapides sur une voie sans aménagement cyclable exposent davantage le cycliste. Le score final classe chaque point de comptage en trois niveaux : \textit{fluide} ($D < 0{,}35$, vert), \textit{dense} ($D < 0{,}65$, orange) ou \textit{critique} ($D \geq 0{,}65$, rouge). Faute de données suffisantes, le niveau reste \textit{indéterminé} (gris).
+\subsubsection{Une collecte, deux usages}
+
+La collecte est menée par une tâche de fond, au rythme de publication de la source, et jamais dans le fil d'une requête utilisateur : l'endpoint \texttt{/traffic/} se contente de servir l'instantané déjà constitué, ce qui rend sa réponse immédiate même au premier appel. Le même instantané produit deux sorties : la couche GeoJSON affichée sur la carte, et le drapeau de congestion posé sur les arêtes du graphe. L'utilisateur voit ainsi exactement ce que le calcul d'itinéraire cherche à éviter.
+
+Une source n'est interrogée que si l'emprise qu'elle couvre croise celle du graphe chargé, elle-même déduite des nœuds du graphe. Le critère est délibérément géographique et non national : notre profil « tournai » comprend des communes françaises (Lille, Roubaix), et un filtrage par pays y aurait activé la source bordelaise pour ne récolter aucun tronçon atteignant la zone. Sur un profil non couvert, la couche se désactive proprement, l'option disparaît de l'interface et aucune requête n'est émise.
+
+\subsubsection{Rattachement au graphe}
+
+Les tronçons signalés \textit{dense} ou \textit{embouteillé} sont échantillonnés tous les 20 mètres, et chaque point est rattaché au nœud du graphe le plus proche au moyen de l'index spatial (\textit{BallTree}) déjà précalculé pour le routage. Une arête n'est déclarée congestionnée que si \textbf{ses deux extrémités} figurent parmi ces nœuds : se contenter d'une seule extrémité marquait toutes les rues perpendiculaires débouchant sur l'axe, soit près de trois fois plus d'arêtes que nécessaire.
+
+En sont exclues les voies \textbf{physiquement séparées de la chaussée} (pistes cyclables en site propre, chemins) : le cycliste n'y partage pas la circulation automobile, si bien qu'une piste longeant un axe saturé ne doit pas en hériter la pénalité.
+
+\subsubsection{Malus de routage}
+
+Le malus est \textbf{gradué selon la sévérité} : un axe embouteillé (rouge) pèse plein tarif, un axe dense (orange) 40\,\% seulement. Il se décompose en une part fixe, qui s'applique quel que soit le curseur rapidité/sécurité car un embouteillage ralentit aussi le trajet, et une part qui ne croît qu'en allant vers la sécurité. Concrètement, un tronçon rouge coûte de 50 mètres virtuels supplémentaires (rapidité pure) à 170 (sécurité pure), un tronçon orange de 20 à 68.
+
+Ce dimensionnement est volontairement modéré. Les axes congestionnés sont massivement des routes primaires et secondaires, que le score d'infrastructure évite déjà fortement — de l'ordre de 700 mètres virtuels sur une arête, en mode sécurité. Le trafic n'ajoute qu'environ un quart par-dessus : il affine le choix sans constituer un second évitement des grands axes, qui ferait double emploi. Nous avons par ailleurs renoncé à faire du niveau de congestion un proxy du risque d'accident : pour un cycliste, un axe à l'arrêt n'est pas plus dangereux qu'un axe dense mais roulant, la gravité ne suivant pas l'intensité de la circulation.
+
+Enfin, le cache d'itinéraires n'est vidé que lorsque l'ensemble des arêtes congestionnées a effectivement changé, et une collecte en échec conserve le dernier état connu en le marquant comme périmé plutôt que de relâcher les pénalités.
 
 \subsection{API REST}
 

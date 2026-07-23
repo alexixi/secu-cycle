@@ -461,6 +461,15 @@ export async function getAccidents() {
     }
 }
 
+export async function getTraffic() {
+    try {
+        const data = await apiFetch("/traffic/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function createReport(token, reportType, description, latitude, longitude) {
     try {
         const data = await apiFetch("/reports/", {

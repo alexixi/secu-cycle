@@ -9,34 +9,7 @@ MAPTILER_GEOCODE_URL = "https://api.maptiler.com/geocoding/{query}.json"
 
 HTTP_TIMEOUT_S = 4.0
 
-# Les communes d'un profil sont des chaînes Nominatim libres suffixées par le
-# pays ("Tournai, Belgium"). C'est ce suffixe qui détermine les providers à
-# interroger. Ajouter un pays = ajouter une entrée ici
-COUNTRY_SUFFIXES = {
-    "france": "fr",
-    "belgium": "be",
-    "belgique": "be",
-    "belgië": "be",
-    "luxembourg": "lu",
-    "netherlands": "nl",
-    "nederland": "nl",
-    "pays-bas": "nl",
-    "germany": "de",
-    "deutschland": "de",
-    "allemagne": "de",
-    "spain": "es",
-    "españa": "es",
-    "espagne": "es",
-    "italy": "it",
-    "italia": "it",
-    "italie": "it",
-    "switzerland": "ch",
-    "suisse": "ch",
-}
-
-# Pays retenu quand aucune commune ne porte de suffixe reconnu. Le corpus
-# historique est français.
-DEFAULT_COUNTRY = "fr"
+from graph.extent import COUNTRY_SUFFIXES, DEFAULT_COUNTRY  # noqa: F401
 
 # Pays servis par la BAN. C'est ce qui décide si on peut commencer par une source
 # gratuite et faisant autorité, ou s'il faut aller directement chez MapTiler.

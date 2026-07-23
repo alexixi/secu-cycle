@@ -29,8 +29,10 @@ from seed_home_cases import seed_home_cases
 from seed_faqs import seed_faqs
 from seed_badges import seed_badges
 from graph import builder as graph_builder
-from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic, load_graph_profile
+from graph.graph_manager import load_graph_with_ign, load_graph_profile
 from graph.route_cache import route_cache
+from traffic import config as traffic_config
+from traffic import service as traffic_service
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -43,13 +45,23 @@ import os
 async def periodic_traffic_update(app: FastAPI):
     """
     Boucle infinie qui s'exécute en arrière-plan.
-    Met à jour le trafic toutes les 5 minutes (300 secondes).
+    Actualise le trafic au rythme de publication de la source.
+
+    Le cache d'itinéraires n'est vidé que si l'ensemble des arêtes
+    congestionnées a réellement changé : le purger à chaque tour le laissait
+    froid en permanence.
     """
     while True:
-        await asyncio.sleep(300)
-        if hasattr(app.state, 'G') and app.state.G is not None:
-            print("[Background Task] Actualisation du trafic en cours...", flush=True)
-            app.state.G = await asyncio.to_thread(update_graph_with_traffic, app.state.G)
+        await asyncio.sleep(traffic_config.REFRESH_INTERVAL_S)
+        if getattr(app.state, 'G', None) is None:
+            continue
+        try:
+            changed = await traffic_service.refresh(app.state.G)
+        except Exception as exc:
+            # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
+            print(f"[Background Task] Échec de l'actualisation du trafic : {exc}", flush=True)
+            continue
+        if changed:
             route_cache.invalidate()
 
 
@@ -139,13 +151,17 @@ async def lifespan(app: FastAPI):
 
     profile = load_graph_profile()
     app.state.graph_profile = profile["name"]
+    app.state.graph_communes = profile["communes"]
     app.state.graph_loading = False
     app.state.G = load_graph_with_ign(
         profile["graph_file"], profile["ign_cache_file"], profile["communes"])
 
     print("Chargement initial du trafic...")
 
-    app.state.G = await asyncio.to_thread(update_graph_with_traffic, app.state.G)
+    try:
+        await traffic_service.refresh(app.state.G)
+    except Exception as exc:
+        print(f"Trafic indisponible au démarrage : {exc}", flush=True)
 
     print("Graphe chargé et prêt !")
 

@@ -52,8 +52,9 @@ DEFAULT_HOME_CASES = [
             "utilisons la BAN (Base Adresse Nationale, adresse.data.gouv.fr), complétée "
             "par MapTiler (maptiler.com) pour les lieux et les adresses situés hors de "
             "France, en Belgique notamment. Pour avoir des données de "
-            "trafic de la circulation routière nous utilisons les données du projet "
-            "Avatar du Cerema (avatar.cerema.fr). Enfin pour l'affichage de la carte, "
+            "trafic de la circulation routière nous utilisons l'open data de Bordeaux "
+            "Métropole (opendata.bordeaux-metropole.fr), qui publie l'état des axes en "
+            "temps réel. Enfin pour l'affichage de la carte, "
             "nous utilisons les tuiles cartographiques de MapTiler, elles aussi "
             "basées sur les données d'OpenStreetMap."
         ),

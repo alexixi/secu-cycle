@@ -2,9 +2,6 @@
     border-radius: 12px;
 }
 
-/* Les popups vivent sur la carte, qui a son propre thème (indépendant de celui
-   de l'app) : on rattache leurs couleurs à `.map-dark` via ces variables locales,
-   pour qu'un popup soit sombre sur carte sombre et clair sur carte claire. */
 .map-container {
     --map-popup-surface: #ffffff;
     --map-popup-text: #1e2030;
@@ -27,8 +24,6 @@
     overflow: hidden;
 }
 
-/* La flèche du popup doit épouser la couleur du corps (sinon elle reste blanche
-   sur un popup sombre). Une seule bordure est colorée selon l'ancrage. */
 .maplibregl-popup-anchor-top .maplibregl-popup-tip,
 .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
 .maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
@@ -49,7 +44,6 @@
     border-left-color: var(--map-popup-surface);
 }
 
-/* L'accent vient de l'en-tête coloré : la croix est blanche pour rester lisible dessus. */
 .maplibregl-popup-close-button {
     font-size: 1.15rem;
     line-height: 1;
@@ -86,8 +80,6 @@
     opacity: 0.9;
 }
 
-/* Carte popup commune aux POI, signalements et points de trafic :
-   en-tête coloré (accent) / corps / pied d'action. */
 .map-popup {
     background-color: var(--map-popup-surface);
     color: var(--map-popup-text);
@@ -469,6 +461,14 @@
     gap: 8px;
 }
 
+.traffic-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 .traffic-legend {
     background-color: var(--bg-surface);
     border-radius: 8px;
@@ -487,11 +487,24 @@
     gap: 7px;
 }
 
-.traffic-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+.traffic-line-sample {
+    width: 16px;
+    height: 4px;
+    border-radius: 2px;
     flex-shrink: 0;
+}
+
+.traffic-legend-time {
+    margin-top: 2px;
+    padding-top: 5px;
+    border-top: 1px solid var(--border-light);
+    font-size: 0.92em;
+    color: var(--map-popup-muted);
+}
+
+.map-popup-muted {
+    color: var(--map-popup-muted);
+    font-size: 0.9em;
 }
 
 @media (max-width: 700px) {

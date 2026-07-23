@@ -106,8 +106,10 @@ ACCIDENT_MALUS_K = 0.5
 
 ELEVATION_DIVISOR = 30.0
 DEFAULT_SAFETY_PENALTY = 30.0
+
+# Malus d'un tronçon congestionné, en mètres virtuels, pondéré par la sévérité
 TRAFFIC_BASE_PENALTY = 50.0
-TRAFFIC_SAFETY_FACTOR = 250.0
+TRAFFIC_SAFETY_FACTOR = 120.0
 
 SURFACE_ROUGHNESS = {
     'asphalt': 0.0, 'concrete': 0.05, 'concrete:plates': 0.1, 'paved': 0.05,

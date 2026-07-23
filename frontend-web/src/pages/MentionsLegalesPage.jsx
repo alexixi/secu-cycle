@@ -69,7 +69,8 @@ export default function MentionsLegalesPage() {
                         <a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>{" "}
                         (licence ODbL), l'<a href="https://www.ign.fr/" target="_blank" rel="noopener noreferrer">IGN</a>,
                         la <a href="https://adresse.data.gouv.fr/" target="_blank" rel="noopener noreferrer">Base Adresse Nationale</a>,
-                        le projet <a href="https://avatar.cerema.fr/" target="_blank" rel="noopener noreferrer">AVATAR</a> du Cerema,
+                        l'<a href="https://opendata.bordeaux-metropole.fr/" target="_blank" rel="noopener noreferrer">open data de Bordeaux Métropole</a>{" "}
+                        (licence ouverte),
                         et <a href="https://www.maptiler.com/" target="_blank" rel="noopener noreferrer">MapTiler</a>.
                     </p>
 

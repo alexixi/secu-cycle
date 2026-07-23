@@ -27,7 +27,8 @@ export default function ItinerairePage() {
     const [reportCoords, setReportCoords] = useState(null);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [isReportMode, setIsReportMode] = useState(false);
-    const [trafficPoints, setTrafficPoints] = useState([]);
+    const [traffic, setTraffic] = useState(null);
+    const [trafficError, setTrafficError] = useState(null);
     const [showTraffic, setShowTraffic] = useState(false);
 
     const { token, user } = useAuth();
@@ -38,11 +39,26 @@ export default function ItinerairePage() {
 
     useEffect(() => {
         if (!showTraffic) return;
-        getTraffic().then(setTrafficPoints).catch(console.error);
-        const interval = setInterval(() => {
-            getTraffic().then(setTrafficPoints).catch(console.error);
-        }, 120000);
-        return () => clearInterval(interval);
+
+        let cancelled = false;
+        let timer = null;
+
+        const load = async () => {
+            try {
+                const data = await getTraffic();
+                if (cancelled) return;
+                setTraffic(data);
+                setTrafficError(null);
+                timer = setTimeout(load, (data?.refresh_interval_s || 300) * 1000);
+            } catch (error) {
+                if (cancelled) return;
+                setTrafficError("Trafic momentanément indisponible.");
+                timer = setTimeout(load, 60000);
+            }
+        };
+        load();
+
+        return () => { cancelled = true; if (timer) clearTimeout(timer); };
     }, [showTraffic]);
 
     const handleStartSelect = (coords) => {
@@ -219,7 +235,8 @@ export default function ItinerairePage() {
                     itineraires={routePaths}
                     selectedItineraire={selectedItineraire}
                     setSelectedItineraire={handleSelectItineraire}
-                    trafficPoints={showTraffic ? trafficPoints : []}
+                    traffic={traffic}
+                    trafficError={trafficError}
                     showTraffic={showTraffic}
                     onToggleTraffic={() => setShowTraffic(prev => !prev)}
                     reports={reports}
