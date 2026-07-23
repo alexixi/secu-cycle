@@ -11,8 +11,9 @@ from dependencies import require_admin
 from graph import builder, communes as communes_service, routing
 from graph.communes import CommuneNotFound
 from graph.config import MAX_SNAP_DISTANCE_M
-from graph.graph_manager import load_graph_with_ign, profile_paths, update_graph_with_traffic
+from graph.graph_manager import load_graph_with_ign, profile_paths
 from graph.route_cache import route_cache
+from traffic import service as traffic_service
 from limiter import limiter
 from models.graph_profile import GraphBuildRun, GraphProfile
 from models.user import User
@@ -392,10 +393,11 @@ async def _reload_graph(app, name: str) -> None:
         G = await asyncio.to_thread(
             load_graph_with_ign, paths["graph_file"], paths["ign_cache_file"], communes
         )
-        G = await asyncio.to_thread(update_graph_with_traffic, G)
+        await traffic_service.refresh(G)
 
         app.state.G = G
         app.state.graph_profile = name
+        app.state.graph_communes = communes
         route_cache.invalidate()
         print(f"[Graphe] Profil '{name}' actif : {G.number_of_nodes()} nœuds.", flush=True)
     except Exception as exc:
