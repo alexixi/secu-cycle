@@ -15,7 +15,7 @@ jobs:
     name: Secrets commités (gitleaks)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2
@@ -26,7 +26,7 @@ jobs:
     name: Dépendances vulnérables
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v5
         with:
@@ -55,7 +55,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Informatif : résultats dans les logs du job (pas d'upload SARIF → pas de
       # gate « Code scanning results » qui bloquerait la PR sur des findings noisy).
       - name: Analyse semgrep
@@ -70,7 +70,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Scan filesystem : vulnérabilités des lockfiles, mauvaises configs
       # Dockerfile/compose, et secrets. Informatif (résultats dans les logs).
       - name: Analyse Trivy
