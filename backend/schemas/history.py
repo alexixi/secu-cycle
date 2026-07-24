@@ -7,9 +7,6 @@ class UserHistoryBase(BaseModel):
     route_id: int
     action_type: str
 
-class UserHistoryCreate(UserHistoryBase):
-    pass
-
 class UserHistoryRead(UserHistoryBase):
     id: int
     user_id: int

@@ -157,11 +157,9 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
             # Le front en a besoin pour appeler /complete sur la variante réellement suivie.
             # Muter route_info est sans risque : route_cache deepcopy en get comme en set.
             route_info["route_id"] = db_route.id
-            db.add(UserHistory(
-                user_id=current_user.id,
-                route_id=db_route.id,
-                action_type="trajet",
-            ))
+            # Pas d'entrée d'historique ici : le calcul persiste 2-3 variantes dont
+            # l'utilisateur n'en suivra au plus qu'une. L'historique est alimenté
+            # à l'arrivée, dans /complete.
 
         db.commit()
 
@@ -189,6 +187,14 @@ def complete_route(route_id: int, db: Session = Depends(get_db),
         if already_mine is None:
             raise HTTPException(status_code=404, detail="Route introuvable")
         return CompleteRouteResponse(completed=False, newly_unlocked=[])
+
+    # L'historique n'enregistre que les trajets réellement parcourus en guidage.
+    # L'UPDATE ci-dessus étant idempotent, on ne passe ici qu'une fois par route.
+    db.add(UserHistory(
+        user_id=current_user.id,
+        route_id=route_id,
+        action_type="trajet",
+    ))
 
     db.commit()
     return CompleteRouteResponse(
