@@ -4,14 +4,15 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import Button from '../../components/ui/Button';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 import MapContextMenu, { formatCoords } from './MapContextMenu';
+import LightingInfoModal from './LightingInfoModal';
 import { useTheme } from '../../context/ThemeContext';
-import { getPois, getAccidents } from '../../services/apiBack';
+import { getPois, getAccidents, getStreetlights, getLitRoads, getStreetlightSources } from '../../services/apiBack';
 import { getAddressFromCoordinates, getApproxLocationFromIp } from '../../services/geocodingService';
 import { trackEvent } from '../../services/analytics';
 
 import { IoMdPin } from "react-icons/io";
 import { FaLayerGroup } from "react-icons/fa";
-import { MdOutlineReportProblem, MdOutlineTraffic, MdMyLocation, MdOutlinePlace } from "react-icons/md";
+import { MdOutlineReportProblem, MdOutlineTraffic, MdMyLocation, MdOutlinePlace, MdOutlineLightbulb, MdInfoOutline } from "react-icons/md";
 import reportAccidentIcon from '../../assets/reports/accident.png';
 import reportTravauxIcon from '../../assets/reports/travaux.png';
 import reportDangerIcon from '../../assets/reports/danger.png';
@@ -157,6 +158,29 @@ const POI_LAYER_ID = 'pois-symbol';
 const REPORT_LAYER_ID = 'reports-symbol';
 const ACCIDENT_HEAT_LAYER_ID = 'accidents-heat';
 const ACCIDENT_POINT_LAYER_ID = 'accidents-point';
+const LIGHTING_HEAT_LAYER_ID = 'lighting-heat';
+const LIT_ROADS_GLOW_LAYER_ID = 'lit-roads-glow';
+const LIT_ROADS_LINE_LAYER_ID = 'lit-roads-line';
+
+const LIT_ROADS_COLORS = { osm: '#ffcf3d', inferred: '#ffe39a' };
+const LIGHTING_LAMP_COLOR = '#ffc12d';
+
+const LIT_ROADS_COLOR = ['match', ['get', 'lit_source'],
+    'inferred', LIT_ROADS_COLORS.inferred,
+    LIT_ROADS_COLORS.osm];
+
+const LIGHTING_HEATMAP_PAINT = {
+    'heatmap-weight': 0.7,
+    'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 13, 1.1, 19, 1.4],
+    'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+        0, 'rgba(0,0,0,0)',
+        0.1, 'rgba(255,247,204,0.35)',
+        0.3, 'rgba(255,236,150,0.55)',
+        0.6, 'rgba(255,214,90,0.72)',
+        1, 'rgba(255,193,45,0.88)'],
+    'heatmap-radius': ['interpolate', ['exponential', 2], ['zoom'], 11, 8, 15, 10, 19, 160, 22, 1280],
+    'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0.55, 19, 0.5],
+};
 
 const ACCIDENT_SWITCH_ZOOM = 13.5;
 
@@ -268,6 +292,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [userPosition, setUserPosition] = useState(null);
     const [isLocating, setIsLocating] = useState(false);
     const [isPoiMenuOpen, setIsPoiMenuOpen] = useState(false);
+    const [isLightingMenuOpen, setIsLightingMenuOpen] = useState(false);
+    const [isLightingInfoOpen, setIsLightingInfoOpen] = useState(false);
+    const [lightingSources, setLightingSources] = useState(null);
+    const lightingSourcesRef = useRef(false);
     const [enabledPoiCats, setEnabledPoiCats] = useState({});
     const [enabledSubTypes, setEnabledSubTypes] = useState(DEFAULT_SUB_TYPES);
     const poiCacheRef = useRef({});
@@ -278,6 +306,12 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [accidentData, setAccidentData] = useState(null);
     const [activeAccident, setActiveAccident] = useState(null);
     const accidentCacheRef = useRef(false);
+    const [showLighting, setShowLighting] = useState(false);
+    const [lightingData, setLightingData] = useState(null);
+    const lightingCacheRef = useRef(false);
+    const [showLitRoads, setShowLitRoads] = useState(false);
+    const [litRoadsData, setLitRoadsData] = useState(null);
+    const litRoadsCacheRef = useRef(false);
     const [contextMenu, setContextMenu] = useState(null);
     const [contextAddress, setContextAddress] = useState(null);
     const [isContextAddressLoading, setIsContextAddressLoading] = useState(false);
@@ -300,6 +334,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         }
 
         setShowAccidents(localStorage.getItem('userMapAccidents') === 'true');
+        setShowLighting(localStorage.getItem('userMapLighting') === 'true');
+        setShowLitRoads(localStorage.getItem('userMapLitRoads') === 'true');
 
         const savedSubTypes = localStorage.getItem('userMapSubTypes');
         if (savedSubTypes) {
@@ -345,6 +381,78 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         localStorage.setItem('userMapAccidents', String(next));
     };
 
+    useEffect(() => {
+        if (littleMap || !showLighting || lightingCacheRef.current) return;
+        lightingCacheRef.current = true;
+        getStreetlights()
+            .then(collection => {
+                setLightingData(collection);
+                if (!collection?.features?.length) lightingCacheRef.current = false;
+            })
+            .catch(error => {
+                lightingCacheRef.current = false;
+                console.error("Erreur chargement de l'éclairage :", error);
+            });
+    }, [showLighting, littleMap]);
+
+    const handleLightingToggle = () => {
+        const next = !showLighting;
+        setShowLighting(next);
+        localStorage.setItem('userMapLighting', String(next));
+    };
+
+    useEffect(() => {
+        if (littleMap || !showLitRoads || litRoadsCacheRef.current) return;
+        litRoadsCacheRef.current = true;
+        getLitRoads()
+            .then(collection => {
+                setLitRoadsData(collection);
+                if (!collection?.features?.length) litRoadsCacheRef.current = false;
+            })
+            .catch(error => {
+                litRoadsCacheRef.current = false;
+                console.error("Erreur chargement des rues éclairées :", error);
+            });
+    }, [showLitRoads, littleMap]);
+
+    const handleLitRoadsToggle = () => {
+        const next = !showLitRoads;
+        setShowLitRoads(next);
+        localStorage.setItem('userMapLitRoads', String(next));
+    };
+
+    const lightingShown = showLighting || showLitRoads;
+
+    const handleLightingButton = () => {
+        if (lightingShown) {
+            setShowLighting(false);
+            setShowLitRoads(false);
+            localStorage.setItem('userMapLighting', 'false');
+            localStorage.setItem('userMapLitRoads', 'false');
+            setIsLightingMenuOpen(false);
+            return;
+        }
+
+        setShowLighting(true);
+        setShowLitRoads(true);
+        localStorage.setItem('userMapLighting', 'true');
+        localStorage.setItem('userMapLitRoads', 'true');
+        setIsLightingMenuOpen(true);
+    };
+
+    const handleLightingInfoToggle = () => {
+        const next = !isLightingInfoOpen;
+        setIsLightingInfoOpen(next);
+        if (!next || lightingSourcesRef.current) return;
+        lightingSourcesRef.current = true;
+        getStreetlightSources()
+            .then(data => setLightingSources(data?.sources || []))
+            .catch(error => {
+                lightingSourcesRef.current = false;  // autorise une nouvelle tentative
+                console.error("Erreur chargement des sources d'éclairage :", error);
+            });
+    };
+
     const handlePoiCategoryToggle = (id) => {
         const next = { ...enabledPoiCats, [id]: !enabledPoiCats[id] };
         setEnabledPoiCats(next);
@@ -381,6 +489,9 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     }), [reports]);
 
     const showAccidentLayers = !littleMap && showAccidents && !!accidentData;
+    const showLightingLayer = !littleMap && showLighting && !!lightingData;
+    const showLitRoadsLayer = !littleMap && showLitRoads && !!litRoadsData;
+    const trafficShown = !littleMap && !!onToggleTraffic && traffic?.available !== false;
 
     const showPois = !littleMap && arePoiImagesReady && poisGeoJSON.features.length > 0;
     const showReports = !littleMap && arePoiImagesReady && reportsGeoJSON.features.length > 0;
@@ -715,6 +826,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
 
     return (
         <div className={`map-container ${littleMap ? 'little-map' : ''} ${resolvedTheme === 'dark' ? 'map-dark' : ''}`}>
+            <div className="map-left-controls">
             {!littleMap && canReport && (
                 <div className="map-report-control">
                     <Button
@@ -729,11 +841,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 </div>
             )}
 
-            {!littleMap && onToggleTraffic && traffic?.available !== false && (
-                <div
-                    className="map-traffic-control"
-                    style={{ bottom: canReport ? "95px" : "45px" }}
-                >
+            {trafficShown && (
+                <div className="map-traffic-control">
                     {showTraffic && (
                         <div className="traffic-legend">
                             <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.green }} />Fluide</span>
@@ -755,6 +864,78 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     </Button>
                 </div>
             )}
+
+            {!littleMap && (
+                <div className="map-lighting-control">
+                    {isLightingMenuOpen && (
+                        <div className="map-style-menu map-lighting-menu">
+                            <div className="lighting-menu-head">
+                                <div className="map-style-menu-title">Éclairage public</div>
+                                <button
+                                    type="button"
+                                    className="lighting-info-btn"
+                                    onClick={handleLightingInfoToggle}
+                                    title="Comment ça marche et d'où viennent les données"
+                                    aria-label="Informations sur l'éclairage"
+                                >
+                                    <MdInfoOutline />
+                                </button>
+                            </div>
+
+                            <label className="map-poi-item">
+                                <span className="map-poi-badge" style={{ backgroundColor: LIGHTING_LAMP_COLOR }} />
+                                <span className="map-poi-label">Lampadaires</span>
+                                <input
+                                    type="checkbox"
+                                    checked={showLighting}
+                                    onChange={handleLightingToggle}
+                                />
+                            </label>
+
+                            <label className="map-poi-item">
+                                <span className="map-poi-badge" style={{ backgroundColor: LIT_ROADS_COLORS.osm }} />
+                                <span className="map-poi-label">Rues éclairées</span>
+                                <input
+                                    type="checkbox"
+                                    checked={showLitRoads}
+                                    onChange={handleLitRoadsToggle}
+                                />
+                            </label>
+                            {showLitRoads && (
+                                <>
+                                    <span className="lighting-legend-item">
+                                        <span className="lighting-line-sample" style={{ backgroundColor: LIT_ROADS_COLORS.osm }} />
+                                        Éclairage connu
+                                    </span>
+                                    <span className="lighting-legend-item">
+                                        <span className="lighting-line-sample" style={{ backgroundColor: LIT_ROADS_COLORS.inferred }} />
+                                        Éclairage déduit
+                                    </span>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    <Button
+                        type="button"
+                        className="map-layer-toggle"
+                        onClick={handleLightingButton}
+                        title={lightingShown ? "Masquer l'éclairage" : "Éclairage public"}
+                    >
+                        <MdOutlineLightbulb size={18} />
+                        <span className="map-btn-label">
+                            {lightingShown ? "Masquer l'éclairage" : "Éclairage"}
+                        </span>
+                    </Button>
+                </div>
+            )}
+            </div>
+
+            <LightingInfoModal
+                isOpen={isLightingInfoOpen}
+                onClose={() => setIsLightingInfoOpen(false)}
+                sources={lightingSources}
+            />
 
             {!littleMap && (
                 <div className="map-theme-control">
@@ -838,6 +1019,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                     )}
                                 </>
                             )}
+
                         </div>
                     )}
 
@@ -939,6 +1121,45 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 'line-opacity': ['interpolate', ['linear'], ['zoom'],
                                     9, ['match', ['get', 'level'], 'red', 0.9, 'orange', 0.9, 'gray', 0.12, 0.3],
                                     12, ['match', ['get', 'level'], 'gray', 0.35, 0.85]],
+                            }}
+                        />
+                    </Source>
+                )}
+
+                {showLightingLayer && (
+                    <Source id="lighting" type="geojson" data={lightingData}>
+                        <Layer
+                            id={LIGHTING_HEAT_LAYER_ID}
+                            type="heatmap"
+                            paint={LIGHTING_HEATMAP_PAINT}
+                        />
+                    </Source>
+                )}
+
+                {showLitRoadsLayer && (
+                    <Source id="lit-roads" type="geojson" data={litRoadsData}>
+                        <Layer
+                            id={LIT_ROADS_GLOW_LAYER_ID}
+                            type="line"
+                            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+                            paint={{
+                                // Largeur exponentielle base 2 (jusqu'à z22) : halo lumineux
+                                // d'emprise au sol constante (~18 m, la voie et son débord éclairé).
+                                'line-color': LIT_ROADS_COLOR,
+                                'line-width': ['interpolate', ['exponential', 2], ['zoom'], 11, 4, 15, 5.3, 19, 85, 22, 680],
+                                'line-blur': ['interpolate', ['exponential', 2], ['zoom'], 11, 2, 15, 3, 19, 48, 22, 384],
+                                'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.12, 14, 0.3],
+                            }}
+                        />
+                        <Layer
+                            id={LIT_ROADS_LINE_LAYER_ID}
+                            type="line"
+                            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+                            paint={{
+                                // Cœur éclairé, ~9 m au sol, exponentiel base 2 jusqu'à z22.
+                                'line-color': LIT_ROADS_COLOR,
+                                'line-width': ['interpolate', ['exponential', 2], ['zoom'], 11, 1.5, 15, 2.7, 19, 43, 22, 344],
+                                'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.5, 14, 0.85],
                             }}
                         />
                     </Source>

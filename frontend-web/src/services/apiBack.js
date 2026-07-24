@@ -496,6 +496,33 @@ export async function getAccidents() {
     }
 }
 
+export async function getStreetlights() {
+    try {
+        const data = await apiFetch("/streetlights/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getLitRoads() {
+    try {
+        const data = await apiFetch("/streetlights/lit-roads", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getStreetlightSources() {
+    try {
+        const data = await apiFetch("/streetlights/sources", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function getTraffic() {
     try {
         const data = await apiFetch("/traffic/", { method: "GET" });

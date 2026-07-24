@@ -3,7 +3,7 @@ import './ItinerariesSelect.css';
 import { useState } from "react";
 import { FaArrowTrendUp, FaArrowTrendDown, FaBicycle } from "react-icons/fa6";
 import { PiPathBold } from "react-icons/pi";
-import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdOutlineReportProblem } from "react-icons/md";
+import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdOutlineReportProblem, MdOutlineDarkMode } from "react-icons/md";
 
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
@@ -73,7 +73,7 @@ function SafetyInfo({ id, stats }) {
     );
 }
 
-function InfraStats({ stats }) {
+function InfraStats({ stats, lightingAware }) {
     if (!stats) return null;
     return (
         <div className="path-infra-stats">
@@ -83,8 +83,14 @@ function InfraStats({ stats }) {
             <span className="infra-badge badge-blue">
                 <MdOutlineSpeed /> {stats.pct_low_speed}% zone ≤30 km/h
             </span>
-            <span className="infra-badge badge-yellow">
+            <span
+                className={`infra-badge ${lightingAware ? 'badge-yellow' : 'badge-muted'}`}
+                title={lightingAware
+                    ? "Il fait nuit : l'éclairage est pris en compte dans le calcul de cet itinéraire."
+                    : "De jour (ou pendant la coupure nocturne), l'éclairage n'entre pas dans le calcul de l'itinéraire."}
+            >
                 <MdLightbulbOutline /> {stats.pct_lit}% éclairé
+                {lightingAware && <MdOutlineDarkMode className="infra-badge-flag" />}
             </span>
             {stats.accidents_count > 0 && (
                 <span className="infra-badge badge-red">
@@ -125,7 +131,10 @@ export default function ItinerariesSelect({ itineraires, selectedItineraire, set
                                     </div>
                                 </div>
                                 {isSelected && (
-                                    <InfraStats stats={itineraire.infra_stats} />
+                                    <InfraStats
+                                        stats={itineraire.infra_stats}
+                                        lightingAware={itineraire.lighting_aware}
+                                    />
                                 )}
                                 {elevationData.length > 0 && (
                                     <div className="path-elevation">
