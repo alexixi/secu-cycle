@@ -42,10 +42,18 @@ def _validate_communes(value):
     return communes
 
 
+def _validate_hour(value):
+    if value is not None and not (0 <= value <= 24):
+        raise ValueError("L'heure d'extinction doit être comprise entre 0 et 24.")
+    return value
+
+
 class GraphProfileCreate(BaseModel):
     name: str
     base_profile_ids: list[int] = []
     communes: list[str] = []
+    night_extinction_start: Optional[int] = None
+    night_extinction_end: Optional[int] = None
 
     @field_validator("name")
     @classmethod
@@ -57,11 +65,18 @@ class GraphProfileCreate(BaseModel):
     def check_communes(cls, value):
         return _normalize_communes(value)
 
+    @field_validator("night_extinction_start", "night_extinction_end")
+    @classmethod
+    def check_extinction(cls, value):
+        return _validate_hour(value)
+
 
 class GraphProfileUpdate(BaseModel):
     name: Optional[str] = None
     communes: Optional[list[str]] = None
     is_default: Optional[bool] = None
+    night_extinction_start: Optional[int] = None
+    night_extinction_end: Optional[int] = None
 
     @field_validator("name")
     @classmethod
@@ -72,6 +87,11 @@ class GraphProfileUpdate(BaseModel):
     @classmethod
     def check_communes(cls, value):
         return _validate_communes(value)
+
+    @field_validator("night_extinction_start", "night_extinction_end")
+    @classmethod
+    def check_extinction(cls, value):
+        return _validate_hour(value)
 
 
 class GraphProfileRead(BaseModel):
@@ -89,6 +109,9 @@ class GraphProfileRead(BaseModel):
     edges: Optional[int] = None
     size_bytes: Optional[int] = None
     built_at: Optional[datetime] = None
+
+    night_extinction_start: Optional[int] = None
+    night_extinction_end: Optional[int] = None
 
     class Config:
         from_attributes = True

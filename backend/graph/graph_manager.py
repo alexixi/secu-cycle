@@ -66,6 +66,7 @@ def load_graph_profile():
             "name": profile.name,
             **profile_paths(profile.name),
             "communes": list(profile.communes or []),
+            "night_extinction": (profile.night_extinction_start, profile.night_extinction_end),
         }
     finally:
         db.close()
@@ -359,7 +360,7 @@ def create_graph(filename, filepath_json, communes, on_progress=None):
             'cycleway', 'cycleway:left', 'cycleway:right', 'cycleway:both',
             'oneway', 'oneway:bicycle', 'bicycle', 'segregated',
             'surface', 'smoothness', 'tracktype', 'width', 'lanes',
-            'lit', 'maxspeed',
+            'lit', 'lit:conditional', 'maxspeed',
         ]
         ox.settings.useful_tags_way = list(set(ox.settings.useful_tags_way + extra_tags))
 
@@ -389,9 +390,14 @@ def create_graph(filename, filepath_json, communes, on_progress=None):
 
     return G
 
-def load_graph_with_ign(filepath_graph, filepath_json, communes):
-    """Charge le graphe routier et y injecte le cache d'altitudes IGN."""
+def load_graph_with_ign(filepath_graph, filepath_json, communes, night_extinction=None):
+    """Charge le graphe routier et y injecte le cache d'altitudes IGN.
+
+    `night_extinction` = (start_h, end_h) du profil actif, posé sur `G.graph`
+    pour que le routage l'utilise comme fenêtre d'extinction de repli.
+    """
     G = create_graph(filepath_graph, filepath_json, communes)
+    G.graph['_extinction_window'] = night_extinction
 
     with open(filepath_json, 'r') as f:
         ign_data = json.load(f)
@@ -414,6 +420,12 @@ def load_graph_with_ign(filepath_graph, filepath_json, communes):
 
     from graph.accidents import attach_accident_risk
     attach_accident_risk(G)
+
+    # Inférence d'éclairage à partir des lampadaires (table street_lamps), pour
+    # densifier le tag OSM `lit` là où il manque. Doit précéder le précalcul des
+    # coûts statiques, qui en dépend.
+    from graph.lighting import attach_lighting
+    attach_lighting(G)
 
     # Précalcule une fois les composantes de coût statiques des arêtes
     # et l'index spatial des nœuds (recherche du point d'accroche).

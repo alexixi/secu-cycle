@@ -22,6 +22,12 @@ class GraphProfile(Base):
 
     is_default = Column(Boolean, nullable=False, default=False)
 
+    # Fenêtre d'extinction de l'éclairage public (heures locales, 0–24), repli
+    # quand une voie ne porte pas d'horaire OSM `lit:conditional`. NULL = repli
+    # sur NIGHT_EXTINCTION_WINDOW ; start == end = pas d'extinction.
+    night_extinction_start = Column(Integer, nullable=True)
+    night_extinction_end = Column(Integer, nullable=True)
+
     nodes = Column(Integer, nullable=True)
     edges = Column(Integer, nullable=True)
     size_bytes = Column(BigInteger, nullable=True)

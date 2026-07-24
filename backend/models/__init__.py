@@ -22,6 +22,8 @@ from models import (  # noqa: F401
     report,
     report_vote,
     route,
+    street_lamp,
+    street_lamp_sync,
     tag,
     task,
     user,

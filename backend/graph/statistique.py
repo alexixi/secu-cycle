@@ -1,5 +1,7 @@
 import math
-from datetime import datetime
+import re
+from datetime import date as _date, datetime
+from functools import lru_cache
 from astral import LocationInfo
 from astral.sun import sun
 import pytz
@@ -8,7 +10,11 @@ from graph.config import (
     DEFAULT_ROUGHNESS, BIKE_SURFACE_SPEED_FACTOR, DEFAULT_SURFACE_SPEED_FACTOR,
     ELECTRIC_SURFACE_SPEED_FACTOR,
     PEDESTRIAN_SHARED_HIGHWAYS, FOOTWAY_SPEED_FACTOR,
+    NIGHT_EXTINCTION_WINDOW,
 )
+
+# Repli lorsqu'aucun centre de graphe n'est connu (place de la Bourse, Bordeaux).
+BORDEAUX_LAT, BORDEAUX_LON = 44.8378, -0.5792
 
 def calculer_statistiques_osm(G):
     """
@@ -212,8 +218,11 @@ def get_route_safety_score(G, route, bike_type=None, is_electric=False):
     (`_s_on`/`_s_off`) et applique un petit malus si le revêtement est inadapté
     au type de vélo (un vélo de route sur gravier voit sa note baisser).
     """
-    lighting_on = get_bordeaux_lighting_condition()[1]
-    score_key = '_s_on' if lighting_on else '_s_off'
+    lat, lon = graph_center(G)
+    now = datetime.now(pytz.timezone('Europe/Paris'))
+    now_min = now.hour * 60 + now.minute
+    is_dark = is_dark_now(now, lat, lon)
+    fallback_use_on = window_lights_on(now_min, G.graph.get('_extinction_window'))
     surface_factor = (ELECTRIC_SURFACE_SPEED_FACTOR if is_electric
                       else BIKE_SURFACE_SPEED_FACTOR.get((bike_type or 'standard').lower(),
                                                          DEFAULT_SURFACE_SPEED_FACTOR))
@@ -230,6 +239,7 @@ def get_route_safety_score(G, route, bike_type=None, is_electric=False):
         data = edge_data[0] if isinstance(edge_data, dict) and 0 in edge_data else edge_data
 
         length = float(data.get('length', 0.0)) or 1.0
+        score_key = '_s_on' if edge_use_on(data, is_dark, now_min, fallback_use_on) else '_s_off'
         base = float(data.get(score_key, data.get('safety_score', 0.0)))
         weighted_score += base * length
         weighted_rough += float(data.get('_roughness', DEFAULT_ROUGHNESS)) * length
@@ -270,10 +280,40 @@ def extract_route_geometry(G, route_nodes):
 
     return path_coords
 
-def get_bordeaux_lighting_condition(check_time=None):
+def graph_center(G):
+    """Centre (lat, lon) du graphe, calculé une fois puis mémorisé sur `G`.
+
+    Sert à situer correctement le calcul lever/coucher du soleil : un graphe
+    couvrant Tournai ou Strasbourg n'a pas les mêmes heures de nuit que Bordeaux.
     """
-    Renvoie l'état de la luminosité et de l'éclairage public.
+    center = G.graph.get('_center')
+    if center is not None:
+        return center
+    ys = [d['y'] for _, d in G.nodes(data=True) if 'y' in d]
+    xs = [d['x'] for _, d in G.nodes(data=True) if 'x' in d]
+    center = (sum(ys) / len(ys), sum(xs) / len(xs)) if xs and ys else (BORDEAUX_LAT, BORDEAUX_LON)
+    G.graph['_center'] = center
+    return center
+
+
+@lru_cache(maxsize=512)
+def _sun_times(date_iso, lat, lon):
+    """Lever/coucher du soleil, mémorisés par (jour, lieu arrondi).
+
+    `astral` recalcule sinon la course du soleil à chaque requête d'itinéraire ;
+    l'arrondi du lieu au centième de degré (~1 km) borne la taille du cache.
+    """
+    loc = LocationInfo("local", "", "Europe/Paris", lat, lon)
+    return sun(loc.observer, date=_date.fromisoformat(date_iso), tzinfo=loc.timezone)
+
+
+def get_lighting_condition(check_time=None, lat=None, lon=None):
+    """
+    Renvoie l'état de la luminosité et de l'éclairage public au lieu (lat, lon).
     Retourne : (is_dark_outside, is_public_lighting_on)
+
+    `lat`/`lon` situent le calcul solaire (centre du graphe actif) ; à défaut, on
+    retombe sur Bordeaux.
     """
     tz = pytz.timezone('Europe/Paris')
     if check_time is None:
@@ -281,18 +321,118 @@ def get_bordeaux_lighting_condition(check_time=None):
     elif check_time.tzinfo is None:
         check_time = tz.localize(check_time)
 
-    bordeaux = LocationInfo("Bordeaux", "France", "Europe/Paris", 44.8378, -0.5792)
-    s = sun(bordeaux.observer, date=check_time.date(), tzinfo=bordeaux.timezone)
+    if lat is None or lon is None:
+        lat, lon = BORDEAUX_LAT, BORDEAUX_LON
+
+    s = _sun_times(check_time.date().isoformat(), round(lat, 2), round(lon, 2))
 
     is_dark_outside = check_time < s['sunrise'] or check_time > s['sunset']
 
     if not is_dark_outside:
         return False, False
 
-    if 1 <= check_time.hour < 5:
+    start, end = NIGHT_EXTINCTION_WINDOW
+    if start <= check_time.hour < end:
         return True, False
 
     return True, True
+
+
+def is_dark_now(check_time=None, lat=None, lon=None):
+    """Fait-il nuit (soleil couché) au lieu (lat, lon) à `check_time` ?"""
+    tz = pytz.timezone('Europe/Paris')
+    if check_time is None:
+        check_time = datetime.now(tz)
+    elif check_time.tzinfo is None:
+        check_time = tz.localize(check_time)
+    if lat is None or lon is None:
+        lat, lon = BORDEAUX_LAT, BORDEAUX_LON
+    s = _sun_times(check_time.date().isoformat(), round(lat, 2), round(lon, 2))
+    return check_time < s['sunrise'] or check_time > s['sunset']
+
+
+def _in_range(now_min, start_min, end_min):
+    """`now_min` est-il dans [start, end[ (minutes), passage minuit géré ?"""
+    if start_min <= end_min:
+        return start_min <= now_min < end_min
+    return now_min >= start_min or now_min < end_min
+
+
+_LIT_RULE_RE = re.compile(r'^(yes|no)\s*@\s*(.+)$', re.I)
+_LIT_TIME_RE = re.compile(r'(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})')
+# Préfixe de jours couvrant TOUTE la semaine (qu'on peut ignorer sans risque).
+_LIT_ALLDAYS_RE = re.compile(r'^\s*(?:Mo-Su|Mo-Sun|Monday-Sunday|24/7)\s*', re.I)
+
+
+def parse_lit_conditional(value):
+    """Parse un tag OSM `lit:conditional` en règles horaires exploitables.
+
+    Renvoie une liste de `(on: bool, start_min: int, end_min: int)`, ou `None`
+    si la valeur contient une condition qu'on ne sait pas lire de façon fiable
+    (`sunset`/`sunrise`, jours partiels…). On préfère `None` (repli sur la
+    fenêtre du profil) plutôt qu'une interprétation hasardeuse.
+
+    Ex. : ``no @ (00:00-05:00)`` → ``[(False, 0, 300)]`` ;
+    ``yes @ (05:00-22:00); no @ (22:00-24:00)`` → deux règles.
+    """
+    if isinstance(value, list):
+        value = value[0] if value else None
+    if not value:
+        return None
+
+    rules = []
+    for part in str(value).split(';'):
+        part = part.strip()
+        if not part:
+            continue
+        m = _LIT_RULE_RE.match(part)
+        if not m:
+            return None
+        on = m.group(1).lower() == 'yes'
+        cond = m.group(2).strip().strip('()').strip()
+        cond = _LIT_ALLDAYS_RE.sub('', cond).strip()
+        tm = _LIT_TIME_RE.search(cond)
+        # Toute lettre résiduelle (sunset, PH, jour partiel Mo-Fr…) => non fiable.
+        if tm is None or any(c.isalpha() for c in cond):
+            return None
+        sh, sm, eh, em = (int(x) for x in tm.groups())
+        start = sh * 60 + sm
+        end = eh * 60 + em
+        if end == 0:
+            end = 24 * 60
+        rules.append((on, start, end))
+    return rules or None
+
+
+def window_lights_on(now_min, window):
+    """Les lampadaires sont-ils censés être ALLUMÉS à `now_min` selon la fenêtre
+    d'extinction `window = (start_h, end_h)` (heures) ? Repli sur la constante
+    globale si la fenêtre est absente ; `start == end` = pas d'extinction."""
+    if not window or window[0] is None or window[1] is None:
+        window = NIGHT_EXTINCTION_WINDOW
+    start_h, end_h = window
+    if start_h == end_h:
+        return True
+    return not _in_range(now_min, start_h * 60, end_h * 60)
+
+
+def edge_use_on(data, is_dark, now_min, fallback_use_on):
+    """Faut-il créditer l'éclairage de CETTE arête maintenant (score `_s_on`) ?
+
+    Faux de jour (aucun crédit d'éclairage). La nuit : suit l'horaire OSM
+    `lit:conditional` de l'arête (`_lit_rules`) s'il est renseigné, sinon le
+    repli commun `fallback_use_on` (fenêtre du profil)."""
+    if not is_dark:
+        return False
+    rules = data.get('_lit_rules')
+    if rules is None:
+        return fallback_use_on
+    state = bool(data.get('_lit_base', True))
+    for on, s, e in rules:
+        if _in_range(now_min, s, e):
+            state = on
+    return state
+
 
 def calculate_infra_stats(G, route):
     total_length = 0.0
@@ -347,11 +487,13 @@ def calculate_infra_stats(G, route):
         except (ValueError, AttributeError):
             low_speed_length += length
 
+        # `pct_lit` ne reflète que du CONNU : voie tagguée `lit=yes` dans OSM ou
+        # éclairée d'après les données spatiales (`_lit_inferred` : lampadaires
+        # proches, ou voie éclairée que ce segment longe). Aucune estimation par
+        # type de voie — on n'affiche pas une supposition comme une mesure.
         lit = data.get('lit', 'unknown')
-        if lit == 'yes':
+        if lit == 'yes' or (lit != 'no' and data.get('_lit_inferred')):
             lit_length += length
-        elif lit not in ('no',) and h_type in ('residential', 'primary', 'secondary', 'tertiary', 'living_street', 'cycleway'):
-            lit_length += length * 0.85
 
     from graph.accidents import route_accident_stats
 

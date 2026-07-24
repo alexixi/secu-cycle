@@ -71,6 +71,8 @@ def _to_read(db: Session, profile: GraphProfile, active_name: str | None) -> Gra
         edges=profile.edges,
         size_bytes=stats["size_bytes"],
         built_at=profile.built_at,
+        night_extinction_start=profile.night_extinction_start,
+        night_extinction_end=profile.night_extinction_end,
     )
 
 
@@ -191,7 +193,11 @@ async def create_profile(
 
     await _validate_communes(db, data.communes)
 
-    profile = GraphProfile(name=data.name, communes=communes, is_default=False)
+    profile = GraphProfile(
+        name=data.name, communes=communes, is_default=False,
+        night_extinction_start=data.night_extinction_start,
+        night_extinction_end=data.night_extinction_end,
+    )
     db.add(profile)
     db.commit()
     db.refresh(profile)
@@ -379,6 +385,10 @@ async def _reload_graph(app, name: str) -> None:
     try:
         profile = db.query(GraphProfile).filter(GraphProfile.name == name).first()
         communes = list(profile.communes or []) if profile else []
+        night_extinction = (
+            (profile.night_extinction_start, profile.night_extinction_end)
+            if profile else None
+        )
     finally:
         db.close()
 
@@ -391,7 +401,8 @@ async def _reload_graph(app, name: str) -> None:
 
         print(f"[Graphe] Rechargement sur le profil '{name}'...", flush=True)
         G = await asyncio.to_thread(
-            load_graph_with_ign, paths["graph_file"], paths["ign_cache_file"], communes
+            load_graph_with_ign, paths["graph_file"], paths["ign_cache_file"], communes,
+            night_extinction
         )
         await traffic_service.refresh(G)
 
