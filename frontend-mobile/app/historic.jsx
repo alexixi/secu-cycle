@@ -1,5 +1,4 @@
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import { Button, DangerButton, OutlineButton } from '../components/ui/Button';
@@ -7,11 +6,12 @@ import HistoricModal from '../components/HistoricModal';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { getUserHistoric, deleteHistoricEntry, deleteAllHistoric } from '../services/apiBack';
+import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { SwipeBackScreen } from '../components/SwipeBackScreen';
 
 export default function HistoricPage() {
 
-    const router = useRouter();
-    const { colors, typography } = useTheme();
+    const { colors } = useTheme();
 
     const { user, token, historic, updateHistoric } = useAuth();
 
@@ -71,19 +71,16 @@ export default function HistoricPage() {
     const trajets = userHistoric.filter(e => e.route);
 
     return (
+        <SwipeBackScreen background={colors.bgMain}>
+        {(close) => (
         <ScrollView
             style={[styles.scrollView, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContent}
         >
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={28} color={colors.textMain} />
-            </TouchableOpacity>
+            <View style={styles.headerWrap}>
+                <ScreenHeader title="Mon historique" onBack={close} />
+            </View>
             <View style={styles.container}>
-                <View style={styles.header}>
-                    <Text style={[typography.h1, { color: colors.textMain }]}>
-                        Mon historique
-                    </Text>
-                </View>
                 <View style={styles.buttonsContainer}>
                     <DangerButton
                         title="Supprimer tout l'historique"
@@ -143,6 +140,8 @@ export default function HistoricPage() {
                 colors={colors}
             />
         </ScrollView>
+        )}
+        </SwipeBackScreen>
     );
 }
 
@@ -153,10 +152,8 @@ const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
     },
-    backButton: {
-        marginTop: 60,
-        marginBottom: 0,
-        marginLeft: 10
+    headerWrap: {
+        paddingHorizontal: 20,
     },
     container: {
         flex: 1,
@@ -167,11 +164,6 @@ const styles = StyleSheet.create({
         width: '90%',
         marginTop: 20,
         gap: 20,
-    },
-    header: {
-        alignItems: 'center',
-        marginBottom: 40,
-        marginTop: 10,
     },
     section: {
         width: '100%',

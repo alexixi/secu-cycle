@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text, Alert } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text, Alert, BackHandler } from 'react-native';
 import MapComponent from '../../components/MapComponent';
 import SearchContainer from '../../components/SearchContainer';
 import { calculateItineraries, completeRoute } from "../../services/apiBack";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from '../../hooks/useTheme';
 import useGuidance from '../../hooks/useGuidance';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation, useFocusEffect } from 'expo-router';
+import { withAlpha } from '../../constants/theme';
 import GuidancePanel from '../../components/GuidancePanel';
 import ItineraryPanel from '../../components/ItineraryPanel';
 import BadgeUnlockedModal from '../../components/BadgeUnlockedModal';
@@ -24,6 +27,8 @@ export default function Index() {
     const [errorPath, setErrorPath] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const [pendingPoiRoute, setPendingPoiRoute] = useState(false);
+    // Détail de l'itinéraire ouvert : remonté ici pour être ouvrable depuis le bouton « i ».
+    const [detailItineraire, setDetailItineraire] = useState(null);
     // File des badges gagnés à l'arrivée : le modal affiche la tête, onNext dépile.
     const [unlockedBadges, setUnlockedBadges] = useState([]);
     // Garde anti-double-appel : un trajet n'est complété qu'une fois par calcul.
@@ -162,6 +167,71 @@ export default function Index() {
         }
     }, [pendingPoiRoute, startPoint, endPoint, handleCalculate]);
 
+    const insets = useSafeAreaInsets();
+    const navigation = useNavigation();
+
+    const hasResults = !!routePaths?.length && !isNavigating;
+
+    // Mode immersif : résultats affichés ou navigation en cours. On masque la
+    // navbar et les boutons de carte, et on abaisse les panneaux du bas.
+    const immersive = hasResults || isNavigating;
+
+    useEffect(() => {
+        navigation.setOptions({ tabBarStyle: immersive ? { display: 'none' } : undefined });
+    }, [immersive, navigation]);
+
+    // Sans navbar, les panneaux et les boutons du bas peuvent descendre.
+    const tabClear = insets.bottom + (immersive ? 12 : 74);
+
+    const cameraPadding = React.useMemo(() => ({
+        top: insets.top + 220,
+        bottom: tabClear + (hasResults ? 250 : 60),
+        left: 60,
+        right: 60,
+    }), [insets.top, tabClear, hasResults]);
+
+    const handleCloseResults = () => {
+        Haptics.selectionAsync().catch(() => { });
+        setRoutePaths(null);
+        setSelectedItineraire(null);
+        setDetailItineraire(null);
+        setErrorPath(false);
+    };
+
+    const backActionRef = useRef(null);
+    backActionRef.current = () => {
+        if (isNavigating) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => { });
+            handleStopNavigation();
+            return true;
+        }
+        if (hasResults) {
+            handleCloseResults();
+            return true;
+        }
+        if (endPoint) {
+            Haptics.selectionAsync().catch(() => { });
+            setEndPoint(null);
+            return true;
+        }
+        if (startPoint) {
+            Haptics.selectionAsync().catch(() => { });
+            setStartPoint(null);
+            return true;
+        }
+        return false;
+    };
+
+    useFocusEffect(
+        React.useCallback(() => {
+            const sub = BackHandler.addEventListener(
+                'hardwareBackPress',
+                () => backActionRef.current?.() ?? false,
+            );
+            return () => sub.remove();
+        }, []),
+    );
+
     return (
         <View style={styles.container}>
             <MapComponent
@@ -175,6 +245,9 @@ export default function Index() {
                 canReport={!!token}
                 onNavigateToPoi={handleNavigateToPoi}
                 miniMap={false}
+                bottomInset={tabClear}
+                hideControls={immersive}
+                cameraPadding={cameraPadding}
             />
 
             {isNavigating && (
@@ -215,12 +288,15 @@ export default function Index() {
                     itineraires={routePaths}
                     selectedItineraire={selectedItineraire}
                     setSelectedItineraire={handleSelectItineraire}
+                    bottomOffset={tabClear}
+                    detailItineraire={detailItineraire}
+                    setDetailItineraire={setDetailItineraire}
                 />
             )}
 
             {isNavigating && (
                 <TouchableOpacity
-                    style={[styles.emergencyStop, { backgroundColor: colors.error }]}
+                    style={[styles.emergencyStop, { backgroundColor: colors.error, bottom: 20 + tabClear }]}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => { });
                         handleStopNavigation();
@@ -233,7 +309,7 @@ export default function Index() {
 
             {selectedItineraire && !isNavigating && !isLoading && (
                 <TouchableOpacity
-                    style={[styles.startButton, { backgroundColor: colors.primary }]}
+                    style={[styles.startButton, { backgroundColor: colors.primary, bottom: 20 + tabClear }]}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => { });
                         handleStartNavigation();
@@ -242,6 +318,38 @@ export default function Index() {
                     <MaterialCommunityIcons name="navigation" size={20} color="#fff" />
                     <Text style={styles.startButtonText}>Démarrer</Text>
                 </TouchableOpacity>
+            )}
+
+            {hasResults && (
+                <>
+                    <TouchableOpacity
+                        style={[
+                            styles.resultAction,
+                            { left: 30, bottom: 20 + tabClear, backgroundColor: withAlpha(colors.bgSurface, 0.9) },
+                        ]}
+                        onPress={() => {
+                            Haptics.selectionAsync().catch(() => { });
+                            setDetailItineraire(routePaths.find(it => it.id === selectedItineraire) ?? null);
+                        }}
+                        disabled={!selectedItineraire}
+                        accessibilityRole="button"
+                        accessibilityLabel="Détails de l'itinéraire"
+                    >
+                        <MaterialCommunityIcons name="information-variant" size={24} color={colors.textMain} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.resultAction,
+                            { right: 30, bottom: 20 + tabClear, backgroundColor: withAlpha(colors.bgSurface, 0.9) },
+                        ]}
+                        onPress={handleCloseResults}
+                        accessibilityRole="button"
+                        accessibilityLabel="Fermer les itinéraires"
+                    >
+                        <Ionicons name="close" size={24} color={colors.textMain} />
+                    </TouchableOpacity>
+                </>
             )}
 
             <BadgeUnlockedModal
@@ -273,6 +381,16 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.8)',
         borderRadius: 20,
         alignSelf: 'center',
+    },
+    // Partagé par les boutons « i » et « X » ; le left/right est passé en ligne.
+    resultAction: {
+        position: 'absolute',
+        height: 50,
+        width: 50,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
     },
     startButton: {
         position: 'absolute',

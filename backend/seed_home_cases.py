@@ -48,12 +48,15 @@ DEFAULT_HOME_CASES = [
             "Sécu'Cycle combine différentes sources de données, principalement les "
             "données d'OpenStreetMap (openstreetmap.fr) pour la carte des routes et "
             "pistes cyclables. Nous ajoutons à cette carte des données topographiques "
-            "de l'IGN (ign.fr). Pour la complétion des adresses nous utilisons la BAN "
-            "(Base Adresse Nationale, adresse.data.gouv.fr). Pour avoir des données de "
-            "trafic de la circulation routière nous utilisons les données du projet "
-            "Avatar du Cerema (avatar.cerema.fr). Enfin pour l'affichage de la carte, "
-            "nous utilisons MapTiler (maptiler.com) qui propose des tuiles "
-            "cartographiques basées sur les données d'OpenStreetMap."
+            "de l'IGN (ign.fr). Pour la complétion des adresses françaises nous "
+            "utilisons la BAN (Base Adresse Nationale, adresse.data.gouv.fr), complétée "
+            "par MapTiler (maptiler.com) pour les lieux et les adresses situés hors de "
+            "France, en Belgique notamment. Pour avoir des données de "
+            "trafic de la circulation routière nous utilisons l'open data de Bordeaux "
+            "Métropole (opendata.bordeaux-metropole.fr), qui publie l'état des axes en "
+            "temps réel. Enfin pour l'affichage de la carte, "
+            "nous utilisons les tuiles cartographiques de MapTiler, elles aussi "
+            "basées sur les données d'OpenStreetMap."
         ),
     },
 ]

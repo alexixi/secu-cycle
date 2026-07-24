@@ -260,7 +260,7 @@ export default function ReportDetailModal({
             <ReportMap
               latitude={report.latitude}
               longitude={report.longitude}
-              icon={typeMeta?.icon || "📍"}
+              reportType={report.report_type}
             />
           </div>
         </div>

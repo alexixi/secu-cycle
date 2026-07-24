@@ -1,11 +1,13 @@
 import osmnx as ox
 import networkx as nx
 import numpy as np
+import pytz
+from datetime import datetime
 from sklearn.neighbors import BallTree
 from shapely.geometry import Point, LineString
 from shapely.ops import substring
 from graph.config import *
-from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_bordeaux_lighting_condition, calculate_infra_stats
+from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_lighting_condition, graph_center, calculate_infra_stats, is_dark_now, extinction_states, edge_use_on, parse_lit_conditional
 from graph.route_cache import route_cache
 
 def _get_speed_score(vmax):
@@ -21,10 +23,12 @@ def _parse_maxspeed(vmax, h_type):
         except: pass
     return 30
 
-def _get_lit_score(lit, h_type):
+def _get_lit_score(lit):
     if lit == 'yes': return 10.0
-    elif lit == 'no': return 0.0
-    return 7.0
+    if lit == 'no': return 0.0
+    # Éclairage non renseigné : score neutre, aucune supposition (cf.
+    # LIT_NEUTRAL_SCORE). On ne récompense que le connu, jamais le supposé.
+    return LIT_NEUTRAL_SCORE
 
 def _first(value, default=None):
     """Normalise un tag OSM potentiellement sous forme de liste."""
@@ -96,7 +100,13 @@ def _edge_quality(data):
     if data.get('contraflow'):
         n_cycleway = max(0.0, n_cycleway - CONTRAFLOW_PENALTY)
 
-    n_lit = _get_lit_score(_first(data.get('lit'), 'unknown'), h_type)
+    # Un `lit` absent mais éclairé d'après les données spatiales (lampadaires
+    # proches, ou voie `lit=yes` que ce segment longe — cf. `attach_lighting`)
+    # est réputé éclairé.
+    lit = _first(data.get('lit'), 'unknown')
+    if lit not in ('yes', 'no') and data.get('_lit_inferred'):
+        lit = 'yes'
+    n_lit = _get_lit_score(lit)
 
     score_on = (n_highway * 0.20) + (n_cycleway * 0.30) + (n_speed * 0.35) + (n_lit * 0.15)
     score_off = (n_highway * 0.25) + (n_cycleway * 0.30) + (n_speed * 0.45)
@@ -121,12 +131,25 @@ def precompute_static_costs(G):
     """Pré-calcul des coûts statiques pour chaque arête du graphe, en fonction de la sécurité et de l'effort."""
     min_on = min_off = float('inf')
     max_on = max_off = float('-inf')
-    lighting_on = get_bordeaux_lighting_condition()[1]
+    lat, lon = graph_center(G)
+    lighting_on = get_lighting_condition(lat=lat, lon=lon)[1]
 
     for u, v, k, data in G.edges(keys=True, data=True):
         score_on, score_off, roughness = _edge_quality(data)
+
+        malus = float(data.get('_accident_malus', 0.0))
+        if malus:
+            score_on = max(0.0, score_on - malus)
+            score_off = max(0.0, score_off - malus)
+
         data['_s_on'], data['_s_off'] = score_on, score_off
         data['_roughness'] = roughness
+
+        # Horaire d'extinction propre à la voie (OSM `lit:conditional`), parsé une
+        # fois. None => pas d'horaire fiable, on retombera sur celui de la commune.
+        data['_lit_rules'] = parse_lit_conditional(data.get('lit:conditional'))
+        lit_raw = _first(data.get('lit'), 'unknown')
+        data['_lit_base'] = lit_raw != 'no'
 
         h_type = _first(data.get('highway'), 'unclassified')
         is_shared_footway = (h_type in PEDESTRIAN_SHARED_HIGHWAYS
@@ -200,23 +223,29 @@ def _nearest_nodes(G, lons, lats):
     return [int(n) for n in G.graph['_node_ids'][pos[:, 0]]]
 
 
-def _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, lighting_on):
+def _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx):
     """Renvoie une fonction de poids pour l'algorithme A*.
 
     alpha        : curseur rapidité (1) ↔ sécurité (0)
     beta         : poids de l'effort (pente), dépend du niveau / type de vélo
     surface_sens : sensibilité au revêtement, dépend du type de vélo
     footway_avoid: aversion aux chemins piétons partagés, dépend du type de vélo
+    light_ctx    : (is_dark, now_min, ext_on) — décide, par arête, s'il faut
+                   compter l'éclairage (`_risk_on`) ou non (`_risk_off`).
+                   `ext_on` = état des lampadaires par commune (cf.
+                   `statistique.extinction_states`).
     """
     one_minus = 1.0 - alpha
-    risk_key = '_risk_on' if lighting_on else '_risk_off'
+    is_dark, now_min, ext_on = light_ctx
 
     def _edge_cost(d):
         comfort = d.get('_roughness', DEFAULT_ROUGHNESS) * surface_sens
         footway = d.get('_footway', 0.0) * footway_avoid
+        risk_key = '_risk_on' if edge_use_on(d, is_dark, now_min, ext_on) else '_risk_off'
         base = d['_length_f'] * (1.0 + d[risk_key] * one_minus + d['_grade_term'] * beta + comfort + footway)
-        if d.get('traffic_jam', False):
-            base += TRAFFIC_BASE_PENALTY + (TRAFFIC_SAFETY_FACTOR * one_minus)
+        traffic = d.get('traffic_factor', 0.0)
+        if traffic:
+            base += traffic * (TRAFFIC_BASE_PENALTY + TRAFFIC_SAFETY_FACTOR * one_minus)
         return base
 
     def weight(u, v, d):
@@ -233,8 +262,23 @@ def _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light
     return weight
 
 
-def _astar_nodes(G, start_node, end_node, alpha, beta, surface_sens, footway_avoid, reported_edges, lighting_on):
-    w = _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, lighting_on)
+def _tag_lighting_aware(res, lighting_aware):
+    """Signale, sur chaque itinéraire, si l'éclairage a pesé dans le calcul.
+
+    Vrai seulement quand il fait nuit ET que l'éclairage public est considéré
+    allumé **quelque part sur l'emprise** : de jour (ou quand toutes les communes
+    sont en coupure), le coût des arêtes n'intègre pas l'éclairage. Les horaires
+    variant d'une commune à l'autre, l'indicateur reste volontairement à la
+    maille de l'emprise : « l'éclairage a pu peser sur ce trajet ». Le front s'en
+    sert pour ne pas laisser croire que le « % éclairé » a orienté un trajet
+    calculé en plein jour.
+    """
+    for route in res.get("routes", []):
+        route["lighting_aware"] = bool(lighting_aware)
+
+
+def _astar_nodes(G, start_node, end_node, alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx):
+    w = _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx)
 
     def dist_heuristic(u, v):
         return ox.distance.great_circle(G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x'])
@@ -424,13 +468,19 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
     try:
         if not G.graph.get('_static_costs_ready'):
             precompute_static_costs(G)
-        lighting_on = get_bordeaux_lighting_condition()[1]
+        lat_c, lon_c = graph_center(G)
+        now = datetime.now(pytz.timezone('Europe/Paris'))
+        now_min = now.hour * 60 + now.minute
+        is_dark = is_dark_now(now, lat_c, lon_c)
+        ext_on = extinction_states(G, now_min)
+        light_ctx = (is_dark, now_min, ext_on)
+        lighting_aware = is_dark and any(ext_on)
 
         cache_key = (
             round(start_coords[0], 5), round(start_coords[1], 5),
             round(end_coords[0], 5), round(end_coords[1], 5),
             bike_type, bool(is_electric), cyclist_level,
-            max_time_min, int(iterations), lighting_on,
+            max_time_min, int(iterations), is_dark, now.hour,
         )
         cached = route_cache.get(cache_key)
         if cached is not None:
@@ -470,6 +520,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
                 {"id": "fast", "name": "Rapide", **direct},
                 {"id": "safe", "name": "Sécurisé", **direct},
             ]}
+            _tag_lighting_aware(res, lighting_aware)
             route_cache.set(cache_key, res)
             return res
 
@@ -481,7 +532,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
 
         # Choix du bon point d'accès (bon côté de la rue) : on minimise le coût
         # total « tronçon d'accroche + trajet » sur le profil rapide.
-        w_fast = _make_weight(1.0, beta_elev, surface_sens, footway_avoid, reported_edges, lighting_on)
+        w_fast = _make_weight(1.0, beta_elev, surface_sens, footway_avoid, reported_edges, light_ctx)
         best_combo = None
         for sc in start_cands:
             for ec in end_cands:
@@ -502,7 +553,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
         start_node, end_node = start_c['node'], end_c['node']
 
         fast_nodes = best_combo['fast_nodes']
-        safe_nodes = _astar_nodes(G, start_node, end_node, 0.0, beta_elev, surface_sens, footway_avoid, reported_edges, lighting_on)
+        safe_nodes = _astar_nodes(G, start_node, end_node, 0.0, beta_elev, surface_sens, footway_avoid, reported_edges, light_ctx)
         fast_data = _route_with_stubs(G, fast_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
         safe_data = _route_with_stubs(G, safe_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
 
@@ -514,7 +565,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
             best_nodes = fast_nodes
             for _ in range(iterations):
                 a_mid = (a_low + a_high) / 2
-                mid_nodes = _astar_nodes(G, start_node, end_node, a_mid, beta_elev, surface_sens, footway_avoid, reported_edges, lighting_on)
+                mid_nodes = _astar_nodes(G, start_node, end_node, a_mid, beta_elev, surface_sens, footway_avoid, reported_edges, light_ctx)
                 mid_dur = calculate_exact_travel_time(G, mid_nodes, bike_type, is_electric, cyclist_level)
                 if mid_dur <= float(max_time_min):
                     best_nodes, a_high = mid_nodes, a_mid
@@ -522,6 +573,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
                     a_low = a_mid
             best_data = _route_with_stubs(G, best_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
             res["routes"].append({"id": "compromise", "name": "Compromis", "alpha_final": a_high, **best_data})
+        _tag_lighting_aware(res, lighting_aware)
         route_cache.set(cache_key, res)
         return res
     except Exception as e: return {"success": False, "error": str(e)}

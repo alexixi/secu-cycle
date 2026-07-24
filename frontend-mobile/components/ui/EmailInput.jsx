@@ -3,7 +3,15 @@ import { useTheme } from "../../hooks/useTheme";
 import { useState } from "react";
 import * as Haptics from 'expo-haptics';
 
-export default function EmailInput({ email, setEmail, emailError, setEmailError, hasError, setHasError }) {
+export default function EmailInput({
+    email,
+    setEmail,
+    emailError,
+    setEmailError,
+    hasError,
+    setHasError,
+    textContentType = "username",
+}) {
     const { colors } = useTheme();
     const [showEmailError, setShowEmailError] = useState(false);
 
@@ -47,6 +55,9 @@ export default function EmailInput({ email, setEmail, emailError, setEmailError,
                 ]}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
+                textContentType={textContentType}
                 value={email}
                 onChangeText={handleChangeEmail}
                 onBlur={handleBlur}

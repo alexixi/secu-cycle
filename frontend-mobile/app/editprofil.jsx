@@ -1,7 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -9,17 +9,18 @@ import { Button, OutlineButton } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
 import { changeProfileInfo } from "../services/apiBack";
+import { ScreenHeader } from "../components/ui/ScreenHeader";
+import { SwipeBackScreen } from "../components/SwipeBackScreen";
 
 import * as Haptics from 'expo-haptics';
 
 export default function EditProfilePage() {
     const router = useRouter();
-    const { colors, typography } = useTheme();
+    const { colors } = useTheme();
     const { user, token, updateUser } = useAuth();
 
     const [firstName, setFirstName] = useState(user?.first_name || "");
     const [lastName, setLastName] = useState(user?.last_name || "");
-    const [email, setEmail] = useState(user?.email || "");
     const [birthDate, setBirthDate] = useState(user?.birth_date ? new Date(user.birth_date) : new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -34,24 +35,16 @@ export default function EditProfilePage() {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            await changeProfileInfo(
+            const updated = await changeProfileInfo(
                 token,
                 firstName,
                 lastName,
-                email,
-                birthDate.toISOString().split('T')[0],
                 null,
-                user?.sport_level
+                birthDate.toISOString().split('T')[0],
+                level
             );
 
-            await updateUser({
-                ...user,
-                first_name: firstName,
-                last_name: lastName,
-                email: email,
-                birth_date: birthDate.toISOString().split('T')[0],
-                sport_level: level
-            });
+            await updateUser({ ...user, ...updated });
 
             router.back();
         } catch (error) {
@@ -68,16 +61,15 @@ export default function EditProfilePage() {
     };
 
     return (
+        <SwipeBackScreen background={colors.bgMain}>
+        {(close) => (
         <KeyboardAwareScrollView
             style={[styles.container, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContainer}
         >
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={28} color={colors.textMain} />
-            </TouchableOpacity>
+            <ScreenHeader title="Modifier mon profil" onBack={close} />
 
             <View style={styles.formContainer}>
-                <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Modifier mon profil</Text>
 
                 <View style={styles.inputGroup}>
                     <Text style={[styles.label, { color: colors.textSecondary }]}>Prénom</Text>
@@ -99,12 +91,20 @@ export default function EditProfilePage() {
 
                 <View style={styles.inputGroup}>
                     <Text style={[styles.label, { color: colors.textSecondary }]}>Adresse mail</Text>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: colors.bgSurface, color: colors.textMain, borderColor: colors.borderStrong }]}
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                    />
+                    <TouchableOpacity
+                        style={[styles.input, styles.readOnlyRow, { backgroundColor: colors.bgSurface, borderColor: colors.borderStrong }]}
+                        onPress={() => router.push("/editemail")}
+                        accessibilityRole="button"
+                        accessibilityLabel="Modifier mon adresse mail"
+                    >
+                        <Text style={{ color: colors.textMain, fontSize: 16, flex: 1 }} numberOfLines={1}>
+                            {user?.email || "Non renseignée"}
+                        </Text>
+                        <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                    </TouchableOpacity>
+                    <Text style={[styles.helpText, { color: colors.textSecondary }]}>
+                        Changer d&apos;adresse nécessite une vérification par code.
+                    </Text>
                 </View>
 
                 <View style={styles.inputGroup}>
@@ -152,14 +152,6 @@ export default function EditProfilePage() {
                     </View>
                 </View>
 
-                <View style={{ marginVertical: 20 }}>
-                    <OutlineButton
-                        title="Changer le mot de passe"
-                        iconName="lock-closed-outline"
-                        onPress={() => router.push("/editpassword")}
-                    />
-                </View>
-
                 <View style={styles.buttonWrapper}>
                     <Button
                         title="Enregistrer les modifications"
@@ -171,24 +163,26 @@ export default function EditProfilePage() {
                     <View style={{ marginTop: 15 }}>
                         <OutlineButton
                             title="Annuler"
-                            onPress={() => router.back()}
+                            onPress={close}
                         />
                     </View>
                 </View>
             </View>
         </KeyboardAwareScrollView>
+        )}
+        </SwipeBackScreen>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
     scrollContainer: { flexGrow: 1, padding: 20, paddingBottom: 50 },
-    backButton: { marginTop: 40, marginBottom: 10 },
     formContainer: { width: '100%' },
-    title: { textAlign: 'center', fontSize: 24, fontWeight: 'bold', marginBottom: 30 },
     inputGroup: { width: '100%', marginBottom: 20 },
     label: { fontSize: 14, fontWeight: 'bold', marginBottom: 8, marginLeft: 4 },
     input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, fontSize: 16 },
+    readOnlyRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    helpText: { fontSize: 12, marginTop: 6, marginLeft: 4 },
     buttonWrapper: { marginTop: 30 },
     levelContainer: {
         flexDirection: 'row',

@@ -1,3 +1,4 @@
+import asyncio
 import sys
 import os
 import json
@@ -5,7 +6,8 @@ import json
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import time
 import osmnx as ox
-from graph_manager import create_graph, load_graph_with_ign, update_graph_with_traffic, load_graph_profile
+from graph_manager import create_graph, load_graph_with_ign, load_graph_profile
+from traffic import service as traffic_service
 from routing import get_optimal_routes, calculate_route_distance, _parse_maxspeed
 from statistique import calculer_statistiques_osm, analyser_qualite_trajet, calculate_route_elevation
 from elevation import verifier_altitudes
@@ -19,7 +21,7 @@ def main():
 
     start_time = time.perf_counter()
 
-    update_graph_with_traffic(G)
+    asyncio.run(traffic_service.refresh(G))
 
     end_time = time.perf_counter()
     print(f"Temps de chargement du graphe : {end_time - start_time:.2f} secondes")

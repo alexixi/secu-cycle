@@ -4,14 +4,20 @@ from datetime import timedelta
 from sqlalchemy import select
 from sqlalchemy.sql import func
 from database import SessionLocal
+from models.accident_sync import AccidentSyncRun
 from models.poi_sync import PoiSyncRun
+from models.street_lamp_sync import StreetLampSyncRun
+from accidents import runner as accident_runner
 from pois import runner as poi_runner
+from lighting import runner as lighting_runner
+from routers import accident
 from routers import user
 from routers import route
 from routers import history
 from routers import bike
 from routers import report
 from routers import poi
+from routers import streetlight
 from routers import navigation
 from routers import traffic
 from routers import home_case
@@ -19,14 +25,17 @@ from routers import faq
 from routers import task
 from routers import tag
 from routers import graph as graph_router
+from routers import geo
 from routers import contact
 from routers import badge
 from seed_home_cases import seed_home_cases
 from seed_faqs import seed_faqs
 from seed_badges import seed_badges
 from graph import builder as graph_builder
-from graph.graph_manager import load_graph_with_ign, update_graph_with_traffic, load_graph_profile
+from graph.graph_manager import load_graph_with_ign, load_graph_profile
 from graph.route_cache import route_cache
+from traffic import config as traffic_config
+from traffic import service as traffic_service
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -39,13 +48,23 @@ import os
 async def periodic_traffic_update(app: FastAPI):
     """
     Boucle infinie qui s'exécute en arrière-plan.
-    Met à jour le trafic toutes les 5 minutes (300 secondes).
+    Actualise le trafic au rythme de publication de la source.
+
+    Le cache d'itinéraires n'est vidé que si l'ensemble des arêtes
+    congestionnées a réellement changé : le purger à chaque tour le laissait
+    froid en permanence.
     """
     while True:
-        await asyncio.sleep(300)
-        if hasattr(app.state, 'G') and app.state.G is not None:
-            print("[Background Task] Actualisation du trafic en cours...", flush=True)
-            app.state.G = await asyncio.to_thread(update_graph_with_traffic, app.state.G)
+        await asyncio.sleep(traffic_config.REFRESH_INTERVAL_S)
+        if getattr(app.state, 'G', None) is None:
+            continue
+        try:
+            changed = await traffic_service.refresh(app.state.G)
+        except Exception as exc:
+            # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
+            print(f"[Background Task] Échec de l'actualisation du trafic : {exc}", flush=True)
+            continue
+        if changed:
             route_cache.invalidate()
 
 
@@ -87,6 +106,84 @@ async def periodic_poi_sync():
             # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
             print(f"[Background Task] Échec de la synchro POI : {exc}", flush=True)
 
+ACCIDENT_SYNC_CHECK_INTERVAL = 3600
+
+
+def accident_sync_is_due() -> bool:
+    """La synchro auto des accidents est-elle activée et son échéance passée ?"""
+    db = SessionLocal()
+    try:
+        interval_days = accident_runner.get_settings(db).interval_days
+        if not interval_days:
+            return False
+        if accident_runner.is_running(db):
+            return False
+
+        recent = db.execute(
+            select(AccidentSyncRun.id)
+            .where(AccidentSyncRun.started_at >= func.now() - timedelta(days=interval_days))
+            .limit(1)
+        ).first()
+        return recent is None
+    finally:
+        db.close()
+
+
+async def periodic_accident_sync(app: FastAPI):
+    """
+    Boucle infinie qui s'exécute en arrière-plan.
+    Reprend les accidents auprès des sources officielles à l'intervalle réglé
+    par les admins. Contrôle horaire : ces bases ne bougent qu'une fois l'an.
+    """
+    while True:
+        await asyncio.sleep(ACCIDENT_SYNC_CHECK_INTERVAL)
+        try:
+            if await asyncio.to_thread(accident_sync_is_due):
+                print("[Background Task] Synchronisation automatique des accidents...", flush=True)
+                await asyncio.to_thread(accident_runner.run_sync, "auto", app)
+        except Exception as exc:
+            print(f"[Background Task] Échec de la synchro accidents : {exc}", flush=True)
+
+
+LIGHTING_SYNC_CHECK_INTERVAL = 3600
+
+
+def lighting_sync_is_due() -> bool:
+    """La synchro auto de l'éclairage est-elle activée et son échéance passée ?"""
+    db = SessionLocal()
+    try:
+        interval_days = lighting_runner.get_settings(db).interval_days
+        if not interval_days:
+            return False
+        if lighting_runner.is_running(db):
+            return False
+
+        recent = db.execute(
+            select(StreetLampSyncRun.id)
+            .where(StreetLampSyncRun.started_at >= func.now() - timedelta(days=interval_days))
+            .limit(1)
+        ).first()
+        return recent is None
+    finally:
+        db.close()
+
+
+async def periodic_lighting_sync(app: FastAPI):
+    """
+    Boucle infinie qui s'exécute en arrière-plan.
+    Resynchronise l'éclairage public (OSM + open data) à l'intervalle réglé par
+    les admins. Contrôle horaire : ces positions ne bougent qu'à la marge.
+    """
+    while True:
+        await asyncio.sleep(LIGHTING_SYNC_CHECK_INTERVAL)
+        try:
+            if await asyncio.to_thread(lighting_sync_is_due):
+                print("[Background Task] Synchronisation automatique de l'éclairage...", flush=True)
+                await asyncio.to_thread(lighting_runner.run_sync, "auto", app)
+        except Exception as exc:
+            print(f"[Background Task] Échec de la synchro éclairage : {exc}", flush=True)
+
+
 seed_home_cases()
 seed_faqs()
 seed_badges()
@@ -96,13 +193,18 @@ async def lifespan(app: FastAPI):
 
     profile = load_graph_profile()
     app.state.graph_profile = profile["name"]
+    app.state.graph_communes = profile["communes"]
     app.state.graph_loading = False
     app.state.G = load_graph_with_ign(
-        profile["graph_file"], profile["ign_cache_file"], profile["communes"])
+        profile["graph_file"], profile["ign_cache_file"], profile["communes"],
+        profile.get("night_extinction"))
 
     print("Chargement initial du trafic...")
 
-    app.state.G = await asyncio.to_thread(update_graph_with_traffic, app.state.G)
+    try:
+        await traffic_service.refresh(app.state.G)
+    except Exception as exc:
+        print(f"Trafic indisponible au démarrage : {exc}", flush=True)
 
     print("Graphe chargé et prêt !")
 
@@ -114,8 +216,18 @@ async def lifespan(app: FastAPI):
     if stale_builds:
         print(f"{stale_builds} génération(s) de graphe interrompue(s) marquée(s) en échec.", flush=True)
 
+    stale_accidents = await asyncio.to_thread(accident_runner.fail_stale_runs)
+    if stale_accidents:
+        print(f"{stale_accidents} synchro(s) d'accidents interrompue(s) marquée(s) en échec.", flush=True)
+
+    stale_lighting = await asyncio.to_thread(lighting_runner.fail_stale_runs)
+    if stale_lighting:
+        print(f"{stale_lighting} synchro(s) d'éclairage interrompue(s) marquée(s) en échec.", flush=True)
+
     traffic_task = asyncio.create_task(periodic_traffic_update(app))
     poi_task = asyncio.create_task(periodic_poi_sync())
+    accident_task = asyncio.create_task(periodic_accident_sync(app))
+    lighting_task = asyncio.create_task(periodic_lighting_sync(app))
 
     yield
 
@@ -123,7 +235,9 @@ async def lifespan(app: FastAPI):
 
     traffic_task.cancel()
     poi_task.cancel()
-    for task in (traffic_task, poi_task):
+    accident_task.cancel()
+    lighting_task.cancel()
+    for task in (traffic_task, poi_task, accident_task, lighting_task):
         try:
             await task
         except asyncio.CancelledError:
@@ -131,7 +245,14 @@ async def lifespan(app: FastAPI):
 
     print("Shutdown terminé")
 
-app = FastAPI(title="Sécu Cycle", lifespan=lifespan)
+_docs_enabled = os.getenv("ENABLE_DOCS", "").lower() in {"1", "true", "yes"}
+app = FastAPI(
+    title="Sécu Cycle",
+    lifespan=lifespan,
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
+    openapi_url="/openapi.json" if _docs_enabled else None,
+)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -149,6 +270,8 @@ app.include_router(history.router)
 app.include_router(bike.router)
 app.include_router(report.router)
 app.include_router(poi.router)
+app.include_router(streetlight.router)
+app.include_router(accident.router)
 app.include_router(navigation.router)
 app.include_router(traffic.router)
 app.include_router(home_case.router)
@@ -156,6 +279,7 @@ app.include_router(faq.router)
 app.include_router(task.router)
 app.include_router(tag.router)
 app.include_router(graph_router.router)
+app.include_router(geo.router)
 app.include_router(contact.router)
 app.include_router(badge.router)
 

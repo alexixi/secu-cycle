@@ -1,21 +1,23 @@
 import { useRef, useState, useEffect, useMemo, use } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, Text, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch, useColorScheme } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { getReports, getPois, createReport, deleteReport, voteReport } from '../services/apiBack';
+import { getReports, getPois, getAccidents, getTraffic, getLitRoads, getStreetlightSources, createReport, deleteReport, voteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import { withAlpha } from '../constants/theme';
+import { useDragToDismiss } from '../hooks/useDragToDismiss';
 import useHazardAlerts from '../hooks/useHazardAlerts';
 import HazardAlert from './HazardAlert';
+import { GrabHandle } from './ui/GrabHandle';
+import { GestureHandlerRootView, GestureDetector } from 'react-native-gesture-handler';
+import Reanimated from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 import { trackEvent } from '../services/analytics';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 
-// Familles d'aménagement des parkings vélo, calculées par le backend
-// (propriété `parking_type`). À garder synchronisé avec models/poi.py.
-// Sous-familles calculées par le backend. `subTypeProp` désigne la propriété
-// GeoJSON portée par chaque feature. À garder synchronisé avec models/poi.py.
 const PARKING_TYPES = [
     { id: 'stands', label: 'Arceaux', color: '#22C55E' },
     { id: 'racks', label: 'Râteliers, pince-roues', color: '#0D9488' },
@@ -41,13 +43,10 @@ const POI_CATEGORIES = [
     { id: 'repair', label: 'Réparation', icon: 'wrench', color: '#F97316', subTypes: REPAIR_TYPES, subTypeProp: 'repair_kind' },
 ];
 
-// Défaut : toutes les sous-familles activées, indexées par catégorie.
 const DEFAULT_SUB_TYPES = Object.fromEntries(
     POI_CATEGORIES.filter(c => c.subTypes).map(c => [c.id, Object.fromEntries(c.subTypes.map(t => [t.id, true]))])
 );
 
-// Fusionne une préférence enregistrée avec les défauts : toute sous-famille
-// ajoutée depuis reste activée par défaut.
 const mergeSubTypes = (saved) => Object.fromEntries(
     Object.entries(DEFAULT_SUB_TYPES).map(([cat, defaults]) => [cat, { ...defaults, ...(saved?.[cat] || {}) }])
 );
@@ -63,13 +62,70 @@ const POI_IMAGES = {
     'poi-parking-other': require('../assets/poi/parking-other.png'),
     'poi-repair-selfservice': require('../assets/poi/repair-selfservice.png'),
     'poi-repair-shop': require('../assets/poi/repair-shop.png'),
+    'poi-water-off': require('../assets/poi/water-off.png'),
+    'poi-toilets-free-off': require('../assets/poi/toilets-free-off.png'),
+    'poi-toilets-paid-off': require('../assets/poi/toilets-paid-off.png'),
+    'poi-toilets-unknown-off': require('../assets/poi/toilets-unknown-off.png'),
+    'poi-parking-stands-off': require('../assets/poi/parking-stands-off.png'),
+    'poi-parking-racks-off': require('../assets/poi/parking-racks-off.png'),
+    'poi-parking-shelter-off': require('../assets/poi/parking-shelter-off.png'),
+    'poi-parking-other-off': require('../assets/poi/parking-other-off.png'),
+    'poi-repair-selfservice-off': require('../assets/poi/repair-selfservice-off.png'),
+    'poi-repair-shop-off': require('../assets/poi/repair-shop-off.png'),
+    'poi-water-customers': require('../assets/poi/water-customers.png'),
+    'poi-toilets-free-customers': require('../assets/poi/toilets-free-customers.png'),
+    'poi-toilets-paid-customers': require('../assets/poi/toilets-paid-customers.png'),
+    'poi-toilets-unknown-customers': require('../assets/poi/toilets-unknown-customers.png'),
+    'poi-parking-stands-customers': require('../assets/poi/parking-stands-customers.png'),
+    'poi-parking-racks-customers': require('../assets/poi/parking-racks-customers.png'),
+    'poi-parking-shelter-customers': require('../assets/poi/parking-shelter-customers.png'),
+    'poi-parking-other-customers': require('../assets/poi/parking-other-customers.png'),
+    'poi-repair-selfservice-customers': require('../assets/poi/repair-selfservice-customers.png'),
+    'poi-repair-shop-customers': require('../assets/poi/repair-shop-customers.png'),
+    'poi-parking-stands-covered': require('../assets/poi/parking-stands-covered.png'),
+    'poi-parking-racks-covered': require('../assets/poi/parking-racks-covered.png'),
+    'poi-parking-other-covered': require('../assets/poi/parking-other-covered.png'),
+    'poi-parking-stands-covered-off': require('../assets/poi/parking-stands-covered-off.png'),
+    'poi-parking-racks-covered-off': require('../assets/poi/parking-racks-covered-off.png'),
+    'poi-parking-other-covered-off': require('../assets/poi/parking-other-covered-off.png'),
+    'poi-parking-stands-covered-customers': require('../assets/poi/parking-stands-covered-customers.png'),
+    'poi-parking-racks-covered-customers': require('../assets/poi/parking-racks-covered-customers.png'),
+    'poi-parking-other-covered-customers': require('../assets/poi/parking-other-covered-customers.png'),
+    'poi-toilets-paid-paid': require('../assets/poi/toilets-paid-paid.png'),
+    'poi-water-paid': require('../assets/poi/water-paid.png'),
+    'poi-parking-stands-paid': require('../assets/poi/parking-stands-paid.png'),
+    'poi-parking-racks-paid': require('../assets/poi/parking-racks-paid.png'),
+    'poi-parking-shelter-paid': require('../assets/poi/parking-shelter-paid.png'),
+    'poi-parking-other-paid': require('../assets/poi/parking-other-paid.png'),
+    'poi-parking-stands-covered-paid': require('../assets/poi/parking-stands-covered-paid.png'),
+    'poi-parking-racks-covered-paid': require('../assets/poi/parking-racks-covered-paid.png'),
+    'poi-parking-other-covered-paid': require('../assets/poi/parking-other-covered-paid.png'),
+    'poi-repair-selfservice-paid': require('../assets/poi/repair-selfservice-paid.png'),
+    'poi-repair-shop-paid': require('../assets/poi/repair-shop-paid.png'),
+};
+
+const RESTRICTED_ACCESS = ['private', 'no', 'permit', 'employees', 'delivery', 'military', 'agricultural', 'forestry'];
+
+const OFF_COLOR = '#9CA3AF';
+const CUSTOMERS_COLOR = '#F59E0B';
+const isPoiUnavailable = (poi) => (
+    RESTRICTED_ACCESS.includes(poi?.access)
+    || poi?.disused === 'yes'
+    || poi?.['disused:amenity'] != null
+    || ['closed', 'off'].includes(poi?.opening_hours)
+);
+const isPoiCustomers = (poi) => poi?.access === 'customers';
+const poiAccentColor = (poi, base) => (isPoiUnavailable(poi) ? OFF_COLOR : isPoiCustomers(poi) ? CUSTOMERS_COLOR : base);
+
+const REPORT_IMAGES = {
+    'report-accident': require('../assets/reports/accident.png'),
+    'report-travaux': require('../assets/reports/travaux.png'),
+    'report-danger': require('../assets/reports/danger.png'),
+    'report-obstacle': require('../assets/reports/obstacle.png'),
 };
 
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
-// Tags OSM affichés dans la fiche d'un POI, quand ils sont renseignés.
-// `except` masque le champ pour une catégorie (le tag brut `fee` fait doublon
-// avec le champ « Accès » synthétique des toilettes).
 const POI_DETAIL_FIELDS = [
     {
         key: 'parking_type',
@@ -103,19 +159,74 @@ const formatPoiTag = (value) => {
 
 const EMPTY_FEATURE_COLLECTION = { type: 'FeatureCollection', features: [] };
 
+const ACCIDENT_SWITCH_ZOOM = 13.5;
+
+const ACCIDENT_SEVERITY_COLOR = [
+    'match', ['get', 'severity'],
+    10, '#7f1d1d',
+    3, '#dc2626',
+    1, '#f97316',
+    '#fbbf24',
+];
+
+const ACCIDENT_LEGEND = [
+    { label: 'Accident mortel', color: '#7f1d1d' },
+    { label: 'Blessé hospitalisé', color: '#dc2626' },
+    { label: 'Blessé léger', color: '#f97316' },
+];
+
+const LIT_ROADS_COLOR = ['match', ['get', 'lit_source'],
+    'inferred', '#ffe39a',
+    '#ffcf3d'];
+
+const ACCIDENT_DETAIL_FIELDS = [
+    { key: 'light', label: 'Luminosité' },
+    { key: 'weather', label: 'Météo' },
+    { key: 'collision', label: 'Type de collision' },
+    { key: 'road_type', label: 'Type de voie' },
+    { key: 'intersection', label: 'Intersection' },
+];
+
+const formatAccidentDate = (properties) => {
+    if (!properties?.date) return null;
+    const parsed = new Date(properties.date);
+    if (Number.isNaN(parsed.getTime())) return properties.date;
+    const options = properties.date_precision === 'month'
+        ? { month: 'long', year: 'numeric' }
+        : { day: 'numeric', month: 'long', year: 'numeric' };
+    return parsed.toLocaleDateString('fr-FR', options);
+};
+
+const TRAFFIC_COLORS = { green: '#22c55e', orange: '#f97316', red: '#ef4444', gray: '#9ca3af' };
+
+function MapButtonFrost() {
+    const { colors, isDark } = useTheme();
+    if (Platform.OS !== 'ios') return null;
+    return (
+        <View style={styles.mapButtonFrost}>
+            <BlurView intensity={40} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bgSurface, opacity: 0.22 }]} />
+        </View>
+    );
+}
+
 export default function MapComponent({
     start, end, itineraires, selectedItineraire,
     setSelectedItineraire, currentPosition, isNavigating,
-    canReport, onNavigateToPoi, miniMap = false
+    canReport, onNavigateToPoi, miniMap = false, bottomInset = 0, hideControls = false,
+    cameraPadding = { top: 200, right: 80, bottom: 200, left: 80 }
 }) {
     const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
     if (!MAPTILER_KEY) {
         console.warn("⚠️ EXPO_PUBLIC_MAPTILER_KEY n'est pas défini ! Assurez-vous de l'avoir dans votre .env");
     }
 
-    const { colors, typography } = useTheme();
+    const { colors, typography, isDark } = useTheme();
+
+    const androidButtonBg = Platform.OS === 'android'
+        ? { backgroundColor: withAlpha(colors.bgSurface, 0.9) }
+        : null;
     const { token, user } = useAuth();
-    const systemColorScheme = useColorScheme();
 
     const MAP_STYLES = [
         { id: "base", lightId: "base-v4", darkId: "base-v4-dark", label: "Basic", icon: "🍃" },
@@ -127,10 +238,10 @@ export default function MapComponent({
     ];
 
     const REPORT_TYPES = [
-        { id: 'accident', label: 'Accident', icon: '🚨' },
-        { id: 'travaux', label: 'Travaux', icon: '🚧' },
-        { id: 'danger', label: 'Danger', icon: '⚠️' },
-        { id: 'obstacle', label: 'Obstacle', icon: '🪨' },
+        { id: 'accident', label: 'Accident' },
+        { id: 'travaux', label: 'Travaux' },
+        { id: 'danger', label: 'Danger' },
+        { id: 'obstacle', label: 'Obstacle' },
     ];
 
     const [activeBaseStyle, setActiveBaseStyle] = useState("base");
@@ -143,12 +254,22 @@ export default function MapComponent({
     const [activeReport, setActiveReport] = useState(null);
     const [isPoiSheetVisible, setPoiSheetVisible] = useState(false);
     const [enabledPoiCats, setEnabledPoiCats] = useState({});
-    // { toilets: {free,paid,unknown}, parking: {stands,...} }
     const [enabledSubTypes, setEnabledSubTypes] = useState(DEFAULT_SUB_TYPES);
-    // Une catégorie n'est téléchargée qu'une fois, à sa première activation.
     const poiCacheRef = useRef({});
     const [poiData, setPoiData] = useState({});
     const [activePoi, setActivePoi] = useState(null);
+    const [showAccidents, setShowAccidents] = useState(false);
+    const [accidentData, setAccidentData] = useState(null);
+    const [activeAccident, setActiveAccident] = useState(null);
+    const accidentCacheRef = useRef(false);
+    const [showTraffic, setShowTraffic] = useState(false);
+    const [traffic, setTraffic] = useState(null);
+    const [showLitRoads, setShowLitRoads] = useState(false);
+    const [litRoadsData, setLitRoadsData] = useState(null);
+    const litRoadsCacheRef = useRef(false);
+    const [isLightingInfoVisible, setLightingInfoVisible] = useState(false);
+    const [lightingSources, setLightingSources] = useState(null);
+    const lightingSourcesRef = useRef(false);
     const [mapHeight, setMapHeight] = useState(0);
     const [recenterTrigger, setRecenterTrigger] = useState(0);
     const [hasCenteredOnce, setHasCenteredOnce] = useState(false);
@@ -160,11 +281,11 @@ export default function MapComponent({
     const navigationStartTimeRef = useRef(null);
 
     const mapStyleUrl = useMemo(() => {
-        const resolvedTheme = mapThemeMode === "auto" ? (systemColorScheme || "light") : mapThemeMode;
+        const resolvedTheme = mapThemeMode === "auto" ? (isDark ? "dark" : "light") : mapThemeMode;
         const styleConfig = MAP_STYLES.find(s => s.id === activeBaseStyle) || MAP_STYLES[0];
         const styleIdToUse = resolvedTheme === "dark" ? styleConfig.darkId : styleConfig.lightId;
         return `https://api.maptiler.com/maps/${styleIdToUse}/style.json?key=${MAPTILER_KEY}`;
-    }, [activeBaseStyle, mapThemeMode, systemColorScheme, MAPTILER_KEY]);
+    }, [activeBaseStyle, mapThemeMode, isDark, MAPTILER_KEY]);
 
     useEffect(() => {
         isNavigatingRef.current = isNavigating;
@@ -271,27 +392,28 @@ export default function MapComponent({
             const savedTheme = await AsyncStorage.getItem('userMapThemeMode');
             const savedPois = await AsyncStorage.getItem('userMapPois');
             const savedSubTypes = await AsyncStorage.getItem('userMapSubTypes');
+            const savedAccidents = await AsyncStorage.getItem('userMapAccidents');
+            const savedLitRoads = await AsyncStorage.getItem('userMapLitRoads');
             if (savedBase) setActiveBaseStyle(savedBase);
             if (savedTheme) setMapThemeMode(savedTheme);
+            setShowAccidents(savedAccidents === 'true');
+            setShowLitRoads(savedLitRoads === 'true');
             if (savedPois) {
                 try {
                     setEnabledPoiCats(JSON.parse(savedPois));
                 } catch {
-                    // Préférence corrompue : on repart sur tout désactivé.
                 }
             }
             if (savedSubTypes) {
                 try {
                     setEnabledSubTypes(mergeSubTypes(JSON.parse(savedSubTypes)));
                 } catch {
-                    // Préférence corrompue : on garde toutes les sous-familles.
                 }
             }
         };
         loadSavedPreferences();
     }, []);
 
-    // Télécharge les catégories nouvellement activées, une seule fois chacune.
     useEffect(() => {
         if (miniMap) return;
         POI_CATEGORIES.forEach(({ id }) => {
@@ -300,11 +422,64 @@ export default function MapComponent({
             getPois(id)
                 .then(collection => setPoiData(prev => ({ ...prev, [id]: collection })))
                 .catch(error => {
-                    poiCacheRef.current[id] = false;  // autorise une nouvelle tentative
+                    poiCacheRef.current[id] = false;
                     console.error(`Erreur chargement POI ${id}:`, error);
                 });
         });
     }, [enabledPoiCats, miniMap]);
+
+    useEffect(() => {
+        if (miniMap || !showAccidents || accidentCacheRef.current) return;
+        accidentCacheRef.current = true;
+        getAccidents()
+            .then(collection => {
+                setAccidentData(collection);
+                if (!collection?.features?.length) accidentCacheRef.current = false;
+            })
+            .catch(error => {
+                accidentCacheRef.current = false;  // autorise une nouvelle tentative
+                console.error("Erreur chargement des accidents :", error);
+            });
+    }, [showAccidents, miniMap]);
+
+    const handleAccidentsToggle = () => {
+        const next = !showAccidents;
+        setShowAccidents(next);
+        if (!next) setActiveAccident(null);
+        AsyncStorage.setItem('userMapAccidents', String(next));
+    };
+
+    useEffect(() => {
+        if (miniMap || !showLitRoads || litRoadsCacheRef.current) return;
+        litRoadsCacheRef.current = true;
+        getLitRoads()
+            .then(collection => {
+                setLitRoadsData(collection);
+                if (!collection?.features?.length) litRoadsCacheRef.current = false;
+            })
+            .catch(error => {
+                litRoadsCacheRef.current = false;  // autorise une nouvelle tentative
+                console.error("Erreur chargement des rues éclairées :", error);
+            });
+    }, [showLitRoads, miniMap]);
+
+    const handleLitRoadsToggle = () => {
+        const next = !showLitRoads;
+        setShowLitRoads(next);
+        AsyncStorage.setItem('userMapLitRoads', String(next));
+    };
+
+    const openLightingInfo = () => {
+        setLightingInfoVisible(true);
+        if (lightingSourcesRef.current) return;
+        lightingSourcesRef.current = true;
+        getStreetlightSources()
+            .then(data => setLightingSources(data?.sources || []))
+            .catch(error => {
+                lightingSourcesRef.current = false;  // autorise une nouvelle tentative
+                console.error("Erreur chargement des sources d'éclairage :", error);
+            });
+    };
 
     const handleRecenter = () => {
         if (!currentPosition || !cameraRef.current) {
@@ -352,9 +527,6 @@ export default function MapComponent({
         await AsyncStorage.setItem('userMapSubTypes', JSON.stringify(next));
     };
 
-    // Une seule source pour les 4 catégories : l'icône est choisie par expression
-    // sur `category`, et un unique layer symbol gère la collision globale.
-    // Les sous-familles (parking, toilettes) se filtrent ici, sans nouvelle requête.
     const poisGeoJSON = useMemo(() => {
         const features = POI_CATEGORIES
             .filter(({ id }) => enabledPoiCats[id] && poiData[id])
@@ -365,6 +537,45 @@ export default function MapComponent({
             ));
         return features.length ? { type: 'FeatureCollection', features } : EMPTY_FEATURE_COLLECTION;
     }, [enabledPoiCats, enabledSubTypes, poiData]);
+
+    const trafficGeoJSON = useMemo(
+        () => traffic?.geojson?.features?.length ? traffic.geojson : EMPTY_FEATURE_COLLECTION,
+        [traffic]
+    );
+
+    useEffect(() => {
+        if (miniMap) return;
+
+        let cancelled = false;
+        let timer = null;
+
+        const load = async () => {
+            try {
+                const data = await getTraffic();
+                if (cancelled) return;
+                setTraffic(data);
+                if (showTraffic) timer = setTimeout(load, (data?.refresh_interval_s || 300) * 1000);
+            } catch (error) {
+                if (cancelled || !showTraffic) return;
+                timer = setTimeout(load, 60000);
+            }
+        };
+        load();
+
+        return () => { cancelled = true; if (timer) clearTimeout(timer); };
+    }, [showTraffic, miniMap]);
+
+    const reportsGeoJSON = useMemo(() => {
+        const features = (reports || []).map((report) => ({
+            type: 'Feature',
+            properties: { id: report.id, report_type: report.report_type },
+            geometry: {
+                type: 'Point',
+                coordinates: [parseFloat(report.longitude), parseFloat(report.latitude)],
+            },
+        }));
+        return features.length ? { type: 'FeatureCollection', features } : EMPTY_FEATURE_COLLECTION;
+    }, [reports]);
 
     const routesGeoJSON = useMemo(() => {
         if (!itineraires) return null;
@@ -428,7 +639,7 @@ export default function MapComponent({
                     Math.max(...lons),
                     Math.max(...lats),
                 ],
-                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : { top: 200, right: 80, bottom: (!itineraires ? 0 : 200), left: 80 },
+                padding: miniMap ? { top: 40, right: 40, bottom: 40, left: 40 } : cameraPadding,
                 duration: 1000,
                 easing: "fly",
                 pitch: 0,
@@ -445,7 +656,7 @@ export default function MapComponent({
             };
         }
         return {};
-    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger, mapHeight, hasCenteredOnce]);
+    }, [start, end, selectedItineraire, itineraires, isNavigating, currentPosition, recenterTrigger, mapHeight, hasCenteredOnce, cameraPadding]);
 
     const onRoutePress = (event) => {
         Haptics.selectionAsync().catch(() => { });
@@ -463,6 +674,21 @@ export default function MapComponent({
         setActivePoi({ ...feature.properties, lat, lon });
     };
 
+    const onAccidentPress = (event) => {
+        Haptics.selectionAsync().catch(() => { });
+        const feature = event?.nativeEvent?.features?.[0];
+        if (!feature) return;
+        setActiveAccident(feature.properties);
+    };
+
+    const onReportPress = (event) => {
+        Haptics.selectionAsync().catch(() => { });
+        const feature = event?.nativeEvent?.features?.[0];
+        if (!feature) return;
+        const report = reports.find((r) => r.id === feature.properties.id);
+        if (report) setActiveReport(report);
+    };
+
     const screenHeight = Dimensions.get('window').height;
     const slideAnim = useRef(new Animated.Value(screenHeight)).current;
 
@@ -476,17 +702,6 @@ export default function MapComponent({
             }).start();
         }
     }, [isLayerMenuVisible]);
-
-    useEffect(() => {
-        if (isReportMenuVisible) {
-            Animated.spring(slideAnim, {
-                toValue: 0,
-                useNativeDriver: true,
-                tension: 50,
-                friction: 7
-            }).start();
-        }
-    }, [isReportMenuVisible]);
 
     useEffect(() => {
         if (isPoiSheetVisible) {
@@ -510,8 +725,10 @@ export default function MapComponent({
     };
 
     const closeLayerMenu = () => closeMenu(setLayerMenuVisible);
-    const closeReportMenu = () => closeMenu(setIsReportMenuVisible);
     const closePoiSheet = () => closeMenu(setPoiSheetVisible);
+
+    const { gesture: reportGesture, sheetStyle: reportSheetStyle, close: closeReport } =
+        useDragToDismiss({ visible: isReportMenuVisible, onClose: () => setIsReportMenuVisible(false) });
 
     const handleNavigateToPoi = () => {
         if (!activePoi || !onNavigateToPoi) return;
@@ -565,7 +782,7 @@ export default function MapComponent({
             setReports(prev => [...prev, newReport]);
             setSelectedReportType(null);
             setReportDescription("");
-            closeReportMenu();
+            closeReport();
         } catch (error) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             console.error("Erreur signalement:", error);
@@ -581,7 +798,7 @@ export default function MapComponent({
                 attribution={true}
                 attributionPosition={{ bottom: 5, right: 5 }}
                 compass={!miniMap}
-                compassPosition={{ bottom: 80, right: 20 }}
+                compassPosition={{ bottom: 80 + bottomInset, right: 20 }}
                 compassHiddenFacingNorth={false}
             >
                 <Camera
@@ -625,9 +842,99 @@ export default function MapComponent({
                     />
                 )}
 
-                {/* Déclarée avant la source des itinéraires : les POI passent donc
-                    sous les tracés. Les signalements, eux, sont des ViewAnnotation,
-                    toujours au-dessus du canvas. */}
+                {!miniMap && showTraffic && trafficGeoJSON.features.length > 0 && (
+                    <GeoJSONSource id="traffic" data={trafficGeoJSON}>
+                        <Layer
+                            id="traffic-line"
+                            type="line"
+                            minzoom={9}
+                            layout={{ lineJoin: 'round', lineCap: 'round' }}
+                            paint={{
+                                lineColor: ['match', ['get', 'level'],
+                                    'red', TRAFFIC_COLORS.red,
+                                    'orange', TRAFFIC_COLORS.orange,
+                                    'green', TRAFFIC_COLORS.green,
+                                    TRAFFIC_COLORS.gray],
+                                lineWidth: ['interpolate', ['linear'], ['zoom'],
+                                    9, ['match', ['get', 'level'], 'red', 2, 'orange', 1.8, 1],
+                                    11, ['match', ['get', 'level'], 'red', 3, 'orange', 2.5, 1.5],
+                                    16, ['match', ['get', 'level'], 'red', 8, 'orange', 7, 4]],
+                                lineOpacity: ['interpolate', ['linear'], ['zoom'],
+                                    9, ['match', ['get', 'level'], 'red', 0.9, 'orange', 0.9, 'gray', 0.12, 0.3],
+                                    12, ['match', ['get', 'level'], 'gray', 0.35, 0.85]],
+                            }}
+                        />
+                    </GeoJSONSource>
+                )}
+
+                {!miniMap && showLitRoads && !!litRoadsData && (
+                    <GeoJSONSource id="lit-roads" data={litRoadsData}>
+                        <Layer
+                            id="lit-roads-glow"
+                            type="line"
+                            layout={{ lineCap: 'round', lineJoin: 'round' }}
+                            paint={{
+                                lineColor: LIT_ROADS_COLOR,
+                                lineWidth: ['interpolate', ['exponential', 2], ['zoom'], 11, 4, 15, 5.3, 19, 85, 22, 680],
+                                lineBlur: ['interpolate', ['exponential', 2], ['zoom'], 11, 2, 15, 3, 19, 48, 22, 384],
+                                lineOpacity: ['interpolate', ['linear'], ['zoom'], 11, 0.12, 14, 0.3],
+                            }}
+                        />
+                        <Layer
+                            id="lit-roads-line"
+                            type="line"
+                            layout={{ lineCap: 'round', lineJoin: 'round' }}
+                            paint={{
+                                lineColor: LIT_ROADS_COLOR,
+                                lineWidth: ['interpolate', ['exponential', 2], ['zoom'], 11, 1.5, 15, 2.7, 19, 43, 22, 344],
+                                lineOpacity: ['interpolate', ['linear'], ['zoom'], 11, 0.5, 14, 0.85],
+                            }}
+                        />
+                    </GeoJSONSource>
+                )}
+
+                {!miniMap && showAccidents && !!accidentData && (
+                    <GeoJSONSource id="accidents" data={accidentData} onPress={onAccidentPress}>
+                        <Layer
+                            id="accidents-heat"
+                            type="heatmap"
+                            maxzoom={ACCIDENT_SWITCH_ZOOM + 1}
+                            paint={{
+                                heatmapWeight: ['interpolate', ['linear'], ['get', 'severity'],
+                                    0, 0.3, 1, 0.5, 3, 0.8, 10, 1],
+                                heatmapIntensity: ['interpolate', ['linear'], ['zoom'], 8, 1, 14, 3],
+                                heatmapColor: ['interpolate', ['linear'], ['heatmap-density'],
+                                    0, 'rgba(0,0,0,0)',
+                                    0.2, 'rgba(254,240,138,0.5)',
+                                    0.4, 'rgba(251,146,60,0.6)',
+                                    0.7, 'rgba(220,38,38,0.75)',
+                                    1, 'rgba(127,29,29,0.9)'],
+                                heatmapRadius: ['interpolate', ['linear'], ['zoom'], 8, 10, 14, 28],
+                                // Disparaît quand les points prennent le relais.
+                                heatmapOpacity: ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0.85, ACCIDENT_SWITCH_ZOOM + 1, 0],
+                            }}
+                        />
+                        <Layer
+                            id="accidents-point"
+                            type="circle"
+                            minzoom={ACCIDENT_SWITCH_ZOOM}
+                            paint={{
+                                circleRadius: ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 4, 17, 10],
+                                circleColor: ACCIDENT_SEVERITY_COLOR,
+                                circleStrokeWidth: 1.5,
+                                circleStrokeColor: '#ffffff',
+                                circleOpacity: ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0, ACCIDENT_SWITCH_ZOOM + 1, 0.9],
+                                circleStrokeOpacity: ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0, ACCIDENT_SWITCH_ZOOM + 1, 1],
+                            }}
+                            hitbox={{ width: 44, height: 44 }}
+                        />
+                    </GeoJSONSource>
+                )}
+
                 {!miniMap && poisGeoJSON.features.length > 0 && (
                     <>
                         <Images images={POI_IMAGES} />
@@ -637,37 +944,49 @@ export default function MapComponent({
                                 type="symbol"
                                 minzoom={10}
                                 layout={{
-                                    iconImage: ['match', ['get', 'category'],
-                                        'water', 'poi-water',
-                                        // Les toilettes se déclinent selon la gratuité.
-                                        'toilets', ['match', ['get', 'toilet_fee'],
-                                            'free', 'poi-toilets-free',
-                                            'paid', 'poi-toilets-paid',
-                                            'poi-toilets-unknown'],
-                                        // Le parking se décline par famille d'aménagement.
-                                        'parking', ['match', ['get', 'parking_type'],
-                                            'stands', 'poi-parking-stands',
-                                            'racks', 'poi-parking-racks',
-                                            'shelter', 'poi-parking-shelter',
-                                            'poi-parking-other'],
-                                        // La réparation distingue libre-service et atelier.
-                                        'repair', ['match', ['get', 'repair_kind'],
-                                            'shop', 'poi-repair-shop',
-                                            'poi-repair-selfservice'],
-                                        'poi-water'],
-                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.22, 13, 0.42, 17, 0.8],
-                                    // Dédensification : le moteur masque les icônes qui se chevauchent.
+                                    iconImage: ['concat',
+                                        ['match', ['get', 'category'],
+                                            'water', 'poi-water',
+                                            'toilets', ['match', ['get', 'toilet_fee'],
+                                                'free', 'poi-toilets-free',
+                                                'paid', 'poi-toilets-paid',
+                                                'poi-toilets-unknown'],
+                                            'parking', ['concat',
+                                                ['match', ['get', 'parking_type'],
+                                                    'stands', 'poi-parking-stands',
+                                                    'racks', 'poi-parking-racks',
+                                                    'shelter', 'poi-parking-shelter',
+                                                    'poi-parking-other'],
+                                                ['case',
+                                                    ['all',
+                                                        ['!=', ['get', 'parking_type'], 'shelter'],
+                                                        ['==', ['get', 'covered'], 'yes']],
+                                                    '-covered', '']],
+                                            'repair', ['match', ['get', 'repair_kind'],
+                                                'shop', 'poi-repair-shop',
+                                                'poi-repair-selfservice'],
+                                            'poi-water'],
+                                        ['case',
+                                            ['any',
+                                                ['in', ['get', 'access'], ['literal', RESTRICTED_ACCESS]],
+                                                ['==', ['get', 'disused'], 'yes'],
+                                                ['has', 'disused:amenity'],
+                                                ['in', ['get', 'opening_hours'], ['literal', ['closed', 'off']]]],
+                                            '-off',
+                                            ['any',
+                                                ['all', ['==', ['get', 'category'], 'toilets'], ['==', ['get', 'toilet_fee'], 'paid']],
+                                                ['all', ['!=', ['get', 'category'], 'toilets'], ['has', 'fee'], ['!=', ['get', 'fee'], 'no']]],
+                                            '-paid',
+                                            ['==', ['get', 'access'], 'customers'], '-customers',
+                                            '']],
+                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.16, 13, 0.3, 17, 0.58],
                                     iconAllowOverlap: false,
-                                    // Priorité de placement : les parkings (très nombreux) cèdent la
-                                    // place aux catégories rares (toilettes, réparation), sinon
-                                    // écrasées par collision. Sort-key bas = placé en premier.
                                     symbolSortKey: ['match', ['get', 'category'], 'parking', 1, 0],
                                     textField: ['step', ['zoom'], '', 16, ['coalesce', ['get', 'name'], '']],
                                     textSize: 11,
                                     textAnchor: 'top',
                                     textOffset: [0, 1.7],
                                     textAllowOverlap: false,
-                                    // En cas de collision, on sacrifie le libellé avant l'icône.
                                     textOptional: true,
                                 }}
                                 paint={{
@@ -706,23 +1025,31 @@ export default function MapComponent({
                     </GeoJSONSource>
                 )}
 
-                {!miniMap && reports && reports.map((report) => (
-                    <ViewAnnotation
-                        key={report.id}
-                        id={`report-${report.id}`}
-                        lngLat={[parseFloat(report.longitude), parseFloat(report.latitude)]}
-                        anchor="center"
-                        onPress={() => {
-                            setActiveReport(report);
-                            Haptics.selectionAsync();
-                        }}
-                        hitbox={{ width: 44, height: 44 }}
-                    >
-                        <Text style={{ fontSize: 24 }}>
-                            {REPORT_TYPES.find(t => t.id === report.report_type)?.icon || '?'}
-                        </Text>
-                    </ViewAnnotation>
-                ))}
+                {!miniMap && reportsGeoJSON.features.length > 0 && (
+                    <>
+                        <Images images={REPORT_IMAGES} />
+                        <GeoJSONSource id="reports" data={reportsGeoJSON} onPress={onReportPress}>
+                            <Layer
+                                id="reports-symbol"
+                                type="symbol"
+                                minzoom={9}
+                                layout={{
+                                    iconImage: ['match', ['get', 'report_type'],
+                                        'accident', 'report-accident',
+                                        'travaux', 'report-travaux',
+                                        'danger', 'report-danger',
+                                        'obstacle', 'report-obstacle',
+                                        'report-danger'],
+                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.18, 13, 0.34, 17, 0.66],
+                                    iconAllowOverlap: true,
+                                }}
+                                paint={{
+                                    iconOpacity: ['interpolate', ['linear'], ['zoom'], 9, 0, 10.5, 1],
+                                }}
+                            />
+                        </GeoJSONSource>
+                    </>
+                )}
             </Map>
 
             {!miniMap && isNavigating && activeAlert && (
@@ -732,27 +1059,32 @@ export default function MapComponent({
                     canVote={!!token && activeAlert.report.user_id !== user?.id}
                     onVote={(isPresent) => handleVoteReport(activeAlert.report.id, isPresent)}
                     onDismiss={dismissAlert}
+                    bottomOffset={bottomInset}
                 />
             )}
 
-            {!miniMap && currentPosition && (
+            {!miniMap && !hideControls && currentPosition && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.recenterButton, { backgroundColor: colors.bgSurface }]}
+                    style={[styles.mapButton, styles.recenterButton, androidButtonBg, { bottom: 20 + bottomInset }]}
                     onPress={handleRecenter}
                 >
+                    <MapButtonFrost />
                     <MaterialCommunityIcons name="crosshairs-gps" size={26} color={colors.textMain} />
                 </TouchableOpacity>
             )}
 
+            {!hideControls && (
             <TouchableOpacity
-                style={[styles.mapButton, styles.layerButton, { backgroundColor: colors.bgSurface }]}
+                style={[styles.mapButton, styles.layerButton, androidButtonBg, { bottom: 20 + bottomInset }]}
                 onPress={() => {
                     Haptics.selectionAsync();
                     setLayerMenuVisible(true);
                 }}
             >
+                <MapButtonFrost />
                 <MaterialCommunityIcons name="layers-outline" size={26} color={colors.textMain} />
             </TouchableOpacity>
+            )}
 
             <Modal
                 visible={isLayerMenuVisible}
@@ -796,18 +1128,142 @@ export default function MapComponent({
                                 </Text>
                             </TouchableOpacity>
                         ))}
+
+                        {traffic?.available && (
+                            <>
+                                <View style={styles.divider} />
+                                <View style={styles.poiOption}>
+                                    <Text style={styles.layerEmoji}>🚦</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={[styles.layerText, typography.body, { color: colors.textMain }]}>
+                                            Trafic automobile
+                                        </Text>
+                                    </View>
+                                    <Switch
+                                        value={showTraffic}
+                                        onValueChange={(value) => { Haptics.selectionAsync(); setShowTraffic(value); }}
+                                        trackColor={{ true: colors.primary }}
+                                    />
+                                </View>
+                            </>
+                        )}
+
+                        <View style={styles.divider} />
+
+                        <View style={styles.lightingHeadRow}>
+                            <Text style={[styles.layerText, typography.body, { color: colors.textMain, fontWeight: 'bold' }]}>
+                                Éclairage public
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => { Haptics.selectionAsync(); openLightingInfo(); }}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                accessibilityLabel="Informations sur l'éclairage"
+                            >
+                                <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.poiOption}>
+                            <Text style={styles.layerEmoji}>💡</Text>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[styles.layerText, typography.body, { color: colors.textMain }]}>
+                                    Éclairage public
+                                </Text>
+                            </View>
+                            <Switch
+                                value={showLitRoads}
+                                onValueChange={() => { Haptics.selectionAsync(); handleLitRoadsToggle(); }}
+                                trackColor={{ true: colors.primary }}
+                            />
+                        </View>
                     </Animated.View>
                 </TouchableOpacity>
             </Modal>
 
-            {!miniMap && (
+            <Modal
+                visible={isLightingInfoVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setLightingInfoVisible(false)}
+            >
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.poiButton, { backgroundColor: colors.bgSurface }]}
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setLightingInfoVisible(false)}
+                >
+                    <View
+                        style={[styles.lightingInfoCard, { backgroundColor: colors.bgMain }]}
+                        onStartShouldSetResponder={() => true}
+                    >
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>
+                            Éclairage public
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            <Text style={{ fontWeight: 'bold', color: colors.textMain }}>Rues éclairées</Text>
+                            {" : les rues marquées comme éclairées sur OpenStreetMap. Toutes les routes "}
+                            {"n'ont pas nécessairement cette information, c'est pour ça que nous déduisons "}
+                            {"l'éclairage de certaines routes avec la présence de lampadaires ou la "}
+                            {"proximité immédiate d'une rue éclairée."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            {"Les lampadaires eux-mêmes (OpenStreetMap et jeux open data des métropoles) "}
+                            {"ne sont pas affichés sur mobile : ils sont trop nombreux pour la mémoire du "}
+                            {"téléphone. Ils servent en revanche à déduire les rues éclairées ci-dessus, "}
+                            {"et restent visibles sur la version web."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary, fontStyle: 'italic' }]}>
+                            {"Une rue non surlignée n'est pas forcément non éclairée : le plus souvent, "}
+                            {"c'est la donnée qui manque. Peu de villes françaises ont un jeu open data de "}
+                            {"lampadaires, et OpenStreetMap n'est pas complet partout, surtout dans les "}
+                            {"zones rurales."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
+                            Sources sur cette zone
+                        </Text>
+
+                        {lightingSources === null ? (
+                            <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                                Chargement…
+                            </Text>
+                        ) : lightingSources.length === 0 ? (
+                            <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                                Aucun lampadaire synchronisé sur cette zone.
+                            </Text>
+                        ) : (
+                            lightingSources.map((s) => (
+                                <Text
+                                    key={s.source}
+                                    style={[typography.body, styles.lightingInfoSource, { color: colors.textSecondary }]}
+                                >
+                                    {`• ${s.attribution}`}
+                                    {s.count ? ` — ${s.count.toLocaleString('fr-FR')} points` : ''}
+                                </Text>
+                            ))
+                        )}
+
+                        <TouchableOpacity
+                            style={[styles.lightingInfoClose, { backgroundColor: colors.primary }]}
+                            onPress={() => setLightingInfoVisible(false)}
+                        >
+                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Fermer</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
+            {!miniMap && !hideControls && (
+                <TouchableOpacity
+                    style={[styles.mapButton, styles.poiButton, androidButtonBg, { bottom: 80 + bottomInset }]}
                     onPress={() => {
                         Haptics.selectionAsync();
                         setPoiSheetVisible(true);
                     }}
                 >
+                    <MapButtonFrost />
                     <MaterialCommunityIcons name="map-marker-multiple-outline" size={26} color={colors.textMain} />
                 </TouchableOpacity>
             )}
@@ -865,13 +1321,61 @@ export default function MapComponent({
                         <Text style={[typography.body, { fontSize: 12, color: colors.textSecondary, marginTop: 10 }]}>
                             {"Zoomez pour faire apparaître les points d'intérêt."}
                         </Text>
+
+                        {/* Séparé des POI : ce ne sont ni des équipements, ni des
+                            signalements d'utilisateurs, mais des accidents
+                            officiellement recensés. Les confondre induirait en erreur. */}
+                        <View style={[styles.divider, { marginTop: 14 }]} />
+
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>
+                            Accidentologie
+                        </Text>
+
+                        <View style={styles.poiOption}>
+                            <View style={[styles.poiBadge, { backgroundColor: '#dc2626' }]}>
+                                <MaterialCommunityIcons name="alert-octagon" size={18} color="#FFF" />
+                            </View>
+                            <Text style={[styles.layerText, typography.body, { flex: 1, color: colors.textMain }]}>
+                                Accidents à vélo
+                            </Text>
+                            <Switch
+                                value={showAccidents}
+                                onValueChange={() => {
+                                    Haptics.selectionAsync();
+                                    handleAccidentsToggle();
+                                }}
+                                trackColor={{ true: colors.primary }}
+                            />
+                        </View>
+
+                        {showAccidents && (
+                            <>
+                                {ACCIDENT_LEGEND.map((item) => (
+                                    <View key={item.label} style={styles.poiSubOption}>
+                                        <View style={[styles.poiSubDot, { backgroundColor: item.color }]} />
+                                        <Text style={[typography.body, { flex: 1, fontSize: 14, color: colors.textSecondary }]}>
+                                            {item.label}
+                                        </Text>
+                                    </View>
+                                ))}
+                                <Text style={[typography.body, { fontSize: 12, color: colors.textSecondary, marginTop: 10 }]}>
+                                    {"Accidents déclarés aux forces de l'ordre : l'absence de point ne signifie pas l'absence de danger."}
+                                </Text>
+                                {accidentData?.attributions?.length > 0 && (
+                                    <Text style={[typography.body, { fontSize: 11, color: colors.textSecondary, marginTop: 6, opacity: 0.75 }]}>
+                                        {accidentData.attributions.join(' · ')}
+                                    </Text>
+                                )}
+                            </>
+                        )}
+
                     </Animated.View>
                 </TouchableOpacity>
             </Modal>
 
-            {canReport && !miniMap && currentPosition && (
+            {canReport && !miniMap && !hideControls && currentPosition && (
                 <TouchableOpacity
-                    style={[styles.mapButton, styles.reportButton, { backgroundColor: colors.bgSurface }]}
+                    style={[styles.mapButton, styles.reportButton, androidButtonBg, { bottom: 140 + bottomInset }]}
                     onPress={() => {
                         if (!currentPosition) {
                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -885,6 +1389,7 @@ export default function MapComponent({
                         Haptics.selectionAsync();
                     }}
                 >
+                    <MapButtonFrost />
                     <Ionicons name="warning-outline" size={26} color={colors.textMain} />
                 </TouchableOpacity>
             )}
@@ -893,27 +1398,33 @@ export default function MapComponent({
                 visible={isReportMenuVisible}
                 animationType="fade"
                 transparent={true}
-                onRequestClose={closeReportMenu}
+                onRequestClose={closeReport}
             >
+                <GestureHandlerRootView style={{ flex: 1 }}>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.reportOverlay}>
 
                     <TouchableOpacity
                         style={StyleSheet.absoluteFill}
                         activeOpacity={1}
-                        onPress={closeReportMenu}
+                        onPress={closeReport}
                     />
 
-                    <Animated.View style={[styles.modalContainer, { backgroundColor: colors.bgSurface, transform: [{ translateY: slideAnim }] }]}>
+                    <Reanimated.View style={[styles.modalContainer, { backgroundColor: colors.bgSurface }, reportSheetStyle]}>
 
-                        <View style={styles.header}>
-                            <Text style={[typography.h1, { fontSize: 20, color: colors.textMain }]}>Signaler un incident</Text>
-                            <TouchableOpacity onPress={closeReportMenu}>
-                                <Ionicons name="close" size={28} color={colors.textMain} />
-                            </TouchableOpacity>
+                        <GestureDetector gesture={reportGesture}>
+                        <View>
+                            <GrabHandle />
+                            <View style={styles.header}>
+                                <Text style={[typography.h1, { fontSize: 20, color: colors.textMain }]}>Signaler un incident</Text>
+                                <TouchableOpacity onPress={closeReport}>
+                                    <Ionicons name="close" size={28} color={colors.textMain} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
+                        </GestureDetector>
 
                         <Text style={[typography.body, { color: colors.textSecondary, marginBottom: 15 }]}>
-                            Quel type d'incident rencontrez-vous ?
+                            {"Quel type d'incident rencontrez-vous ?"}
                         </Text>
 
                         <View style={styles.grid}>
@@ -930,8 +1441,12 @@ export default function MapComponent({
                                         Haptics.selectionAsync();
                                     }}
                                 >
-                                    <Text style={styles.typeIcon}>{type.icon}</Text>
-                                    <Text style={[typography.body, { fontSize: 14, color: selectedReportType === type.id ? colors.primary : colors.textMain }]}>
+                                    <Image
+                                        source={REPORT_IMAGES[`report-${type.id}`]}
+                                        style={styles.typeIcon}
+                                        resizeMode="contain"
+                                    />
+                                    <Text style={[typography.body, { fontSize: 14, fontWeight: selectedReportType === type.id ? 'bold' : 'normal', color: colors.textMain }]}>
                                         {type.label}
                                     </Text>
                                 </TouchableOpacity>
@@ -966,8 +1481,9 @@ export default function MapComponent({
                             </Text>
                         </TouchableOpacity>
 
-                    </Animated.View>
+                    </Reanimated.View>
                 </KeyboardAvoidingView>
+                </GestureHandlerRootView>
             </Modal>
 
             <Modal
@@ -984,9 +1500,18 @@ export default function MapComponent({
                     <View style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
 
                         <View style={styles.header}>
-                            <Text style={[typography.h1, { fontSize: 20, color: colors.textMain, textTransform: 'capitalize' }]}>
-                                {activeReport ? REPORT_TYPES.find(t => t.id === activeReport.report_type)?.icon : ''} {activeReport?.report_type}
-                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
+                                {activeReport && (
+                                    <Image
+                                        source={REPORT_IMAGES[`report-${activeReport.report_type}`] || REPORT_IMAGES['report-danger']}
+                                        style={{ width: 30, height: 30 }}
+                                        resizeMode="contain"
+                                    />
+                                )}
+                                <Text style={[typography.h1, { fontSize: 20, color: colors.textMain, textTransform: 'capitalize', flex: 1 }]}>
+                                    {activeReport?.report_type}
+                                </Text>
+                            </View>
                             <TouchableOpacity onPress={() => setActiveReport(null)}>
                                 <Ionicons name="close" size={28} color={colors.textMain} />
                             </TouchableOpacity>
@@ -1007,8 +1532,6 @@ export default function MapComponent({
                             </Text>
                         </View>
 
-                        {/* On ne vote pas sur son propre signalement : l'auteur voit
-                            « Supprimer », les autres voient les boutons de vote. */}
                         {token && activeReport && activeReport.user_id !== user?.id && (
                             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
                                 <TouchableOpacity
@@ -1072,7 +1595,7 @@ export default function MapComponent({
                                 <>
                                     <View style={styles.header}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
-                                            <View style={[styles.poiBadge, { backgroundColor: category?.color }]}>
+                                            <View style={[styles.poiBadge, { backgroundColor: poiAccentColor(activePoi, category?.color) }]}>
                                                 <MaterialCommunityIcons name={category?.icon} size={18} color="#FFF" />
                                             </View>
                                             <Text style={[typography.h1, { fontSize: 18, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
@@ -1110,6 +1633,65 @@ export default function MapComponent({
                     </View>
                 </TouchableOpacity>
             </Modal>
+
+            <Modal
+                visible={!!activeAccident}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setActiveAccident(null)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setActiveAccident(null)}
+                >
+                    <View style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
+                        {activeAccident && (() => {
+                            const date = formatAccidentDate(activeAccident);
+                            const details = ACCIDENT_DETAIL_FIELDS
+                                .filter(field => activeAccident[field.key])
+                                .map(field => `${field.label} : ${activeAccident[field.key]}`);
+                            const color = activeAccident.severity >= 10 ? '#7f1d1d'
+                                : activeAccident.severity >= 3 ? '#dc2626' : '#f97316';
+                            return (
+                                <>
+                                    <View style={styles.header}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
+                                            <View style={[styles.poiBadge, { backgroundColor: color }]}>
+                                                <MaterialCommunityIcons name="alert-octagon" size={18} color="#FFF" />
+                                            </View>
+                                            <Text style={[typography.h1, { fontSize: 18, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
+                                                Accident à vélo
+                                            </Text>
+                                        </View>
+                                        <TouchableOpacity onPress={() => setActiveAccident(null)}>
+                                            <Ionicons name="close" size={28} color={colors.textMain} />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {date && (
+                                        <Text style={[typography.body, { color: colors.textSecondary, marginBottom: 8 }]}>
+                                            {date}
+                                        </Text>
+                                    )}
+
+                                    {activeAccident.severity_label && (
+                                        <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
+                                            {`Gravité : ${activeAccident.severity_label}`}
+                                        </Text>
+                                    )}
+
+                                    {details.map(detail => (
+                                        <Text key={detail} style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
+                                            {detail}
+                                        </Text>
+                                    ))}
+                                </>
+                            );
+                        })()}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </View>
     );
 }
@@ -1120,15 +1702,18 @@ const styles = StyleSheet.create({
     mapButton: {
         height: 50,
         width: 50,
-        padding: 10,
-        borderRadius: 50,
-        elevation: 5,
+        borderRadius: 25,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    mapButtonFrost: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: 25,
+        overflow: 'hidden',
     },
     layerButton: {
         position: 'absolute',
@@ -1161,6 +1746,38 @@ const styles = StyleSheet.create({
         padding: 20,
         width: '80%',
         alignItems: 'flex-start',
+    },
+    lightingHeadRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        paddingHorizontal: 4,
+        marginBottom: 4,
+    },
+    lightingInfoCard: {
+        borderRadius: 20,
+        padding: 20,
+        width: '88%',
+        maxHeight: '80%',
+        alignItems: 'flex-start',
+    },
+    lightingInfoText: {
+        fontSize: 13,
+        lineHeight: 19,
+        marginBottom: 10,
+    },
+    lightingInfoSource: {
+        fontSize: 13,
+        lineHeight: 19,
+        marginBottom: 4,
+    },
+    lightingInfoClose: {
+        alignSelf: 'stretch',
+        alignItems: 'center',
+        paddingVertical: 11,
+        borderRadius: 12,
+        marginTop: 6,
     },
     modalTitle: {
         fontSize: 18,
@@ -1276,7 +1893,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     typeIcon: {
-        fontSize: 32,
+        width: 40,
+        height: 40,
         marginBottom: 5
     },
     input: {

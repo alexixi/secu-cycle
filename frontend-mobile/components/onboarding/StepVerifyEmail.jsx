@@ -1,9 +1,8 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { Button } from "../ui/Button";
+import CodeInput, { CODE_LENGTH } from "../ui/CodeInput";
 import { useTheme } from "../../hooks/useTheme";
-
-const CODE_LENGTH = 6;
 
 export default function StepVerifyEmail({
     email,
@@ -27,11 +26,6 @@ export default function StepVerifyEmail({
             ? `Renvoyer le code (${cooldown}s)`
             : "Renvoyer le code";
 
-    const handleChange = (text) => {
-        const digitsOnly = text.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH);
-        setCode(digitsOnly);
-    };
-
     return (
         <View style={styles.formContainer}>
             <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Vérifiez votre e-mail</Text>
@@ -42,24 +36,7 @@ export default function StepVerifyEmail({
 
             <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.textSecondary }]}>Code de vérification</Text>
-                <TextInput
-                    style={[
-                        styles.codeInput,
-                        {
-                            backgroundColor: colors.bgSurface,
-                            color: colors.textMain,
-                            borderColor: error ? colors.error : colors.borderStrong,
-                        },
-                    ]}
-                    value={code}
-                    onChangeText={handleChange}
-                    keyboardType="number-pad"
-                    maxLength={CODE_LENGTH}
-                    placeholder="––––––"
-                    placeholderTextColor={colors.textSecondary}
-                    autoFocus
-                    textAlign="center"
-                />
+                <CodeInput value={code} onChange={setCode} hasError={!!error} />
                 {error && <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>}
             </View>
 
@@ -95,15 +72,6 @@ const styles = StyleSheet.create({
     subtitle: { textAlign: "center", fontSize: 15, marginBottom: 30, lineHeight: 22 },
     inputGroup: { width: "100%", marginBottom: 20 },
     label: { fontSize: 14, fontWeight: "bold", marginBottom: 8, marginLeft: 4 },
-    codeInput: {
-        borderWidth: 1,
-        borderRadius: 12,
-        paddingHorizontal: 15,
-        paddingVertical: 16,
-        fontSize: 28,
-        letterSpacing: 12,
-        fontWeight: "bold",
-    },
     errorText: { fontSize: 12, marginTop: 8, marginLeft: 4 },
     linksRow: {
         flexDirection: "row",

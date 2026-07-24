@@ -5,7 +5,9 @@ services:
     # swap, le pic de chargement saturait la RAM et déclenchait l'OOM killer,
     # rendant l'hôte injoignable. Le calcul d'itinéraire étant déporté hors de
     # l'event loop (asyncio.to_thread), 1 worker async reste réactif.
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    # --proxy-headers/--forwarded-allow-ips : voir le Dockerfile. Nécessaire pour
+    # que le rate-limiting voie la vraie IP client (X-Forwarded-For du proxy).
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*"]
     ports:
       - "127.0.0.1:8000:8000"
   web:

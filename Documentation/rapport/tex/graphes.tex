@@ -37,9 +37,32 @@ Les pondérations sont alors rééquilibrées pour accorder 15\,\% de la note à
     S_{nuit} = (n_{highway} \times 0.20) + (n_{cycleway} \times 0.30) + (n_{speed} \times 0.35) + (n_{lit} \times 0.15)
 \end{equation}
 
+\subsubsection{Correction par l'accidentologie réelle ($M_{accident}$)}
+\label{sec:accidentologie}
+
+Le score $S$ décrit ce à quoi une rue \emph{ressemble} d'après OpenStreetMap, jamais ce qui s'y est réellement produit. Une rue bien notée sur le papier mais qui concentre les collisions cyclistes resterait invisible pour l'algorithme. Nous corrigeons donc la note d'infrastructure par les accidents corporels officiellement recensés : les bases \textbf{BAAC} de l'ONISR pour la France, et le fichier géolocalisé de \textbf{Statbel} pour la Belgique, tous deux filtrés sur les accidents impliquant au moins un vélo.
+
+Chaque accident est rattaché au segment le plus proche (tolérance de 25\,m), avec un poids égal à sa gravité, atténué exponentiellement par son ancienneté (demi-vie de cinq ans). La note finale du segment devient :
+\begin{equation}
+    S_{final} = \max\left(0,\; S - M_{accident}\right),
+    \qquad
+    M_{accident} = \min\left(M_{max},\; k \cdot \ln\left(1 + \frac{\sum_i g_i\,e^{-\lambda a_i}}{L / 100}\right)\right)
+\end{equation}
+où $g_i$ est la gravité de l'accident $i$, $a_i$ son ancienneté en années, $L$ la longueur du segment en mètres, et $M_{max} = 1{,}5$ point.
+
+Trois précautions méthodologiques déterminent cette forme, et méritent d'être explicitées.
+
+\paragraph{Un malus soustractif, jamais un bonus.} Un segment sans accident recensé --- ou situé dans une zone qu'aucune source ne couvre --- conserve exactement sa note d'infrastructure. Une normalisation entre segments aurait, elle, récompensé l'absence de données autant que l'absence d'accidents, ce qui aurait avantagé les zones les moins bien couvertes.
+
+\paragraph{Un plafond, faute de dénominateur d'exposition.} Les bases d'accidentologie recensent des accidents, jamais le nombre de cyclistes passés. Un axe cyclable très fréquenté cumule donc mécaniquement des accidents sans être plus dangereux \emph{au kilomètre parcouru}. Sans plafond ni compression logarithmique, le score aurait pénalisé les grands axes aménagés au profit de rues résidentielles désertes --- exactement l'inverse de l'effet recherché. L'accidentologie corrige la note d'infrastructure, elle ne s'y substitue pas.
+
+\paragraph{Une fenêtre temporelle large plutôt que récente.} La couverture du géocodage varie fortement d'une année à l'autre : sur l'emprise de Bordeaux intra-rocade, le dérivé BAAC compte 176 accidents géolocalisés en 2015 contre 15 en 2019 et 3 en 2021, sans qu'il se soit rien passé de tel sur le terrain. Restreindre la fenêtre aux années récentes n'aurait pas donné une donnée plus fraîche, mais un échantillon de quelques dizaines de points dont la géographie refléterait surtout les aléas de saisie. C'est la décroissance exponentielle qui assure la recence, sans introduire de seuil arbitraire.
+
+Il reste une limite que nous assumons : ces bases ne recensent que les accidents \emph{corporels déclarés aux forces de l'ordre}. Les chutes sans tiers y sont très largement sous-représentées, et le géocodage est plus lacunaire hors agglomération. Le signal est donc structurellement plus fiable en ville, ce que l'application indique explicitement à l'utilisateur plutôt que de le masquer.
+
 \subsubsection{Transformation en multiplicateur de risque ($M_{risque}$)}
 Une fois le score sur 10 obtenu, il doit être converti en une pénalité de distance. 
-L'algorithme calcule d'abord le risque normalisé ($R_{norm}$), qui est l'inverse du score (un score de 10/10 donne un risque de 0, un score de 1/10 donne un risque de 1).
+L'algorithme calcule d'abord le risque normalisé ($R_{norm}$) à partir de $S_{final}$, qui est l'inverse du score (un score de 10/10 donne un risque de 0, un score de 1/10 donne un risque de 1). L'accidentologie se propage donc mécaniquement jusqu'au poids soumis à A* : l'itinéraire « Sécurisé » ($\alpha = 0$) contourne réellement les points noirs, tandis que l'itinéraire « Rapide » ($\alpha = 1$), qui annule le multiplicateur, en reste insensible.
 
 Ce risque est ensuite élevé au carré pour créer un \textbf{effet dissuasif exponentiel} : un danger critique sera puni beaucoup plus sévèrement qu'un danger modéré.
 \begin{equation}
@@ -63,7 +86,7 @@ La distance perçue finale de l'arête ($W$), qui sera soumise à l'algorithme A
 \begin{equation}
     W = \left[ D_{réelle} \times (1 + M_{risque} + M_{effort}) \right] + C_{trafic} + C_{signalements}
 \end{equation}
-Les coûts d'impédance dynamiques ($C_{trafic}$ et $C_{signalements}$) sont des mètres virtuels ajoutés de manière additive (ex: + 50 mètres pour un embouteillage, + 10\,000 mètres pour un accident bloquant). 
+Les coûts d'impédance dynamiques ($C_{trafic}$ et $C_{signalements}$) sont des mètres virtuels ajoutés de manière additive. Le coût de trafic dépend de la sévérité (axe dense ou embouteillé) et de la position du curseur rapidité/sécurité : de 20 à 170 mètres virtuels par tronçon (cf. Section~\ref{sec:backend}). Un signalement bloquant, lui, peut ajouter jusqu'à 10\,000 mètres.
 Cette méthode additive garantit que le GPS cherchera à contourner le segment impacté sans gonfler proportionnellement sa longueur réelle.
 
 \subsubsection{Choix des poids}

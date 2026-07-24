@@ -43,6 +43,24 @@ async function refreshAccessToken() {
     }
 }
 
+const SESSION_INVALID_DETAILS = [
+    "Invalid token",
+    "Invalid token payload",
+    "Token révoqué",
+    "Compte suspendu.",
+];
+
+function isSessionInvalid(errorData) {
+    let detail = errorData;
+    try {
+        const parsed = JSON.parse(errorData)?.detail;
+        if (typeof parsed === "string") detail = parsed;
+    } catch {
+    }
+    return typeof detail === "string"
+        && SESSION_INVALID_DETAILS.some((message) => detail.includes(message));
+}
+
 export async function apiFetch(endpoint, options = {}, token = null, _retried = false) {
     const headers = {
         "Content-Type": "application/json",
@@ -60,7 +78,7 @@ export async function apiFetch(endpoint, options = {}, token = null, _retried = 
     if (!response.ok) {
         const errorData = await response.text();
         const isAuthEndpoint = url.includes("/login") || url.includes("/refresh");
-        if (response.status === 401 && !isAuthEndpoint && errorData.includes("token")) {
+        if (response.status === 401 && !isAuthEndpoint && isSessionInvalid(errorData)) {
             if (!_retried) {
                 const newToken = await refreshAccessToken();
                 if (newToken) {
@@ -270,6 +288,30 @@ export async function changePassword(token, oldPassword, newPassword) {
     }
 }
 
+export async function requestEmailChange(token, newEmail, password) {
+    try {
+        const data = await apiFetch("/users/me/email", {
+            method: "POST",
+            body: JSON.stringify({ new_email: newEmail, password: password }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function confirmEmailChange(token, code) {
+    try {
+        const data = await apiFetch("/users/me/email/confirm", {
+            method: "POST",
+            body: JSON.stringify({ code: code }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function changeAddress(token, homeAddress, workAddress) {
     try {
         const data = await apiFetch("/users/me", {
@@ -404,6 +446,51 @@ export async function getReports() {
 export async function getPois(category) {
     try {
         const data = await apiFetch(`/pois/?categories=${encodeURIComponent(category)}`, { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getAccidents() {
+    try {
+        const data = await apiFetch("/accidents/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getTraffic() {
+    try {
+        const data = await apiFetch("/traffic/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getStreetlights() {
+    try {
+        const data = await apiFetch("/streetlights/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getLitRoads() {
+    try {
+        const data = await apiFetch("/streetlights/lit-roads", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getStreetlightSources() {
+    try {
+        const data = await apiFetch("/streetlights/sources", { method: "GET" });
         return data;
     } catch (error) {
         throw error;

@@ -37,12 +37,41 @@ DEFAULT_MAXSPEED_BY_HIGHWAY = {
     'footway': 10, 'pedestrian': 10
 }
 
-DEFAULT_LIT_SCORE_BY_HIGHWAY = {
-    'residential': 0.9, 'primary': 0.9, 'secondary': 0.9, 'tertiary': 0.9,
-    'living_street': 0.9, 'pedestrian': 0.9,
-    'cycleway': 0.7,
-    'path': 0.2, 'track': 0.2, 'footway': 0.2
-}
+# Score d'éclairage (sur 10) d'une voie dont l'éclairage n'est PAS renseigné :
+# ni tag OSM `lit`, ni inférence lampadaires. Variante prudente pour une app de
+# sécurité : on ne suppose rien — ni éclairée, ni obscure — donc score NEUTRE.
+# L'éclairage ne récompense ainsi que le connu (`lit=yes` ou lampadaires
+# proches) et ne pénalise que le connu (`lit=no`) ; il ne prête jamais
+# d'éclairage à une voie sur la seule foi de son type.
+LIT_NEUTRAL_SCORE = 5.0
+
+# Coupure nocturne de l'éclairage public (heures locales) : de nombreuses
+# communes éteignent leurs lampadaires en cœur de nuit. Heuristique, faute de
+# donnée d'extinction commune par commune ; bornes [début, fin[.
+NIGHT_EXTINCTION_WINDOW = (1, 5)
+
+# Inférence d'éclairage à partir des lampadaires (table `street_lamps`).
+# Rayon d'INFLUENCE d'un lampadaire : il compte pour TOUTES les arêtes situées à
+# moins de cette distance, et non pour la seule plus proche — une lampe en bord
+# de chaussée éclaire aussi la piste cyclable qui la longe.
+STREETLAMP_SNAP_RADIUS_M = 20.0
+# Densité (lampadaires pour 100 m) à partir de laquelle une arête sans tag `lit`
+# est réputée éclairée. ~1 lampadaire tous les 30 m sur une voie urbaine.
+STREETLAMP_LIT_MIN_PER_100M = 2.5
+
+# Propagation de l'éclairage depuis une voie tagguée `lit=yes` (OSM) vers les
+# aménagements séparés qui la longent (piste cyclable, chemin, trottoir).
+LIT_SPILL_RADIUS_M = 15.0
+# Part de la longueur de la voie candidate devant courir à moins de
+# LIT_SPILL_RADIUS_M d'une voie éclairée. Un critère de COUVERTURE (et non la
+# distance minimale) est indispensable : deux arêtes qui se touchent à un
+# carrefour sont à distance nulle, or une rue perpendiculaire n'est pas éclairée
+# par le boulevard qu'elle croise. Longer, oui ; croiser, non.
+LIT_SPILL_MIN_COVERAGE = 0.6
+LIT_SPILL_SAMPLE_STEP_M = 10.0
+# Seuls ces types de voies bénéficient de la propagation : les aménagements
+# séparés de la chaussée, pas les rues voisines.
+LIT_SPILL_TARGET_HIGHWAYS = ('cycleway', 'path', 'footway', 'track')
 
 SPEED_BY_INFRASTRUCTURE = {
     "none":          (18, 21, 14, 22),
@@ -81,10 +110,35 @@ REPORT_PENALTIES = {
     'default': 2.0
 }
 
+# Distance (m) au-delà de laquelle un accident n'est plus considéré comme attaché à une arête du graphe
+ACCIDENT_SNAP_RADIUS_M = 25.0
+
+# Demi-vie de l'ancienneté d'un accident : au bout de ce délai, il ne pèse plus que moitié
+ACCIDENT_HALF_LIFE_YEARS = 5.0
+
+# Longueur de référence de la densité d'accidents (accidents pour 100 m).
+ACCIDENT_REFERENCE_LENGTH_M = 100.0
+
+# Plafond du malus, en points sur 10. Volontairement bas : l'accidentologie
+# corrige la note d'infrastructure, elle ne la remplace pas. Les données ne
+# comportent aucun dénominateur d'exposition (nombre de cyclistes passés), si
+# bien qu'un axe cyclable très fréquenté cumule des accidents sans être plus
+# dangereux au kilomètre parcouru. Un malus non plafonné pénaliserait donc les
+# grands axes aménagés au profit de rues résidentielles désertes.
+ACCIDENT_MAX_MALUS = 1.5
+# Calibré pour qu'un seul accident, même mortel, n'atteigne pas le plafond : sans
+# quoi tous les points noirs seraient à égalité et le score cesserait de les
+# distinguer. Ordre de grandeur obtenu sur un segment de 100 m : un blessé léger
+# récent coûte 0,3 pt, un mort 1,1 pt, un carrefour cumulant plusieurs drames
+# atteint le plafond.
+ACCIDENT_MALUS_K = 0.5
+
 ELEVATION_DIVISOR = 30.0
 DEFAULT_SAFETY_PENALTY = 30.0
+
+# Malus d'un tronçon congestionné, en mètres virtuels, pondéré par la sévérité
 TRAFFIC_BASE_PENALTY = 50.0
-TRAFFIC_SAFETY_FACTOR = 250.0
+TRAFFIC_SAFETY_FACTOR = 120.0
 
 SURFACE_ROUGHNESS = {
     'asphalt': 0.0, 'concrete': 0.05, 'concrete:plates': 0.1, 'paved': 0.05,

@@ -17,6 +17,8 @@ def profile_paths(name):
     La convention `graphs/<nom>.graphml` est celle que suppose déjà
     `make regen-graph`, et que respectent les profils historiques.
     """
+    if not name or "/" in name or "\\" in name or ".." in name or name.startswith("."):
+        raise ValueError(f"Nom de profil invalide : {name!r}")
     base = backend_dir()
     return {
         "graph_file": os.path.join(base, "graphs", f"{name}.graphml"),
@@ -64,6 +66,7 @@ def load_graph_profile():
             "name": profile.name,
             **profile_paths(profile.name),
             "communes": list(profile.communes or []),
+            "night_extinction": (profile.night_extinction_start, profile.night_extinction_end),
         }
     finally:
         db.close()
@@ -357,7 +360,7 @@ def create_graph(filename, filepath_json, communes, on_progress=None):
             'cycleway', 'cycleway:left', 'cycleway:right', 'cycleway:both',
             'oneway', 'oneway:bicycle', 'bicycle', 'segregated',
             'surface', 'smoothness', 'tracktype', 'width', 'lanes',
-            'lit', 'maxspeed',
+            'lit', 'lit:conditional', 'maxspeed',
         ]
         ox.settings.useful_tags_way = list(set(ox.settings.useful_tags_way + extra_tags))
 
@@ -387,9 +390,15 @@ def create_graph(filename, filepath_json, communes, on_progress=None):
 
     return G
 
-def load_graph_with_ign(filepath_graph, filepath_json, communes):
-    """Charge le graphe routier et y injecte le cache d'altitudes IGN."""
+def load_graph_with_ign(filepath_graph, filepath_json, communes, night_extinction=None):
+    """Charge le graphe routier et y injecte le cache d'altitudes IGN.
+
+    `night_extinction` = (start_h, end_h) du profil actif, posé sur `G.graph`
+    comme fenêtre d'extinction **par défaut** : chaque commune peut la remplacer
+    par la sienne (cf. `graph.lighting.resolve_extinction_windows`).
+    """
     G = create_graph(filepath_graph, filepath_json, communes)
+    G.graph['_extinction_window'] = night_extinction
 
     with open(filepath_json, 'r') as f:
         ign_data = json.load(f)
@@ -410,6 +419,22 @@ def load_graph_with_ign(filepath_graph, filepath_json, communes):
 
     G = ox.elevation.add_edge_grades(G, add_absolute=True)
 
+    from graph.accidents import attach_accident_risk
+    attach_accident_risk(G)
+
+    # Rattachement des arêtes à leur commune, puis résolution des horaires
+    # d'extinction (commune → défaut du profil → constante globale).
+    from graph.lighting import (
+        attach_communes, attach_lighting, resolve_extinction_windows,
+    )
+    attach_communes(G, communes)
+    resolve_extinction_windows(G, night_extinction)
+
+    # Inférence d'éclairage à partir des lampadaires (table street_lamps), pour
+    # densifier le tag OSM `lit` là où il manque. Doit précéder le précalcul des
+    # coûts statiques, qui en dépend.
+    attach_lighting(G)
+
     # Précalcule une fois les composantes de coût statiques des arêtes
     # et l'index spatial des nœuds (recherche du point d'accroche).
     from graph.routing import precompute_static_costs, precompute_nearest_node_index
@@ -418,61 +443,3 @@ def load_graph_with_ign(filepath_graph, filepath_json, communes):
 
     return G
 
-def update_graph_with_traffic(G):
-    """
-    Version Haute Performance (Vectorisée) pour la mise à jour du trafic.
-    """
-    url = "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/ci_trafi_l/records"
-
-    query = 'etat in ("EMBOUTEILLE", "DENSE")'
-
-    params = {
-        "where": query,
-        "limit": 100,
-        "select": "geo_shape"
-    }
-
-    try:
-        response = requests.get(url, params=params, timeout=5)
-        response.raise_for_status()
-        records = response.json().get('results', [])
-    except Exception as e:
-        print(f"Erreur API Trafic : {e}")
-        return G
-
-    lons = []
-    lats = []
-
-    for record in records:
-        geometry = record.get('geo_shape', {}).get('geometry', {})
-        if geometry.get('type') == 'LineString':
-            coords = geometry.get('coordinates', [])
-            if not coords: continue
-
-            step = max(1, len(coords) // 3)
-            for i in range(0, len(coords), step):
-                lons.append(coords[i][0])
-                lats.append(coords[i][1])
-
-            lons.append(coords[-1][0])
-            lats.append(coords[-1][1])
-
-    congested_nodes = set()
-
-    if lons and lats:
-        try:
-            nearest_nodes = ox.distance.nearest_nodes(G, X=lons, Y=lats)
-            congested_nodes = set(nearest_nodes)
-        except Exception as e:
-            print(f"Erreur de calcul spatial : {e}")
-
-    segments_count = 0
-    for u, v, k, data in G.edges(keys=True, data=True):
-        if u in congested_nodes or v in congested_nodes:
-            data['traffic_jam'] = True
-            segments_count += 1
-        else:
-            data['traffic_jam'] = False
-
-    print(f"[Trafic] Mise à jour : {len(records)} zones reçues, {segments_count} segments impactés.", flush=True)
-    return G

@@ -28,6 +28,9 @@ async function refreshAccessToken() {
         if (!response.ok) return null;
         const data = await response.json();
         localStorage.setItem("access_token", data.access_token);
+        if (data.refresh_token) {
+            localStorage.setItem("refresh_token", data.refresh_token);
+        }
         window.dispatchEvent(new CustomEvent("token-refreshed", { detail: data.access_token }));
         return data.access_token;
     } catch {
@@ -243,6 +246,29 @@ export async function deleteTag(token, tagId) {
     return apiFetch(`/tags/${tagId}`, { method: "DELETE" }, token);
 }
 
+export async function getAccidentStats(token) {
+    return apiFetch("/accidents/admin/stats", { method: "GET" }, token);
+}
+
+export async function triggerAccidentSync(token) {
+    return apiFetch("/accidents/admin/sync", { method: "POST" }, token);
+}
+
+export async function getAccidentSyncRuns(token, limit = 20) {
+    return apiFetch(`/accidents/admin/runs?limit=${limit}`, { method: "GET" }, token);
+}
+
+export async function getAccidentSyncSettings(token) {
+    return apiFetch("/accidents/admin/settings", { method: "GET" }, token);
+}
+
+export async function updateAccidentSyncSettings(token, updates) {
+    return apiFetch("/accidents/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}
+
 export async function getPoiStats(token) {
     return apiFetch("/pois/admin/stats", { method: "GET" }, token);
 }
@@ -261,6 +287,30 @@ export async function getPoiSyncSettings(token) {
 
 export async function updatePoiSyncSettings(token, updates) {
     return apiFetch("/pois/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}
+
+
+export async function getStreetlightStats(token) {
+    return apiFetch("/streetlights/admin/stats", { method: "GET" }, token);
+}
+
+export async function triggerStreetlightSync(token) {
+    return apiFetch("/streetlights/admin/sync", { method: "POST" }, token);
+}
+
+export async function getStreetlightSyncRuns(token, limit = 20) {
+    return apiFetch(`/streetlights/admin/runs?limit=${limit}`, { method: "GET" }, token);
+}
+
+export async function getStreetlightSyncSettings(token) {
+    return apiFetch("/streetlights/admin/settings", { method: "GET" }, token);
+}
+
+export async function updateStreetlightSyncSettings(token, updates) {
+    return apiFetch("/streetlights/admin/settings", {
         method: "PATCH",
         body: JSON.stringify(updates),
     }, token);
@@ -305,6 +355,17 @@ export async function buildGraphProfile(token, profileId, wipeIgn = false) {
 
 export async function activateGraphProfile(token, profileId) {
     return apiFetch(`/graph/admin/profiles/${profileId}/activate`, { method: "POST" }, token);
+}
+
+export async function getCommuneLighting(token) {
+    return apiFetch("/graph/admin/communes/lighting", { method: "GET" }, token);
+}
+
+export async function updateCommuneLighting(token, schedules) {
+    return apiFetch("/graph/admin/communes/lighting", {
+        method: "PUT",
+        body: JSON.stringify({ schedules }),
+    }, token);
 }
 
 export async function getGraphBuilds(token, limit = 20) {

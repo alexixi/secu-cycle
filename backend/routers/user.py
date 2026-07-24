@@ -1,31 +1,45 @@
 import logging
+from datetime import datetime, timedelta
 
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
+from models.email_verification import EmailVerification
+from models.refresh_session import RefreshSession
 from schemas.user import (
     UserCreate, UserRead, UserLogin, UserUpdate, UserAdminUpdate, PasswordChange,
     TokenRefresh, EmailVerifyRequest, ResendVerificationRequest,
     ForgotPasswordRequest, ResetPasswordRequest,
+    EmailChangeRequest, EmailChangeConfirm, EmailChangeRequested, EmailChangeResult,
 )
 from fastapi import HTTPException
 from utils.security import verify_password, hash_password, create_access_token, create_refresh_token, verify_token
-from utils.verification import issue_code, verify_code
+from utils.verification import issue_code, verify_code, consume_code, CODE_TTL
+from utils import refresh_sessions
 from dependencies import get_current_user, require_admin
-from admin_emails import is_user_admin
+from admin_emails import is_user_admin, is_admin_email
 from fastapi.security import OAuth2PasswordRequestForm
 from limiter import limiter
 import mailer
-from mailer.templates import verification_email, password_reset_email
+from mailer.templates import (
+    verification_email, password_reset_email,
+    email_change_code_email, email_change_alert_email,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 PASSWORD_RESET_PURPOSE = "password_reset"
+EMAIL_CHANGE_PURPOSE = "email_change"
+
+EMAIL_CHANGE_COOLDOWN = timedelta(seconds=60)
+
+_DUMMY_PASSWORD_HASH = hash_password("timing-attack-equalizer")
 
 
 def _send_verification_code(db: Session, user: User) -> None:
@@ -67,7 +81,8 @@ def _with_effective_admin(db: Session, user: User) -> User:
     return user
 
 @router.post("/", response_model=UserRead)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("30/hour")
+def create_user(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     db_user = User(
         email=user.email,
         password_hash= hash_password(user.password),
@@ -103,6 +118,7 @@ def login(
     db_user = db.query(User).filter(User.email == form_data.username).first()
 
     if not db_user:
+        verify_password(form_data.password, _DUMMY_PASSWORD_HASH)
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if not verify_password(form_data.password, db_user.password_hash):
@@ -120,8 +136,10 @@ def login(
             detail="Compte suspendu. Contactez l'administration.",
         )
 
-    access_token = create_access_token(data={"sub": str(db_user.id)})
-    refresh_token = create_refresh_token(data={"sub": str(db_user.id)})
+    token_data = {"sub": str(db_user.id), "tv": db_user.token_version}
+    access_token = create_access_token(data=token_data)
+    sid, jti = refresh_sessions.create_session(db, db_user.id)
+    refresh_token = create_refresh_token(data={**token_data, "sid": sid, "jti": jti})
 
     return {
         "access_token": access_token,
@@ -131,7 +149,8 @@ def login(
 
 
 @router.post("/refresh")
-def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def refresh_access_token(request: Request, data: TokenRefresh, db: Session = Depends(get_db)):
     payload = verify_token(data.refresh_token, expected_type="refresh")
     if payload is None:
         raise HTTPException(status_code=401, detail="Refresh token invalide ou expiré")
@@ -140,16 +159,38 @@ def refresh_access_token(data: TokenRefresh, db: Session = Depends(get_db)):
     if user_id is None:
         raise HTTPException(status_code=401, detail="Refresh token invalide")
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Refresh token invalide")
+
+    user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(status_code=401, detail="Utilisateur introuvable")
 
-    access_token = create_access_token(data={"sub": str(user.id)})
+    if user.is_banned:
+        raise HTTPException(status_code=403, detail="Compte suspendu.")
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
+    if payload.get("tv", 0) != (user.token_version or 0):
+        raise HTTPException(status_code=401, detail="Refresh token révoqué")
+
+    sid = payload.get("sid")
+    jti = payload.get("jti")
+    new_jti = None
+    if sid and jti:
+        new_jti = refresh_sessions.rotate(db, sid, jti)
+        if new_jti is None:
+            raise HTTPException(status_code=401, detail="Refresh token révoqué")
+
+    token_data = {"sub": str(user.id), "tv": user.token_version}
+    access_token = create_access_token(data=token_data)
+
+    response = {"access_token": access_token, "token_type": "bearer"}
+    if new_jti is not None:
+        response["refresh_token"] = create_refresh_token(
+            data={**token_data, "sid": sid, "jti": new_jti}
+        )
+    return response
 
 
 @router.post("/verify")
@@ -197,9 +238,8 @@ def reset_password(
         raise HTTPException(status_code=400, detail="Code invalide ou expiré.")
 
     user.password_hash = hash_password(data.new_password)
-    # Prouver l'accès à l'e-mail vaut vérification : évite qu'un compte jamais
-    # vérifié reste bloqué au login (403 « Compte non vérifié ») après un reset.
     user.is_verified = True
+    user.token_version = (user.token_version or 0) + 1
     db.commit()
     return {"detail": "Mot de passe réinitialisé."}
 
@@ -238,6 +278,168 @@ def update_password(
         raise HTTPException(status_code=401, detail="Ancien mot de passe incorrect.")
     current_user.password_hash = hash_password(data.new_password)
     db.commit()
+
+
+@router.post("/me/email", response_model=EmailChangeRequested, status_code=202)
+@limiter.limit("3/hour")
+def request_email_change(
+    request: Request,
+    data: EmailChangeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Étape 1 : demande de changement d'adresse.
+
+    Le code part vers la NOUVELLE adresse (preuve de possession) ; une alerte
+    informative part vers l'ANCIENNE (détection d'une session compromise).
+    L'adresse du compte n'est PAS modifiée à ce stade : une faute de frappe est
+    donc sans conséquence, l'utilisateur ne reçoit simplement aucun code.
+    """
+    new_email = data.new_email.strip().lower()
+
+    if not verify_password(data.password, current_user.password_hash):
+        raise HTTPException(status_code=401, detail="Mot de passe incorrect.")
+
+    if new_email == (current_user.email or "").lower():
+        raise HTTPException(
+            status_code=400, detail="Cette adresse est déjà celle de votre compte."
+        )
+
+    taken = (
+        db.query(User.id)
+        .filter(func.lower(User.email) == new_email, User.id != current_user.id)
+        .first()
+    )
+    if taken is not None:
+        raise HTTPException(
+            status_code=409, detail="Cette adresse e-mail est déjà associée à un compte."
+        )
+
+    if is_admin_email(new_email) and not is_admin_email(current_user.email):
+        raise HTTPException(
+            status_code=409, detail="Cette adresse e-mail est déjà associée à un compte."
+        )
+
+    pending = (
+        db.query(EmailVerification)
+        .filter(
+            EmailVerification.user_id == current_user.id,
+            EmailVerification.purpose == EMAIL_CHANGE_PURPOSE,
+            EmailVerification.consumed_at.is_(None),
+        )
+        .order_by(EmailVerification.expires_at.desc())
+        .first()
+    )
+    # La fenêtre se calcule depuis `expires_at` (écrit par Python) et non
+    # `created_at` (écrit par le now() de la base), pour ne pas dépendre du
+    # fuseau horaire de la session Postgres.
+    if pending is not None and pending.expires_at is not None:
+        issued_at = pending.expires_at - CODE_TTL
+        if datetime.utcnow() - issued_at < EMAIL_CHANGE_COOLDOWN:
+            raise HTTPException(
+                status_code=429,
+                detail="Un code vient d'être envoyé. Réessayez dans une minute.",
+            )
+
+    old_email = current_user.email
+    code = issue_code(
+        db, current_user, purpose=EMAIL_CHANGE_PURPOSE, target_email=new_email
+    )
+
+    # Les échecs d'envoi sont journalisés sans interrompre : l'utilisateur peut
+    # relancer la demande (même contrat que _send_reset_code).
+    try:
+        subject, html, text = email_change_code_email(code, new_email)
+        mailer.send_email(new_email, subject, html, text)
+    except Exception:
+        logger.exception(
+            "Échec de l'envoi du code de changement d'e-mail à %s", new_email
+        )
+
+    try:
+        subject, html, text = email_change_alert_email(new_email)
+        mailer.send_email(old_email, subject, html, text)
+    except Exception:
+        logger.exception(
+            "Échec de l'envoi de l'alerte de changement d'e-mail à %s", old_email
+        )
+
+    return EmailChangeRequested(
+        detail="Un code de confirmation a été envoyé à la nouvelle adresse.",
+        pending_email=new_email,
+    )
+
+
+@router.post("/me/email/confirm", response_model=EmailChangeResult)
+@limiter.limit("5/minute")
+def confirm_email_change(
+    request: Request,
+    data: EmailChangeConfirm,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Étape 2 : confirmation par le code reçu sur la nouvelle adresse.
+
+    L'adresse cible est relue en base (scellée à l'émission) : le client ne la
+    refournit pas, un code valide ne peut donc pas viser une autre adresse.
+    """
+    entry = consume_code(db, current_user, data.code, purpose=EMAIL_CHANGE_PURPOSE)
+    if entry is None:
+        raise HTTPException(status_code=400, detail="Code invalide ou expiré.")
+
+    new_email = entry.target_email
+    if not new_email:
+        # Ne devrait pas arriver : issue_code scelle toujours l'adresse pour ce purpose.
+        logger.error(
+            "Code de changement d'e-mail sans adresse cible (entry=%s, user=%s)",
+            entry.id, current_user.id,
+        )
+        raise HTTPException(status_code=400, detail="Demande de changement introuvable.")
+
+    current_user.email = new_email
+    current_user.is_verified = True
+    # L'adresse est l'identifiant de connexion ET le canal de récupération :
+    # on révoque toutes les sessions, puis on en rouvre une pour l'appareil courant.
+    current_user.token_version = (current_user.token_version or 0) + 1
+
+    try:
+        db.commit()
+    except IntegrityError:
+        # L'adresse a été prise entre la demande et la confirmation. L'index
+        # unique est le seul garde fiable contre cette course ; le contrôle de
+        # l'étape 1 n'est qu'un confort d'UX. Le code reste consommé (commit
+        # distinct dans consume_code) : pas de rejeu, il faut relancer une demande.
+        db.rollback()
+        raise HTTPException(
+            status_code=409, detail="Cette adresse e-mail est déjà associée à un compte."
+        )
+
+    # Les sessions de refresh échouent désormais le contrôle `tv` : on les purge,
+    # rien d'autre ne nettoie cette table.
+    db.query(RefreshSession).filter(
+        RefreshSession.user_id == current_user.id
+    ).delete(synchronize_session=False)
+    db.commit()
+
+    sid, jti = refresh_sessions.create_session(db, current_user.id)
+
+    # create_session commite, ce qui expire l'instance (expire_on_commit par
+    # défaut) : il faut la recharger AVANT de la détacher plus bas, sinon la
+    # lecture de ses attributs lèverait DetachedInstanceError.
+    db.refresh(current_user)
+
+    token_data = {"sub": str(current_user.id), "tv": current_user.token_version}
+    access_token = create_access_token(data=token_data)
+    refresh_token = create_refresh_token(data={**token_data, "sid": sid, "jti": jti})
+
+    # _with_effective_admin détache l'instance (db.expunge) : impérativement en
+    # dernier, sinon le changement d'adresse serait silencieusement perdu.
+    return EmailChangeResult(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+        user=UserRead.model_validate(_with_effective_admin(db, current_user)),
+    )
 
 
 # --- Administration des utilisateurs (réservé aux admins) ---
@@ -305,6 +507,8 @@ def admin_update_user(
 
     for field, value in update_data.items():
         setattr(user, field, value)
+    if update_data.get("is_banned") is True:
+        user.token_version = (user.token_version or 0) + 1
     db.commit()
     db.refresh(user)
     return _with_effective_admin(db, user)

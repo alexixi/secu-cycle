@@ -374,3 +374,14 @@
 .graph-modal .graph-add-commune {
   margin-top: 0;
 }
+
+.graph-extinction-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.graph-extinction-row input[type="number"] {
+  width: 4.5rem;
+}

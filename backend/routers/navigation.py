@@ -5,11 +5,13 @@ from schemas.navigation import (
 )
 from graph.guidance import navigation_update
 from graph.instruction_builder import build_instruction
+from limiter import limiter
 
 router = APIRouter(prefix="/navigation", tags=["navigation"])
 
 
 @router.post("/update", response_model=NavigationUpdateResponse)
+@limiter.limit("300/minute")
 def update_navigation(req: NavigationUpdateRequest, request: Request):
     G = request.app.state.G
     if G is None:

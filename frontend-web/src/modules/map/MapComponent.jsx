@@ -4,24 +4,19 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import Button from '../../components/ui/Button';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 import MapContextMenu, { formatCoords } from './MapContextMenu';
+import LightingInfoModal from './LightingInfoModal';
 import { useTheme } from '../../context/ThemeContext';
-import { getPois } from '../../services/apiBack';
-import { getAddressFromCoordinates } from '../../services/geocodingService';
+import { getPois, getAccidents, getStreetlights, getLitRoads, getStreetlightSources } from '../../services/apiBack';
+import { getAddressFromCoordinates, getApproxLocationFromIp } from '../../services/geocodingService';
 import { trackEvent } from '../../services/analytics';
 
 import { IoMdPin } from "react-icons/io";
 import { FaLayerGroup } from "react-icons/fa";
-import { MdOutlineReportProblem, MdOutlineTraffic, MdMyLocation, MdOutlinePlace } from "react-icons/md";
-import poiWaterIcon from '../../assets/poi/water.png';
-import poiToiletsFreeIcon from '../../assets/poi/toilets-free.png';
-import poiToiletsPaidIcon from '../../assets/poi/toilets-paid.png';
-import poiToiletsUnknownIcon from '../../assets/poi/toilets-unknown.png';
-import poiParkingStandsIcon from '../../assets/poi/parking-stands.png';
-import poiParkingRacksIcon from '../../assets/poi/parking-racks.png';
-import poiParkingShelterIcon from '../../assets/poi/parking-shelter.png';
-import poiParkingOtherIcon from '../../assets/poi/parking-other.png';
-import poiRepairSelfserviceIcon from '../../assets/poi/repair-selfservice.png';
-import poiRepairShopIcon from '../../assets/poi/repair-shop.png';
+import { MdOutlineReportProblem, MdOutlineTraffic, MdMyLocation, MdOutlinePlace, MdOutlineLightbulb, MdInfoOutline } from "react-icons/md";
+import reportAccidentIcon from '../../assets/reports/accident.png';
+import reportTravauxIcon from '../../assets/reports/travaux.png';
+import reportDangerIcon from '../../assets/reports/danger.png';
+import reportObstacleIcon from '../../assets/reports/obstacle.png';
 import './MapComponent.css';
 
 const MAP_STYLES = [
@@ -35,15 +30,6 @@ const MAP_STYLES = [
 
 const TRAFFIC_COLORS = { green: "#22c55e", orange: "#f97316", red: "#ef4444", gray: "#9ca3af" };
 
-const REPORT_ICONS = {
-    accident: "🚨",
-    travaux: "🚧",
-    danger: "⚠️",
-    obstacle: "🪨",
-};
-
-// Libellé FR + couleur d'accent par type de signalement (libellés alignés sur
-// ReportModal.jsx). Sert l'en-tête coloré du popup.
 const REPORT_TYPE_META = {
     accident: { label: 'Accident', color: '#ef4444' },
     travaux: { label: 'Travaux', color: '#f97316' },
@@ -100,20 +86,150 @@ const mergeSubTypes = (saved) => Object.fromEntries(
     Object.entries(DEFAULT_SUB_TYPES).map(([cat, defaults]) => [cat, { ...defaults, ...(saved?.[cat] || {}) }])
 );
 
-const POI_IMAGE_ASSETS = [
-    { key: 'poi-water', src: poiWaterIcon },
-    { key: 'poi-toilets-free', src: poiToiletsFreeIcon },
-    { key: 'poi-toilets-paid', src: poiToiletsPaidIcon },
-    { key: 'poi-toilets-unknown', src: poiToiletsUnknownIcon },
-    { key: 'poi-parking-stands', src: poiParkingStandsIcon },
-    { key: 'poi-parking-racks', src: poiParkingRacksIcon },
-    { key: 'poi-parking-shelter', src: poiParkingShelterIcon },
-    { key: 'poi-parking-other', src: poiParkingOtherIcon },
-    { key: 'poi-repair-selfservice', src: poiRepairSelfserviceIcon },
-    { key: 'poi-repair-shop', src: poiRepairShopIcon },
+const poiImageModules = import.meta.glob('../../assets/poi/*.png', { eager: true, import: 'default' });
+const POI_IMAGE_ASSETS = Object.entries(poiImageModules).map(([filePath, src]) => ({
+    key: `poi-${filePath.split('/').pop().replace('.png', '')}`,
+    src,
+}));
+
+const REPORT_IMAGE_ASSETS = [
+    { key: 'report-accident', src: reportAccidentIcon },
+    { key: 'report-travaux', src: reportTravauxIcon },
+    { key: 'report-danger', src: reportDangerIcon },
+    { key: 'report-obstacle', src: reportObstacleIcon },
 ];
 
+const MAP_IMAGE_ASSETS = [...POI_IMAGE_ASSETS, ...REPORT_IMAGE_ASSETS];
+
+const IMAGE_SRC_BY_KEY = Object.fromEntries(MAP_IMAGE_ASSETS.map(({ key, src }) => [key, src]));
+
+const reportIconSrc = (type) => IMAGE_SRC_BY_KEY[`report-${type}`] || IMAGE_SRC_BY_KEY['report-danger'];
+
+const RESTRICTED_ACCESS = ['private', 'no', 'permit', 'employees', 'delivery', 'military', 'agricultural', 'forestry'];
+const OFF_COLOR = '#9CA3AF';
+const CUSTOMERS_COLOR = '#F59E0B';
+
+const isPoiUnavailable = (poi) => (
+    RESTRICTED_ACCESS.includes(poi?.access)
+    || poi?.disused === 'yes'
+    || poi?.['disused:amenity'] != null
+    || ['closed', 'off'].includes(poi?.opening_hours)
+);
+
+const isPoiCustomers = (poi) => poi?.access === 'customers';
+
+const isPoiPaid = (poi) => (
+    poi?.category === 'toilets'
+        ? poi?.toilet_fee === 'paid'
+        : (poi?.fee != null && poi.fee !== 'no' && poi.fee !== '')
+);
+
+const poiStateSuffix = (poi) => (
+    isPoiUnavailable(poi) ? '-off'
+        : isPoiPaid(poi) ? '-paid'
+            : isPoiCustomers(poi) ? '-customers'
+                : ''
+);
+
+const poiAccentColor = (poi, base) => (isPoiUnavailable(poi) ? OFF_COLOR : isPoiCustomers(poi) ? CUSTOMERS_COLOR : base);
+
+const poiIconSrc = (poi) => {
+    let key;
+    switch (poi?.category) {
+        case 'toilets':
+            key = ['free', 'paid'].includes(poi.toilet_fee) ? `poi-toilets-${poi.toilet_fee}` : 'poi-toilets-unknown';
+            break;
+        case 'parking': {
+            const ptype = ['stands', 'racks', 'shelter'].includes(poi.parking_type) ? poi.parking_type : 'other';
+            key = `poi-parking-${ptype}`;
+            if (ptype !== 'shelter' && poi.covered === 'yes') key += '-covered';
+            break;
+        }
+        case 'repair':
+            key = poi.repair_kind === 'shop' ? 'poi-repair-shop' : 'poi-repair-selfservice';
+            break;
+        default:
+            key = 'poi-water';
+    }
+    return IMAGE_SRC_BY_KEY[key + poiStateSuffix(poi)];
+};
+
 const POI_LAYER_ID = 'pois-symbol';
+const REPORT_LAYER_ID = 'reports-symbol';
+const ACCIDENT_HEAT_LAYER_ID = 'accidents-heat';
+const ACCIDENT_POINT_LAYER_ID = 'accidents-point';
+const LIGHTING_HEAT_LAYER_ID = 'lighting-heat';
+const LIT_ROADS_GLOW_LAYER_ID = 'lit-roads-glow';
+const LIT_ROADS_LINE_LAYER_ID = 'lit-roads-line';
+
+const LIT_ROADS_COLORS = { osm: '#ffcf3d', inferred: '#ffe39a' };
+const LIGHTING_LAMP_COLOR = '#ffc12d';
+
+const LIT_ROADS_COLOR = ['match', ['get', 'lit_source'],
+    'inferred', LIT_ROADS_COLORS.inferred,
+    LIT_ROADS_COLORS.osm];
+
+const LIGHTING_HEATMAP_PAINT = {
+    'heatmap-weight': 0.7,
+    'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 13, 1.1, 19, 1.4],
+    'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+        0, 'rgba(0,0,0,0)',
+        0.1, 'rgba(255,247,204,0.35)',
+        0.3, 'rgba(255,236,150,0.55)',
+        0.6, 'rgba(255,214,90,0.72)',
+        1, 'rgba(255,193,45,0.88)'],
+    'heatmap-radius': ['interpolate', ['exponential', 2], ['zoom'], 11, 8, 15, 10, 19, 160, 22, 1280],
+    'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0.55, 19, 0.5],
+};
+
+const ACCIDENT_SWITCH_ZOOM = 13.5;
+
+const ACCIDENT_SEVERITY_COLOR = [
+    'match', ['get', 'severity'],
+    10, '#7f1d1d',
+    3, '#dc2626',
+    1, '#f97316',
+    '#fbbf24',
+];
+
+const ACCIDENT_LEGEND = [
+    { label: 'Accident mortel', color: '#7f1d1d' },
+    { label: 'Blessé hospitalisé', color: '#dc2626' },
+    { label: 'Blessé léger', color: '#f97316' },
+];
+
+const formatAccidentDate = (properties) => {
+    if (!properties?.date) return null;
+    const parsed = new Date(properties.date);
+    if (Number.isNaN(parsed.getTime())) return properties.date;
+    const options = properties.date_precision === 'month'
+        ? { month: 'long', year: 'numeric' }
+        : { day: 'numeric', month: 'long', year: 'numeric' };
+    return parsed.toLocaleDateString('fr-FR', options);
+};
+
+const ACCIDENT_DETAIL_FIELDS = [
+    { key: 'light', label: 'Luminosité' },
+    { key: 'weather', label: 'Météo' },
+    { key: 'collision', label: 'Type de collision' },
+    { key: 'road_type', label: 'Type de voie' },
+    { key: 'intersection', label: 'Intersection' },
+];
+
+const TRAFFIC_LAYER_ID = 'traffic-line';
+const TRAFFIC_HITBOX_LAYER_ID = 'traffic-hitbox';
+
+const TRAFFIC_LABELS = {
+    green: 'Circulation fluide',
+    orange: 'Circulation dense',
+    red: 'Axe embouteillé',
+    gray: 'État inconnu',
+};
+
+const TRAFFIC_CYCLIST_HINT = {
+    orange: '🚲 Trafic ralenti : dépassements serrés et portières, restez visible.',
+    red: '🚲 Axe évité par nos itinéraires sécurisés dès que possible.',
+};
 
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
@@ -150,7 +266,7 @@ const formatPoiTag = (value) => {
 
 const isRouteFeature = (feature) => feature?.layer?.id?.startsWith('route-hitbox-');
 
-export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, onVote, canVote, currentUserId, isReportMode, onToggleReportMode, canReport, trafficPoints = [], showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
+export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, onVote, canVote, currentUserId, isReportMode, onToggleReportMode, canReport, traffic = null, trafficError = null, showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
 
     const mapRef = useRef();
     const { effectiveTheme } = useTheme();
@@ -176,17 +292,31 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [userPosition, setUserPosition] = useState(null);
     const [isLocating, setIsLocating] = useState(false);
     const [isPoiMenuOpen, setIsPoiMenuOpen] = useState(false);
+    const [isLightingMenuOpen, setIsLightingMenuOpen] = useState(false);
+    const [isLightingInfoOpen, setIsLightingInfoOpen] = useState(false);
+    const [lightingSources, setLightingSources] = useState(null);
+    const lightingSourcesRef = useRef(false);
     const [enabledPoiCats, setEnabledPoiCats] = useState({});
-    // { toilets: {free,paid,unknown}, parking: {stands,...} }
     const [enabledSubTypes, setEnabledSubTypes] = useState(DEFAULT_SUB_TYPES);
     const poiCacheRef = useRef({});
     const [poiData, setPoiData] = useState({});
     const [activePoi, setActivePoi] = useState(null);
     const [arePoiImagesReady, setArePoiImagesReady] = useState(false);
+    const [showAccidents, setShowAccidents] = useState(false);
+    const [accidentData, setAccidentData] = useState(null);
+    const [activeAccident, setActiveAccident] = useState(null);
+    const accidentCacheRef = useRef(false);
+    const [showLighting, setShowLighting] = useState(false);
+    const [lightingData, setLightingData] = useState(null);
+    const lightingCacheRef = useRef(false);
+    const [showLitRoads, setShowLitRoads] = useState(false);
+    const [litRoadsData, setLitRoadsData] = useState(null);
+    const litRoadsCacheRef = useRef(false);
     const [contextMenu, setContextMenu] = useState(null);
     const [contextAddress, setContextAddress] = useState(null);
     const [isContextAddressLoading, setIsContextAddressLoading] = useState(false);
     const contextGeocodeRef = useRef(null);
+    const didAutoCenterRef = useRef(false);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem('userMapThemeMode');
@@ -202,6 +332,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             } catch {
             }
         }
+
+        setShowAccidents(localStorage.getItem('userMapAccidents') === 'true');
+        setShowLighting(localStorage.getItem('userMapLighting') === 'true');
+        setShowLitRoads(localStorage.getItem('userMapLitRoads') === 'true');
 
         const savedSubTypes = localStorage.getItem('userMapSubTypes');
         if (savedSubTypes) {
@@ -226,6 +360,99 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         });
     }, [enabledPoiCats, littleMap]);
 
+    useEffect(() => {
+        if (littleMap || !showAccidents || accidentCacheRef.current) return;
+        accidentCacheRef.current = true;
+        getAccidents()
+            .then(collection => {
+                setAccidentData(collection);
+                if (!collection?.features?.length) accidentCacheRef.current = false;
+            })
+            .catch(error => {
+                accidentCacheRef.current = false;  // autorise une nouvelle tentative
+                console.error("Erreur chargement des accidents :", error);
+            });
+    }, [showAccidents, littleMap]);
+
+    const handleAccidentsToggle = () => {
+        const next = !showAccidents;
+        setShowAccidents(next);
+        if (!next) setActiveAccident(null);
+        localStorage.setItem('userMapAccidents', String(next));
+    };
+
+    useEffect(() => {
+        if (littleMap || !showLighting || lightingCacheRef.current) return;
+        lightingCacheRef.current = true;
+        getStreetlights()
+            .then(collection => {
+                setLightingData(collection);
+                if (!collection?.features?.length) lightingCacheRef.current = false;
+            })
+            .catch(error => {
+                lightingCacheRef.current = false;
+                console.error("Erreur chargement de l'éclairage :", error);
+            });
+    }, [showLighting, littleMap]);
+
+    const handleLightingToggle = () => {
+        const next = !showLighting;
+        setShowLighting(next);
+        localStorage.setItem('userMapLighting', String(next));
+    };
+
+    useEffect(() => {
+        if (littleMap || !showLitRoads || litRoadsCacheRef.current) return;
+        litRoadsCacheRef.current = true;
+        getLitRoads()
+            .then(collection => {
+                setLitRoadsData(collection);
+                if (!collection?.features?.length) litRoadsCacheRef.current = false;
+            })
+            .catch(error => {
+                litRoadsCacheRef.current = false;
+                console.error("Erreur chargement des rues éclairées :", error);
+            });
+    }, [showLitRoads, littleMap]);
+
+    const handleLitRoadsToggle = () => {
+        const next = !showLitRoads;
+        setShowLitRoads(next);
+        localStorage.setItem('userMapLitRoads', String(next));
+    };
+
+    const lightingShown = showLighting || showLitRoads;
+
+    const handleLightingButton = () => {
+        if (lightingShown) {
+            setShowLighting(false);
+            setShowLitRoads(false);
+            localStorage.setItem('userMapLighting', 'false');
+            localStorage.setItem('userMapLitRoads', 'false');
+            setIsLightingMenuOpen(false);
+            return;
+        }
+
+        setShowLighting(true);
+        setShowLitRoads(true);
+        localStorage.setItem('userMapLighting', 'true');
+        localStorage.setItem('userMapLitRoads', 'true');
+        setIsLightingMenuOpen(true);
+    };
+
+    const handleLightingInfoToggle = () => {
+        const next = !isLightingInfoOpen;
+        setIsLightingInfoOpen(next);
+        if (!next || lightingSourcesRef.current) return;
+        lightingSourcesRef.current = true;
+        getStreetlightSources()
+            .then(data => setLightingSources(data?.sources || []))
+            .catch(error => {
+                lightingSourcesRef.current = false;  // autorise une nouvelle tentative
+                console.error("Erreur chargement des sources d'éclairage :", error);
+            });
+    };
+
     const handlePoiCategoryToggle = (id) => {
         const next = { ...enabledPoiCats, [id]: !enabledPoiCats[id] };
         setEnabledPoiCats(next);
@@ -241,9 +468,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         localStorage.setItem('userMapSubTypes', JSON.stringify(next));
     };
 
-    // Une seule source pour les 4 catégories : l'icône est choisie par expression
-    // sur `category`, et un unique layer symbol gère la collision globale.
-    // Les sous-familles (parking, toilettes) se filtrent ici, sans nouvelle requête.
     const poisGeoJSON = useMemo(() => ({
         type: 'FeatureCollection',
         features: POI_CATEGORIES
@@ -255,7 +479,22 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             )),
     }), [enabledPoiCats, enabledSubTypes, poiData]);
 
+    const reportsGeoJSON = useMemo(() => ({
+        type: 'FeatureCollection',
+        features: (reports || []).map((report) => ({
+            type: 'Feature',
+            properties: { id: report.id, report_type: report.report_type },
+            geometry: { type: 'Point', coordinates: [report.longitude, report.latitude] },
+        })),
+    }), [reports]);
+
+    const showAccidentLayers = !littleMap && showAccidents && !!accidentData;
+    const showLightingLayer = !littleMap && showLighting && !!lightingData;
+    const showLitRoadsLayer = !littleMap && showLitRoads && !!litRoadsData;
+    const trafficShown = !littleMap && !!onToggleTraffic && traffic?.available !== false;
+
     const showPois = !littleMap && arePoiImagesReady && poisGeoJSON.features.length > 0;
+    const showReports = !littleMap && arePoiImagesReady && reportsGeoJSON.features.length > 0;
 
     const poiImagesRef = useRef({});
 
@@ -264,7 +503,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         const map = mapRef.current.getMap();
 
         const registerImages = () => {
-            POI_IMAGE_ASSETS.forEach(({ key }) => {
+            MAP_IMAGE_ASSETS.forEach(({ key }) => {
                 const image = poiImagesRef.current[key];
                 if (image && !map.hasImage(key)) {
                     map.addImage(key, image, { pixelRatio: 2 });
@@ -273,7 +512,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         };
 
         let cancelled = false;
-        Promise.all(POI_IMAGE_ASSETS.map(({ key, src }) => new Promise((resolve, reject) => {
+        Promise.all(MAP_IMAGE_ASSETS.map(({ key, src }) => new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => { poiImagesRef.current[key] = img; resolve(); };
             img.onerror = reject;
@@ -283,7 +522,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             registerImages();
             map.on('styledata', registerImages);
             setArePoiImagesReady(true);
-        }).catch(error => console.error("Erreur chargement des icônes POI:", error));
+        }).catch(error => console.error("Erreur chargement des icônes de la carte:", error));
 
         return () => {
             cancelled = true;
@@ -326,6 +565,52 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             map.flyTo({ center: [end.lon, end.lat], zoom: 15, duration: 1500 });
         }
     }, [start, end, itineraires, isMapLoaded]);
+
+    useEffect(() => {
+        if (littleMap || !isMapLoaded || didAutoCenterRef.current) return;
+        if (start || end || itineraires?.[0]?.path?.length) return; // un cadrage explicite a priorité
+        didAutoCenterRef.current = true;
+
+        (async () => {
+            if (navigator.geolocation && navigator.permissions?.query) {
+                try {
+                    const perm = await navigator.permissions.query({ name: 'geolocation' });
+                    if (perm.state === 'granted') {
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                const { latitude, longitude } = pos.coords;
+                                setUserPosition({ lat: latitude, lon: longitude });
+                                mapRef.current?.getMap().flyTo({ center: [longitude, latitude], zoom: 16, duration: 1500 });
+                            },
+                            () => {},
+                            { enableHighAccuracy: true, timeout: 10000 }
+                        );
+                        return;
+                    }
+                } catch {
+                }
+            }
+
+            if (localStorage.getItem('userMapLastView')) return;
+
+            const loc = await getApproxLocationFromIp();
+            if (loc) {
+                mapRef.current?.getMap().flyTo({ center: [loc.lon, loc.lat], zoom: 11, duration: 1000 });
+            }
+        })();
+    }, [isMapLoaded, start, end, itineraires, littleMap]);
+
+    const trafficGeoJSON = useMemo(
+        () => traffic?.geojson || { type: 'FeatureCollection', features: [] },
+        [traffic]
+    );
+
+    const trafficUpdatedAt = useMemo(() => {
+        if (!traffic?.updated_at) return null;
+        const date = new Date(traffic.updated_at);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }, [traffic]);
 
     const handleLocate = () => {
         if (!navigator.geolocation) {
@@ -415,12 +700,48 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         setContextMenu(null);
         const features = event.features || [];
 
+        const reportFeature = features.find(f => f.layer?.id === REPORT_LAYER_ID);
+        if (reportFeature) {
+            const report = reports?.find((r) => r.id === reportFeature.properties.id);
+            if (report) {
+                setActivePoi(null);
+                setActiveTraffic(null);
+                setActiveAccident(null);
+                setActiveReport(report);
+            }
+            return;
+        }
+
+        const trafficFeature = features.find(f => f.layer?.id === TRAFFIC_HITBOX_LAYER_ID);
+        if (trafficFeature) {
+            setActivePoi(null);
+            setActiveReport(null);
+            setActiveAccident(null);
+            setActiveTraffic({
+                ...trafficFeature.properties,
+                lat: event.lngLat.lat,
+                lon: event.lngLat.lng,
+            });
+            return;
+        }
+
         const poiFeature = features.find(f => f.layer?.id === POI_LAYER_ID);
         if (poiFeature) {
             const [lon, lat] = poiFeature.geometry.coordinates;
             setActiveReport(null);
             setActiveTraffic(null);
+            setActiveAccident(null);
             setActivePoi({ ...poiFeature.properties, lat, lon });
+            return;
+        }
+
+        const accidentFeature = features.find(f => f.layer?.id === ACCIDENT_POINT_LAYER_ID);
+        if (accidentFeature) {
+            const [lon, lat] = accidentFeature.geometry.coordinates;
+            setActivePoi(null);
+            setActiveReport(null);
+            setActiveTraffic(null);
+            setActiveAccident({ ...accidentFeature.properties, lat, lon });
             return;
         }
 
@@ -430,11 +751,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             return;
         }
 
-        // Clic à vide : on ferme tout popup ouvert avant de déléguer au parent
-        // (mode signalement). Les markers font stopPropagation, ils n'arrivent pas ici.
         setActivePoi(null);
         setActiveReport(null);
         setActiveTraffic(null);
+        setActiveAccident(null);
         if (onMapClick) {
             onMapClick({ lat: event.lngLat.lat, lon: event.lngLat.lng });
         }
@@ -442,8 +762,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
 
     const onHover = (event) => {
         const features = event.features || [];
-        // Seuls les itinéraires portent une infobulle ; un POI survolé ne doit
-        // pas alimenter hoverInfo, dont le rendu lit distance/duration.
         const feature = features.find(isRouteFeature);
         if (feature) {
             setHoverInfo({
@@ -494,11 +812,21 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         }
         if (start) return { longitude: start.lon, latitude: start.lat, zoom: 15 };
         if (end) return { longitude: end.lon, latitude: end.lat, zoom: 15 };
+        if (!littleMap) {
+            try {
+                const saved = JSON.parse(localStorage.getItem('userMapLastView'));
+                if (saved && Number.isFinite(saved.longitude) && Number.isFinite(saved.latitude)) {
+                    return { longitude: saved.longitude, latitude: saved.latitude, zoom: saved.zoom ?? 13 };
+                }
+            } catch {
+            }
+        }
         return { longitude: -0.5795, latitude: 44.8378, zoom: 13 };
     };
 
     return (
         <div className={`map-container ${littleMap ? 'little-map' : ''} ${resolvedTheme === 'dark' ? 'map-dark' : ''}`}>
+            <div className="map-left-controls">
             {!littleMap && canReport && (
                 <div className="map-report-control">
                     <Button
@@ -513,29 +841,101 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 </div>
             )}
 
-            {!littleMap && onToggleTraffic && (
-                <div
-                    className="map-traffic-control"
-                    style={{ bottom: canReport ? "95px" : "45px" }}
-                >
+            {trafficShown && (
+                <div className="map-traffic-control">
+                    {showTraffic && (
+                        <div className="traffic-legend">
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.green }} />Fluide</span>
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.orange }} />Dense</span>
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.red }} />Embouteillé</span>
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.gray }} />Inconnu</span>
+                            {trafficError
+                                ? <span className="traffic-legend-time">{trafficError}</span>
+                                : trafficUpdatedAt && <span className="traffic-legend-time">Relevé de {trafficUpdatedAt}</span>}
+                        </div>
+                    )}
                     <Button
                         onClick={onToggleTraffic}
-                        className={showTraffic ? "report-button-active" : "report-button"}
+                        className="traffic-button"
                         title="Trafic en temps réel"
                     >
                         <MdOutlineTraffic size={18} />
                         <span className="map-btn-label">{showTraffic ? "Masquer le trafic" : "Trafic en temps réel"}</span>
                     </Button>
-                    {showTraffic && (
-                        <div className="traffic-legend">
-                            <span className="traffic-legend-item"><span className="traffic-dot" style={{ backgroundColor: "#22c55e" }} />Route fluide</span>
-                            <span className="traffic-legend-item"><span className="traffic-dot" style={{ backgroundColor: "#f97316" }} />Route ralentie</span>
-                            <span className="traffic-legend-item"><span className="traffic-dot" style={{ backgroundColor: "#ef4444" }} />Route bloquée</span>
-                            <span className="traffic-legend-item"><span className="traffic-dot" style={{ backgroundColor: "#9ca3af" }} />Inconnu</span>
-                        </div>
-                    )}
                 </div>
             )}
+
+            {!littleMap && (
+                <div className="map-lighting-control">
+                    {isLightingMenuOpen && (
+                        <div className="map-style-menu map-lighting-menu">
+                            <div className="lighting-menu-head">
+                                <div className="map-style-menu-title">Éclairage public</div>
+                                <button
+                                    type="button"
+                                    className="lighting-info-btn"
+                                    onClick={handleLightingInfoToggle}
+                                    title="Comment ça marche et d'où viennent les données"
+                                    aria-label="Informations sur l'éclairage"
+                                >
+                                    <MdInfoOutline />
+                                </button>
+                            </div>
+
+                            <label className="map-poi-item">
+                                <span className="map-poi-badge" style={{ backgroundColor: LIGHTING_LAMP_COLOR }} />
+                                <span className="map-poi-label">Lampadaires</span>
+                                <input
+                                    type="checkbox"
+                                    checked={showLighting}
+                                    onChange={handleLightingToggle}
+                                />
+                            </label>
+
+                            <label className="map-poi-item">
+                                <span className="map-poi-badge" style={{ backgroundColor: LIT_ROADS_COLORS.osm }} />
+                                <span className="map-poi-label">Rues éclairées</span>
+                                <input
+                                    type="checkbox"
+                                    checked={showLitRoads}
+                                    onChange={handleLitRoadsToggle}
+                                />
+                            </label>
+                            {showLitRoads && (
+                                <>
+                                    <span className="lighting-legend-item">
+                                        <span className="lighting-line-sample" style={{ backgroundColor: LIT_ROADS_COLORS.osm }} />
+                                        Éclairage connu
+                                    </span>
+                                    <span className="lighting-legend-item">
+                                        <span className="lighting-line-sample" style={{ backgroundColor: LIT_ROADS_COLORS.inferred }} />
+                                        Éclairage déduit
+                                    </span>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    <Button
+                        type="button"
+                        className="map-layer-toggle"
+                        onClick={handleLightingButton}
+                        title={lightingShown ? "Masquer l'éclairage" : "Éclairage public"}
+                    >
+                        <MdOutlineLightbulb size={18} />
+                        <span className="map-btn-label">
+                            {lightingShown ? "Masquer l'éclairage" : "Éclairage"}
+                        </span>
+                    </Button>
+                </div>
+            )}
+            </div>
+
+            <LightingInfoModal
+                isOpen={isLightingInfoOpen}
+                onClose={() => setIsLightingInfoOpen(false)}
+                sources={lightingSources}
+            />
 
             {!littleMap && (
                 <div className="map-theme-control">
@@ -589,6 +989,37 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 </div>
                             ))}
                             <div className="map-poi-hint">Zoomez pour les faire apparaître.</div>
+
+                            <div className="map-style-menu-title map-poi-section">Accidentologie</div>
+                            <label className="map-poi-item">
+                                <span className="map-poi-badge" style={{ backgroundColor: '#dc2626' }} />
+                                <span className="map-poi-label">Accidents à vélo</span>
+                                <input
+                                    type="checkbox"
+                                    checked={showAccidents}
+                                    onChange={handleAccidentsToggle}
+                                />
+                            </label>
+                            {showAccidents && (
+                                <>
+                                    {ACCIDENT_LEGEND.map(item => (
+                                        <span key={item.label} className="map-poi-item map-poi-subitem">
+                                            <span className="map-poi-dot" style={{ backgroundColor: item.color }} />
+                                            <span className="map-poi-label">{item.label}</span>
+                                        </span>
+                                    ))}
+                                    <div className="map-poi-hint">
+                                        Accidents déclarés aux forces de l'ordre : l'absence de point
+                                        ne signifie pas l'absence de danger.
+                                    </div>
+                                    {accidentData?.attributions?.length > 0 && (
+                                        <div className="map-poi-hint map-poi-source">
+                                            {accidentData.attributions.join(' · ')}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
                         </div>
                     )}
 
@@ -640,12 +1071,24 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 mapStyle={currentMapStyle}
                 interactiveLayerIds={[
                     ...(itineraires ? itineraires.map((it) => `route-hitbox-${it.id}`) : []),
+                    ...(showReports ? [REPORT_LAYER_ID] : []),
                     ...(showPois ? [POI_LAYER_ID] : []),
+                    ...(showAccidentLayers ? [ACCIDENT_POINT_LAYER_ID] : []),
+                    ...(showTraffic ? [TRAFFIC_HITBOX_LAYER_ID] : []),
                 ]}
                 onClick={onClick}
                 onMouseMove={onHover}
                 onContextMenu={littleMap ? undefined : onContextMenu}
                 onMoveStart={closeContextMenu}
+                onMoveEnd={littleMap ? undefined : (e) => {
+                    const c = e.viewState;
+                    try {
+                        localStorage.setItem('userMapLastView', JSON.stringify({
+                            longitude: c.longitude, latitude: c.latitude, zoom: c.zoom
+                        }));
+                    } catch {
+                    }
+                }}
                 onLoad={() => setIsMapLoaded(true)}
                 style={{ width: '100%', height: '100%' }}
             >
@@ -657,9 +1100,111 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     </Marker>
                 )}
 
-                {/* Déclarée avant les sources d'itinéraires : les POI passent donc
-                    sous les tracés. Les signalements sont des Marker DOM, toujours
-                    au-dessus du canvas. */}
+                {showTraffic && trafficGeoJSON.features.length > 0 && (
+                    <Source id="traffic" type="geojson" data={trafficGeoJSON}>
+                        <Layer id={TRAFFIC_HITBOX_LAYER_ID} type="line" minzoom={9} paint={{ 'line-color': 'transparent', 'line-width': 14 }} />
+                        <Layer
+                            id={TRAFFIC_LAYER_ID}
+                            type="line"
+                            minzoom={9}
+                            layout={{ 'line-join': 'round', 'line-cap': 'round' }}
+                            paint={{
+                                'line-color': ['match', ['get', 'level'],
+                                    'red', TRAFFIC_COLORS.red,
+                                    'orange', TRAFFIC_COLORS.orange,
+                                    'green', TRAFFIC_COLORS.green,
+                                    TRAFFIC_COLORS.gray],
+                                'line-width': ['interpolate', ['linear'], ['zoom'],
+                                    9, ['match', ['get', 'level'], 'red', 2, 'orange', 1.8, 1],
+                                    11, ['match', ['get', 'level'], 'red', 3, 'orange', 2.5, 1.5],
+                                    16, ['match', ['get', 'level'], 'red', 8, 'orange', 7, 4]],
+                                'line-opacity': ['interpolate', ['linear'], ['zoom'],
+                                    9, ['match', ['get', 'level'], 'red', 0.9, 'orange', 0.9, 'gray', 0.12, 0.3],
+                                    12, ['match', ['get', 'level'], 'gray', 0.35, 0.85]],
+                            }}
+                        />
+                    </Source>
+                )}
+
+                {showLightingLayer && (
+                    <Source id="lighting" type="geojson" data={lightingData}>
+                        <Layer
+                            id={LIGHTING_HEAT_LAYER_ID}
+                            type="heatmap"
+                            paint={LIGHTING_HEATMAP_PAINT}
+                        />
+                    </Source>
+                )}
+
+                {showLitRoadsLayer && (
+                    <Source id="lit-roads" type="geojson" data={litRoadsData}>
+                        <Layer
+                            id={LIT_ROADS_GLOW_LAYER_ID}
+                            type="line"
+                            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+                            paint={{
+                                // Largeur exponentielle base 2 (jusqu'à z22) : halo lumineux
+                                // d'emprise au sol constante (~18 m, la voie et son débord éclairé).
+                                'line-color': LIT_ROADS_COLOR,
+                                'line-width': ['interpolate', ['exponential', 2], ['zoom'], 11, 4, 15, 5.3, 19, 85, 22, 680],
+                                'line-blur': ['interpolate', ['exponential', 2], ['zoom'], 11, 2, 15, 3, 19, 48, 22, 384],
+                                'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.12, 14, 0.3],
+                            }}
+                        />
+                        <Layer
+                            id={LIT_ROADS_LINE_LAYER_ID}
+                            type="line"
+                            layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+                            paint={{
+                                // Cœur éclairé, ~9 m au sol, exponentiel base 2 jusqu'à z22.
+                                'line-color': LIT_ROADS_COLOR,
+                                'line-width': ['interpolate', ['exponential', 2], ['zoom'], 11, 1.5, 15, 2.7, 19, 43, 22, 344],
+                                'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.5, 14, 0.85],
+                            }}
+                        />
+                    </Source>
+                )}
+
+                {showAccidentLayers && (
+                    <Source id="accidents" type="geojson" data={accidentData}>
+                        <Layer
+                            id={ACCIDENT_HEAT_LAYER_ID}
+                            type="heatmap"
+                            maxzoom={ACCIDENT_SWITCH_ZOOM + 1}
+                            paint={{
+                                'heatmap-weight': ['interpolate', ['linear'], ['get', 'severity'],
+                                    0, 0.3, 1, 0.5, 3, 0.8, 10, 1],
+                                'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 8, 1, 14, 3],
+                                'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+                                    0, 'rgba(0,0,0,0)',
+                                    0.2, 'rgba(254,240,138,0.5)',
+                                    0.4, 'rgba(251,146,60,0.6)',
+                                    0.7, 'rgba(220,38,38,0.75)',
+                                    1, 'rgba(127,29,29,0.9)'],
+                                'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 8, 10, 14, 28],
+                                'heatmap-opacity': ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0.85, ACCIDENT_SWITCH_ZOOM + 1, 0],
+                            }}
+                        />
+                        <Layer
+                            id={ACCIDENT_POINT_LAYER_ID}
+                            type="circle"
+                            minzoom={ACCIDENT_SWITCH_ZOOM}
+                            paint={{
+                                'circle-radius': ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 4, 17, 10],
+                                'circle-color': ACCIDENT_SEVERITY_COLOR,
+                                'circle-stroke-width': 1.5,
+                                'circle-stroke-color': '#ffffff',
+                                'circle-opacity': ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0, ACCIDENT_SWITCH_ZOOM + 1, 0.9],
+                                'circle-stroke-opacity': ['interpolate', ['linear'], ['zoom'],
+                                    ACCIDENT_SWITCH_ZOOM, 0, ACCIDENT_SWITCH_ZOOM + 1, 1],
+                            }}
+                        />
+                    </Source>
+                )}
+
                 {showPois && (
                     <Source id="pois" type="geojson" data={poisGeoJSON}>
                         <Layer
@@ -667,37 +1212,49 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                             type="symbol"
                             minzoom={10}
                             layout={{
-                                'icon-image': ['match', ['get', 'category'],
-                                    'water', 'poi-water',
-                                    // Les toilettes se déclinent selon la gratuité.
-                                    'toilets', ['match', ['get', 'toilet_fee'],
-                                        'free', 'poi-toilets-free',
-                                        'paid', 'poi-toilets-paid',
-                                        'poi-toilets-unknown'],
-                                    // Le parking se décline par famille d'aménagement.
-                                    'parking', ['match', ['get', 'parking_type'],
-                                        'stands', 'poi-parking-stands',
-                                        'racks', 'poi-parking-racks',
-                                        'shelter', 'poi-parking-shelter',
-                                        'poi-parking-other'],
-                                    // La réparation distingue libre-service et atelier.
-                                    'repair', ['match', ['get', 'repair_kind'],
-                                        'shop', 'poi-repair-shop',
-                                        'poi-repair-selfservice'],
-                                    'poi-water'],
+                                'icon-image': ['concat',
+                                    ['match', ['get', 'category'],
+                                        'water', 'poi-water',
+                                        'toilets', ['match', ['get', 'toilet_fee'],
+                                            'free', 'poi-toilets-free',
+                                            'paid', 'poi-toilets-paid',
+                                            'poi-toilets-unknown'],
+                                        'parking', ['concat',
+                                            ['match', ['get', 'parking_type'],
+                                                'stands', 'poi-parking-stands',
+                                                'racks', 'poi-parking-racks',
+                                                'shelter', 'poi-parking-shelter',
+                                                'poi-parking-other'],
+                                            ['case',
+                                                ['all',
+                                                    ['!=', ['get', 'parking_type'], 'shelter'],
+                                                    ['==', ['get', 'covered'], 'yes']],
+                                                '-covered', '']],
+                                        'repair', ['match', ['get', 'repair_kind'],
+                                            'shop', 'poi-repair-shop',
+                                            'poi-repair-selfservice'],
+                                        'poi-water'],
+                                    ['case',
+                                        ['any',
+                                            ['in', ['get', 'access'], ['literal', RESTRICTED_ACCESS]],
+                                            ['==', ['get', 'disused'], 'yes'],
+                                            ['has', 'disused:amenity'],
+                                            ['in', ['get', 'opening_hours'], ['literal', ['closed', 'off']]]],
+                                        '-off',
+                                        ['any',
+                                            ['all', ['==', ['get', 'category'], 'toilets'], ['==', ['get', 'toilet_fee'], 'paid']],
+                                            ['all', ['!=', ['get', 'category'], 'toilets'], ['has', 'fee'], ['!=', ['get', 'fee'], 'no']]],
+                                        '-paid',
+                                        ['==', ['get', 'access'], 'customers'], '-customers',
+                                        '']],
                                 'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.3, 13, 0.6, 17, 1.1],
-                                // Dédensification : le moteur masque les icônes qui se chevauchent.
                                 'icon-allow-overlap': false,
-                                // Priorité de placement : les parkings (très nombreux) cèdent la
-                                // place aux catégories rares (toilettes, réparation) qui seraient
-                                // sinon écrasées par collision. Sort-key bas = placé en premier.
                                 'symbol-sort-key': ['match', ['get', 'category'], 'parking', 1, 0],
                                 'text-field': ['step', ['zoom'], '', 16, ['coalesce', ['get', 'name'], '']],
                                 'text-size': 11,
                                 'text-anchor': 'top',
                                 'text-offset': [0, 1.7],
                                 'text-allow-overlap': false,
-                                // En cas de collision, on sacrifie le libellé avant l'icône.
                                 'text-optional': true,
                             }}
                             paint={{
@@ -764,31 +1321,28 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     </Marker>
                 )}
 
-                {reports && reports.map((report) => (
-                    <Marker key={report.id} longitude={report.longitude} latitude={report.latitude} anchor="bottom">
-                        <div style={{ fontSize: "28px", lineHeight: "1", cursor: "pointer", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
-                            onClick={(e) => { e.stopPropagation(); setActivePoi(null); setActiveTraffic(null); setActiveReport(report); }}>
-                            {REPORT_ICONS[report.report_type] || "📍"}
-                        </div>
-                    </Marker>
-                ))}
-
-                {trafficPoints && trafficPoints.map((pt) => (
-                    <Marker key={`traffic-${pt.id}`} longitude={pt.lon} latitude={pt.lat} anchor="center">
-                        <div
-                            onClick={(e) => { e.stopPropagation(); setActivePoi(null); setActiveReport(null); setActiveTraffic(pt); }}
-                            style={{
-                                width: 14,
-                                height: 14,
-                                borderRadius: "50%",
-                                backgroundColor: TRAFFIC_COLORS[pt.level] || TRAFFIC_COLORS.gray,
-                                border: "2px solid white",
-                                boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
-                                cursor: "pointer",
+                {showReports && (
+                    <Source id="reports" type="geojson" data={reportsGeoJSON}>
+                        <Layer
+                            id={REPORT_LAYER_ID}
+                            type="symbol"
+                            minzoom={9}
+                            layout={{
+                                'icon-image': ['match', ['get', 'report_type'],
+                                    'accident', 'report-accident',
+                                    'travaux', 'report-travaux',
+                                    'danger', 'report-danger',
+                                    'obstacle', 'report-obstacle',
+                                    'report-danger'],
+                                'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.42, 13, 0.84, 17, 1.5],
+                                'icon-allow-overlap': true,
+                            }}
+                            paint={{
+                                'icon-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0, 10.5, 1],
                             }}
                         />
-                    </Marker>
-                ))}
+                    </Source>
+                )}
 
                 {activeTraffic && (
                     <Popup
@@ -805,12 +1359,14 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 style={{ backgroundColor: TRAFFIC_COLORS[activeTraffic.level] || TRAFFIC_COLORS.gray }}
                             >
                                 <span className="map-popup-icon">🚦</span>
-                                <span className="map-popup-title">{activeTraffic.name || "Point de comptage"}</span>
+                                <span className="map-popup-title">{TRAFFIC_LABELS[activeTraffic.level] || "État inconnu"}</span>
                             </div>
                             <div className="map-popup-body">
-                                {activeTraffic.speed != null && <p className="map-popup-line">🚗 Vitesse : <strong>{activeTraffic.speed} km/h</strong></p>}
-                                {activeTraffic.flow != null && <p className="map-popup-line">🚦 Débit : <strong>{activeTraffic.flow} véh/h</strong></p>}
-                                {activeTraffic.occupancy != null && <p className="map-popup-line">📊 Occupation : <strong>{activeTraffic.occupancy}%</strong></p>}
+                                {activeTraffic.commune && <p className="map-popup-line">📍 <strong>{activeTraffic.commune}</strong></p>}
+                                {TRAFFIC_CYCLIST_HINT[activeTraffic.level] && (
+                                    <p className="map-popup-line">{TRAFFIC_CYCLIST_HINT[activeTraffic.level]}</p>
+                                )}
+                                {trafficUpdatedAt && <p className="map-popup-line map-popup-muted">Relevé {trafficUpdatedAt}</p>}
                             </div>
                         </div>
                     </Popup>
@@ -830,7 +1386,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 className="map-popup-header"
                                 style={{ backgroundColor: REPORT_TYPE_META[activeReport.report_type]?.color || '#6b7280' }}
                             >
-                                <span className="map-popup-icon">{REPORT_ICONS[activeReport.report_type] || "📍"}</span>
+                                <img className="map-popup-icon map-popup-icon-img" src={reportIconSrc(activeReport.report_type)} alt="" />
                                 <span className="map-popup-title">
                                     {REPORT_TYPE_META[activeReport.report_type]?.label || activeReport.report_type}
                                 </span>
@@ -903,8 +1459,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 && activePoi[field.key] !== undefined && activePoi[field.key] !== null);
                             return (
                                 <div className="map-popup">
-                                    <div className="map-popup-header" style={{ backgroundColor: category?.color || '#6b7280' }}>
-                                        <span className="map-popup-icon">📍</span>
+                                    <div className="map-popup-header" style={{ backgroundColor: poiAccentColor(activePoi, category?.color || '#6b7280') }}>
+                                        <img className="map-popup-icon map-popup-icon-img" src={poiIconSrc(activePoi)} alt="" />
                                         <span className="map-popup-header-text">
                                             <span className="map-popup-title">{activePoi.name || category?.label}</span>
                                             {activePoi.name && <span className="map-popup-subtitle">{category?.label}</span>}
@@ -926,6 +1482,49 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                             </Button>
                                         </div>
                                     )}
+                                </div>
+                            );
+                        })()}
+                    </Popup>
+                )}
+
+                {activeAccident && (
+                    <Popup
+                        longitude={activeAccident.lon}
+                        latitude={activeAccident.lat}
+                        onClose={() => setActiveAccident(null)}
+                        closeOnClick={false}
+                        anchor="bottom"
+                        offset={[0, -12]}
+                    >
+                        {(() => {
+                            const details = ACCIDENT_DETAIL_FIELDS.filter(
+                                field => activeAccident[field.key]);
+                            const date = formatAccidentDate(activeAccident);
+                            return (
+                                <div className="map-popup">
+                                    <div
+                                        className="map-popup-header"
+                                        style={{ backgroundColor: activeAccident.severity >= 10 ? '#7f1d1d'
+                                            : activeAccident.severity >= 3 ? '#dc2626' : '#f97316' }}
+                                    >
+                                        <span className="map-popup-header-text">
+                                            <span className="map-popup-title">Accident à vélo</span>
+                                            {date && <span className="map-popup-subtitle">{date}</span>}
+                                        </span>
+                                    </div>
+                                    <div className="map-popup-body">
+                                        {activeAccident.severity_label && (
+                                            <p className="map-popup-detail">
+                                                Gravité : <strong>{activeAccident.severity_label}</strong>
+                                            </p>
+                                        )}
+                                        {details.map(field => (
+                                            <p key={field.key} className="map-popup-detail">
+                                                {field.label} : <strong>{activeAccident[field.key]}</strong>
+                                            </p>
+                                        ))}
+                                    </div>
                                 </div>
                             );
                         })()}

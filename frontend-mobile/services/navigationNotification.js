@@ -2,12 +2,14 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { formatDistance } from '../utils/format';
 import * as NavNotification from '../modules/nav-notification';
+import { areNotificationsEnabled } from './notificationPreference';
 
 let isActive = false;
 let lastSignature = null;
 
 export async function startNavigationNotification() {
     if (Platform.OS !== 'android') return;
+    if (!(await areNotificationsEnabled())) return;
 
     try {
         const { status } = await Notifications.requestPermissionsAsync();

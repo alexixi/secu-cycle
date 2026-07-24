@@ -8,6 +8,8 @@ import FaqPage from "./pages/FaqPage";
 import PlanningPage from "./pages/PlanningPage";
 import ReportsPage from "./pages/ReportsPage";
 import PoisPage from "./pages/PoisPage";
+import AccidentsPage from "./pages/AccidentsPage";
+import LightingPage from "./pages/LightingPage";
 import GraphPage from "./pages/GraphPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -29,6 +31,8 @@ export default function App() {
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/planning" element={<PlanningPage />} />
         <Route path="/pois" element={<PoisPage />} />
+        <Route path="/accidents" element={<AccidentsPage />} />
+        <Route path="/lighting" element={<LightingPage />} />
         <Route path="/graph" element={<GraphPage />} />
       </Route>
 

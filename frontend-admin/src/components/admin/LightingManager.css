@@ -1,0 +1,60 @@
+.lighting-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0 0.6rem;
+  font-size: 0.95rem;
+}
+
+.lighting-window-count {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.lighting-window-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.lighting-window-scroll {
+  max-height: 22rem;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
+.lighting-window-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+}
+
+.lighting-window-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 10rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lighting-window-tag {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
+.lighting-window-row input[type="number"] {
+  width: 4rem;
+}

@@ -1,14 +1,32 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
-class ReportCreate(BaseModel):
+
+class ReportBase(BaseModel):
+    """Champs communs, SANS contrainte : sert à la lecture (sortie), qui doit
+    accepter telles quelles les données déjà en base."""
     report_type: str
     report_description: Optional[str] = None
     latitude: float
     longitude: float
 
-class ReportRead(ReportCreate):
+
+class ReportCreate(ReportBase):
+    """Entrée d'un nouveau signalement : bornée pour éviter DoS / données invalides.
+
+    Découplé de la lecture : durcir l'entrée ne doit pas faire échouer la
+    sérialisation d'anciens signalements hors bornes.
+    """
+    model_config = ConfigDict(allow_inf_nan=False)  # rejette NaN/inf
+
+    report_type: Literal["accident", "danger", "obstacle", "travaux"]
+    report_description: Optional[str] = Field(default=None, max_length=1000)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+
+
+class ReportRead(ReportBase):
     id: int
     user_id: Optional[int] = None
     created_at: datetime

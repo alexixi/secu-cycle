@@ -20,7 +20,7 @@ export default function useHazardAlerts(reports, currentPosition, activeRoute, i
     const [activeAlert, setActiveAlert] = useState(null);
     const announcedRef = useRef(new Set());
 
-$    useEffect(() => {
+    useEffect(() => {
         if (!isNavigating) {
             announcedRef.current = new Set();
             setActiveAlert(null);

@@ -3,10 +3,18 @@ import { useState } from "react";
 import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 
-export default function PasswordInput({ password, setPassword, hasError, setHasError }) {
+export default function PasswordInput({
+    password,
+    setPassword,
+    hasError,
+    setHasError,
+    autoComplete = "current-password",
+}) {
     const [showPassword, setShowPassword] = useState(false);
 
     const { colors } = useTheme();
+
+    const textContentType = autoComplete === "new-password" ? "newPassword" : "password";
 
     return (
         <View style={[
@@ -19,6 +27,10 @@ export default function PasswordInput({ password, setPassword, hasError, setHasE
             <TextInput
                 style={[styles.passwordInput, { color: colors.textMain }]}
                 secureTextEntry={!showPassword}
+                autoComplete={autoComplete}
+                textContentType={textContentType}
+                autoCapitalize="none"
+                autoCorrect={false}
                 value={password}
                 onChangeText={(text) => {
                     setPassword(text);

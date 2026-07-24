@@ -4,11 +4,13 @@ import { searchAddressAutocomplete } from '../../services/geocodingService';
 import { isCovered } from '../../services/apiBack';
 import { trackEvent } from '../../services/analytics';
 import { useTheme } from '../../hooks/useTheme';
+import { withAlpha } from '../../constants/theme';
 
 export default function AdressInput({ placeholder, onSelect, icon, defaultValue, variant = 'search', zIndex = 1000, onFocusChange, checkCoverage = false }) {
   const [query, setQuery] = useState(defaultValue || "");
   const [suggestions, setSuggestions] = useState([]);
   const [showList, setShowList] = useState(false);
+  const [noResults, setNoResults] = useState(false);
   const [outOfZone, setOutOfZone] = useState(false);
   const isTyping = React.useRef(false);
 
@@ -27,22 +29,24 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
       if (query.length >= 3 && isTyping.current) {
         try {
           const results = await searchAddressAutocomplete(query);
-          setSuggestions(results.slice(0, 3));
+          setSuggestions(results);
+          setNoResults(results.length === 0);
           setShowList(true);
         } catch (error) {
           console.error("Erreur géocodage:", error);
         }
       } else if (query.length < 3) {
         setSuggestions([]);
+        setNoResults(false);
         setShowList(false);
       }
-    }, 300);
+    }, 400);
 
     return () => clearTimeout(delayDebounceFn);
   }, [query]);
 
   const warnIfOutOfZone = async (item) => {
-    if (!checkCoverage || item.id === "no-result") return;
+    if (!checkCoverage) return;
     const covered = await isCovered(item.lat, item.lon);
     setOutOfZone(!covered);
     if (!covered) {
@@ -54,6 +58,7 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
     isTyping.current = false;
     setQuery(item.name);
     setSuggestions([]);
+    setNoResults(false);
     setShowList(false);
     setOutOfZone(false);
     Keyboard.dismiss();
@@ -67,7 +72,7 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
       { zIndex: zIndex },
       isForm && [styles.formContainer, {
         borderColor: colors.borderStrong,
-        backgroundColor: colors.bgSurface,
+        backgroundColor: withAlpha(colors.bgSurface, 0.92),
       }]
     ]}>
       <View style={styles.inputRow}>
@@ -86,6 +91,7 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
             setOutOfZone(false);
             if (text.trim() === "") {
               setSuggestions([]);
+              setNoResults(false);
               setShowList(false);
               onSelect(null);
             }
@@ -107,9 +113,23 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
         </Text>
       )}
 
+      {showList && noResults && suggestions.length === 0 && (
+        <View style={[styles.suggestionList, {
+          backgroundColor: withAlpha(colors.bgSurface, 0.92),
+          borderColor: colors.borderStrong,
+          shadowColor: colors.textMain
+        }]}>
+          <View style={[styles.suggestionItem, { borderBottomWidth: 0 }]}>
+            <Text style={[styles.suggestionSubText, { color: colors.textSecondary }]}>
+              Aucun résultat trouvé
+            </Text>
+          </View>
+        </View>
+      )}
+
       {showList && suggestions.length > 0 && (
         <View style={[styles.suggestionList, {
-          backgroundColor: colors.bgSurface,
+          backgroundColor: withAlpha(colors.bgSurface, 0.92),
           borderColor: colors.borderStrong,
           shadowColor: colors.textMain
         }]}>
