@@ -6,8 +6,10 @@ from sqlalchemy.sql import func
 from database import SessionLocal
 from models.accident_sync import AccidentSyncRun
 from models.poi_sync import PoiSyncRun
+from models.street_lamp_sync import StreetLampSyncRun
 from accidents import runner as accident_runner
 from pois import runner as poi_runner
+from lighting import runner as lighting_runner
 from routers import accident
 from routers import user
 from routers import route
@@ -15,6 +17,7 @@ from routers import history
 from routers import bike
 from routers import report
 from routers import poi
+from routers import streetlight
 from routers import navigation
 from routers import traffic
 from routers import home_case
@@ -142,6 +145,45 @@ async def periodic_accident_sync(app: FastAPI):
             print(f"[Background Task] Échec de la synchro accidents : {exc}", flush=True)
 
 
+LIGHTING_SYNC_CHECK_INTERVAL = 3600
+
+
+def lighting_sync_is_due() -> bool:
+    """La synchro auto de l'éclairage est-elle activée et son échéance passée ?"""
+    db = SessionLocal()
+    try:
+        interval_days = lighting_runner.get_settings(db).interval_days
+        if not interval_days:
+            return False
+        if lighting_runner.is_running(db):
+            return False
+
+        recent = db.execute(
+            select(StreetLampSyncRun.id)
+            .where(StreetLampSyncRun.started_at >= func.now() - timedelta(days=interval_days))
+            .limit(1)
+        ).first()
+        return recent is None
+    finally:
+        db.close()
+
+
+async def periodic_lighting_sync(app: FastAPI):
+    """
+    Boucle infinie qui s'exécute en arrière-plan.
+    Resynchronise l'éclairage public (OSM + open data) à l'intervalle réglé par
+    les admins. Contrôle horaire : ces positions ne bougent qu'à la marge.
+    """
+    while True:
+        await asyncio.sleep(LIGHTING_SYNC_CHECK_INTERVAL)
+        try:
+            if await asyncio.to_thread(lighting_sync_is_due):
+                print("[Background Task] Synchronisation automatique de l'éclairage...", flush=True)
+                await asyncio.to_thread(lighting_runner.run_sync, "auto", app)
+        except Exception as exc:
+            print(f"[Background Task] Échec de la synchro éclairage : {exc}", flush=True)
+
+
 seed_home_cases()
 seed_faqs()
 seed_badges()
@@ -154,7 +196,8 @@ async def lifespan(app: FastAPI):
     app.state.graph_communes = profile["communes"]
     app.state.graph_loading = False
     app.state.G = load_graph_with_ign(
-        profile["graph_file"], profile["ign_cache_file"], profile["communes"])
+        profile["graph_file"], profile["ign_cache_file"], profile["communes"],
+        profile.get("night_extinction"))
 
     print("Chargement initial du trafic...")
 
@@ -177,9 +220,14 @@ async def lifespan(app: FastAPI):
     if stale_accidents:
         print(f"{stale_accidents} synchro(s) d'accidents interrompue(s) marquée(s) en échec.", flush=True)
 
+    stale_lighting = await asyncio.to_thread(lighting_runner.fail_stale_runs)
+    if stale_lighting:
+        print(f"{stale_lighting} synchro(s) d'éclairage interrompue(s) marquée(s) en échec.", flush=True)
+
     traffic_task = asyncio.create_task(periodic_traffic_update(app))
     poi_task = asyncio.create_task(periodic_poi_sync())
     accident_task = asyncio.create_task(periodic_accident_sync(app))
+    lighting_task = asyncio.create_task(periodic_lighting_sync(app))
 
     yield
 
@@ -188,7 +236,8 @@ async def lifespan(app: FastAPI):
     traffic_task.cancel()
     poi_task.cancel()
     accident_task.cancel()
-    for task in (traffic_task, poi_task, accident_task):
+    lighting_task.cancel()
+    for task in (traffic_task, poi_task, accident_task, lighting_task):
         try:
             await task
         except asyncio.CancelledError:
@@ -221,6 +270,7 @@ app.include_router(history.router)
 app.include_router(bike.router)
 app.include_router(report.router)
 app.include_router(poi.router)
+app.include_router(streetlight.router)
 app.include_router(accident.router)
 app.include_router(navigation.router)
 app.include_router(traffic.router)

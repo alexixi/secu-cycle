@@ -1,0 +1,38 @@
+.lighting-info-modal h2 {
+    margin: 0 0 12px;
+    font-size: 1.15rem;
+    color: var(--text-main);
+}
+
+.lighting-info-modal p {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--text-secondary, #6b7280);
+}
+
+.lighting-info-modal strong {
+    color: var(--text-main);
+}
+
+.lighting-info-modal .lighting-info-warn {
+    font-style: italic;
+}
+
+.lighting-info-modal .lighting-info-sources-title {
+    font-weight: 600;
+    color: var(--text-main);
+    margin-top: 14px;
+    margin-bottom: 6px;
+}
+
+.lighting-info-modal .lighting-info-sources {
+    margin: 0 0 10px;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--text-secondary, #6b7280);
+}

@@ -15,6 +15,8 @@ export default function GraphProfileModal({ profiles, onCancel, onCreate }) {
   const [baseIds, setBaseIds] = useState([]);
   const [extras, setExtras] = useState([]);
   const [communeInput, setCommuneInput] = useState("");
+  const [extStart, setExtStart] = useState("");
+  const [extEnd, setExtEnd] = useState("");
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -63,6 +65,8 @@ export default function GraphProfileModal({ profiles, onCancel, onCreate }) {
         name: name.trim(),
         base_profile_ids: baseIds,
         communes: extras,
+        night_extinction_start: extStart === "" ? null : Number(extStart),
+        night_extinction_end: extEnd === "" ? null : Number(extEnd),
       });
     } catch (err) {
       setError(err.message);
@@ -149,6 +153,31 @@ export default function GraphProfileModal({ profiles, onCancel, onCreate }) {
                   ))}
                 </ul>
               )}
+            </div>
+
+            <div className="graph-modal-field">
+              <span>Extinction de l'éclairage — défaut sur l'emprise (optionnel)</span>
+              <div className="graph-extinction-row">
+                <span>de</span>
+                <input
+                  type="number" min={0} max={24} placeholder="—"
+                  value={extStart}
+                  onChange={(e) => setExtStart(e.target.value)}
+                />
+                <span>h à</span>
+                <input
+                  type="number" min={0} max={24} placeholder="—"
+                  value={extEnd}
+                  onChange={(e) => setExtEnd(e.target.value)}
+                />
+                <span>h</span>
+              </div>
+              <small>
+                Heures où les lampadaires sont éteints, appliquées aux communes sans
+                horaire propre. Vide = valeur par défaut ; deux valeurs égales = pas
+                d'extinction. Se modifie ensuite depuis la page « Éclairage », avec les
+                horaires par commune.
+              </small>
             </div>
 
             <p className="graph-modal-summary">

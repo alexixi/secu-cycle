@@ -293,6 +293,30 @@ export async function updatePoiSyncSettings(token, updates) {
 }
 
 
+export async function getStreetlightStats(token) {
+    return apiFetch("/streetlights/admin/stats", { method: "GET" }, token);
+}
+
+export async function triggerStreetlightSync(token) {
+    return apiFetch("/streetlights/admin/sync", { method: "POST" }, token);
+}
+
+export async function getStreetlightSyncRuns(token, limit = 20) {
+    return apiFetch(`/streetlights/admin/runs?limit=${limit}`, { method: "GET" }, token);
+}
+
+export async function getStreetlightSyncSettings(token) {
+    return apiFetch("/streetlights/admin/settings", { method: "GET" }, token);
+}
+
+export async function updateStreetlightSyncSettings(token, updates) {
+    return apiFetch("/streetlights/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+    }, token);
+}
+
+
 export async function getGraphStats(token) {
     return apiFetch("/graph/admin/stats", { method: "GET" }, token);
 }
@@ -331,6 +355,17 @@ export async function buildGraphProfile(token, profileId, wipeIgn = false) {
 
 export async function activateGraphProfile(token, profileId) {
     return apiFetch(`/graph/admin/profiles/${profileId}/activate`, { method: "POST" }, token);
+}
+
+export async function getCommuneLighting(token) {
+    return apiFetch("/graph/admin/communes/lighting", { method: "GET" }, token);
+}
+
+export async function updateCommuneLighting(token, schedules) {
+    return apiFetch("/graph/admin/communes/lighting", {
+        method: "PUT",
+        body: JSON.stringify({ schedules }),
+    }, token);
 }
 
 export async function getGraphBuilds(token, limit = 20) {

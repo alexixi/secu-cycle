@@ -90,6 +90,10 @@ sync-accidents:
 	@echo "🚑 Récupération des accidents corporels (BAAC / Statbel)..."
 	$(COMPOSE) exec api python -m accidents.sync
 
+sync-lighting:
+	@echo "💡 Synchronisation de l'éclairage public (OSM + open data, qq min)..."
+	$(COMPOSE) exec api python -m lighting.sync
+
 screen:
 	@test -d $(SCREEN_DIR)/node_modules || npm --prefix $(SCREEN_DIR) install
 	npm --prefix $(SCREEN_DIR) run screenshots -- $(ARGS)
@@ -100,4 +104,4 @@ mail:
 		|| open $(MAIL_PREVIEW) >/dev/null 2>&1 \
 		|| echo "   Ouvrez $(MAIL_PREVIEW) dans un navigateur."
 
-.PHONY: all api api-background api-build api-stop web web-docker web-install mobile mobile-install appli install logs shell stop down clean prod deploy deploy-static regen-graph sync-pois sync-accidents screen mail
+.PHONY: all api api-background api-build api-stop web web-docker web-install mobile mobile-install appli install logs shell stop down clean prod deploy deploy-static regen-graph sync-pois sync-accidents sync-lighting screen mail

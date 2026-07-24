@@ -179,3 +179,14 @@
     color: var(--text-main);
     line-height: 1.4;
 }
+
+.infra-badge.badge-muted {
+    color: var(--text-secondary, #9ca3af);
+    opacity: 0.65;
+}
+
+.infra-badge-flag {
+    margin-left: 2px;
+    font-size: 0.85em;
+    vertical-align: middle;
+}
