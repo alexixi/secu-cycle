@@ -3,7 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimen
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { getReports, getPois, getAccidents, getTraffic, createReport, deleteReport, voteReport } from '../services/apiBack';
+import { getReports, getPois, getAccidents, getTraffic, getLitRoads, getStreetlightSources, createReport, deleteReport, voteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
@@ -175,6 +175,10 @@ const ACCIDENT_LEGEND = [
     { label: 'Blessé léger', color: '#f97316' },
 ];
 
+const LIT_ROADS_COLOR = ['match', ['get', 'lit_source'],
+    'inferred', '#ffe39a',
+    '#ffcf3d'];
+
 const ACCIDENT_DETAIL_FIELDS = [
     { key: 'light', label: 'Luminosité' },
     { key: 'weather', label: 'Météo' },
@@ -260,6 +264,12 @@ export default function MapComponent({
     const accidentCacheRef = useRef(false);
     const [showTraffic, setShowTraffic] = useState(false);
     const [traffic, setTraffic] = useState(null);
+    const [showLitRoads, setShowLitRoads] = useState(false);
+    const [litRoadsData, setLitRoadsData] = useState(null);
+    const litRoadsCacheRef = useRef(false);
+    const [isLightingInfoVisible, setLightingInfoVisible] = useState(false);
+    const [lightingSources, setLightingSources] = useState(null);
+    const lightingSourcesRef = useRef(false);
     const [mapHeight, setMapHeight] = useState(0);
     const [recenterTrigger, setRecenterTrigger] = useState(0);
     const [hasCenteredOnce, setHasCenteredOnce] = useState(false);
@@ -383,9 +393,11 @@ export default function MapComponent({
             const savedPois = await AsyncStorage.getItem('userMapPois');
             const savedSubTypes = await AsyncStorage.getItem('userMapSubTypes');
             const savedAccidents = await AsyncStorage.getItem('userMapAccidents');
+            const savedLitRoads = await AsyncStorage.getItem('userMapLitRoads');
             if (savedBase) setActiveBaseStyle(savedBase);
             if (savedTheme) setMapThemeMode(savedTheme);
             setShowAccidents(savedAccidents === 'true');
+            setShowLitRoads(savedLitRoads === 'true');
             if (savedPois) {
                 try {
                     setEnabledPoiCats(JSON.parse(savedPois));
@@ -422,9 +434,6 @@ export default function MapComponent({
         getAccidents()
             .then(collection => {
                 setAccidentData(collection);
-                // Une collection vide n'est pas un succès à mémoriser : c'est le cas
-                // d'un profil pas encore synchronisé. Sans cette remise à zéro, il
-                // faudrait relancer l'appli pour revoir la couche après la synchro.
                 if (!collection?.features?.length) accidentCacheRef.current = false;
             })
             .catch(error => {
@@ -438,6 +447,38 @@ export default function MapComponent({
         setShowAccidents(next);
         if (!next) setActiveAccident(null);
         AsyncStorage.setItem('userMapAccidents', String(next));
+    };
+
+    useEffect(() => {
+        if (miniMap || !showLitRoads || litRoadsCacheRef.current) return;
+        litRoadsCacheRef.current = true;
+        getLitRoads()
+            .then(collection => {
+                setLitRoadsData(collection);
+                if (!collection?.features?.length) litRoadsCacheRef.current = false;
+            })
+            .catch(error => {
+                litRoadsCacheRef.current = false;  // autorise une nouvelle tentative
+                console.error("Erreur chargement des rues éclairées :", error);
+            });
+    }, [showLitRoads, miniMap]);
+
+    const handleLitRoadsToggle = () => {
+        const next = !showLitRoads;
+        setShowLitRoads(next);
+        AsyncStorage.setItem('userMapLitRoads', String(next));
+    };
+
+    const openLightingInfo = () => {
+        setLightingInfoVisible(true);
+        if (lightingSourcesRef.current) return;
+        lightingSourcesRef.current = true;
+        getStreetlightSources()
+            .then(data => setLightingSources(data?.sources || []))
+            .catch(error => {
+                lightingSourcesRef.current = false;  // autorise une nouvelle tentative
+                console.error("Erreur chargement des sources d'éclairage :", error);
+            });
     };
 
     const handleRecenter = () => {
@@ -826,10 +867,34 @@ export default function MapComponent({
                     </GeoJSONSource>
                 )}
 
+                {!miniMap && showLitRoads && !!litRoadsData && (
+                    <GeoJSONSource id="lit-roads" data={litRoadsData}>
+                        <Layer
+                            id="lit-roads-glow"
+                            type="line"
+                            layout={{ lineCap: 'round', lineJoin: 'round' }}
+                            paint={{
+                                lineColor: LIT_ROADS_COLOR,
+                                lineWidth: ['interpolate', ['exponential', 2], ['zoom'], 11, 4, 15, 5.3, 19, 85, 22, 680],
+                                lineBlur: ['interpolate', ['exponential', 2], ['zoom'], 11, 2, 15, 3, 19, 48, 22, 384],
+                                lineOpacity: ['interpolate', ['linear'], ['zoom'], 11, 0.12, 14, 0.3],
+                            }}
+                        />
+                        <Layer
+                            id="lit-roads-line"
+                            type="line"
+                            layout={{ lineCap: 'round', lineJoin: 'round' }}
+                            paint={{
+                                lineColor: LIT_ROADS_COLOR,
+                                lineWidth: ['interpolate', ['exponential', 2], ['zoom'], 11, 1.5, 15, 2.7, 19, 43, 22, 344],
+                                lineOpacity: ['interpolate', ['linear'], ['zoom'], 11, 0.5, 14, 0.85],
+                            }}
+                        />
+                    </GeoJSONSource>
+                )}
+
                 {!miniMap && showAccidents && !!accidentData && (
                     <GeoJSONSource id="accidents" data={accidentData} onPress={onAccidentPress}>
-                        {/* Densité aux zooms larges : plusieurs centaines de points
-                            se recouvrent et ne disent plus rien un par un. */}
                         <Layer
                             id="accidents-heat"
                             type="heatmap"
@@ -1073,9 +1138,6 @@ export default function MapComponent({
                                         <Text style={[styles.layerText, typography.body, { color: colors.textMain }]}>
                                             Trafic automobile
                                         </Text>
-                                        <Text style={{ fontSize: 12, lineHeight: 16, color: colors.textSecondary }}>
-                                            Axes denses et embouteillés, évités par les itinéraires sécurisés
-                                        </Text>
                                     </View>
                                     <Switch
                                         value={showTraffic}
@@ -1085,7 +1147,111 @@ export default function MapComponent({
                                 </View>
                             </>
                         )}
+
+                        <View style={styles.divider} />
+
+                        <View style={styles.lightingHeadRow}>
+                            <Text style={[styles.layerText, typography.body, { color: colors.textMain, fontWeight: 'bold' }]}>
+                                Éclairage public
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => { Haptics.selectionAsync(); openLightingInfo(); }}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                accessibilityLabel="Informations sur l'éclairage"
+                            >
+                                <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.poiOption}>
+                            <Text style={styles.layerEmoji}>💡</Text>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[styles.layerText, typography.body, { color: colors.textMain }]}>
+                                    Éclairage public
+                                </Text>
+                            </View>
+                            <Switch
+                                value={showLitRoads}
+                                onValueChange={() => { Haptics.selectionAsync(); handleLitRoadsToggle(); }}
+                                trackColor={{ true: colors.primary }}
+                            />
+                        </View>
                     </Animated.View>
+                </TouchableOpacity>
+            </Modal>
+
+            <Modal
+                visible={isLightingInfoVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setLightingInfoVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setLightingInfoVisible(false)}
+                >
+                    <View
+                        style={[styles.lightingInfoCard, { backgroundColor: colors.bgMain }]}
+                        onStartShouldSetResponder={() => true}
+                    >
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>
+                            Éclairage public
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            <Text style={{ fontWeight: 'bold', color: colors.textMain }}>Rues éclairées</Text>
+                            {" : les rues marquées comme éclairées sur OpenStreetMap. Toutes les routes "}
+                            {"n'ont pas nécessairement cette information, c'est pour ça que nous déduisons "}
+                            {"l'éclairage de certaines routes avec la présence de lampadaires ou la "}
+                            {"proximité immédiate d'une rue éclairée."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            {"Les lampadaires eux-mêmes (OpenStreetMap et jeux open data des métropoles) "}
+                            {"ne sont pas affichés sur mobile : ils sont trop nombreux pour la mémoire du "}
+                            {"téléphone. Ils servent en revanche à déduire les rues éclairées ci-dessus, "}
+                            {"et restent visibles sur la version web."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary, fontStyle: 'italic' }]}>
+                            {"Une rue non surlignée n'est pas forcément non éclairée : le plus souvent, "}
+                            {"c'est la donnée qui manque. Peu de villes françaises ont un jeu open data de "}
+                            {"lampadaires, et OpenStreetMap n'est pas complet partout, surtout dans les "}
+                            {"zones rurales."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
+                            Sources sur cette zone
+                        </Text>
+
+                        {lightingSources === null ? (
+                            <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                                Chargement…
+                            </Text>
+                        ) : lightingSources.length === 0 ? (
+                            <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                                Aucun lampadaire synchronisé sur cette zone.
+                            </Text>
+                        ) : (
+                            lightingSources.map((s) => (
+                                <Text
+                                    key={s.source}
+                                    style={[typography.body, styles.lightingInfoSource, { color: colors.textSecondary }]}
+                                >
+                                    {`• ${s.attribution}`}
+                                    {s.count ? ` — ${s.count.toLocaleString('fr-FR')} points` : ''}
+                                </Text>
+                            ))
+                        )}
+
+                        <TouchableOpacity
+                            style={[styles.lightingInfoClose, { backgroundColor: colors.primary }]}
+                            onPress={() => setLightingInfoVisible(false)}
+                        >
+                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Fermer</Text>
+                        </TouchableOpacity>
+                    </View>
                 </TouchableOpacity>
             </Modal>
 
@@ -1202,6 +1368,7 @@ export default function MapComponent({
                                 )}
                             </>
                         )}
+
                     </Animated.View>
                 </TouchableOpacity>
             </Modal>
@@ -1579,6 +1746,38 @@ const styles = StyleSheet.create({
         padding: 20,
         width: '80%',
         alignItems: 'flex-start',
+    },
+    lightingHeadRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        paddingHorizontal: 4,
+        marginBottom: 4,
+    },
+    lightingInfoCard: {
+        borderRadius: 20,
+        padding: 20,
+        width: '88%',
+        maxHeight: '80%',
+        alignItems: 'flex-start',
+    },
+    lightingInfoText: {
+        fontSize: 13,
+        lineHeight: 19,
+        marginBottom: 10,
+    },
+    lightingInfoSource: {
+        fontSize: 13,
+        lineHeight: 19,
+        marginBottom: 4,
+    },
+    lightingInfoClose: {
+        alignSelf: 'stretch',
+        alignItems: 'center',
+        paddingVertical: 11,
+        borderRadius: 12,
+        marginTop: 6,
     },
     modalTitle: {
         fontSize: 18,
