@@ -12,23 +12,31 @@
 (`routing._edge_quality`), les statistiques (`statistique.calculate_infra_stats`)
 et la couche carte. Ces inférences ne s'appliquent qu'aux arêtes dont le tag OSM
 `lit` est **inconnu** : un `lit=yes`/`lit=no` explicite fait toujours autorité.
+
+Ce module porte aussi le rattachement des arêtes à leur commune
+(`attach_communes`) et la résolution des fenêtres d'extinction
+(`resolve_extinction_windows`) : l'extinction nocturne est décidée commune par
+commune, et le routage a besoin de savoir, pour chaque arête, quel horaire
+s'applique.
 """
 
 import math
 
 import numpy as np
 import osmnx as ox
-from shapely import STRtree
-from shapely.geometry import LineString, Point, box
+from shapely import STRtree, points as shapely_points
+from shapely.geometry import LineString, Point, box, shape
 from sqlalchemy import select
 
 from database import SessionLocal
 from graph.accidents import _graph_bounds
 from graph.config import (
     LIT_SPILL_MIN_COVERAGE, LIT_SPILL_RADIUS_M, LIT_SPILL_SAMPLE_STEP_M,
-    LIT_SPILL_TARGET_HIGHWAYS,
+    LIT_SPILL_TARGET_HIGHWAYS, NIGHT_EXTINCTION_WINDOW,
     STREETLAMP_LIT_MIN_PER_100M, STREETLAMP_SNAP_RADIUS_M,
 )
+from models.commune_lighting import CommuneLighting
+from models.graph_profile import CommuneGeometry
 from models.street_lamp import StreetLamp
 
 # Nombre maximal de points d'échantillonnage par arête (borne le coût sur les
@@ -268,6 +276,172 @@ def attach_lighting(G):
         f"de {STREETLAMP_SNAP_RADIUS_M:.0f} m ; {lamp_lit_edges} sens d'arête éclairé(s) "
         f"par les lampadaires, {spilled} voie(s) séparée(s) éclairée(s) par propagation "
         f"depuis une voie `lit=yes`.",
+        flush=True,
+    )
+    return G
+
+
+def _cached_commune_shapes(communes):
+    """Contours des communes, **depuis le cache uniquement**.
+
+    Renvoie `(noms, polygones)` alignés. Le chargement du graphe ne doit jamais
+    dépendre de Nominatim (une seconde par commune, et un échec réseau bloquerait
+    le démarrage) : une commune absente du cache est simplement ignorée, ses
+    arêtes retomberont sur la fenêtre par défaut. Le cache est peuplé par
+    `graph.communes.validate` au moment où l'admin saisit la commune.
+    """
+    if not communes:
+        return [], []
+
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(CommuneGeometry.name, CommuneGeometry.geojson)
+            .filter(CommuneGeometry.name.in_(list(communes)))
+            .all()
+        )
+    finally:
+        db.close()
+
+    by_name = {name: geojson for name, geojson in rows}
+
+    names, shapes = [], []
+    for name in communes:
+        geojson = by_name.get(name)
+        if geojson is None:
+            continue
+        try:
+            geometry = shape(geojson)
+        except Exception as exc:
+            print(f"[Éclairage] Contour illisible pour « {name} » : {exc}", flush=True)
+            continue
+        names.append(name)
+        shapes.append(geometry)
+    return names, shapes
+
+
+def attach_communes(G, communes):
+    """Pose `_commune_idx` sur chaque arête : son indice dans `G.graph['_communes']`.
+
+    `-1` quand l'arête ne tombe dans aucun contour connu (bordure d'emprise,
+    commune absente du cache) — l'indexation négative de Python fait alors
+    naturellement tomber `resolve_extinction_windows` sur la fenêtre par défaut,
+    placée en dernier.
+
+    On situe une arête par le **point médian de ses deux nœuds** : reconstruire
+    sa géométrie complète ne changerait pas la commune retenue, sauf pour les
+    rares voies à cheval sur une limite communale.
+    """
+    for _, _, data in G.edges(data=True):
+        data['_commune_idx'] = -1
+
+    names, shapes = _cached_commune_shapes(communes)
+    G.graph['_communes'] = names
+    if not names:
+        missing = len(communes or [])
+        if missing:
+            print(
+                f"[Éclairage] Aucun contour en cache pour les {missing} commune(s) du "
+                f"profil : horaires d'extinction par défaut partout.",
+                flush=True,
+            )
+        return G
+
+    tree = STRtree(shapes)
+
+    edge_refs, xs, ys = [], [], []
+    for u, v, k, data in G.edges(keys=True, data=True):
+        try:
+            x = (float(G.nodes[u]['x']) + float(G.nodes[v]['x'])) / 2.0
+            y = (float(G.nodes[u]['y']) + float(G.nodes[v]['y'])) / 2.0
+        except (KeyError, TypeError, ValueError):
+            continue
+        edge_refs.append(data)
+        xs.append(x)
+        ys.append(y)
+
+    if not edge_refs:
+        return G
+
+    # `shapely.points` construit le tableau d'un bloc : sur un graphe
+    # métropolitain (plusieurs centaines de milliers d'arêtes), instancier
+    # autant d'objets Point un à un coûterait bien plus cher en temps et en RAM.
+    midpoints = shapely_points(np.asarray(xs, dtype=float), np.asarray(ys, dtype=float))
+
+    # `predicate='intersects'` fait le test exact dans shapely (pas seulement la
+    # boîte englobante) ; une arête sur une limite peut ressortir deux fois, on
+    # garde la première commune rencontrée.
+    edge_idx, commune_idx = tree.query(midpoints, predicate='intersects')
+    matched = 0
+    for ei, ci in zip(edge_idx, commune_idx):
+        data = edge_refs[int(ei)]
+        if data['_commune_idx'] == -1:
+            data['_commune_idx'] = int(ci)
+            matched += 1
+
+    print(
+        f"[Éclairage] {matched}/{len(edge_refs)} arête(s) rattachée(s) à l'une des "
+        f"{len(names)} commune(s) du profil.",
+        flush=True,
+    )
+    return G
+
+
+def _norm_window(window):
+    """Fenêtre `(start_h, end_h)` exploitable, ou None si elle n'est pas renseignée."""
+    if not window:
+        return None
+    start, end = window[0], window[1]
+    if start is None or end is None:
+        return None
+    return (int(start), int(end))
+
+
+def resolve_extinction_windows(G, profile_window=None):
+    """Construit `G.graph['_ext_windows']` : une fenêtre d'extinction par commune.
+
+    Cascade, du plus précis au plus général : horaire de la commune → fenêtre par
+    défaut du profil → `NIGHT_EXTINCTION_WINDOW`. La valeur par défaut est placée
+    **en dernier** pour que l'indice `-1` des arêtes non rattachées tombe dessus.
+
+    Ne dépend que de la base et de `_commune_idx` déjà posé : rejouable à chaud
+    après une édition dans l'admin, sans refaire la jointure spatiale ni
+    recharger le graphe.
+    """
+    if profile_window is None:
+        profile_window = G.graph.get('_extinction_window')
+    default = _norm_window(profile_window) or NIGHT_EXTINCTION_WINDOW
+
+    communes = list(G.graph.get('_communes') or [])
+
+    by_commune = {}
+    if communes:
+        db = SessionLocal()
+        try:
+            rows = (
+                db.query(
+                    CommuneLighting.commune,
+                    CommuneLighting.night_extinction_start,
+                    CommuneLighting.night_extinction_end,
+                )
+                .filter(CommuneLighting.commune.in_(communes))
+                .all()
+            )
+            by_commune = {name: (start, end) for name, start, end in rows}
+        except Exception as exc:
+            print(f"[Éclairage] Horaires par commune illisibles : {exc}", flush=True)
+        finally:
+            db.close()
+
+    windows = [_norm_window(by_commune.get(name)) or default for name in communes]
+    windows.append(default)
+
+    G.graph['_ext_windows'] = windows
+
+    specific = sum(1 for name in communes if _norm_window(by_commune.get(name)))
+    print(
+        f"[Éclairage] Horaires d'extinction : {specific} commune(s) avec un horaire "
+        f"propre, {len(communes) - specific} sur le défaut {default}.",
         flush=True,
     )
     return G

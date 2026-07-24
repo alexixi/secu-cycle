@@ -117,6 +117,37 @@ class GraphProfileRead(BaseModel):
         from_attributes = True
 
 
+class CommuneLightingItem(BaseModel):
+    """Horaire d'extinction d'une commune. Les deux heures à None = pas d'horaire
+    connu (la commune retombe sur le défaut de l'emprise)."""
+
+    commune: str
+    night_extinction_start: Optional[int] = None
+    night_extinction_end: Optional[int] = None
+
+    @field_validator("commune")
+    @classmethod
+    def check_commune(cls, value):
+        commune = (value or "").strip()
+        if not commune:
+            raise ValueError("Le nom de la commune est obligatoire.")
+        if len(commune) > 255:
+            raise ValueError("Le nom de la commune ne doit pas dépasser 255 caractères.")
+        return commune
+
+    @field_validator("night_extinction_start", "night_extinction_end")
+    @classmethod
+    def check_extinction(cls, value):
+        return _validate_hour(value)
+
+    class Config:
+        from_attributes = True
+
+
+class CommuneLightingUpdate(BaseModel):
+    schedules: list[CommuneLightingItem] = []
+
+
 class GraphBuildRunRead(BaseModel):
     id: int
     profile_id: int

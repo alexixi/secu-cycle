@@ -10,6 +10,7 @@ from models import (  # noqa: F401
     accident_sync,
     badge,
     bike,
+    commune_lighting,
     email_verification,
     faq,
     geocode_cache,

@@ -15,9 +15,12 @@ from graph.graph_manager import load_graph_with_ign, profile_paths
 from graph.route_cache import route_cache
 from traffic import service as traffic_service
 from limiter import limiter
+from models.commune_lighting import CommuneLighting
 from models.graph_profile import GraphBuildRun, GraphProfile
 from models.user import User
 from schemas.graph_profile import (
+    CommuneLightingItem,
+    CommuneLightingUpdate,
     GraphBuildRunRead,
     GraphProfileCreate,
     GraphProfileRead,
@@ -242,6 +245,20 @@ async def update_profile(
         setattr(profile, field, value)
     db.commit()
     db.refresh(profile)
+
+    # La fenêtre par défaut de l'emprise s'applique tout de suite, comme les
+    # horaires par commune : inutile de régénérer le graphe pour un horaire.
+    touched_extinction = (
+        "night_extinction_start" in update_data or "night_extinction_end" in update_data
+    )
+    if touched_extinction and profile.name == _active_name(request):
+        G = getattr(request.app.state, "G", None)
+        if G is not None:
+            G.graph["_extinction_window"] = (
+                profile.night_extinction_start, profile.night_extinction_end
+            )
+        _reapply_extinction(request)
+
     return _to_read(db, profile, _active_name(request))
 
 
@@ -294,6 +311,80 @@ async def get_profile_extent(
         communes_service.extent, db, list(profile.communes or [])
     )
     return JSONResponse(geojson)
+
+
+@router.get("/admin/communes/lighting", response_model=list[CommuneLightingItem])
+def list_commune_lighting(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Horaires d'extinction saisis, toutes communes confondues.
+
+    Renvoie toutes les lignes plutôt que celles d'un profil : une commune est
+    partagée entre profils, et l'éditeur filtre lui-même sur celles qu'il affiche.
+    """
+    return (
+        db.query(CommuneLighting)
+        .order_by(CommuneLighting.commune)
+        .all()
+    )
+
+
+@router.put("/admin/communes/lighting", response_model=list[CommuneLightingItem])
+def update_commune_lighting(
+    payload: CommuneLightingUpdate,
+    request: Request,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Enregistre les horaires d'extinction par commune (envoi groupé).
+
+    Les deux heures à None effacent l'horaire : la commune retombe alors sur le
+    défaut de l'emprise. La résolution est rejouée immédiatement sur le graphe
+    chargé — pas besoin de le régénérer ni de redémarrer l'API.
+    """
+    for item in payload.schedules:
+        row = (
+            db.query(CommuneLighting)
+            .filter(CommuneLighting.commune == item.commune)
+            .first()
+        )
+        cleared = (
+            item.night_extinction_start is None and item.night_extinction_end is None
+        )
+        if row is None:
+            if cleared:
+                continue
+            row = CommuneLighting(commune=item.commune)
+            db.add(row)
+        row.night_extinction_start = item.night_extinction_start
+        row.night_extinction_end = item.night_extinction_end
+    db.commit()
+
+    _reapply_extinction(request)
+
+    return (
+        db.query(CommuneLighting)
+        .order_by(CommuneLighting.commune)
+        .all()
+    )
+
+
+def _reapply_extinction(request: Request) -> None:
+    """Rejoue la cascade des horaires sur le graphe en mémoire.
+
+    Ne refait ni la jointure spatiale (`_commune_idx` est déjà posé) ni le
+    précalcul des coûts : `_s_on`/`_s_off` ne dépendent pas de l'horaire, seul le
+    choix entre les deux en dépend. Le cache d'itinéraires, lui, a été calculé
+    avec les anciennes fenêtres : il faut le vider.
+    """
+    G = getattr(request.app.state, "G", None)
+    if G is None:
+        return
+    from graph.lighting import resolve_extinction_windows
+
+    resolve_extinction_windows(G)
+    route_cache.invalidate()
 
 
 @router.post("/admin/profiles/{profile_id}/build", response_model=GraphBuildRunRead, status_code=202)

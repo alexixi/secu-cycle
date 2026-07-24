@@ -394,7 +394,8 @@ def load_graph_with_ign(filepath_graph, filepath_json, communes, night_extinctio
     """Charge le graphe routier et y injecte le cache d'altitudes IGN.
 
     `night_extinction` = (start_h, end_h) du profil actif, posé sur `G.graph`
-    pour que le routage l'utilise comme fenêtre d'extinction de repli.
+    comme fenêtre d'extinction **par défaut** : chaque commune peut la remplacer
+    par la sienne (cf. `graph.lighting.resolve_extinction_windows`).
     """
     G = create_graph(filepath_graph, filepath_json, communes)
     G.graph['_extinction_window'] = night_extinction
@@ -421,10 +422,17 @@ def load_graph_with_ign(filepath_graph, filepath_json, communes, night_extinctio
     from graph.accidents import attach_accident_risk
     attach_accident_risk(G)
 
+    # Rattachement des arêtes à leur commune, puis résolution des horaires
+    # d'extinction (commune → défaut du profil → constante globale).
+    from graph.lighting import (
+        attach_communes, attach_lighting, resolve_extinction_windows,
+    )
+    attach_communes(G, communes)
+    resolve_extinction_windows(G, night_extinction)
+
     # Inférence d'éclairage à partir des lampadaires (table street_lamps), pour
     # densifier le tag OSM `lit` là où il manque. Doit précéder le précalcul des
     # coûts statiques, qui en dépend.
-    from graph.lighting import attach_lighting
     attach_lighting(G)
 
     # Précalcule une fois les composantes de coût statiques des arêtes

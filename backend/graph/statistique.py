@@ -222,7 +222,7 @@ def get_route_safety_score(G, route, bike_type=None, is_electric=False):
     now = datetime.now(pytz.timezone('Europe/Paris'))
     now_min = now.hour * 60 + now.minute
     is_dark = is_dark_now(now, lat, lon)
-    fallback_use_on = window_lights_on(now_min, G.graph.get('_extinction_window'))
+    ext_on = extinction_states(G, now_min)
     surface_factor = (ELECTRIC_SURFACE_SPEED_FACTOR if is_electric
                       else BIKE_SURFACE_SPEED_FACTOR.get((bike_type or 'standard').lower(),
                                                          DEFAULT_SURFACE_SPEED_FACTOR))
@@ -239,7 +239,7 @@ def get_route_safety_score(G, route, bike_type=None, is_electric=False):
         data = edge_data[0] if isinstance(edge_data, dict) and 0 in edge_data else edge_data
 
         length = float(data.get('length', 0.0)) or 1.0
-        score_key = '_s_on' if edge_use_on(data, is_dark, now_min, fallback_use_on) else '_s_off'
+        score_key = '_s_on' if edge_use_on(data, is_dark, now_min, ext_on) else '_s_off'
         base = float(data.get(score_key, data.get('safety_score', 0.0)))
         weighted_score += base * length
         weighted_rough += float(data.get('_roughness', DEFAULT_ROUGHNESS)) * length
@@ -416,17 +416,36 @@ def window_lights_on(now_min, window):
     return not _in_range(now_min, start_h * 60, end_h * 60)
 
 
-def edge_use_on(data, is_dark, now_min, fallback_use_on):
+def extinction_states(G, now_min):
+    """Les lampadaires sont-ils allumés à `now_min`, commune par commune ?
+
+    Renvoie la liste alignée sur `G.graph['_ext_windows']` : un booléen par
+    commune du profil, **suivi de celui de la fenêtre par défaut**. Se calcule
+    une fois par requête, puis se lit par arête via `_commune_idx` (l'indice
+    `-1` des arêtes non rattachées tombe sur le défaut).
+    """
+    windows = G.graph.get('_ext_windows')
+    if not windows:
+        # Graphe chargé sans résolution (ancien cache, échec de lecture) : on
+        # dimensionne quand même la liste sur les communes, pour qu'un
+        # `_commune_idx` déjà posé reste un indice valide.
+        default = window_lights_on(now_min, G.graph.get('_extinction_window'))
+        return [default] * (len(G.graph.get('_communes') or []) + 1)
+    return [window_lights_on(now_min, w) for w in windows]
+
+
+def edge_use_on(data, is_dark, now_min, ext_on):
     """Faut-il créditer l'éclairage de CETTE arête maintenant (score `_s_on`) ?
 
     Faux de jour (aucun crédit d'éclairage). La nuit : suit l'horaire OSM
-    `lit:conditional` de l'arête (`_lit_rules`) s'il est renseigné, sinon le
-    repli commun `fallback_use_on` (fenêtre du profil)."""
+    `lit:conditional` de l'arête (`_lit_rules`) s'il est renseigné, sinon
+    l'horaire de sa commune — `ext_on` est la liste renvoyée par
+    `extinction_states`, indexée par `_commune_idx`."""
     if not is_dark:
         return False
     rules = data.get('_lit_rules')
     if rules is None:
-        return fallback_use_on
+        return ext_on[data.get('_commune_idx', -1)]
     state = bool(data.get('_lit_base', True))
     for on, s, e in rules:
         if _in_range(now_min, s, e):
