@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import confetti from "canvas-confetti";
 import { IoArrowBack } from "react-icons/io5";
 

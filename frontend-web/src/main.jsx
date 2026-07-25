@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import { HelmetProvider } from 'react-helmet-async';
 
 const storedThemeMode = localStorage.getItem('themeMode') || 'auto';

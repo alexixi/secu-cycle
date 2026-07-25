@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import Meta from "../components/Meta";
 import Button from "../components/ui/Button";
 import { sendContactMessage } from "../services/apiBack";

@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';

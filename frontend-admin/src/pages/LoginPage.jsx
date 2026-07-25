@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Navigate, useLocation } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router";
 import { LuLogIn, LuShieldCheck } from "react-icons/lu";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";

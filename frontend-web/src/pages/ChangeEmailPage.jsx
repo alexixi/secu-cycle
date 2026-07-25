@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router";
 import { LuMail, LuCheck } from "react-icons/lu";
 
 import Meta from "../components/Meta";
