@@ -20,6 +20,7 @@ from routers import poi
 from routers import streetlight
 from routers import navigation
 from routers import traffic
+from routers import air_quality
 from routers import home_case
 from routers import faq
 from routers import task
@@ -36,6 +37,8 @@ from graph.graph_manager import load_graph_with_ign, load_graph_profile
 from graph.route_cache import route_cache
 from traffic import config as traffic_config
 from traffic import service as traffic_service
+from air_quality import config as air_quality_config
+from air_quality import service as air_quality_service
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -63,6 +66,28 @@ async def periodic_traffic_update(app: FastAPI):
         except Exception as exc:
             # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
             print(f"[Background Task] Échec de l'actualisation du trafic : {exc}", flush=True)
+            continue
+        if changed:
+            route_cache.invalidate()
+
+
+async def periodic_air_quality_update(app: FastAPI):
+    """
+    Boucle infinie qui s'exécute en arrière-plan.
+    Actualise la qualité de l'air au rythme de publication du CAMS.
+
+    Le cache d'itinéraires n'est vidé que si l'intensité de modulation a
+    réellement changé de palier : un frémissement de l'indice ne le purge pas.
+    """
+    while True:
+        await asyncio.sleep(air_quality_config.REFRESH_INTERVAL_S)
+        if getattr(app.state, 'G', None) is None:
+            continue
+        try:
+            changed = await air_quality_service.refresh(app.state.G)
+        except Exception as exc:
+            # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
+            print(f"[Background Task] Échec de l'actualisation de la qualité de l'air : {exc}", flush=True)
             continue
         if changed:
             route_cache.invalidate()
@@ -206,6 +231,13 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         print(f"Trafic indisponible au démarrage : {exc}", flush=True)
 
+    print("Chargement initial de la qualité de l'air...")
+
+    try:
+        await air_quality_service.refresh(app.state.G)
+    except Exception as exc:
+        print(f"Qualité de l'air indisponible au démarrage : {exc}", flush=True)
+
     print("Graphe chargé et prêt !")
 
     stale = await asyncio.to_thread(poi_runner.fail_stale_runs)
@@ -225,6 +257,7 @@ async def lifespan(app: FastAPI):
         print(f"{stale_lighting} synchro(s) d'éclairage interrompue(s) marquée(s) en échec.", flush=True)
 
     traffic_task = asyncio.create_task(periodic_traffic_update(app))
+    air_quality_task = asyncio.create_task(periodic_air_quality_update(app))
     poi_task = asyncio.create_task(periodic_poi_sync())
     accident_task = asyncio.create_task(periodic_accident_sync(app))
     lighting_task = asyncio.create_task(periodic_lighting_sync(app))
@@ -234,10 +267,11 @@ async def lifespan(app: FastAPI):
     print("Shutdown serveur en cours...")
 
     traffic_task.cancel()
+    air_quality_task.cancel()
     poi_task.cancel()
     accident_task.cancel()
     lighting_task.cancel()
-    for task in (traffic_task, poi_task, accident_task, lighting_task):
+    for task in (traffic_task, air_quality_task, poi_task, accident_task, lighting_task):
         try:
             await task
         except asyncio.CancelledError:
@@ -274,6 +308,7 @@ app.include_router(streetlight.router)
 app.include_router(accident.router)
 app.include_router(navigation.router)
 app.include_router(traffic.router)
+app.include_router(air_quality.router)
 app.include_router(home_case.router)
 app.include_router(faq.router)
 app.include_router(task.router)

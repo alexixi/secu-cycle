@@ -3,7 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimen
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { getReports, getPois, getAccidents, getTraffic, getLitRoads, getStreetlightSources, createReport, deleteReport, voteReport } from '../services/apiBack';
+import { getReports, getPois, getAccidents, getTraffic, getAirQuality, getLitRoads, getStreetlightSources, createReport, deleteReport, voteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
@@ -199,6 +199,21 @@ const formatAccidentDate = (properties) => {
 
 const TRAFFIC_COLORS = { green: '#22c55e', orange: '#f97316', red: '#ef4444', gray: '#9ca3af' };
 
+// Couleurs officielles de l'indice européen (EAQI, barème EEA).
+const AIR_BAND_COLORS = {
+    good: '#50f0e6', fair: '#50ccaa', moderate: '#f0e641',
+    poor: '#ff5050', very_poor: '#960032', extreme: '#7d2181',
+};
+
+const AIR_FILL_COLOR = ['match', ['get', 'band'],
+    'good', AIR_BAND_COLORS.good,
+    'fair', AIR_BAND_COLORS.fair,
+    'moderate', AIR_BAND_COLORS.moderate,
+    'poor', AIR_BAND_COLORS.poor,
+    'very_poor', AIR_BAND_COLORS.very_poor,
+    'extreme', AIR_BAND_COLORS.extreme,
+    '#9ca3af'];
+
 function MapButtonFrost() {
     const { colors, isDark } = useTheme();
     if (Platform.OS !== 'ios') return null;
@@ -229,12 +244,10 @@ export default function MapComponent({
     const { token, user } = useAuth();
 
     const MAP_STYLES = [
-        { id: "base", lightId: "base-v4", darkId: "base-v4-dark", label: "Basic", icon: "🍃" },
         { id: "streets", lightId: "streets-v4", darkId: "streets-v4-dark", label: "Rues", icon: "🛣️" },
+        { id: "base", lightId: "base-v4", darkId: "base-v4-dark", label: "Basic", icon: "🍃" },
         { id: "outdoor", lightId: "outdoor-v4", darkId: "outdoor-v4-dark", label: "Outdoor", icon: "🚴" },
-        { id: "topo", lightId: "topo-v4", darkId: "topo-v4-dark", label: "Relief", icon: "⛰️" },
         { id: "hybrid", lightId: "hybrid-v4", darkId: "hybrid-v4", label: "Satellite", icon: "🛰️" },
-        { id: "openstreetmap", lightId: "openstreetmap", darkId: "openstreetmap", label: "Détaillée", icon: "🗺️" },
     ];
 
     const REPORT_TYPES = [
@@ -244,7 +257,7 @@ export default function MapComponent({
         { id: 'obstacle', label: 'Obstacle' },
     ];
 
-    const [activeBaseStyle, setActiveBaseStyle] = useState("base");
+    const [activeBaseStyle, setActiveBaseStyle] = useState(MAP_STYLES[0].id);
     const [mapThemeMode, setMapThemeMode] = useState("auto");
     const [isLayerMenuVisible, setLayerMenuVisible] = useState(false);
     const [isReportMenuVisible, setIsReportMenuVisible] = useState(false);
@@ -264,6 +277,10 @@ export default function MapComponent({
     const accidentCacheRef = useRef(false);
     const [showTraffic, setShowTraffic] = useState(false);
     const [traffic, setTraffic] = useState(null);
+    const [showAir, setShowAir] = useState(false);
+    const [airData, setAirData] = useState(null);
+    const [isAirInfoVisible, setAirInfoVisible] = useState(false);
+    const [activeAirStation, setActiveAirStation] = useState(null);
     const [showLitRoads, setShowLitRoads] = useState(false);
     const [litRoadsData, setLitRoadsData] = useState(null);
     const litRoadsCacheRef = useRef(false);
@@ -394,10 +411,12 @@ export default function MapComponent({
             const savedSubTypes = await AsyncStorage.getItem('userMapSubTypes');
             const savedAccidents = await AsyncStorage.getItem('userMapAccidents');
             const savedLitRoads = await AsyncStorage.getItem('userMapLitRoads');
+            const savedAir = await AsyncStorage.getItem('userMapAir');
             if (savedBase) setActiveBaseStyle(savedBase);
             if (savedTheme) setMapThemeMode(savedTheme);
             setShowAccidents(savedAccidents === 'true');
             setShowLitRoads(savedLitRoads === 'true');
+            setShowAir(savedAir === 'true');
             if (savedPois) {
                 try {
                     setEnabledPoiCats(JSON.parse(savedPois));
@@ -467,6 +486,12 @@ export default function MapComponent({
         const next = !showLitRoads;
         setShowLitRoads(next);
         AsyncStorage.setItem('userMapLitRoads', String(next));
+    };
+
+    const handleAirToggle = () => {
+        const next = !showAir;
+        setShowAir(next);
+        AsyncStorage.setItem('userMapAir', String(next));
     };
 
     const openLightingInfo = () => {
@@ -564,6 +589,38 @@ export default function MapComponent({
 
         return () => { cancelled = true; if (timer) clearTimeout(timer); };
     }, [showTraffic, miniMap]);
+
+    const airGeoJSON = useMemo(
+        () => airData?.geojson?.features?.length ? airData.geojson : EMPTY_FEATURE_COLLECTION,
+        [airData]
+    );
+
+    const airStationsGeoJSON = useMemo(
+        () => airData?.stations?.features?.length ? airData.stations : EMPTY_FEATURE_COLLECTION,
+        [airData]
+    );
+
+    useEffect(() => {
+        if (miniMap) return;
+
+        let cancelled = false;
+        let timer = null;
+
+        const load = async () => {
+            try {
+                const data = await getAirQuality();
+                if (cancelled) return;
+                setAirData(data);
+                if (showAir) timer = setTimeout(load, (data?.refresh_interval_s || 900) * 1000);
+            } catch (error) {
+                if (cancelled || !showAir) return;
+                timer = setTimeout(load, 60000);
+            }
+        };
+        load();
+
+        return () => { cancelled = true; if (timer) clearTimeout(timer); };
+    }, [showAir, miniMap]);
 
     const reportsGeoJSON = useMemo(() => {
         const features = (reports || []).map((report) => ({
@@ -679,6 +736,13 @@ export default function MapComponent({
         const feature = event?.nativeEvent?.features?.[0];
         if (!feature) return;
         setActiveAccident(feature.properties);
+    };
+
+    const onAirStationPress = (event) => {
+        Haptics.selectionAsync().catch(() => { });
+        const feature = event?.nativeEvent?.features?.[0];
+        if (!feature) return;
+        setActiveAirStation(feature.properties);
     };
 
     const onReportPress = (event) => {
@@ -840,6 +904,40 @@ export default function MapComponent({
                         mode="heading"
                         androidPreferredFramesPerSecond={30}
                     />
+                )}
+
+                {!miniMap && showAir && airGeoJSON.features.length > 0 && (
+                    <GeoJSONSource id="air-quality" data={airGeoJSON}>
+                        <Layer
+                            id="air-quality-fill"
+                            type="fill"
+                            paint={{
+                                fillColor: AIR_FILL_COLOR,
+                                fillOpacity: ['interpolate', ['linear'], ['zoom'], 8, 0.32, 13, 0.22, 16, 0.14],
+                            }}
+                        />
+                        <Layer
+                            id="air-quality-outline"
+                            type="line"
+                            paint={{ lineColor: AIR_FILL_COLOR, lineWidth: 1, lineOpacity: 0.4 }}
+                        />
+                    </GeoJSONSource>
+                )}
+
+                {!miniMap && showAir && airStationsGeoJSON.features.length > 0 && (
+                    <GeoJSONSource id="air-stations" data={airStationsGeoJSON} onPress={onAirStationPress}>
+                        <Layer
+                            id="air-stations-circle"
+                            type="circle"
+                            paint={{
+                                circleColor: ['get', 'color'],
+                                circleRadius: ['interpolate', ['linear'], ['zoom'], 8, 6, 14, 9, 18, 13],
+                                circleStrokeColor: '#ffffff',
+                                circleStrokeWidth: 2,
+                                circleOpacity: 0.95,
+                            }}
+                        />
+                    </GeoJSONSource>
                 )}
 
                 {!miniMap && showTraffic && trafficGeoJSON.features.length > 0 && (
@@ -1093,7 +1191,7 @@ export default function MapComponent({
                 onRequestClose={() => closeMenu(setLayerMenuVisible)}
             >
                 <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => closeMenu(setLayerMenuVisible)}>
-                    <Animated.View style={[styles.modalContent, { transform: [{ translateY: slideAnim }], backgroundColor: colors.bgMain }]}>
+                    <Animated.View onStartShouldSetResponder={() => true} style={[styles.modalContent, { transform: [{ translateY: slideAnim }], backgroundColor: colors.bgMain }]}>
 
                         <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>Apparence</Text>
 
@@ -1129,47 +1227,73 @@ export default function MapComponent({
                             </TouchableOpacity>
                         ))}
 
+                        <View style={styles.divider} />
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>Calques</Text>
+
                         {traffic?.available && (
-                            <>
-                                <View style={styles.divider} />
-                                <View style={styles.poiOption}>
-                                    <Text style={styles.layerEmoji}>🚦</Text>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={[styles.layerText, typography.body, { color: colors.textMain }]}>
-                                            Trafic automobile
-                                        </Text>
-                                    </View>
-                                    <Switch
-                                        value={showTraffic}
-                                        onValueChange={(value) => { Haptics.selectionAsync(); setShowTraffic(value); }}
-                                        trackColor={{ true: colors.primary }}
-                                    />
+                            <View style={styles.poiOption}>
+                                <View style={[styles.poiBadge, { backgroundColor: '#f97316' }]}>
+                                    <MaterialCommunityIcons name="traffic-light" size={18} color="#FFF" />
                                 </View>
-                            </>
+                                <Text style={[styles.layerText, typography.body, { flex: 1, color: colors.textMain }]}>
+                                    Trafic automobile
+                                </Text>
+                                <Switch
+                                    value={showTraffic}
+                                    onValueChange={(value) => { Haptics.selectionAsync(); setShowTraffic(value); }}
+                                    trackColor={{ true: colors.primary }}
+                                />
+                            </View>
                         )}
 
-                        <View style={styles.divider} />
-
-                        <View style={styles.lightingHeadRow}>
-                            <Text style={[styles.layerText, typography.body, { color: colors.textMain, fontWeight: 'bold' }]}>
-                                Éclairage public
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() => { Haptics.selectionAsync(); openLightingInfo(); }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                accessibilityLabel="Informations sur l'éclairage"
-                            >
-                                <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
-                            </TouchableOpacity>
-                        </View>
+                        {airData?.available && (
+                            <View style={styles.poiOption}>
+                                <View style={[styles.poiBadge, { backgroundColor: '#0d9488' }]}>
+                                    <MaterialCommunityIcons name="weather-windy" size={18} color="#FFF" />
+                                </View>
+                                <TouchableOpacity
+                                    style={{ flex: 1 }}
+                                    activeOpacity={0.6}
+                                    onPress={() => { Haptics.selectionAsync(); setAirInfoVisible(true); }}
+                                    accessibilityLabel="Informations sur la qualité de l'air"
+                                >
+                                    <View style={styles.layerNameRow}>
+                                        <Text style={[typography.body, { fontSize: 16, color: colors.textMain }]}>
+                                            Qualité de l'air
+                                        </Text>
+                                        <Ionicons name="information-circle-outline" size={15} color={colors.textSecondary} />
+                                    </View>
+                                    {airData?.summary?.aqi != null && (
+                                        <Text style={[typography.body, { marginLeft: 15, fontSize: 12, color: colors.textSecondary }]}>
+                                            {`Indice ${airData.summary.aqi} · ${airData.summary.label}`}
+                                        </Text>
+                                    )}
+                                </TouchableOpacity>
+                                <Switch
+                                    value={showAir}
+                                    onValueChange={() => { Haptics.selectionAsync(); handleAirToggle(); }}
+                                    trackColor={{ true: colors.primary }}
+                                />
+                            </View>
+                        )}
 
                         <View style={styles.poiOption}>
-                            <Text style={styles.layerEmoji}>💡</Text>
-                            <View style={{ flex: 1 }}>
-                                <Text style={[styles.layerText, typography.body, { color: colors.textMain }]}>
-                                    Éclairage public
-                                </Text>
+                            <View style={[styles.poiBadge, { backgroundColor: '#f59e0b' }]}>
+                                <MaterialCommunityIcons name="lightbulb-on" size={18} color="#FFF" />
                             </View>
+                            <TouchableOpacity
+                                style={{ flex: 1 }}
+                                activeOpacity={0.6}
+                                onPress={() => { Haptics.selectionAsync(); openLightingInfo(); }}
+                                accessibilityLabel="Informations sur l'éclairage"
+                            >
+                                <View style={styles.layerNameRow}>
+                                    <Text style={[typography.body, { fontSize: 16, color: colors.textMain }]}>
+                                        Éclairage public
+                                    </Text>
+                                    <Ionicons name="information-circle-outline" size={15} color={colors.textSecondary} />
+                                </View>
+                            </TouchableOpacity>
                             <Switch
                                 value={showLitRoads}
                                 onValueChange={() => { Haptics.selectionAsync(); handleLitRoadsToggle(); }}
@@ -1255,6 +1379,66 @@ export default function MapComponent({
                 </TouchableOpacity>
             </Modal>
 
+            <Modal
+                visible={isAirInfoVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setAirInfoVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setAirInfoVisible(false)}
+                >
+                    <View
+                        style={[styles.lightingInfoCard, { backgroundColor: colors.bgMain }]}
+                        onStartShouldSetResponder={() => true}
+                    >
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>
+                            Qualité de l'air
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            {"L'indice affiché est l'indice européen de qualité de l'air (EAQI), calculé "}
+                            {"par le service européen Copernicus (CAMS). Chaque cellule colorée couvre "}
+                            {"environ 11 km de côté : c'est un niveau régional"}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary, fontStyle: 'italic' }]}>
+                            {"À cette résolution, deux rues voisines partagent le même indice. Pour le "}
+                            {"calcul d'itinéraire, quand l'air régional se dégrade, l'algorithme s'appuie "}
+                            {"sur un indicateur d'exposition déduit du réseau routier  pour privilégier "}
+                            {"les rues les plus à l'écart de la circulation."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
+                            Capteurs au sol (pastilles)
+                        </Text>
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            {"Les pastilles sont des stations de mesure réelles. Un modèle comme CAMS peut "}
+                            {"être en retard sur un événement soudain et local ; une "}
+                            {"station, elle, mesure l'air sans latence. Quand une station proche relève un "}
+                            {"pic, l'itinéraire en tient compte même si les cellules restent calmes."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
+                            Sources
+                        </Text>
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            {"Cellules : CAMS ENSEMBLE, redistribuées par Open-Meteo (prévision jusqu'à 24 h). "}
+                            {"Pastilles : World Air Quality Index Project (waqi.info)."}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={[styles.lightingInfoClose, { backgroundColor: colors.primary }]}
+                            onPress={() => setAirInfoVisible(false)}
+                        >
+                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Fermer</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
             {!miniMap && !hideControls && (
                 <TouchableOpacity
                     style={[styles.mapButton, styles.poiButton, androidButtonBg, { bottom: 80 + bottomInset }]}
@@ -1275,7 +1459,7 @@ export default function MapComponent({
                 onRequestClose={closePoiSheet}
             >
                 <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closePoiSheet}>
-                    <Animated.View style={[styles.modalContent, { transform: [{ translateY: slideAnim }], backgroundColor: colors.bgMain }]}>
+                    <Animated.View onStartShouldSetResponder={() => true} style={[styles.modalContent, { transform: [{ translateY: slideAnim }], backgroundColor: colors.bgMain }]}>
 
                         <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>{"Points d'intérêt"}</Text>
 
@@ -1497,7 +1681,7 @@ export default function MapComponent({
                     activeOpacity={1}
                     onPress={() => setActiveReport(null)}
                 >
-                    <View style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
+                    <View onStartShouldSetResponder={() => true} style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
 
                         <View style={styles.header}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
@@ -1584,7 +1768,7 @@ export default function MapComponent({
                     activeOpacity={1}
                     onPress={() => setActivePoi(null)}
                 >
-                    <View style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
+                    <View onStartShouldSetResponder={() => true} style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
                         {activePoi && (() => {
                             const category = POI_CATEGORIES.find(c => c.id === activePoi.category);
                             const details = POI_DETAIL_FIELDS
@@ -1645,7 +1829,7 @@ export default function MapComponent({
                     activeOpacity={1}
                     onPress={() => setActiveAccident(null)}
                 >
-                    <View style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
+                    <View onStartShouldSetResponder={() => true} style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
                         {activeAccident && (() => {
                             const date = formatAccidentDate(activeAccident);
                             const details = ACCIDENT_DETAIL_FIELDS
@@ -1689,6 +1873,55 @@ export default function MapComponent({
                                 </>
                             );
                         })()}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
+            <Modal
+                visible={!!activeAirStation}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setActiveAirStation(null)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setActiveAirStation(null)}
+                >
+                    <View onStartShouldSetResponder={() => true} style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
+                        {activeAirStation && (
+                            <>
+                                <View style={styles.header}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
+                                        <View style={[styles.poiBadge, { backgroundColor: activeAirStation.color || '#9ca3af' }]}>
+                                            <MaterialCommunityIcons name="weather-windy" size={18} color="#FFF" />
+                                        </View>
+                                        <Text style={[typography.h1, { fontSize: 18, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
+                                            {`AQI ${activeAirStation.aqi} · ${activeAirStation.label}`}
+                                        </Text>
+                                    </View>
+                                    <TouchableOpacity onPress={() => setActiveAirStation(null)}>
+                                        <Ionicons name="close" size={28} color={colors.textMain} />
+                                    </TouchableOpacity>
+                                </View>
+
+                                {activeAirStation.name ? (
+                                    <Text style={[typography.body, { color: colors.textMain, marginBottom: 8 }]}>
+                                        {activeAirStation.name}
+                                    </Text>
+                                ) : null}
+
+                                <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
+                                    Capteur au sol · échelle AQI US
+                                </Text>
+
+                                {activeAirStation.time ? (
+                                    <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary }]}>
+                                        {`Relevé : ${activeAirStation.time}`}
+                                    </Text>
+                                ) : null}
+                            </>
+                        )}
                     </View>
                 </TouchableOpacity>
             </Modal>
@@ -1746,14 +1979,6 @@ const styles = StyleSheet.create({
         padding: 20,
         width: '80%',
         alignItems: 'flex-start',
-    },
-    lightingHeadRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '100%',
-        paddingHorizontal: 4,
-        marginBottom: 4,
     },
     lightingInfoCard: {
         borderRadius: 20,
@@ -1832,6 +2057,12 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         width: '100%',
         gap: 4,
+    },
+    layerNameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginLeft: 15,
+        gap: 6,
     },
     poiSubOption: {
         flexDirection: 'row',

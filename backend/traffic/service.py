@@ -145,18 +145,6 @@ def _congested_nodes(G, segments):
     return node_weight
 
 
-def _is_separated(data):
-    """L'arête est-elle une voie séparée de la chaussée (piste, chemin) ?
-
-    Le cycliste n'y partage pas la circulation automobile : la congestion des
-    voitures ne doit donc pas la pénaliser, même si elle longe un axe saturé.
-    """
-    highway = routing._first(data.get("highway"), "")
-    if highway in config.SEPARATED_HIGHWAYS:
-        return True
-    return routing._first(data.get("cycleway"), "none") in config.SEPARATED_CYCLEWAY_TAGS
-
-
 def _apply_to_graph(G, segments):
     """Pose `traffic_factor` (et `traffic_jam`) sur les arêtes.
 
@@ -170,7 +158,7 @@ def _apply_to_graph(G, segments):
     marked = set()
     for u, v, k, data in G.edges(keys=True, data=True):
         wu, wv = congested.get(u, 0.0), congested.get(v, 0.0)
-        factor = min(wu, wv) if (wu and wv and not _is_separated(data)) else 0.0
+        factor = min(wu, wv) if (wu and wv and not routing.is_separated_from_traffic(data)) else 0.0
         data["traffic_factor"] = factor
         data["traffic_jam"] = factor > 0.0
         if factor:

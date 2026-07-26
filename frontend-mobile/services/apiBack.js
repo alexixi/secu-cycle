@@ -470,6 +470,15 @@ export async function getTraffic() {
     }
 }
 
+export async function getAirQuality() {
+    try {
+        const data = await apiFetch("/air-quality/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function getStreetlights() {
     try {
         const data = await apiFetch("/streetlights/", { method: "GET" });

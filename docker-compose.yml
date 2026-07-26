@@ -34,6 +34,7 @@ services:
       - MAPTILER_KEY=${MAPTILER_KEY:-}
       - MAPTILER_GEOCODING_BUDGET=${MAPTILER_GEOCODING_BUDGET:-40000}
       - GEOCODE_CACHE_TTL_DAYS=${GEOCODE_CACHE_TTL_DAYS:-365}
+      - WAQI_TOKEN=${WAQI_TOKEN:-}
       - PYTHONUNBUFFERED=1
     volumes:
       - graphs_data:/app/graphs

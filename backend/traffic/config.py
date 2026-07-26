@@ -79,7 +79,3 @@ CONGESTION_WEIGHT = {
 CONGESTED_LEVELS = frozenset(level for level, w in CONGESTION_WEIGHT.items() if w > 0)
 
 DEFAULT_LEVEL = "gray"
-
-# Types de voie où le cycliste est physiquement séparé de la circulation
-SEPARATED_HIGHWAYS = frozenset({"cycleway", "footway", "path", "pedestrian", "steps", "bridleway"})
-SEPARATED_CYCLEWAY_TAGS = frozenset({"track", "separate"})
