@@ -5,14 +5,15 @@ import Button from '../../components/ui/Button';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 import MapContextMenu, { formatCoords } from './MapContextMenu';
 import LightingInfoModal from './LightingInfoModal';
+import AirQualityInfoModal from './AirQualityInfoModal';
 import { useTheme } from '../../context/ThemeContext';
-import { getPois, getAccidents, getStreetlights, getLitRoads, getStreetlightSources } from '../../services/apiBack';
+import { getPois, getAccidents, getStreetlights, getLitRoads, getStreetlightSources, getAirQuality } from '../../services/apiBack';
 import { getAddressFromCoordinates, getApproxLocationFromIp } from '../../services/geocodingService';
 import { trackEvent } from '../../services/analytics';
 
 import { IoMdPin } from "react-icons/io";
 import { FaLayerGroup } from "react-icons/fa";
-import { MdOutlineReportProblem, MdOutlineTraffic, MdMyLocation, MdOutlinePlace, MdOutlineLightbulb, MdInfoOutline } from "react-icons/md";
+import { MdOutlineReportProblem, MdOutlineTraffic, MdMyLocation, MdOutlinePlace, MdOutlineLightbulb, MdInfoOutline, MdOutlineAir } from "react-icons/md";
 import reportAccidentIcon from '../../assets/reports/accident.png';
 import reportTravauxIcon from '../../assets/reports/travaux.png';
 import reportDangerIcon from '../../assets/reports/danger.png';
@@ -231,6 +232,32 @@ const TRAFFIC_CYCLIST_HINT = {
     red: '🚲 Axe évité par nos itinéraires sécurisés dès que possible.',
 };
 
+const AIR_LAYER_ID = 'air-quality-fill';
+const AIR_OUTLINE_LAYER_ID = 'air-quality-outline';
+
+// Couleurs officielles de l'indice européen (EAQI, barème EEA).
+const AIR_BAND_COLORS = {
+    good: '#50f0e6',
+    fair: '#50ccaa',
+    moderate: '#f0e641',
+    poor: '#ff5050',
+    very_poor: '#960032',
+    extreme: '#7d2181',
+};
+
+const AIR_FILL_COLOR = ['match', ['get', 'band'],
+    'good', AIR_BAND_COLORS.good,
+    'fair', AIR_BAND_COLORS.fair,
+    'moderate', AIR_BAND_COLORS.moderate,
+    'poor', AIR_BAND_COLORS.poor,
+    'very_poor', AIR_BAND_COLORS.very_poor,
+    'extreme', AIR_BAND_COLORS.extreme,
+    '#9ca3af'];
+
+// Capteurs sol WAQI : pastilles en échelle AQI US (couleur fournie par le backend
+// via la propriété `color`).
+const AIR_STATION_CIRCLE_LAYER_ID = 'air-stations-circle';
+
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
 const POI_DETAIL_FIELDS = [
@@ -285,6 +312,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         }
     };
     const [activeTraffic, setActiveTraffic] = useState(null);
+    const [activeAirStation, setActiveAirStation] = useState(null);
     const [isMapSelectOpen, setIsMapSelectOpen] = useState(false);
     const [selectedMapStyle, setSelectedMapStyle] = useState("base");
     const [mapThemeMode, setMapThemeMode] = useState("auto");
@@ -312,6 +340,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [showLitRoads, setShowLitRoads] = useState(false);
     const [litRoadsData, setLitRoadsData] = useState(null);
     const litRoadsCacheRef = useRef(false);
+    const [showAir, setShowAir] = useState(false);
+    const [airData, setAirData] = useState(null);
+    const [airError, setAirError] = useState(null);
+    const [isAirInfoOpen, setIsAirInfoOpen] = useState(false);
     const [contextMenu, setContextMenu] = useState(null);
     const [contextAddress, setContextAddress] = useState(null);
     const [isContextAddressLoading, setIsContextAddressLoading] = useState(false);
@@ -336,6 +368,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         setShowAccidents(localStorage.getItem('userMapAccidents') === 'true');
         setShowLighting(localStorage.getItem('userMapLighting') === 'true');
         setShowLitRoads(localStorage.getItem('userMapLitRoads') === 'true');
+        setShowAir(localStorage.getItem('userMapAir') === 'true');
 
         const savedSubTypes = localStorage.getItem('userMapSubTypes');
         if (savedSubTypes) {
@@ -421,6 +454,41 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         localStorage.setItem('userMapLitRoads', String(next));
     };
 
+    // Qualité de l'air : donnée vivante, rechargée au rythme publié par la source
+    // (comme le trafic). Réessai à 60 s en cas d'échec. La couche reste affichée
+    // sur le dernier instantané entre deux tours.
+    useEffect(() => {
+        if (littleMap || !showAir) return;
+
+        let cancelled = false;
+        let timer = null;
+
+        const load = async () => {
+            try {
+                const data = await getAirQuality();
+                if (cancelled) return;
+                setAirData(data);
+                setAirError(null);
+                timer = setTimeout(load, (data?.refresh_interval_s || 900) * 1000);
+            } catch (error) {
+                if (cancelled) return;
+                setAirError("Qualité de l'air momentanément indisponible.");
+                timer = setTimeout(load, 60000);
+            }
+        };
+        load();
+
+        return () => { cancelled = true; if (timer) clearTimeout(timer); };
+    }, [showAir, littleMap]);
+
+    const handleAirToggle = () => {
+        const next = !showAir;
+        setShowAir(next);
+        localStorage.setItem('userMapAir', String(next));
+    };
+
+    const handleAirInfoToggle = () => setIsAirInfoOpen((open) => !open);
+
     const lightingShown = showLighting || showLitRoads;
 
     const handleLightingButton = () => {
@@ -492,6 +560,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const showLightingLayer = !littleMap && showLighting && !!lightingData;
     const showLitRoadsLayer = !littleMap && showLitRoads && !!litRoadsData;
     const trafficShown = !littleMap && !!onToggleTraffic && traffic?.available !== false;
+    const showAirLayer = !littleMap && showAir && (airData?.geojson?.features?.length > 0);
+    const showAirStations = !littleMap && showAir && (airData?.stations?.features?.length > 0);
 
     const showPois = !littleMap && arePoiImagesReady && poisGeoJSON.features.length > 0;
     const showReports = !littleMap && arePoiImagesReady && reportsGeoJSON.features.length > 0;
@@ -612,6 +682,36 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     }, [traffic]);
 
+    const airGeoJSON = useMemo(
+        () => airData?.geojson || { type: 'FeatureCollection', features: [] },
+        [airData]
+    );
+
+    const airStationsGeoJSON = useMemo(
+        () => airData?.stations || { type: 'FeatureCollection', features: [] },
+        [airData]
+    );
+
+    const airUpdatedAt = useMemo(() => {
+        if (!airData?.updated_at) return null;
+        const date = new Date(airData.updated_at);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }, [airData]);
+
+    // Première heure de la prévision où l'indice bascule dans une bande plus
+    // dégradée que l'actuelle : « dégradation prévue vers 19 h ».
+    const airForecastWarning = useMemo(() => {
+        const current = airData?.summary?.aqi;
+        const forecast = airData?.forecast;
+        if (current == null || !Array.isArray(forecast)) return null;
+        const worse = forecast.find((f) => f.aqi >= current + 20);
+        if (!worse) return null;
+        const date = new Date(worse.time);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }, [airData]);
+
     const handleLocate = () => {
         if (!navigator.geolocation) {
             alert("La géolocalisation n'est pas disponible sur ce navigateur.");
@@ -639,6 +739,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         setActivePoi(null);
         setActiveReport(null);
         setActiveTraffic(null);
+        setActiveAirStation(null);
         setHoverInfo(null);
         setContextMenu({
             x: event.point.x,
@@ -717,11 +818,23 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             setActivePoi(null);
             setActiveReport(null);
             setActiveAccident(null);
+            setActiveAirStation(null);
             setActiveTraffic({
                 ...trafficFeature.properties,
                 lat: event.lngLat.lat,
                 lon: event.lngLat.lng,
             });
+            return;
+        }
+
+        const stationFeature = features.find(f => f.layer?.id === AIR_STATION_CIRCLE_LAYER_ID);
+        if (stationFeature) {
+            const [lon, lat] = stationFeature.geometry.coordinates;
+            setActivePoi(null);
+            setActiveReport(null);
+            setActiveAccident(null);
+            setActiveTraffic(null);
+            setActiveAirStation({ ...stationFeature.properties, lat, lon });
             return;
         }
 
@@ -731,6 +844,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             setActiveReport(null);
             setActiveTraffic(null);
             setActiveAccident(null);
+            setActiveAirStation(null);
             setActivePoi({ ...poiFeature.properties, lat, lon });
             return;
         }
@@ -741,6 +855,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             setActivePoi(null);
             setActiveReport(null);
             setActiveTraffic(null);
+            setActiveAirStation(null);
             setActiveAccident({ ...accidentFeature.properties, lat, lon });
             return;
         }
@@ -755,6 +870,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         setActiveReport(null);
         setActiveTraffic(null);
         setActiveAccident(null);
+        setActiveAirStation(null);
         if (onMapClick) {
             onMapClick({ lat: event.lngLat.lat, lon: event.lngLat.lng });
         }
@@ -866,6 +982,59 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             )}
 
             {!littleMap && (
+                <div className="map-air-control">
+                    {showAir && (
+                        <div className="air-legend">
+                            <div className="air-legend-head">
+                                <span className="air-legend-title">Qualité de l'air</span>
+                                <button
+                                    type="button"
+                                    className="air-info-btn"
+                                    onClick={handleAirInfoToggle}
+                                    title="Comment ça marche et d'où viennent les données"
+                                    aria-label="Informations sur la qualité de l'air"
+                                >
+                                    <MdInfoOutline />
+                                </button>
+                            </div>
+                            {airError ? (
+                                <span className="air-legend-time">{airError}</span>
+                            ) : airData?.summary?.aqi != null ? (
+                                <>
+                                    <span className="air-legend-index">
+                                        <span
+                                            className="air-legend-dot"
+                                            style={{ backgroundColor: AIR_BAND_COLORS[airData.summary.band] || '#9ca3af' }}
+                                        />
+                                        Indice {airData.summary.aqi} · {airData.summary.label}
+                                    </span>
+                                    {airData.summary.dominant && (
+                                        <span className="air-legend-sub">Polluant dominant : {airData.summary.dominant}</span>
+                                    )}
+                                    {airForecastWarning && (
+                                        <span className="air-legend-sub">Dégradation prévue vers {airForecastWarning}</span>
+                                    )}
+                                    {airData.stale
+                                        ? <span className="air-legend-time">Dernier relevé disponible{airUpdatedAt ? ` (${airUpdatedAt})` : ''}</span>
+                                        : airUpdatedAt && <span className="air-legend-time">Relevé de {airUpdatedAt} · maille ~11 km</span>}
+                                </>
+                            ) : (
+                                <span className="air-legend-time">Chargement…</span>
+                            )}
+                        </div>
+                    )}
+                    <Button
+                        onClick={handleAirToggle}
+                        className="air-button"
+                        title="Qualité de l'air"
+                    >
+                        <MdOutlineAir size={18} />
+                        <span className="map-btn-label">{showAir ? "Masquer l'air" : "Qualité de l'air"}</span>
+                    </Button>
+                </div>
+            )}
+
+            {!littleMap && (
                 <div className="map-lighting-control">
                     {isLightingMenuOpen && (
                         <div className="map-style-menu map-lighting-menu">
@@ -935,6 +1104,11 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 isOpen={isLightingInfoOpen}
                 onClose={() => setIsLightingInfoOpen(false)}
                 sources={lightingSources}
+            />
+
+            <AirQualityInfoModal
+                isOpen={isAirInfoOpen}
+                onClose={() => setIsAirInfoOpen(false)}
             />
 
             {!littleMap && (
@@ -1075,6 +1249,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     ...(showPois ? [POI_LAYER_ID] : []),
                     ...(showAccidentLayers ? [ACCIDENT_POINT_LAYER_ID] : []),
                     ...(showTraffic ? [TRAFFIC_HITBOX_LAYER_ID] : []),
+                    ...(showAirStations ? [AIR_STATION_CIRCLE_LAYER_ID] : []),
                 ]}
                 onClick={onClick}
                 onMouseMove={onHover}
@@ -1093,6 +1268,44 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 style={{ width: '100%', height: '100%' }}
             >
                 <NavigationControl position="top-right" />
+
+                {showAirLayer && (
+                    <Source id="air-quality" type="geojson" data={airGeoJSON}>
+                        <Layer
+                            id={AIR_LAYER_ID}
+                            type="fill"
+                            paint={{
+                                'fill-color': AIR_FILL_COLOR,
+                                'fill-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.32, 13, 0.22, 16, 0.14],
+                            }}
+                        />
+                        <Layer
+                            id={AIR_OUTLINE_LAYER_ID}
+                            type="line"
+                            paint={{
+                                'line-color': AIR_FILL_COLOR,
+                                'line-width': 1,
+                                'line-opacity': 0.4,
+                            }}
+                        />
+                    </Source>
+                )}
+
+                {showAirStations && (
+                    <Source id="air-stations" type="geojson" data={airStationsGeoJSON}>
+                        <Layer
+                            id={AIR_STATION_CIRCLE_LAYER_ID}
+                            type="circle"
+                            paint={{
+                                'circle-color': ['get', 'color'],
+                                'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 6, 14, 9, 18, 13],
+                                'circle-stroke-color': '#ffffff',
+                                'circle-stroke-width': 2,
+                                'circle-opacity': 0.95,
+                            }}
+                        />
+                    </Source>
+                )}
 
                 {userPosition && (
                     <Marker longitude={userPosition.lon} latitude={userPosition.lat} anchor="center">
@@ -1367,6 +1580,32 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                     <p className="map-popup-line">{TRAFFIC_CYCLIST_HINT[activeTraffic.level]}</p>
                                 )}
                                 {trafficUpdatedAt && <p className="map-popup-line map-popup-muted">Relevé {trafficUpdatedAt}</p>}
+                            </div>
+                        </div>
+                    </Popup>
+                )}
+
+                {activeAirStation && (
+                    <Popup
+                        longitude={activeAirStation.lon}
+                        latitude={activeAirStation.lat}
+                        onClose={() => setActiveAirStation(null)}
+                        closeOnClick={false}
+                        anchor="bottom"
+                        offset={[0, -10]}
+                    >
+                        <div className="map-popup">
+                            <div
+                                className="map-popup-header"
+                                style={{ backgroundColor: activeAirStation.color || '#9ca3af' }}
+                            >
+                                <span className="map-popup-icon">🌬️</span>
+                                <span className="map-popup-title">AQI {activeAirStation.aqi} · {activeAirStation.label}</span>
+                            </div>
+                            <div className="map-popup-body">
+                                {activeAirStation.name && <p className="map-popup-line">📍 <strong>{activeAirStation.name}</strong></p>}
+                                <p className="map-popup-line map-popup-muted">Capteur au sol · échelle AQI US</p>
+                                {activeAirStation.time && <p className="map-popup-line map-popup-muted">Relevé {activeAirStation.time}</p>}
                             </div>
                         </div>
                     </Popup>
