@@ -120,6 +120,10 @@
     color: #dc2626;
 }
 
+.infra-badge.badge-teal {
+    color: #0d9488;
+}
+
 .path-title-row {
     display: flex;
     align-items: center;

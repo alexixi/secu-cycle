@@ -229,6 +229,17 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                                         </Text>
                                     </View>
                                 )}
+                                {itineraire.infra_stats.air_aware && (
+                                    <View style={[styles.infraCard, { backgroundColor: '#0D948815', borderColor: '#0D948830' }]}>
+                                        <MaterialCommunityIcons name="weather-windy" size={20} color="#0D9488" />
+                                        <Text style={[styles.infraValue, { color: '#0D9488' }]}>
+                                            {itineraire.infra_stats.pct_low_air_exposure}%
+                                        </Text>
+                                        <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
+                                            À l'écart du trafic
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
                         </View>
                     )}

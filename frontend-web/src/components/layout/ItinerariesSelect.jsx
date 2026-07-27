@@ -3,7 +3,7 @@ import './ItinerariesSelect.css';
 import { useState } from "react";
 import { FaArrowTrendUp, FaArrowTrendDown, FaBicycle } from "react-icons/fa6";
 import { PiPathBold } from "react-icons/pi";
-import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdOutlineReportProblem, MdOutlineDarkMode } from "react-icons/md";
+import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdOutlineReportProblem, MdOutlineDarkMode, MdOutlineAir } from "react-icons/md";
 
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
@@ -95,6 +95,14 @@ function InfraStats({ stats, lightingAware }) {
             {stats.accidents_count > 0 && (
                 <span className="infra-badge badge-red">
                     <MdOutlineReportProblem /> {stats.accidents_count} accident{stats.accidents_count > 1 ? 's' : ''} recensé{stats.accidents_count > 1 ? 's' : ''}
+                </span>
+            )}
+            {stats.air_aware && (
+                <span
+                    className="infra-badge badge-teal"
+                    title="L'air régional est dégradé : cet itinéraire privilégie les rues les plus à l'écart de la circulation, où l'exposition à la pollution est la plus faible."
+                >
+                    <MdOutlineAir /> {stats.pct_low_air_exposure}% à l'écart du trafic
                 </span>
             )}
         </div>

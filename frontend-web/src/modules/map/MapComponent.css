@@ -593,3 +593,84 @@
 .lighting-info-btn:hover {
     color: var(--text-main);
 }
+
+.map-air-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.air-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.air-legend {
+    background-color: var(--bg-surface);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.8em;
+    color: var(--text-main);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    max-width: 240px;
+}
+
+.air-legend-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.air-legend-title {
+    font-weight: 600;
+}
+
+.air-info-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: var(--text-secondary, #6b7280);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.air-info-btn:hover {
+    color: var(--text-main);
+}
+
+.air-legend-index {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 500;
+}
+
+.air-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.air-legend-sub {
+    color: var(--text-secondary, #6b7280);
+}
+
+.air-legend-time {
+    margin-top: 2px;
+    padding-top: 5px;
+    border-top: 1px solid var(--border-light);
+    font-size: 0.92em;
+    color: var(--map-popup-muted);
+}

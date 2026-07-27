@@ -11,6 +11,7 @@ from graph.config import (
     ELECTRIC_SURFACE_SPEED_FACTOR,
     PEDESTRIAN_SHARED_HIGHWAYS, FOOTWAY_SPEED_FACTOR,
     NIGHT_EXTINCTION_WINDOW,
+    DEFAULT_AIR_EXPOSURE, AIR_INTENSITY_LOW_EXPOSURE,
 )
 
 # Repli lorsqu'aucun centre de graphe n'est connu (place de la Bourse, Bordeaux).
@@ -460,6 +461,13 @@ def calculate_infra_stats(G, route):
     lit_length = 0.0
     smooth_length = 0.0
     contraflow_length = 0.0
+    low_air_exposure_length = 0.0
+
+    # L'air a-t-il réellement pesé sur ce calcul ? Vrai seulement quand l'indice
+    # régional est dégradé (intensité > 0). Sinon le terme d'exposition est inactif
+    # et on ne met pas en avant un critère qui n'a rien orienté (comme l'éclairage
+    # de jour). Lue sur le graphe, tenue à jour par la tâche de fond air_quality.
+    air_aware = float(G.graph.get('_air_intensity', 0.0)) > 0.0
 
     CYCLABLE_CYCLEWAYS = {'track', 'separate', 'lane', 'shared_busway',
                           'opposite_lane', 'opposite_track', 'opposite'}
@@ -514,11 +522,17 @@ def calculate_infra_stats(G, route):
         if lit == 'yes' or (lit != 'no' and data.get('_lit_inferred')):
             lit_length += length
 
+        # Part du trajet à l'écart du trafic (faible exposition à la pollution de
+        # proximité). Rend visible et mesurable l'effet du critère d'exposition.
+        if float(data.get('_air_exposure', DEFAULT_AIR_EXPOSURE)) <= AIR_INTENSITY_LOW_EXPOSURE:
+            low_air_exposure_length += length
+
     from graph.accidents import route_accident_stats
 
     if total_length == 0:
         return {"pct_cyclable": 0.0, "pct_low_speed": 0.0, "pct_lit": 0.0,
                 "pct_smooth": 0.0, "pct_contraflow": 0.0,
+                "pct_low_air_exposure": 0.0, "air_aware": air_aware,
                 "accidents_count": 0, "pct_accident_free": 100.0}
 
     return {
@@ -527,5 +541,7 @@ def calculate_infra_stats(G, route):
         "pct_lit": round(lit_length / total_length * 100, 1),
         "pct_smooth": round(smooth_length / total_length * 100, 1),
         "pct_contraflow": round(contraflow_length / total_length * 100, 1),
+        "pct_low_air_exposure": round(low_air_exposure_length / total_length * 100, 1),
+        "air_aware": air_aware,
         **route_accident_stats(G, route),
     }

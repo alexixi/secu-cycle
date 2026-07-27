@@ -1,5 +1,5 @@
 import "./Button.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 export default function LinkButton({ to, className, children }) {
     const navigate = useNavigate();

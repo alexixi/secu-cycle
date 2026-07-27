@@ -140,6 +140,35 @@ DEFAULT_SAFETY_PENALTY = 30.0
 TRAFFIC_BASE_PENALTY = 50.0
 TRAFFIC_SAFETY_FACTOR = 120.0
 
+# Types de voie où le cycliste est physiquement séparé de la circulation
+# automobile (piste, chemin, trottoir…). Notions de réseau, partagées par le
+# trafic et la qualité de l'air : une voie séparée n'hérite ni de la congestion
+# des voitures ni de leur pollution de proximité.
+SEPARATED_HIGHWAYS = frozenset({"cycleway", "footway", "path", "pedestrian", "steps", "bridleway"})
+SEPARATED_CYCLEWAY_TAGS = frozenset({"track", "separate"})
+
+# Exposition du cycliste à la pollution de proximité selon la classe de voie :
+# proxy spatial du gradient intra-urbain que le CAMS (maille ~11 km) ne capte
+# pas. 0 = à l'écart du trafic, 1 = au cœur d'un grand axe. Nul sur une voie
+# séparée de la chaussée (posé à 0 dans precompute_static_costs).
+AIR_EXPOSURE_BY_HIGHWAY = {
+    'trunk': 1.0, 'trunk_link': 1.0, 'primary': 0.9, 'primary_link': 0.9,
+    'secondary': 0.7, 'secondary_link': 0.7, 'busway': 0.7,
+    'tertiary': 0.5, 'tertiary_link': 0.5, 'unclassified': 0.35,
+    'residential': 0.25, 'service': 0.2, 'living_street': 0.1,
+}
+DEFAULT_AIR_EXPOSURE = 0.35
+AIR_CONGESTION_BOOST = 0.5   # trafic à l'arrêt/redémarrage = émissions accrues
+# Malus d'exposition, proportionnel à la longueur (dose = concentration × temps).
+# Volontairement modéré : l'air corrige la note d'infrastructure, il ne la
+# remplace pas (cf. ACCIDENT_MAX_MALUS). Calibrage visant ~10 % d'influence face
+# au terme de risque (qui monte à DEFAULT_SAFETY_PENALTY = 30).
+AIR_BASE_PENALTY = 0.2       # à calibrer
+AIR_SAFETY_FACTOR = 3.0      # à calibrer
+# En deçà de ce seuil EAQI aucun malus (air « Moyen ») ; au-delà de FULL, malus
+# plein (« Très mauvais »). Barème EEA, valable France et Belgique.
+AIR_INTENSITY_LOW_EXPOSURE = 0.25  # seuil « à l'écart du trafic » pour pct_low_air_exposure
+
 SURFACE_ROUGHNESS = {
     'asphalt': 0.0, 'concrete': 0.05, 'concrete:plates': 0.1, 'paved': 0.05,
     'metal': 0.1, 'wood': 0.2,

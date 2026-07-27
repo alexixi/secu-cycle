@@ -36,6 +36,19 @@ def _first(value, default=None):
         return value[0] if value else default
     return value if value is not None else default
 
+
+def is_separated_from_traffic(data):
+    """L'arête est-elle une voie physiquement séparée de la chaussée ?
+
+    Le cycliste n'y partage pas la circulation automobile : ni la congestion des
+    voitures (trafic) ni leur pollution de proximité (qualité de l'air) ne doivent
+    la pénaliser, même si elle longe un axe saturé.
+    """
+    highway = _first(data.get("highway"), "")
+    if highway in SEPARATED_HIGHWAYS:
+        return True
+    return _first(data.get("cycleway"), "none") in SEPARATED_CYCLEWAY_TAGS
+
 def _edge_roughness(data):
     """Rugosité [0, 1] d'un segment, dérivée de surface / smoothness / tracktype.
 
@@ -155,6 +168,13 @@ def precompute_static_costs(G):
         is_shared_footway = (h_type in PEDESTRIAN_SHARED_HIGHWAYS
                              and _first(data.get('bicycle')) != 'designated')
         data['_footway'] = 1.0 if is_shared_footway else 0.0
+
+        # Exposition statique à la pollution de proximité (proxy spatial). Nulle
+        # sur une voie séparée de la chaussée ; sinon fonction de la classe de
+        # voie. La modulation temporelle (intensité EAQI) et la congestion vivante
+        # sont appliquées au routage, pas ici.
+        data['_air_exposure'] = (0.0 if is_separated_from_traffic(data)
+                                 else AIR_EXPOSURE_BY_HIGHWAY.get(h_type, DEFAULT_AIR_EXPOSURE))
         min_on, max_on = min(min_on, score_on), max(max_on, score_on)
         min_off, max_off = min(min_off, score_off), max(max_off, score_off)
 
@@ -223,7 +243,7 @@ def _nearest_nodes(G, lons, lats):
     return [int(n) for n in G.graph['_node_ids'][pos[:, 0]]]
 
 
-def _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx):
+def _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx, air_intensity=0.0):
     """Renvoie une fonction de poids pour l'algorithme A*.
 
     alpha        : curseur rapidité (1) ↔ sécurité (0)
@@ -234,6 +254,8 @@ def _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light
                    compter l'éclairage (`_risk_on`) ou non (`_risk_off`).
                    `ext_on` = état des lampadaires par commune (cf.
                    `statistique.extinction_states`).
+    air_intensity: modulation temporelle du malus d'exposition à la pollution
+                   ∈ [0, 1] (0 = air bon, terme inactif).
     """
     one_minus = 1.0 - alpha
     is_dark, now_min, ext_on = light_ctx
@@ -246,6 +268,13 @@ def _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light
         traffic = d.get('traffic_factor', 0.0)
         if traffic:
             base += traffic * (TRAFFIC_BASE_PENALTY + TRAFFIC_SAFETY_FACTOR * one_minus)
+        # Exposition à la pollution : proportionnelle à la longueur (dose), nulle
+        # quand l'air est bon. La congestion vivante majore l'exposition (trafic à
+        # l'arrêt = émissions accrues) sans passe supplémentaire sur le graphe.
+        air = d.get('_air_exposure', 0.0)
+        if air and air_intensity:
+            air = min(1.0, air * (1.0 + AIR_CONGESTION_BOOST * traffic))
+            base += d['_length_f'] * air * air_intensity * (AIR_BASE_PENALTY + AIR_SAFETY_FACTOR * one_minus)
         return base
 
     def weight(u, v, d):
@@ -277,8 +306,8 @@ def _tag_lighting_aware(res, lighting_aware):
         route["lighting_aware"] = bool(lighting_aware)
 
 
-def _astar_nodes(G, start_node, end_node, alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx):
-    w = _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx)
+def _astar_nodes(G, start_node, end_node, alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx, air_intensity=0.0):
+    w = _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx, air_intensity)
 
     def dist_heuristic(u, v):
         return ox.distance.great_circle(G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x'])
@@ -476,11 +505,17 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
         light_ctx = (is_dark, now_min, ext_on)
         lighting_aware = is_dark and any(ext_on)
 
+        # Intensité de modulation de la pollution, tenue à jour par la tâche de
+        # fond (cf. air_quality.service.refresh). Arrondie pour stabiliser le
+        # cache : un frémissement de l'EAQI ne recalcule pas tous les trajets.
+        air_intensity = round(float(G.graph.get('_air_intensity', 0.0)), 1)
+
         cache_key = (
             round(start_coords[0], 5), round(start_coords[1], 5),
             round(end_coords[0], 5), round(end_coords[1], 5),
             bike_type, bool(is_electric), cyclist_level,
             max_time_min, int(iterations), is_dark, now.hour,
+            air_intensity,
         )
         cached = route_cache.get(cache_key)
         if cached is not None:
@@ -532,7 +567,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
 
         # Choix du bon point d'accès (bon côté de la rue) : on minimise le coût
         # total « tronçon d'accroche + trajet » sur le profil rapide.
-        w_fast = _make_weight(1.0, beta_elev, surface_sens, footway_avoid, reported_edges, light_ctx)
+        w_fast = _make_weight(1.0, beta_elev, surface_sens, footway_avoid, reported_edges, light_ctx, air_intensity)
         best_combo = None
         for sc in start_cands:
             for ec in end_cands:
@@ -553,7 +588,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
         start_node, end_node = start_c['node'], end_c['node']
 
         fast_nodes = best_combo['fast_nodes']
-        safe_nodes = _astar_nodes(G, start_node, end_node, 0.0, beta_elev, surface_sens, footway_avoid, reported_edges, light_ctx)
+        safe_nodes = _astar_nodes(G, start_node, end_node, 0.0, beta_elev, surface_sens, footway_avoid, reported_edges, light_ctx, air_intensity)
         fast_data = _route_with_stubs(G, fast_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
         safe_data = _route_with_stubs(G, safe_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
 
@@ -565,7 +600,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
             best_nodes = fast_nodes
             for _ in range(iterations):
                 a_mid = (a_low + a_high) / 2
-                mid_nodes = _astar_nodes(G, start_node, end_node, a_mid, beta_elev, surface_sens, footway_avoid, reported_edges, light_ctx)
+                mid_nodes = _astar_nodes(G, start_node, end_node, a_mid, beta_elev, surface_sens, footway_avoid, reported_edges, light_ctx, air_intensity)
                 mid_dur = calculate_exact_travel_time(G, mid_nodes, bike_type, is_electric, cyclist_level)
                 if mid_dur <= float(max_time_min):
                     best_nodes, a_high = mid_nodes, a_mid
