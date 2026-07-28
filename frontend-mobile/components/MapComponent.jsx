@@ -1,9 +1,9 @@
 import { useRef, useState, useEffect, useMemo, use } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { getReports, getPois, getAccidents, getTraffic, getAirQuality, getLitRoads, getStreetlightSources, createReport, deleteReport, voteReport } from '../services/apiBack';
+import { getReports, getPois, getAccidents, getTraffic, getAirQuality, getBikeshareStations, getLitRoads, getStreetlightSources, createReport, deleteReport, voteReport } from '../services/apiBack';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
@@ -124,6 +124,32 @@ const REPORT_IMAGES = {
     'report-obstacle': require('../assets/reports/obstacle.png'),
 };
 
+// Générées par `Documentation/gen-bikeshare-icons.js`, mêmes fichiers que le web.
+const BIKESHARE_IMAGES = {
+    'bikeshare-unknown': require('../assets/bikeshare/bikeshare-unknown.png'),
+    'bikeshare-off': require('../assets/bikeshare/bikeshare-off.png'),
+    'bikeshare-0': require('../assets/bikeshare/bikeshare-0.png'),
+    'bikeshare-1': require('../assets/bikeshare/bikeshare-1.png'),
+    'bikeshare-2': require('../assets/bikeshare/bikeshare-2.png'),
+    'bikeshare-3': require('../assets/bikeshare/bikeshare-3.png'),
+    'bikeshare-badge-empty': require('../assets/bikeshare/bikeshare-badge-empty.png'),
+    'bikeshare-badge-low': require('../assets/bikeshare/bikeshare-badge-low.png'),
+    'bikeshare-badge-ok': require('../assets/bikeshare/bikeshare-badge-ok.png'),
+    'bikeshare-badge-full': require('../assets/bikeshare/bikeshare-badge-full.png'),
+};
+
+const BIKESHARE_LOGOS = {
+    'bordeaux-tbm': require('../assets/bikeshare/logos/bordeaux-tbm.png'),
+    'paris-velib': require('../assets/bikeshare/logos/paris-velib.png'),
+    'lille-vlille': require('../assets/bikeshare/logos/lille-vlille.png'),
+    'rennes-velostar': require('../assets/bikeshare/logos/rennes-velostar.png'),
+    'nantes-naolib': require('../assets/bikeshare/logos/nantes-naolib.png'),
+    'lyon-velov': require('../assets/bikeshare/logos/lyon-velov.png'),
+    'strasbourg-velhop': require('../assets/bikeshare/logos/strasbourg-velhop.png'),
+    'bruxelles-villo': require('../assets/bikeshare/logos/bruxelles-villo.png'),
+    'be-bluebike': require('../assets/bikeshare/logos/be-bluebike.png'),
+};
+
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
 const POI_DETAIL_FIELDS = [
@@ -199,7 +225,6 @@ const formatAccidentDate = (properties) => {
 
 const TRAFFIC_COLORS = { green: '#22c55e', orange: '#f97316', red: '#ef4444', gray: '#9ca3af' };
 
-// Couleurs officielles de l'indice européen (EAQI, barème EEA).
 const AIR_BAND_COLORS = {
     good: '#50f0e6', fair: '#50ccaa', moderate: '#f0e641',
     poor: '#ff5050', very_poor: '#960032', extreme: '#7d2181',
@@ -213,6 +238,95 @@ const AIR_FILL_COLOR = ['match', ['get', 'band'],
     'very_poor', AIR_BAND_COLORS.very_poor,
     'extreme', AIR_BAND_COLORS.extreme,
     '#9ca3af'];
+
+const BIKESHARE_NAVY = '#312E81';
+
+const BIKESHARE_COLORS = {
+    ok: '#16A34A',
+    low: '#F97316',
+    empty: '#EF4444',
+    off: OFF_COLOR,
+    full: '#166534',
+};
+
+const BIKESHARE_IS_OFF = ['any',
+    ['==', ['get', 'is_renting'], false],
+    ['==', ['get', 'is_installed'], false]];
+
+const BIKESHARE_BIKES = ['coalesce', ['get', 'bikes_available'], -1];
+const BIKESHARE_DOCKS = ['coalesce', ['get', 'docks_available'], -1];
+
+const BIKESHARE_STATE = (unknown, off, empty, full, low, ok) => ['case',
+    BIKESHARE_IS_OFF, off,
+    ['<', BIKESHARE_BIKES, 0], unknown,
+    ['==', BIKESHARE_BIKES, 0], empty,
+    ['==', BIKESHARE_DOCKS, 0], full,
+    ['<=', BIKESHARE_BIKES, 2], low,
+    ok];
+
+const BIKESHARE_ICON_IMAGE = BIKESHARE_STATE(
+    'bikeshare-unknown', 'bikeshare-off', 'bikeshare-0',
+    'bikeshare-3', 'bikeshare-1', 'bikeshare-2');
+
+const BIKESHARE_BADGE_IMAGE = BIKESHARE_STATE(
+    '', '', 'bikeshare-badge-empty',
+    'bikeshare-badge-full', 'bikeshare-badge-low', 'bikeshare-badge-ok');
+
+const BIKESHARE_HAS_BADGE = ['all',
+    ['!', BIKESHARE_IS_OFF],
+    ['>=', BIKESHARE_BIKES, 0]];
+
+const BIKESHARE_BADGE_TRANSLATE = ['interpolate', ['linear'], ['zoom'],
+    10, ['literal', [4, -4]],
+    12, ['literal', [7, -7]],
+    14, ['literal', [10, -10]],
+    16, ['literal', [12, -12]],
+    18, ['literal', [14, -14]]];
+
+const bikeshareAccentColor = (station) => {
+    if (!station) return BIKESHARE_COLORS.off;
+    if (station.is_renting === false || station.is_installed === false) return BIKESHARE_COLORS.off;
+    const bikes = station.bikes_available;
+    if (bikes == null) return BIKESHARE_COLORS.off;
+    if (bikes === 0) return BIKESHARE_COLORS.empty;
+    if (station.docks_available === 0) return BIKESHARE_COLORS.full;
+    return bikes <= 2 ? BIKESHARE_COLORS.low : BIKESHARE_COLORS.ok;
+};
+
+const BIKESHARE_TONES = {
+    light: { mechanical: '#312E81', electric: '#0E7490', docks: '#475569', indispo: '#CBD5E1' },
+    dark: { mechanical: '#A5B4FC', electric: '#67E8F9', docks: '#CBD5E1', indispo: '#4B5563' },
+};
+
+const BIKESHARE_COUNT_FIELDS = [
+    { key: 'bikes_mechanical', label: 'Mécaniques', icon: 'bicycle', tone: 'mechanical' },
+    { key: 'bikes_electric', label: 'Électriques', icon: 'bicycle-electric', tone: 'electric' },
+    { key: 'docks_available', label: 'Places libres', icon: 'parking', tone: 'docks' },
+];
+
+const BIKESHARE_TOTAL_FIELD = {
+    key: 'bikes_available', label: 'Vélos', icon: 'bicycle', tone: 'mechanical',
+};
+
+function bikeshareShare(station, ventile) {
+    const nombre = (key) => (typeof station[key] === 'number' ? station[key] : 0);
+    const bikes = nombre('bikes_available');
+    const docks = nombre('docks_available');
+    const mecha = ventile ? nombre('bikes_mechanical') : bikes;
+    const elec = ventile ? nombre('bikes_electric') : 0;
+
+    const autres = Math.max(0, bikes - mecha - elec);
+    const capacity = typeof station.capacity === 'number' ? station.capacity : 0;
+
+    const indispo = Math.max(0, capacity - bikes - docks);
+    const total = mecha + elec + autres + docks + indispo;
+    if (total <= 0) return null;
+
+    return {
+        mecha, elec, autres, docks, indispo, total,
+        indispoNotable: indispo >= 3 && indispo / total >= 0.25,
+    };
+}
 
 function MapButtonFrost() {
     const { colors, isDark } = useTheme();
@@ -281,6 +395,9 @@ export default function MapComponent({
     const [airData, setAirData] = useState(null);
     const [isAirInfoVisible, setAirInfoVisible] = useState(false);
     const [activeAirStation, setActiveAirStation] = useState(null);
+    const [showBikeshare, setShowBikeshare] = useState(false);
+    const [bikeshareData, setBikeshareData] = useState(null);
+    const [activeStation, setActiveStation] = useState(null);
     const [showLitRoads, setShowLitRoads] = useState(false);
     const [litRoadsData, setLitRoadsData] = useState(null);
     const litRoadsCacheRef = useRef(false);
@@ -412,11 +529,13 @@ export default function MapComponent({
             const savedAccidents = await AsyncStorage.getItem('userMapAccidents');
             const savedLitRoads = await AsyncStorage.getItem('userMapLitRoads');
             const savedAir = await AsyncStorage.getItem('userMapAir');
+            const savedBikeshare = await AsyncStorage.getItem('userMapBikeshare');
             if (savedBase) setActiveBaseStyle(savedBase);
             if (savedTheme) setMapThemeMode(savedTheme);
             setShowAccidents(savedAccidents === 'true');
             setShowLitRoads(savedLitRoads === 'true');
             setShowAir(savedAir === 'true');
+            setShowBikeshare(savedBikeshare === 'true');
             if (savedPois) {
                 try {
                     setEnabledPoiCats(JSON.parse(savedPois));
@@ -456,7 +575,7 @@ export default function MapComponent({
                 if (!collection?.features?.length) accidentCacheRef.current = false;
             })
             .catch(error => {
-                accidentCacheRef.current = false;  // autorise une nouvelle tentative
+                accidentCacheRef.current = false;
                 console.error("Erreur chargement des accidents :", error);
             });
     }, [showAccidents, miniMap]);
@@ -477,7 +596,7 @@ export default function MapComponent({
                 if (!collection?.features?.length) litRoadsCacheRef.current = false;
             })
             .catch(error => {
-                litRoadsCacheRef.current = false;  // autorise une nouvelle tentative
+                litRoadsCacheRef.current = false;
                 console.error("Erreur chargement des rues éclairées :", error);
             });
     }, [showLitRoads, miniMap]);
@@ -494,6 +613,13 @@ export default function MapComponent({
         AsyncStorage.setItem('userMapAir', String(next));
     };
 
+    const handleBikeshareToggle = () => {
+        const next = !showBikeshare;
+        setShowBikeshare(next);
+        if (!next) setActiveStation(null);
+        AsyncStorage.setItem('userMapBikeshare', String(next));
+    };
+
     const openLightingInfo = () => {
         setLightingInfoVisible(true);
         if (lightingSourcesRef.current) return;
@@ -501,7 +627,7 @@ export default function MapComponent({
         getStreetlightSources()
             .then(data => setLightingSources(data?.sources || []))
             .catch(error => {
-                lightingSourcesRef.current = false;  // autorise une nouvelle tentative
+                lightingSourcesRef.current = false;
                 console.error("Erreur chargement des sources d'éclairage :", error);
             });
     };
@@ -621,6 +747,54 @@ export default function MapComponent({
 
         return () => { cancelled = true; if (timer) clearTimeout(timer); };
     }, [showAir, miniMap]);
+
+    const bikeshareGeoJSON = useMemo(
+        () => bikeshareData?.geojson?.features?.length ? bikeshareData.geojson : EMPTY_FEATURE_COLLECTION,
+        [bikeshareData]
+    );
+
+    useEffect(() => {
+        if (miniMap || !showBikeshare) return;
+
+        let cancelled = false;
+        let timer = null;
+
+        const schedule = (delayMs) => {
+            clearTimeout(timer);
+            timer = setTimeout(load, delayMs);
+        };
+
+        const load = async () => {
+            if (cancelled || AppState.currentState !== 'active') return;
+            try {
+                const data = await getBikeshareStations();
+                if (cancelled) return;
+                setBikeshareData(data);
+                schedule((data?.refresh_interval_s || 60) * 1000);
+            } catch (error) {
+                if (cancelled) return;
+                schedule(60000);
+            }
+        };
+
+        load();
+        const subscription = AppState.addEventListener('change', (state) => {
+            if (state === 'active') load();
+            else clearTimeout(timer);
+        });
+
+        return () => { cancelled = true; clearTimeout(timer); subscription.remove(); };
+    }, [showBikeshare, miniMap]);
+
+    useEffect(() => {
+        setActiveStation(prev => {
+            if (!prev) return prev;
+            const fresh = bikeshareGeoJSON.features.find(
+                f => f.properties.station_id === prev.station_id
+            );
+            return fresh ? { ...prev, ...fresh.properties } : prev;
+        });
+    }, [bikeshareGeoJSON]);
 
     const reportsGeoJSON = useMemo(() => {
         const features = (reports || []).map((report) => ({
@@ -745,6 +919,14 @@ export default function MapComponent({
         setActiveAirStation(feature.properties);
     };
 
+    const onBikesharePress = (event) => {
+        Haptics.selectionAsync().catch(() => { });
+        const feature = event?.nativeEvent?.features?.[0];
+        if (!feature) return;
+        const [lon, lat] = feature.geometry.coordinates;
+        setActiveStation({ ...feature.properties, lat, lon });
+    };
+
     const onReportPress = (event) => {
         Haptics.selectionAsync().catch(() => { });
         const feature = event?.nativeEvent?.features?.[0];
@@ -803,6 +985,21 @@ export default function MapComponent({
             name: activePoi.name || POI_CATEGORIES.find(c => c.id === activePoi.category)?.label,
         });
         setActivePoi(null);
+    };
+
+    const handleNavigateToStation = () => {
+        if (!activeStation || !onNavigateToPoi) return;
+        Haptics.selectionAsync().catch(() => { });
+        onNavigateToPoi({
+            lat: activeStation.lat,
+            lon: activeStation.lon,
+            name: activeStation.name || 'Station de vélos',
+        });
+        trackEvent("bikeshare_navigated", {
+            system: activeStation.system || 'inconnu',
+            bikes: activeStation.bikes_available ?? 0,
+        });
+        setActiveStation(null);
     };
 
     const handleDeleteReport = async (reportId) => {
@@ -938,6 +1135,51 @@ export default function MapComponent({
                             }}
                         />
                     </GeoJSONSource>
+                )}
+
+                {!miniMap && showBikeshare && bikeshareGeoJSON.features.length > 0 && (
+                    <>
+                        <Images images={BIKESHARE_IMAGES} />
+                        <GeoJSONSource
+                            id="bikeshare"
+                            data={bikeshareGeoJSON}
+                            onPress={onBikesharePress}
+                        >
+                            <Layer
+                                id="bikeshare-icon"
+                                type="symbol"
+                                minzoom={10}
+                                layout={{
+                                    iconImage: BIKESHARE_ICON_IMAGE,
+                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.175, 12, 0.28, 14, 0.4, 16, 0.5, 18, 0.6],
+                                    iconAllowOverlap: true,
+                                    iconIgnorePlacement: true,
+                                }}
+                                paint={{
+                                    iconOpacity: ['interpolate', ['linear'], ['zoom'], 10, 0.5, 13, 0.85, 15, 1],
+                                }}
+                            />
+                            <Layer
+                                id="bikeshare-badge"
+                                type="symbol"
+                                minzoom={10}
+                                filter={BIKESHARE_HAS_BADGE}
+                                layout={{
+                                    iconImage: BIKESHARE_BADGE_IMAGE,
+                                    iconSize: ['interpolate', ['linear'], ['zoom'], 10, 0.095, 12.99, 0.19, 13, 0.32, 16, 0.43, 18, 0.5],
+                                    textField: ['step', ['zoom'], '', 13, ['to-string', BIKESHARE_BIKES]],
+                                    textSize: ['interpolate', ['linear'], ['zoom'], 13, 9, 16, 11, 18, 12],
+                                    iconAllowOverlap: ['step', ['zoom'], true, 13, false],
+                                    iconIgnorePlacement: ['step', ['zoom'], true, 13, false],
+                                }}
+                                paint={{
+                                    iconTranslate: BIKESHARE_BADGE_TRANSLATE,
+                                    textTranslate: BIKESHARE_BADGE_TRANSLATE,
+                                    textColor: '#ffffff',
+                                }}
+                            />
+                        </GeoJSONSource>
+                    </>
                 )}
 
                 {!miniMap && showTraffic && trafficGeoJSON.features.length > 0 && (
@@ -1193,7 +1435,7 @@ export default function MapComponent({
                 <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => closeMenu(setLayerMenuVisible)}>
                     <Animated.View onStartShouldSetResponder={() => true} style={[styles.modalContent, { transform: [{ translateY: slideAnim }], backgroundColor: colors.bgMain }]}>
 
-                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>Apparence</Text>
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>Fond de carte</Text>
 
                         <View style={[styles.themeSelector, { backgroundColor: colors.bgSurface }]}>
                             <TouchableOpacity style={[styles.themeBtn, mapThemeMode === 'light' && [styles.themeBtnActive, { backgroundColor: colors.bgMain }]]} onPress={() => { Haptics.selectionAsync(); handleThemeChange('light'); }}>
@@ -1228,7 +1470,7 @@ export default function MapComponent({
                         ))}
 
                         <View style={styles.divider} />
-                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>Calques</Text>
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>Calques</Text>
 
                         {traffic?.available && (
                             <View style={styles.poiOption}>
@@ -1278,6 +1520,29 @@ export default function MapComponent({
                         )}
 
                         <View style={styles.poiOption}>
+                            {/* Bleu nuit comme le disque sur la carte : la pastille
+                                du menu doit désigner la couche, pas l'un de ses états. */}
+                            <View style={[styles.poiBadge, { backgroundColor: BIKESHARE_NAVY }]}>
+                                <MaterialCommunityIcons name="bicycle" size={18} color="#FFF" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[typography.body, { fontSize: 16, color: colors.textMain }]}>
+                                    Stations de vélos
+                                </Text>
+                                {showBikeshare && bikeshareData?.counts?.stations > 0 && (
+                                    <Text style={[typography.body, { marginLeft: 15, fontSize: 12, color: colors.textSecondary }]}>
+                                        {`${bikeshareData.counts.stations} stations · ${bikeshareData.counts.bikes} vélos`}
+                                    </Text>
+                                )}
+                            </View>
+                            <Switch
+                                value={showBikeshare}
+                                onValueChange={() => { Haptics.selectionAsync(); handleBikeshareToggle(); }}
+                                trackColor={{ true: colors.primary }}
+                            />
+                        </View>
+
+                        <View style={styles.poiOption}>
                             <View style={[styles.poiBadge, { backgroundColor: '#f59e0b' }]}>
                                 <MaterialCommunityIcons name="lightbulb-on" size={18} color="#FFF" />
                             </View>
@@ -1319,7 +1584,7 @@ export default function MapComponent({
                         style={[styles.lightingInfoCard, { backgroundColor: colors.bgMain }]}
                         onStartShouldSetResponder={() => true}
                     >
-                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>
                             Éclairage public
                         </Text>
 
@@ -1394,7 +1659,7 @@ export default function MapComponent({
                         style={[styles.lightingInfoCard, { backgroundColor: colors.bgMain }]}
                         onStartShouldSetResponder={() => true}
                     >
-                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>
                             Qualité de l'air
                         </Text>
 
@@ -1461,7 +1726,7 @@ export default function MapComponent({
                 <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closePoiSheet}>
                     <Animated.View onStartShouldSetResponder={() => true} style={[styles.modalContent, { transform: [{ translateY: slideAnim }], backgroundColor: colors.bgMain }]}>
 
-                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>{"Points d'intérêt"}</Text>
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>{"Points d'intérêt"}</Text>
 
                         {POI_CATEGORIES.map((category) => (
                             <View key={category.id} style={{ width: '100%' }}>
@@ -1506,12 +1771,9 @@ export default function MapComponent({
                             {"Zoomez pour faire apparaître les points d'intérêt."}
                         </Text>
 
-                        {/* Séparé des POI : ce ne sont ni des équipements, ni des
-                            signalements d'utilisateurs, mais des accidents
-                            officiellement recensés. Les confondre induirait en erreur. */}
                         <View style={[styles.divider, { marginTop: 14 }]} />
 
-                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, color: colors.textMain }]}>
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>
                             Accidentologie
                         </Text>
 
@@ -1599,7 +1861,7 @@ export default function MapComponent({
                         <View>
                             <GrabHandle />
                             <View style={styles.header}>
-                                <Text style={[typography.h1, { fontSize: 20, color: colors.textMain }]}>Signaler un incident</Text>
+                                <Text style={[typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>Signaler un incident</Text>
                                 <TouchableOpacity onPress={closeReport}>
                                     <Ionicons name="close" size={28} color={colors.textMain} />
                                 </TouchableOpacity>
@@ -1692,7 +1954,7 @@ export default function MapComponent({
                                         resizeMode="contain"
                                     />
                                 )}
-                                <Text style={[typography.h1, { fontSize: 20, color: colors.textMain, textTransform: 'capitalize', flex: 1 }]}>
+                                <Text style={[typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain, textTransform: 'capitalize', flex: 1 }]}>
                                     {activeReport?.report_type}
                                 </Text>
                             </View>
@@ -1782,7 +2044,7 @@ export default function MapComponent({
                                             <View style={[styles.poiBadge, { backgroundColor: poiAccentColor(activePoi, category?.color) }]}>
                                                 <MaterialCommunityIcons name={category?.icon} size={18} color="#FFF" />
                                             </View>
-                                            <Text style={[typography.h1, { fontSize: 18, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
+                                            <Text style={[typography.h1, { fontSize: 18, lineHeight: 22, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
                                                 {activePoi.name || category?.label}
                                             </Text>
                                         </View>
@@ -1844,7 +2106,7 @@ export default function MapComponent({
                                             <View style={[styles.poiBadge, { backgroundColor: color }]}>
                                                 <MaterialCommunityIcons name="alert-octagon" size={18} color="#FFF" />
                                             </View>
-                                            <Text style={[typography.h1, { fontSize: 18, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
+                                            <Text style={[typography.h1, { fontSize: 18, lineHeight: 22, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
                                                 Accident à vélo
                                             </Text>
                                         </View>
@@ -1878,6 +2140,161 @@ export default function MapComponent({
             </Modal>
 
             <Modal
+                visible={!!activeStation}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setActiveStation(null)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setActiveStation(null)}
+                >
+                    <View onStartShouldSetResponder={() => true} style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
+                        {activeStation && (() => {
+                            const isOff = activeStation.is_renting === false || activeStation.is_installed === false;
+                            const bikes = activeStation.bikes_available;
+                            const color = bikeshareAccentColor(activeStation);
+                            const present = (key) => activeStation[key] !== undefined
+                                && activeStation[key] !== null;
+                            const ventile = present('bikes_mechanical') || present('bikes_electric');
+                            const counts = (ventile
+                                ? BIKESHARE_COUNT_FIELDS
+                                : [BIKESHARE_TOTAL_FIELD, BIKESHARE_COUNT_FIELDS[2]]
+                            ).filter(f => present(f.key));
+                            const parts = bikeshareShare(activeStation, ventile);
+                            const tones = BIKESHARE_TONES[isDark ? 'dark' : 'light'];
+                            return (
+                                <>
+                                    <View style={styles.header}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
+                                            {BIKESHARE_LOGOS[activeStation.system] ? (
+                                                <View style={styles.bikeshareLogo}>
+                                                    <Image
+                                                        source={BIKESHARE_LOGOS[activeStation.system]}
+                                                        style={{ width: 48, height: 20 }}
+                                                        resizeMode="contain"
+                                                    />
+                                                </View>
+                                            ) : (
+                                                <View style={[styles.poiBadge, { backgroundColor: color }]}>
+                                                    <MaterialCommunityIcons name="bicycle" size={18} color="#FFF" />
+                                                </View>
+                                            )}
+                                            <Text style={[typography.h1, { fontSize: 18, lineHeight: 22, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
+                                                {activeStation.name || 'Station de vélos'}
+                                            </Text>
+                                        </View>
+                                        <TouchableOpacity onPress={() => setActiveStation(null)}>
+                                            <Ionicons name="close" size={28} color={colors.textMain} />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    <Text style={[typography.body, { color: colors.textSecondary, marginBottom: 8 }]}>
+                                        {isOff
+                                            ? 'Station hors service'
+                                            : bikes == null
+                                                ? 'Disponibilité inconnue'
+                                                : `${bikes} vélo${bikes > 1 ? 's' : ''} disponible${bikes > 1 ? 's' : ''}`}
+                                    </Text>
+
+                                    {counts.length > 0 && (
+                                        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8, opacity: isOff ? 0.45 : 1 }}>
+                                            {counts.map(field => (
+                                                <View
+                                                    key={field.key}
+                                                    style={[styles.bikeshareCount, { backgroundColor: withAlpha(tones[field.tone], 0.14) }]}
+                                                >
+                                                    <View style={styles.bikeshareCountTop}>
+                                                        <MaterialCommunityIcons
+                                                            name={field.icon}
+                                                            size={15}
+                                                            color={tones[field.tone]}
+                                                        />
+                                                        <Text style={[typography.h1, { fontSize: 20, color: tones[field.tone] }]}>
+                                                            {String(activeStation[field.key])}
+                                                        </Text>
+                                                    </View>
+                                                    <Text style={[typography.body, { fontSize: 11, color: colors.textSecondary, textAlign: 'center' }]}>
+                                                        {field.label}
+                                                    </Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+
+                                    {parts && !isOff && (
+                                        <View style={styles.bikeshareBar}>
+                                            {[
+                                                ['mechanical', parts.mecha],
+                                                ['electric', parts.elec],
+                                                ['mechanical', parts.autres],
+                                                ['docks', parts.docks],
+                                                ['indispo', parts.indispo],
+                                            ].map(([tone, part], index) => part > 0 && (
+                                                <View
+                                                    key={index}
+                                                    style={[styles.bikeshareBarPart, { flexGrow: part, backgroundColor: tones[tone] }]}
+                                                />
+                                            ))}
+                                        </View>
+                                    )}
+                                    {parts && !isOff && parts.indispoNotable && (
+                                        <Text style={[typography.body, { fontSize: 13, color: '#b45309', fontWeight: 'bold', marginBottom: 4 }]}>
+                                            {`${parts.indispo} points d'attache indisponibles.`}
+                                        </Text>
+                                    )}
+
+                                    {isOff && (
+                                        <Text style={[typography.body, { fontSize: 13, color: '#b45309', fontWeight: 'bold', marginBottom: 4 }]}>
+                                            Ni retrait ni retour possible.
+                                        </Text>
+                                    )}
+                                    {!isOff && activeStation.is_returning === false && (
+                                        <Text style={[typography.body, { fontSize: 13, color: '#b45309', fontWeight: 'bold', marginBottom: 4 }]}>
+                                            Retour de vélo impossible.
+                                        </Text>
+                                    )}
+                                    {!isOff && activeStation.is_returning !== false && activeStation.docks_available === 0 && (
+                                        <Text style={[typography.body, { fontSize: 13, color: '#b45309', fontWeight: 'bold', marginBottom: 4 }]}>
+                                            Station pleine : aucun retour possible.
+                                        </Text>
+                                    )}
+
+                                    {activeStation.capacity != null && (
+                                        <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
+                                            {`Capacité : ${activeStation.capacity} points d'attache`}
+                                        </Text>
+                                    )}
+                                    {activeStation.system_name ? (
+                                        <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
+                                            {`Réseau : ${activeStation.system_name}`}
+                                        </Text>
+                                    ) : null}
+                                    {activeStation.stale && (
+                                        <Text style={[typography.body, { fontSize: 12, color: colors.textSecondary }]}>
+                                            Dernier relevé disponible, données non rafraîchies.
+                                        </Text>
+                                    )}
+
+                                    {onNavigateToPoi && (
+                                        <TouchableOpacity
+                                            style={[styles.submitButton, { backgroundColor: colors.primary, marginTop: 16 }]}
+                                            onPress={handleNavigateToStation}
+                                        >
+                                            <Text style={[typography.body, { color: '#FFF', fontWeight: 'bold' }]}>
+                                                Y aller
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </>
+                            );
+                        })()}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
+            <Modal
                 visible={!!activeAirStation}
                 transparent={true}
                 animationType="fade"
@@ -1896,7 +2313,7 @@ export default function MapComponent({
                                         <View style={[styles.poiBadge, { backgroundColor: activeAirStation.color || '#9ca3af' }]}>
                                             <MaterialCommunityIcons name="weather-windy" size={18} color="#FFF" />
                                         </View>
-                                        <Text style={[typography.h1, { fontSize: 18, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
+                                        <Text style={[typography.h1, { fontSize: 18, lineHeight: 22, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
                                             {`AQI ${activeAirStation.aqi} · ${activeAirStation.label}`}
                                         </Text>
                                     </View>
@@ -2083,6 +2500,38 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    bikeshareLogo: {
+        width: 52,
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: '#FFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    bikeshareCount: {
+        flex: 1,
+        alignItems: 'center',
+        gap: 2,
+        paddingVertical: 8,
+        paddingHorizontal: 4,
+        borderRadius: 8,
+    },
+    bikeshareCountTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+    },
+    bikeshareBar: {
+        flexDirection: 'row',
+        gap: 3,
+        height: 7,
+        marginBottom: 12,
+    },
+    bikeshareBarPart: {
+        flexBasis: 0,
+        minWidth: 4,
+        borderRadius: 3.5,
     },
     layerText: {
         fontSize: 16,
