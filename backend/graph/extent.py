@@ -64,6 +64,16 @@ def graph_bbox(G) -> tuple[float, float, float, float] | None:
     return bbox
 
 
+def overlaps(a, b) -> bool:
+    """Les deux emprises (w, s, e, n) se croisent-elles ?
+
+    C'est le portillon des sources extérieures : une source de portée
+    métropolitaine ne doit pas être interrogée pour un graphe situé à l'autre
+    bout du pays, même s'ils partagent un code pays.
+    """
+    return not (a[2] < b[0] or b[2] < a[0] or a[3] < b[1] or b[3] < a[1])
+
+
 def graph_center(G) -> tuple[float, float] | None:
     """Centre de l'emprise, en (lat, lon), pour biaiser les recherches."""
     bbox = graph_bbox(G)
