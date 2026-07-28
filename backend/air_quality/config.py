@@ -20,11 +20,20 @@ HTTP_TIMEOUT_S = 10.0
 # des 10 000/jour de la formule gratuite (non commerciale).
 REFRESH_INTERVAL_S = 900
 
-# Maille réelle du CAMS européen. On échantillonne l'emprise du graphe à ce pas ;
-# l'API recale de toute façon chaque coordonnée sur le nœud CAMS le plus proche.
+# Maille réelle du CAMS européen, et pas le plus fin qu'on échantillonne. L'API
+# recale de toute façon chaque coordonnée sur le nœud CAMS le plus proche.
 GRID_STEP_DEG = 0.1
-# Garde-fou si un profil couvre une très grande emprise : au-delà, on tronque.
-MAX_GRID_POINTS = 60
+# Garde-fou si un profil couvre une très grande emprise. Ce n'est pas une limite
+# de quota — Open-Meteo compte une requête multi-points comme un seul appel, et
+# 96 appels/jour restent très loin des 10 000 — mais une limite de longueur d'URL,
+# de taille de réponse et de latence.
+#
+# Le dépassement **ne coupe jamais des cellules** : la maille entière s'élargit
+# d'un multiple du pas (cf. `service.grid_points`) jusqu'à tenir dans le budget.
+# Une couverture trouée serait pire qu'une couverture grossière : sur la carte,
+# elle se lit comme une absence de donnée, pas comme une résolution moindre.
+# 150 laisse deux métropoles au pas natif de 0,1°.
+MAX_GRID_POINTS = 150
 
 # Sous-indices EAQI par polluant. Le polluant dominant est celui dont le
 # sous-indice égale l'indice global (l'EAQI est le max des sous-indices). L'ordre

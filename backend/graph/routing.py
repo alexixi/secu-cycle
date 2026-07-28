@@ -7,7 +7,7 @@ from sklearn.neighbors import BallTree
 from shapely.geometry import Point, LineString
 from shapely.ops import substring
 from graph.config import *
-from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_lighting_condition, graph_center, calculate_infra_stats, is_dark_now, extinction_states, edge_use_on, parse_lit_conditional
+from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_lighting_condition, main_zone_center, zone_center_of, air_intensity_at, calculate_infra_stats, is_dark_now, extinction_states, edge_use_on, parse_lit_conditional
 from graph.route_cache import route_cache
 
 def _get_speed_score(vmax):
@@ -144,7 +144,7 @@ def precompute_static_costs(G):
     """Pré-calcul des coûts statiques pour chaque arête du graphe, en fonction de la sécurité et de l'effort."""
     min_on = min_off = float('inf')
     max_on = max_off = float('-inf')
-    lat, lon = graph_center(G)
+    lat, lon = main_zone_center(G)
     lighting_on = get_lighting_condition(lat=lat, lon=lon)[1]
 
     for u, v, k, data in G.edges(keys=True, data=True):
@@ -497,7 +497,8 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
     try:
         if not G.graph.get('_static_costs_ready'):
             precompute_static_costs(G)
-        lat_c, lon_c = graph_center(G)
+
+        lat_c, lon_c = zone_center_of(G, start_coords[0], start_coords[1])
         now = datetime.now(pytz.timezone('Europe/Paris'))
         now_min = now.hour * 60 + now.minute
         is_dark = is_dark_now(now, lat_c, lon_c)
@@ -508,7 +509,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
         # Intensité de modulation de la pollution, tenue à jour par la tâche de
         # fond (cf. air_quality.service.refresh). Arrondie pour stabiliser le
         # cache : un frémissement de l'EAQI ne recalcule pas tous les trajets.
-        air_intensity = round(float(G.graph.get('_air_intensity', 0.0)), 1)
+        air_intensity = round(air_intensity_at(G, start_coords[0], start_coords[1]), 1)
 
         cache_key = (
             round(start_coords[0], 5), round(start_coords[1], 5),

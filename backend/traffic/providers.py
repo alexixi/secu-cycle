@@ -14,6 +14,7 @@ import logging
 
 import httpx
 
+from graph.extent import contains_any
 from traffic import config
 
 logger = logging.getLogger(__name__)
@@ -57,11 +58,13 @@ def _normalise(record: dict, spec: dict) -> dict | None:
     }
 
 
-async def fetch(spec: dict, bbox=None) -> list[dict]:
-    """Tous les tronçons d'une source, paginés puis filtrés sur l'emprise.
+async def fetch(spec: dict, zones=None) -> list[dict]:
+    """Tous les tronçons d'une source, paginés puis filtrés sur les zones.
 
-    `bbox` (w, s, e, n) restreint côté client aux tronçons touchant l'emprise du
-    graphe chargé ; un bbox absent laisse tout passer.
+    `zones` (liste d'emprises `(w, s, e, n)`) restreint côté client aux tronçons
+    touchant l'une des zones du graphe chargé ; `zones` absent laisse tout passer.
+    Filtrer sur l'enveloppe plutôt que sur les zones ne filtrerait rien d'utile
+    sur un profil multi-villes : entre Bordeaux et Tournai, tout est « dedans ».
     """
     segments = []
 
@@ -92,13 +95,12 @@ async def fetch(spec: dict, bbox=None) -> list[dict]:
                 config.MAX_PAGES,
             )
 
-    if bbox is not None:
-        segments = [s for s in segments if _intersects(s["coordinates"], bbox)]
+    if zones:
+        segments = [s for s in segments if _intersects(s["coordinates"], zones)]
 
     return segments
 
 
-def _intersects(coordinates, bbox) -> bool:
-    """Le tronçon passe-t-il par l'emprise ? (au moins un sommet dedans)"""
-    w, s, e, n = bbox
-    return any(w <= lon <= e and s <= lat <= n for lon, lat in coordinates)
+def _intersects(coordinates, zones) -> bool:
+    """Le tronçon passe-t-il par une zone ? (au moins un sommet dedans)"""
+    return any(contains_any(zones, lat, lon) for lon, lat in coordinates)

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from air_quality import service as air_quality_service
 from database import get_db, SessionLocal
 from dependencies import require_admin
 from graph import builder, communes as communes_service, routing
@@ -501,10 +502,12 @@ async def _reload_graph(app, name: str) -> None:
         try:
             await bikeshare_service.refresh(G)
         except Exception as exc:
-            # Le `except` englobant laisserait `app.state.G` à None, donc un
-            # routage en 503 : une couche informative ne doit jamais avoir ce
-            # pouvoir sur le rechargement du graphe.
             print(f"[Graphe] Vélos en libre-service indisponibles : {exc}", flush=True)
+
+        try:
+            await air_quality_service.refresh(G)
+        except Exception as exc:
+            print(f"[Graphe] Qualité de l'air indisponible : {exc}", flush=True)
 
         app.state.G = G
         app.state.graph_profile = name

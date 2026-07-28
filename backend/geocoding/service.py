@@ -10,14 +10,16 @@ du graphe chargé est de toute façon inutilisable, puisqu'on ne sait pas y rout
 
 import logging
 import re
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
+from functools import partial
 from itertools import zip_longest
 
 from sqlalchemy.exc import IntegrityError
 
 from geocoding import config, providers
 from graph import routing
-from graph.extent import countries_of, graph_bbox, graph_center
+from graph.extent import countries_of, graph_zones, zone_center
 from models.geocode_cache import GeocodeCache, GeocodeUsage
 
 logger = logging.getLogger(__name__)
@@ -31,6 +33,19 @@ def _within_extent(G, result: dict) -> bool:
     """Ce résultat est-il assez proche du graphe pour être crédible ?"""
     distance = routing.snap_distance_m(G, result["lat"], result["lon"])
     return distance is not None and distance <= MAX_RESULT_DISTANCE_M
+
+
+def _in_parallel(calls: list) -> list:
+    """Lance des appels providers de front et rend leurs résultats dans l'ordre.
+
+    Les providers sont synchrones et les zones peu nombreuses (deux ou trois) :
+    un pool éphémère coûte bien moins que la latence cumulée d'appels en série,
+    sur un chemin qui alimente une saisie semi-automatique.
+    """
+    if len(calls) == 1:
+        return [calls[0]()]
+    with ThreadPoolExecutor(max_workers=len(calls)) as pool:
+        return [future.result() for future in [pool.submit(call) for call in calls]]
 
 
 def _looks_like_address(query: str) -> bool:
@@ -159,13 +174,21 @@ def search(db, G, profile: str, communes, query: str) -> list[dict]:
         return cached
 
     countries = countries_of(communes)
-    bias = graph_center(G)
+    zones = graph_zones(G)
+    # Les zones sont triées par taille : la première est la ville principale du
+    # profil, donc le repli naturel quand un provider n'accepte qu'un seul point.
+    centers = [zone_center(zone) for zone in zones] or [None]
     is_cross_border = len(countries) > 1
     use_ban = bool(config.BAN_COUNTRIES & set(countries))
 
     ban_results = []
     if use_ban:
-        ban_results = [r for r in providers.ban_search(query, bias) if _within_extent(G, r)]
+        batches = _in_parallel([
+            partial(providers.ban_search, query, center) for center in centers
+        ])
+        ban_results = _dedupe([
+            r for batch in batches for r in batch if _within_extent(G, r)
+        ])
 
     maptiler_results = []
     degraded = False
@@ -173,10 +196,29 @@ def search(db, G, profile: str, communes, query: str) -> list[dict]:
         if maptiler_budget_left(db):
             try:
                 _record_maptiler_call(db)
-                raw = providers.maptiler_search(query, countries, bias, graph_bbox(G))
+                bbox = zones[0] if len(zones) == 1 else None
+                raw = providers.maptiler_search(query, countries, centers[0], bbox)
                 maptiler_results = [r for r in raw if _within_extent(G, r)]
             except providers.ProviderUnavailable:
                 degraded = True
+
+            if not degraded and not maptiler_results and len(zones) > 1:
+                calls = []
+                for zone, center in zip(zones[1:], centers[1:]):
+                    if not maptiler_budget_left(db):
+                        break
+                    _record_maptiler_call(db)
+                    calls.append(partial(
+                        providers.maptiler_search, query, countries, center, zone))
+                if calls:
+                    try:
+                        batches = _in_parallel(calls)
+                    except providers.ProviderUnavailable:
+                        degraded = True
+                    else:
+                        maptiler_results = [
+                            r for batch in batches for r in batch if _within_extent(G, r)
+                        ]
         else:
             degraded = True
             logger.warning(
