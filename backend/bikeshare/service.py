@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 import httpx
 
 from bikeshare import config, providers
-from graph.extent import graph_bbox, overlaps
+from graph.extent import contains_any, graph_zones, overlaps_any
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ class _State:
                        "electric": 0, "docks": 0}
         self.interval_s = config.DEFAULT_STATUS_INTERVAL_S
         self.etag = None
-        self.bbox = None
+        self.zones = None
 
     def as_dict(self):
         return {
@@ -95,20 +95,30 @@ def etag() -> str | None:
     return _state.etag
 
 
-def systems_for(bbox) -> list[str]:
-    """Systèmes dont l'emprise croise celle du graphe chargé."""
-    if bbox is None:
+def systems_for(zones) -> list[str]:
+    """Systèmes dont l'emprise croise au moins une zone du graphe chargé.
+
+    Zone par zone, et non sur leur enveloppe : celle d'un profil « Bordeaux +
+    Tournai » recouvre la moitié de la France et réveillerait neuf systèmes
+    (Vélib', Vélo'v, Naolib…) au lieu des deux qui servent réellement.
+    """
+    if not zones:
         return []
     return [
         name
         for name, spec in config.SYSTEMS.items()
-        if overlaps(bbox, spec["coverage"])
+        if overlaps_any(zones, spec["coverage"])
     ]
 
 
-def _within(station: dict, bbox) -> bool:
-    w, s, e, n = bbox
-    return w <= station["lon"] <= e and s <= station["lat"] <= n
+def _within(station: dict, zones) -> bool:
+    """La station tombe-t-elle dans une zone couverte ?
+
+    Second étage du filtrage, plus fin que `systems_for` : un système régional
+    (Blue-bike, à l'échelle de la Belgique) ne doit poser sur la carte que les
+    stations des villes effectivement couvertes.
+    """
+    return contains_any(zones, station["lat"], station["lon"])
 
 
 def _reset():
@@ -125,7 +135,7 @@ def _reset():
 
 # --- Collecte d'un système ---------------------------------------------------
 
-async def _refresh_system(client, name: str, bbox, full: bool) -> None:
+async def _refresh_system(client, name: str, zones, full: bool) -> None:
     """Collecte un système. N'échoue jamais : toute erreur est absorbée dans son
     `_SystemState`, avec un recul exponentiel sur les tentatives suivantes."""
     spec = config.SYSTEMS[name]
@@ -152,7 +162,7 @@ async def _refresh_system(client, name: str, bbox, full: bool) -> None:
             kept = {
                 s["station_id"]: s
                 for s in stations
-                if not s["virtual"] and _within(s, bbox)
+                if not s["virtual"] and _within(s, zones)
             }
             state.stations = kept
             state.dormant = not kept
@@ -354,13 +364,13 @@ async def refresh(G) -> None:
     if not config.ENABLED:
         return
 
-    bbox = graph_bbox(G)
-    names = systems_for(bbox)
+    zones = graph_zones(G)
+    names = systems_for(zones)
 
-    if bbox != _state.bbox:
-        # Changement de profil : les stations retenues l'ont été sur l'ancienne
-        # emprise. Sans cette remise à zéro, une bascule Bordeaux → Tournai
-        # laisserait les stations bordelaises sur la carte de Tournai.
+    if zones != _state.zones:
+        # Changement de profil : les stations retenues l'ont été sur les
+        # anciennes zones. Sans cette remise à zéro, une bascule Bordeaux →
+        # Tournai laisserait les stations bordelaises sur la carte de Tournai.
         for name in list(_systems):
             if name not in names:
                 del _systems[name]
@@ -368,7 +378,7 @@ async def refresh(G) -> None:
             state.dormant = False
             state.next_information_at = 0.0
             state.next_status_at = 0.0
-        _state.bbox = bbox
+        _state.zones = zones
 
     if not names:
         if _state.available or _state.updated_at is None:
@@ -399,7 +409,7 @@ async def refresh(G) -> None:
         # `return_exceptions` est la ceinture ; `_refresh_system` absorbe déjà
         # tout en interne, ce sont les bretelles.
         await asyncio.gather(
-            *(_refresh_system(client, name, bbox, full) for name, full in due),
+            *(_refresh_system(client, name, zones, full) for name, full in due),
             return_exceptions=True,
         )
 

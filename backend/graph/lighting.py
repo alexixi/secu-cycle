@@ -29,7 +29,8 @@ from shapely.geometry import LineString, Point, box, shape
 from sqlalchemy import select
 
 from database import SessionLocal
-from graph.accidents import _graph_bounds
+from graph.accidents import zone_filter
+from graph.extent import graph_zones
 from graph.config import (
     LIT_SPILL_MIN_COVERAGE, LIT_SPILL_RADIUS_M, LIT_SPILL_SAMPLE_STEP_M,
     LIT_SPILL_TARGET_HIGHWAYS, NIGHT_EXTINCTION_WINDOW,
@@ -46,20 +47,17 @@ _MAX_SAMPLES = 30
 _M_PER_DEG_LAT = 111320.0
 
 
-def load_street_lamp_points(bbox=None):
-    """Points lumineux en base, éventuellement restreints à une boîte englobante.
+def load_street_lamp_points(zones=None):
+    """Points lumineux en base, éventuellement restreints aux zones du graphe.
 
     Renvoie une liste de tuples (lat, lon).
     """
     db = SessionLocal()
     try:
         query = select(StreetLamp.latitude, StreetLamp.longitude)
-        if bbox is not None:
-            lon_min, lat_min, lon_max, lat_max = bbox
-            query = query.where(
-                StreetLamp.longitude.between(lon_min, lon_max),
-                StreetLamp.latitude.between(lat_min, lat_max),
-            )
+        clause = zone_filter(StreetLamp.latitude, StreetLamp.longitude, zones)
+        if clause is not None:
+            query = query.where(clause)
         return db.execute(query).all()
     finally:
         db.close()
@@ -245,7 +243,7 @@ def attach_lighting(G):
     tree = STRtree(geoms)
 
     try:
-        points = load_street_lamp_points(_graph_bounds(G))
+        points = load_street_lamp_points(graph_zones(G))
     except Exception as exc:
         print(f"[Éclairage] Lecture des lampadaires impossible : {exc}", flush=True)
         points = []

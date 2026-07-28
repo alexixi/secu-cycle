@@ -6,6 +6,7 @@ liste d'objets par point, dans l'ordre des coordonnées envoyées ; pour un poin
 unique l'API renvoie un objet seul, qu'on enveloppe pour homogénéiser.
 """
 
+import asyncio
 import logging
 
 import httpx
@@ -53,24 +54,14 @@ def _parse_aqi(value):
         return None
 
 
-async def fetch_stations(bbox) -> list[dict]:
-    """Stations WAQI dont la position tombe dans l'emprise `(w, s, e, n)`.
-
-    Un seul appel `/map/bounds/` (latlng attendu en SO→NE : lat1,lng1,lat2,lng2).
-    Jeton absent → aucune requête, liste vide (couche CAMS seule). Renvoie une
-    liste normalisée `{aqi, lat, lon, uid, name, time}`, stations sans donnée
-    écartées.
-    """
-    if not config.WAQI_TOKEN or bbox is None:
-        return []
-
-    w, s, e, n = bbox
+async def _fetch_stations_zone(client, zone) -> list[dict]:
+    """Stations WAQI d'une emprise `(w, s, e, n)`, via `/map/bounds/`."""
+    w, s, e, n = zone
     params = {"latlng": f"{s},{w},{n},{e}", "token": config.WAQI_TOKEN}
 
-    async with httpx.AsyncClient(timeout=config.HTTP_TIMEOUT_S) as client:
-        response = await client.get(config.WAQI_URL, params=params)
-        response.raise_for_status()
-        payload = response.json()
+    response = await client.get(config.WAQI_URL, params=params)
+    response.raise_for_status()
+    payload = response.json()
 
     if payload.get("status") != "ok":
         raise RuntimeError(f"WAQI a répondu : {payload.get('data') or payload.get('status')}")
@@ -89,4 +80,35 @@ async def fetch_stations(bbox) -> list[dict]:
             "name": info.get("name") or "",
             "time": info.get("time") or "",
         })
+    return stations
+
+
+async def fetch_stations(zones) -> list[dict]:
+    """Stations WAQI de chaque zone du graphe, fusionnées.
+
+    Un appel `/map/bounds/` **par zone** (latlng attendu en SO→NE :
+    lat1,lng1,lat2,lng2). Interroger l'enveloppe de toutes les zones ramènerait
+    les stations de tout ce qui les sépare — sur « Bordeaux + Tournai », celles de
+    Paris et de Nantes, dont un pic ferait dévier des itinéraires bordelais.
+    WAQI est gratuit et l'appel est léger : une requête par zone est le prix juste.
+
+    Jeton absent → aucune requête, liste vide (couche CAMS seule). Renvoie une
+    liste normalisée `{aqi, lat, lon, uid, name, time}`, dédoublonnée sur `uid`
+    (deux zones voisines peuvent se recouper), stations sans donnée écartées.
+    """
+    if not config.WAQI_TOKEN or not zones:
+        return []
+
+    async with httpx.AsyncClient(timeout=config.HTTP_TIMEOUT_S) as client:
+        batches = await asyncio.gather(
+            *(_fetch_stations_zone(client, zone) for zone in zones)
+        )
+
+    stations, seen = [], set()
+    for batch in batches:
+        for station in batch:
+            if station["uid"] in seen:
+                continue
+            seen.add(station["uid"])
+            stations.append(station)
     return stations

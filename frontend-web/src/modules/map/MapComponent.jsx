@@ -270,6 +270,34 @@ const AIR_FILL_COLOR = ['match', ['get', 'band'],
 // via la propriété `color`).
 const AIR_STATION_CIRCLE_LAYER_ID = 'air-stations-circle';
 
+// Résumé de la zone regardée.
+function airForCenter(airData, center) {
+    const zones = airData?.zones;
+    if (!Array.isArray(zones) || zones.length === 0) return airData || null;
+    if (zones.length === 1 || !center) return zones[0];
+
+    const inside = zones.find(({ bbox }) => Array.isArray(bbox)
+        && center.lon >= bbox[0] && center.lon <= bbox[2]
+        && center.lat >= bbox[1] && center.lat <= bbox[3]);
+    if (inside) return inside;
+
+    let best = zones[0];
+    let bestDistance = Infinity;
+    for (const zone of zones) {
+        if (!Array.isArray(zone.bbox)) continue;
+        const [w, s, e, n] = zone.bbox;
+        const dLon = Math.max(w - center.lon, 0, center.lon - e)
+            * Math.cos((center.lat * Math.PI) / 180);
+        const dLat = Math.max(s - center.lat, 0, center.lat - n);
+        const distance = Math.hypot(dLon, dLat);
+        if (distance < bestDistance) {
+            best = zone;
+            bestDistance = distance;
+        }
+    }
+    return best;
+}
+
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
 const POI_DETAIL_FIELDS = [
@@ -479,6 +507,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [showAir, setShowAir] = useState(false);
     const [airData, setAirData] = useState(null);
     const [airError, setAirError] = useState(null);
+    const [mapCenter, setMapCenter] = useState(null);
     const [isAirInfoOpen, setIsAirInfoOpen] = useState(false);
     const [showBikeshare, setShowBikeshare] = useState(false);
     const [bikeshareData, setBikeshareData] = useState(null);
@@ -920,18 +949,20 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     }, [airData]);
 
+    const activeAir = useMemo(() => airForCenter(airData, mapCenter), [airData, mapCenter]);
+
     // Première heure de la prévision où l'indice bascule dans une bande plus
     // dégradée que l'actuelle : « dégradation prévue vers 19 h ».
     const airForecastWarning = useMemo(() => {
-        const current = airData?.summary?.aqi;
-        const forecast = airData?.forecast;
+        const current = activeAir?.summary?.aqi;
+        const forecast = activeAir?.forecast;
         if (current == null || !Array.isArray(forecast)) return null;
         const worse = forecast.find((f) => f.aqi >= current + 20);
         if (!worse) return null;
         const date = new Date(worse.time);
         if (Number.isNaN(date.getTime())) return null;
         return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    }, [airData]);
+    }, [activeAir]);
 
     const bikeshareGeoJSON = useMemo(
         () => bikeshareData?.geojson || { type: 'FeatureCollection', features: [] },
@@ -1280,24 +1311,24 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                             </div>
                             {airError ? (
                                 <span className="air-legend-time">{airError}</span>
-                            ) : airData?.summary?.aqi != null ? (
+                            ) : activeAir?.summary?.aqi != null ? (
                                 <>
                                     <span className="air-legend-index">
                                         <span
                                             className="air-legend-dot"
-                                            style={{ backgroundColor: AIR_BAND_COLORS[airData.summary.band] || '#9ca3af' }}
+                                            style={{ backgroundColor: AIR_BAND_COLORS[activeAir.summary.band] || '#9ca3af' }}
                                         />
-                                        Indice {airData.summary.aqi} · {airData.summary.label}
+                                        Indice {activeAir.summary.aqi} · {activeAir.summary.label}
                                     </span>
-                                    {airData.summary.dominant && (
-                                        <span className="air-legend-sub">Polluant dominant : {airData.summary.dominant}</span>
+                                    {activeAir.summary.dominant && (
+                                        <span className="air-legend-sub">Polluant dominant : {activeAir.summary.dominant}</span>
                                     )}
                                     {airForecastWarning && (
                                         <span className="air-legend-sub">Dégradation prévue vers {airForecastWarning}</span>
                                     )}
                                     {airData.stale
                                         ? <span className="air-legend-time">Dernier relevé disponible{airUpdatedAt ? ` (${airUpdatedAt})` : ''}</span>
-                                        : airUpdatedAt && <span className="air-legend-time">Relevé de {airUpdatedAt} · maille ~11 km</span>}
+                                        : airUpdatedAt && <span className="air-legend-time">Relevé de {airUpdatedAt} · maille ~{airData.resolution_km || 11} km</span>}
                                 </>
                             ) : (
                                 <span className="air-legend-time">Chargement…</span>
@@ -1390,6 +1421,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             <AirQualityInfoModal
                 isOpen={isAirInfoOpen}
                 onClose={() => setIsAirInfoOpen(false)}
+                resolutionKm={airData?.resolution_km || 11}
             />
 
             {!littleMap && (
@@ -1567,6 +1599,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 onMoveStart={closeContextMenu}
                 onMoveEnd={littleMap ? undefined : (e) => {
                     const c = e.viewState;
+                    setMapCenter({ lat: c.latitude, lon: c.longitude });
                     try {
                         localStorage.setItem('userMapLastView', JSON.stringify({
                             longitude: c.longitude, latitude: c.latitude, zoom: c.zoom
@@ -1574,7 +1607,11 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     } catch {
                     }
                 }}
-                onLoad={() => setIsMapLoaded(true)}
+                onLoad={(e) => {
+                    setIsMapLoaded(true);
+                    const c = e.target.getCenter();
+                    setMapCenter({ lat: c.lat, lon: c.lng });
+                }}
                 style={{ width: '100%', height: '100%' }}
             >
                 <NavigationControl position="top-right" />

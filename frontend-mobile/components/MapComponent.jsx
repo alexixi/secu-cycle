@@ -225,6 +225,34 @@ const formatAccidentDate = (properties) => {
 
 const TRAFFIC_COLORS = { green: '#22c55e', orange: '#f97316', red: '#ef4444', gray: '#9ca3af' };
 
+// Résumé de la zone où se trouve l'utilisateur.
+function airForPoint(airData, point) {
+    const zones = airData?.zones;
+    if (!Array.isArray(zones) || zones.length === 0) return airData || null;
+    if (zones.length === 1 || !point) return zones[0];
+
+    const inside = zones.find(({ bbox }) => Array.isArray(bbox)
+        && point.lon >= bbox[0] && point.lon <= bbox[2]
+        && point.lat >= bbox[1] && point.lat <= bbox[3]);
+    if (inside) return inside;
+
+    let best = zones[0];
+    let bestDistance = Infinity;
+    for (const zone of zones) {
+        if (!Array.isArray(zone.bbox)) continue;
+        const [w, s, e, n] = zone.bbox;
+        const dLon = Math.max(w - point.lon, 0, point.lon - e)
+            * Math.cos((point.lat * Math.PI) / 180);
+        const dLat = Math.max(s - point.lat, 0, point.lat - n);
+        const distance = Math.hypot(dLon, dLat);
+        if (distance < bestDistance) {
+            best = zone;
+            bestDistance = distance;
+        }
+    }
+    return best;
+}
+
 const AIR_BAND_COLORS = {
     good: '#50f0e6', fair: '#50ccaa', moderate: '#f0e641',
     poor: '#ff5050', very_poor: '#960032', extreme: '#7d2181',
@@ -725,6 +753,15 @@ export default function MapComponent({
         () => airData?.stations?.features?.length ? airData.stations : EMPTY_FEATURE_COLLECTION,
         [airData]
     );
+
+    const activeAir = useMemo(() => {
+        const point = (currentPosition?.lat != null && currentPosition?.lon != null)
+            ? { lat: currentPosition.lat, lon: currentPosition.lon }
+            : (start?.lat != null && start?.lon != null)
+                ? { lat: parseFloat(start.lat), lon: parseFloat(start.lon) }
+                : null;
+        return airForPoint(airData, point);
+    }, [airData, currentPosition, start]);
 
     useEffect(() => {
         if (miniMap) return;
@@ -1505,9 +1542,9 @@ export default function MapComponent({
                                         </Text>
                                         <Ionicons name="information-circle-outline" size={15} color={colors.textSecondary} />
                                     </View>
-                                    {airData?.summary?.aqi != null && (
+                                    {activeAir?.summary?.aqi != null && (
                                         <Text style={[typography.body, { marginLeft: 15, fontSize: 12, color: colors.textSecondary }]}>
-                                            {`Indice ${airData.summary.aqi} · ${airData.summary.label}`}
+                                            {`Indice ${activeAir.summary.aqi} · ${activeAir.summary.label}`}
                                         </Text>
                                     )}
                                 </TouchableOpacity>
@@ -1666,7 +1703,7 @@ export default function MapComponent({
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
                             {"L'indice affiché est l'indice européen de qualité de l'air (EAQI), calculé "}
                             {"par le service européen Copernicus (CAMS). Chaque cellule colorée couvre "}
-                            {"environ 11 km de côté : c'est un niveau régional"}
+                            {`environ ${airData?.resolution_km || 11} km de côté : c'est un niveau régional`}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary, fontStyle: 'italic' }]}>

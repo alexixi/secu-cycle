@@ -13,6 +13,7 @@ from graph.config import (
     NIGHT_EXTINCTION_WINDOW,
     DEFAULT_AIR_EXPOSURE, AIR_INTENSITY_LOW_EXPOSURE,
 )
+from graph.extent import graph_zones, zone_center, zone_of
 
 # Repli lorsqu'aucun centre de graphe n'est connu (place de la Bourse, Bordeaux).
 BORDEAUX_LAT, BORDEAUX_LON = 44.8378, -0.5792
@@ -219,7 +220,7 @@ def get_route_safety_score(G, route, bike_type=None, is_electric=False):
     (`_s_on`/`_s_off`) et applique un petit malus si le revêtement est inadapté
     au type de vélo (un vélo de route sur gravier voit sa note baisser).
     """
-    lat, lon = graph_center(G)
+    lat, lon = node_zone_center(G, route[0]) if route else main_zone_center(G)
     now = datetime.now(pytz.timezone('Europe/Paris'))
     now_min = now.hour * 60 + now.minute
     is_dark = is_dark_now(now, lat, lon)
@@ -281,20 +282,66 @@ def extract_route_geometry(G, route_nodes):
 
     return path_coords
 
-def graph_center(G):
-    """Centre (lat, lon) du graphe, calculé une fois puis mémorisé sur `G`.
+def main_zone_center(G):
+    """Centre (lat, lon) de la zone principale du graphe.
 
-    Sert à situer correctement le calcul lever/coucher du soleil : un graphe
-    couvrant Tournai ou Strasbourg n'a pas les mêmes heures de nuit que Bordeaux.
+    Repli pour les calculs qui ne se rapportent à aucun point précis. Quand un
+    point est disponible, c'est `zone_center_of` qu'il faut : un graphe couvrant
+    Bordeaux et Tournai n'a pas les mêmes heures de nuit d'un bout à l'autre.
     """
-    center = G.graph.get('_center')
-    if center is not None:
-        return center
-    ys = [d['y'] for _, d in G.nodes(data=True) if 'y' in d]
-    xs = [d['x'] for _, d in G.nodes(data=True) if 'x' in d]
-    center = (sum(ys) / len(ys), sum(xs) / len(xs)) if xs and ys else (BORDEAUX_LAT, BORDEAUX_LON)
-    G.graph['_center'] = center
-    return center
+    zones = graph_zones(G)
+    return zone_center(zones[0]) if zones else (BORDEAUX_LAT, BORDEAUX_LON)
+
+
+def zone_center_of(G, lat, lon):
+    """Centre (lat, lon) de la zone où tombe le point — le lieu du calcul solaire.
+
+    C'est le centre de la zone, et non le point lui-même : `_sun_times` mémorise
+    par lieu arrondi au centième de degré, et une clé par kilomètre saturerait
+    son cache pour un gain nul (à l'échelle d'une agglomération, le coucher du
+    soleil ne bouge que de quelques minutes).
+    """
+    zones = graph_zones(G)
+    if not zones:
+        return BORDEAUX_LAT, BORDEAUX_LON
+    return zone_center(zones[zone_of(G, lat, lon)])
+
+
+def _node_latlon(G, node):
+    """(lat, lon) d'un nœud du graphe, ou None si ses coordonnées manquent."""
+    data = G.nodes[node]
+    if 'y' not in data or 'x' not in data:
+        return None
+    return data['y'], data['x']
+
+
+def node_zone_center(G, node):
+    """Centre de la zone d'un nœud du graphe, avec repli si ses coordonnées manquent."""
+    point = _node_latlon(G, node)
+    return zone_center_of(G, *point) if point else main_zone_center(G)
+
+
+def air_intensity_at(G, lat, lon):
+    """Intensité du malus de pollution applicable au point, dans [0, 1].
+
+    Par zone : un pic mesuré à Tournai ne doit pas alourdir un trajet bordelais.
+    Repli sur la valeur globale tant que la tâche de fond `air_quality` n'a pas
+    posé le détail par zone (premier démarrage, profil tout juste rechargé).
+    """
+    per_zone = G.graph.get('_air_zone_intensity')
+    if per_zone:
+        index = zone_of(G, lat, lon)
+        if index is not None and index < len(per_zone):
+            return float(per_zone[index])
+    return float(G.graph.get('_air_intensity', 0.0))
+
+
+def node_air_intensity(G, node):
+    """Intensité du malus de pollution dans la zone d'un nœud du graphe."""
+    point = _node_latlon(G, node)
+    if point is None:
+        return float(G.graph.get('_air_intensity', 0.0))
+    return air_intensity_at(G, *point)
 
 
 @lru_cache(maxsize=512)
@@ -466,8 +513,9 @@ def calculate_infra_stats(G, route):
     # L'air a-t-il réellement pesé sur ce calcul ? Vrai seulement quand l'indice
     # régional est dégradé (intensité > 0). Sinon le terme d'exposition est inactif
     # et on ne met pas en avant un critère qui n'a rien orienté (comme l'éclairage
-    # de jour). Lue sur le graphe, tenue à jour par la tâche de fond air_quality.
-    air_aware = float(G.graph.get('_air_intensity', 0.0)) > 0.0
+    # de jour). Lue sur le graphe, tenue à jour par la tâche de fond air_quality,
+    # et prise dans la zone de l'itinéraire — pas dans celle d'une autre ville.
+    air_aware = node_air_intensity(G, route[0]) > 0.0 if route else False
 
     CYCLABLE_CYCLEWAYS = {'track', 'separate', 'lane', 'shared_busway',
                           'opposite_lane', 'opposite_track', 'opposite'}

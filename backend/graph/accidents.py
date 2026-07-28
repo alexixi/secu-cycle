@@ -3,18 +3,33 @@
 import math
 
 import osmnx as ox
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 
 from database import SessionLocal
 from graph.config import (
     ACCIDENT_HALF_LIFE_YEARS, ACCIDENT_MALUS_K, ACCIDENT_MAX_MALUS,
     ACCIDENT_SNAP_RADIUS_M, ACCIDENT_REFERENCE_LENGTH_M,
 )
+from graph.extent import graph_zones
 from models.accident import RoadAccident
 
 
-def load_accident_points(bbox=None):
-    """Accidents en base, éventuellement restreints à une boîte englobante.
+def zone_filter(latitude, longitude, zones):
+    """Clause SQL « le point tombe dans l'une des zones », ou None si `zones` est vide.
+
+    Un `OR` de rectangles, et non le rectangle englobant : sur un profil
+    multi-villes, ce dernier couvrirait tout ce qui sépare les villes.
+    """
+    if not zones:
+        return None
+    return or_(*[
+        and_(longitude.between(w, e), latitude.between(s, n))
+        for w, s, e, n in zones
+    ])
+
+
+def load_accident_points(zones=None):
+    """Accidents en base, éventuellement restreints aux zones du graphe.
 
     Renvoie une liste de tuples (lat, lon, severity, année). Lire toute la table
     est acceptable : on parle de quelques centaines à quelques milliers de lignes
@@ -26,12 +41,9 @@ def load_accident_points(bbox=None):
             RoadAccident.latitude, RoadAccident.longitude,
             RoadAccident.severity, RoadAccident.occurred_on,
         )
-        if bbox is not None:
-            lon_min, lat_min, lon_max, lat_max = bbox
-            query = query.where(
-                RoadAccident.longitude.between(lon_min, lon_max),
-                RoadAccident.latitude.between(lat_min, lat_max),
-            )
+        clause = zone_filter(RoadAccident.latitude, RoadAccident.longitude, zones)
+        if clause is not None:
+            query = query.where(clause)
         return db.execute(query).all()
     finally:
         db.close()
@@ -66,7 +78,7 @@ def attach_accident_risk(G):
         data['_accident_n'] = 0
 
     try:
-        points = load_accident_points(_graph_bounds(G))
+        points = load_accident_points(graph_zones(G))
     except Exception as exc:
         print(f"[Accidents] Lecture impossible, scores d'infrastructure inchangés : {exc}",
               flush=True)
@@ -136,15 +148,6 @@ def attach_accident_risk(G):
         flush=True,
     )
     return G
-
-
-def _graph_bounds(G):
-    """Boîte englobante du graphe, pour ne lire que les accidents utiles."""
-    ys = [d['y'] for _, d in G.nodes(data=True)]
-    xs = [d['x'] for _, d in G.nodes(data=True)]
-    if not xs or not ys:
-        return None
-    return min(xs), min(ys), max(xs), max(ys)
 
 
 def _distance_to_edge_m(G, u, v, data, lat, lon):
