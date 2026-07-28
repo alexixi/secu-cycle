@@ -16,6 +16,45 @@
     --map-popup-border: rgba(255, 255, 255, 0.14);
 }
 
+.map-container {
+    --bikeshare-mechanical: #312e81;
+    --bikeshare-mechanical-tint: rgba(49, 46, 129, 0.10);
+    --bikeshare-electric: #0e7490;
+    --bikeshare-electric-tint: rgba(14, 116, 144, 0.10);
+    --bikeshare-docks: #475569;
+    --bikeshare-docks-tint: rgba(71, 85, 105, 0.10);
+    --bikeshare-indispo: #cbd5e1;
+}
+
+.map-container.map-dark {
+    --bikeshare-mechanical: #a5b4fc;
+    --bikeshare-mechanical-tint: rgba(165, 180, 252, 0.14);
+    --bikeshare-electric: #67e8f9;
+    --bikeshare-electric-tint: rgba(103, 232, 249, 0.14);
+    --bikeshare-docks: #cbd5e1;
+    --bikeshare-docks-tint: rgba(203, 213, 225, 0.12);
+    --bikeshare-indispo: #4b5563;
+}
+
+.bikeshare-tone-mechanical {
+    --tone: var(--bikeshare-mechanical);
+    --tone-tint: var(--bikeshare-mechanical-tint);
+}
+
+.bikeshare-tone-electric {
+    --tone: var(--bikeshare-electric);
+    --tone-tint: var(--bikeshare-electric-tint);
+}
+
+.bikeshare-tone-docks {
+    --tone: var(--bikeshare-docks);
+    --tone-tint: var(--bikeshare-docks-tint);
+}
+
+.bikeshare-tone-indispo {
+    --tone: var(--bikeshare-indispo);
+}
+
 .maplibregl-popup-content {
     padding: 0 !important;
     border-radius: 10px !important;
@@ -107,6 +146,25 @@
     height: 30px;
     object-fit: contain;
     display: block;
+}
+
+.map-popup-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    height: 30px;
+    padding: 0 5px;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.map-popup-logo img {
+    display: block;
+    height: 20px;
+    max-width: 62px;
+    object-fit: contain;
 }
 
 .map-popup-header-text {
@@ -403,6 +461,73 @@
     font-size: 0.85rem;
     color: var(--map-popup-muted);
     margin: 0;
+}
+
+.bikeshare-counts {
+    display: flex;
+    gap: 6px;
+    margin: 2px 0 6px;
+}
+
+.bikeshare-counts-off {
+    opacity: 0.45;
+}
+
+.bikeshare-count {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 6px 3px;
+    border-radius: 7px;
+    background-color: var(--tone-tint);
+}
+
+.bikeshare-count-top {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--tone);
+}
+
+.bikeshare-count-icon {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.bikeshare-count-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.bikeshare-count-label {
+    font-size: 0.66rem;
+    color: var(--map-popup-muted);
+    text-align: center;
+    line-height: 1.15;
+}
+
+.bikeshare-bar {
+    display: flex;
+    gap: 2px;
+    height: 6px;
+    margin: 0 0 8px;
+}
+
+.bikeshare-bar-part {
+    flex-basis: 0;
+    min-width: 3px;
+    border-radius: 3px;
+    background-color: var(--tone);
+}
+
+.map-popup-warning {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #b45309;
 }
 
 .map-locate-control {

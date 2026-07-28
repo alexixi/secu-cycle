@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 from graph import routing
-from graph.extent import graph_bbox
+from graph.extent import graph_bbox, overlaps
 from traffic import config, providers
 
 logger = logging.getLogger(__name__)
@@ -69,11 +69,6 @@ def snapshot() -> dict:
     return _state.as_dict()
 
 
-def _overlaps(a, b) -> bool:
-    """Les deux emprises (w, s, e, n) se croisent-elles ?"""
-    return not (a[2] < b[0] or b[2] < a[0] or a[3] < b[1] or b[3] < a[1])
-
-
 def providers_for(bbox) -> list[str]:
     """Sources dont l'emprise croise celle du graphe chargé.
 
@@ -86,7 +81,7 @@ def providers_for(bbox) -> list[str]:
     return [
         name
         for name, spec in config.PROVIDERS.items()
-        if _overlaps(bbox, spec["coverage"])
+        if overlaps(bbox, spec["coverage"])
     ]
 
 
