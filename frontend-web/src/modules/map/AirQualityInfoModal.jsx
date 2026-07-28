@@ -21,7 +21,7 @@ const US_AQI_LEGEND = [
     { band: "hazardous", label: "Dangereux", range: "> 300", color: "#7e0023" },
 ];
 
-export default function AirQualityInfoModal({ isOpen, onClose }) {
+export default function AirQualityInfoModal({ isOpen, onClose, resolutionKm = 11 }) {
     useEffect(() => {
         if (!isOpen) return;
 
@@ -55,7 +55,7 @@ export default function AirQualityInfoModal({ isOpen, onClose }) {
                         <h3 className="air-info-sources-title">Cellules — indice européen (CAMS)</h3>
                         <p>
                             Indice européen (<strong>EAQI</strong>) du service Copernicus (<strong>CAMS</strong>).
-                            Chaque cellule ≈ <strong>11 km</strong> : un niveau régional, pas une mesure de rue.
+                            Chaque cellule ≈ <strong>{resolutionKm} km</strong> : un niveau régional, pas une mesure de rue.
                         </p>
 
                         <ul className="air-info-legend">
