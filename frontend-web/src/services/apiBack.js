@@ -541,6 +541,15 @@ export async function getAirQuality() {
     }
 }
 
+export async function getBikeshareStations() {
+    try {
+        const data = await apiFetch("/bikeshare/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function getHomeCases() {
     try {
         const data = await apiFetch("/home-cases/", { method: "GET" });
