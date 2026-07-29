@@ -275,6 +275,40 @@ d'épuiser un quota **partagé avec les tuiles de la carte**, dont l'épuisement
 Variables d'environnement associées (backend) : `MAPTILER_KEY`, `MAPTILER_GEOCODING_BUDGET`,
 `GEOCODE_CACHE_TTL_DAYS`. Sans clé, la recherche reste fonctionnelle en France mais se limite aux adresses.
 
+### Couches temps réel : trafic, vélos en libre-service, qualité de l'air, éclairage
+
+Quatre couches alimentées par des sources externes rafraîchies en continu. Toutes suivent le même
+principe de **sélection géographique** : une source n'est interrogée que si son emprise croise celle
+du graphe chargé, jamais parce qu'elle est « nationale ».
+
+- **Trafic** (`traffic/config.py`) — quatre portails Opendatasoft moissonnés toutes les 5 minutes :
+  Bordeaux Métropole (`ci_trafi_l`), Eurométropole de Strasbourg (`sirac_flux_trafic`), Rennes
+  Métropole (`etat-du-trafic-en-temps-reel`) et Nantes Métropole (`fluidite-axes-routiers`). Chaque
+  portail publie son propre vocabulaire d'état (majuscules à Bordeaux, entier 0-3 à Strasbourg, enum
+  DATEX II à Rennes) : `level_map` les ramène à une échelle unique green/orange/red/gray. Le malus de
+  routage correspondant vit dans `graph/config.py`, pas ici. AVATAR (Cerema) a été **évalué puis
+  écarté** — couverture trompeuse, vitesse renseignée dans 21 % des cas, latence de 31 s.
+- **Vélos en libre-service** (`bikeshare/config.py`) — neuf systèmes GBFS français et belges (Le Vélo,
+  Vélib', V'Lille, LE vélo STAR, Naolib, Vélo'v, Vélhop, Villo!, Blue-bike), atteints par
+  auto-découverte (`gbfs.json`) : aucune URL de flux ni numéro de version en dur, ce qui permet
+  d'ajouter un système sans savoir quelle version du standard il parle. Couche **informative**, sans
+  effet sur le calcul d'itinéraire. La fraîcheur est mesurée sur *notre* dernière collecte réussie et
+  non sur le `last_reported` publié, que plusieurs opérateurs laissent figé.
+- **Qualité de l'air** (`air_quality/config.py`) — indice européen (EAQI) du **CAMS**
+  (Copernicus Atmosphere Monitoring Service) via Open-Meteo, sur une maille d'environ 11 km,
+  échantillonné le long du trajet. Complété par les stations au sol du **World Air Quality Index**,
+  publiées sur l'échelle AQI américaine — deux échelles distinctes, affichées comme telles. Sans
+  `WAQI_TOKEN`, seule la couche CAMS est servie.
+- **Éclairage public** (`lighting/config.py`) — les lampadaires OSM (`highway=street_lamp`) couvrent
+  toute la zone mais inégalement ; deux jeux open data les densifient : points lumineux de Bordeaux
+  Métropole (`bor_ptlum`) et luminaires de Nantes Métropole.
+
+L'inventaire complet des sources, avec usage, licence et producteur, fait l'objet de la page publique
+[`/donnees`](https://secu-cycle.fr/donnees) et du § 1 de
+`Documentation/opendata-reutilisations.md`, qui fait foi. Les attributions ODbL, Licence Ouverte,
+CC BY 4.0, Copernicus et WAQI sont des **obligations de licence** : toute source ajoutée doit y être
+répercutée, ainsi que dans les mentions légales.
+
 ### Sécurité : limitation du débit (rate-limiting)
 L'API limite déjà le débit des tentatives de connexion (`5/minute` par IP via `slowapi`).
 En production, l'API tourne derrière Nginx avec plusieurs workers : le stockage en mémoire de
