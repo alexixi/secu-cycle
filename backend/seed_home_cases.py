@@ -16,9 +16,10 @@ DEFAULT_HOME_CASES = [
             "dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web "
             "et une application mobile qui aide les cyclistes à trouver des itinéraires "
             "sécurisés en fonction de leurs préférences, de leur profil et de leur "
-            "équipement. Nous nous sommes focalisés sur la zone de Bordeaux et de notre "
-            "campus universitaire pour affiner les résultats avec nos connaissances "
-            "locales du terrain."
+            "équipement. Nous avons d'abord affiné les résultats sur la zone de Bordeaux "
+            "et de notre campus universitaire grâce à nos connaissances locales du "
+            "terrain, et la couverture s'étend désormais à Lille, Tournai et leurs "
+            "environs."
         ),
     },
     {
@@ -45,18 +46,15 @@ DEFAULT_HOME_CASES = [
     {
         "title": "Sources des données",
         "text": (
-            "Sécu'Cycle combine différentes sources de données, principalement les "
-            "données d'OpenStreetMap (openstreetmap.fr) pour la carte des routes et "
-            "pistes cyclables. Nous ajoutons à cette carte des données topographiques "
-            "de l'IGN (ign.fr). Pour la complétion des adresses françaises nous "
-            "utilisons la BAN (Base Adresse Nationale, adresse.data.gouv.fr), complétée "
-            "par MapTiler (maptiler.com) pour les lieux et les adresses situés hors de "
-            "France, en Belgique notamment. Pour avoir des données de "
-            "trafic de la circulation routière nous utilisons l'open data de Bordeaux "
-            "Métropole (opendata.bordeaux-metropole.fr), qui publie l'état des axes en "
-            "temps réel. Enfin pour l'affichage de la carte, "
-            "nous utilisons les tuiles cartographiques de MapTiler, elles aussi "
-            "basées sur les données d'OpenStreetMap."
+            "Sécu'Cycle croise une quinzaine de jeux de données, très majoritairement "
+            "ouverts : OpenStreetMap pour le réseau routier, les aménagements "
+            "cyclables, le revêtement et l'éclairage, l'IGN pour le dénivelé, les "
+            "registres officiels d'accidentologie français et belge, le trafic en "
+            "temps réel publié par quatre métropoles, la disponibilité des vélos en "
+            "libre-service au format GBFS, l'indice européen de qualité de l'air du "
+            "service Copernicus, et la Base Adresse Nationale pour les adresses. Les "
+            "fonds de carte sont fournis par MapTiler, eux aussi construits sur les "
+            "données d'OpenStreetMap."
         ),
     },
 ]
