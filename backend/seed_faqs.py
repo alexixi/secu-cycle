@@ -27,28 +27,33 @@ DEFAULT_FAQS = [
         "question": "Comment est calculé un itinéraire sécurisé ?",
         "answer": (
             "Sécu'Cycle s'appuie sur un graphe routier construit à partir "
-            "d'OpenStreetMap et enrichi de données topographiques de l'IGN (dénivelé) "
-            "et de données de trafic. Chaque tronçon reçoit un coût qui tient compte "
-            "de la présence de pistes cyclables, du type de route, du trafic "
-            "automobile et de la pente. L'itinéraire proposé est celui qui minimise "
-            "ce coût global de sécurité, et pas seulement la distance."
+            "d'OpenStreetMap, enrichi de données topographiques de l'IGN pour le "
+            "dénivelé, de l'accidentologie officielle, de l'éclairage public, du "
+            "trafic routier en temps réel et de la qualité de l'air. Chaque tronçon "
+            "reçoit un score de sécurité sur 10 qui tient compte de la présence "
+            "d'aménagements cyclables, du type de route, du revêtement, de "
+            "l'éclairage, de la pente, du trafic automobile et des accidents recensés "
+            "à proximité. L'itinéraire proposé est celui qui minimise ce coût global "
+            "de sécurité, et pas seulement la distance. Le poids relatif de ces "
+            "critères s'ajuste selon votre profil et votre équipement."
         ),
     },
     {
         "question": "Sécu'Cycle est-il gratuit ?",
         "answer": (
             "Oui. Le site web et l'application mobile sont entièrement gratuits et "
-            "sans publicité. Sécu'Cycle est un projet étudiant."
+            "sans publicité. Sécu'Cycle est un projet étudiant à but non lucratif."
         ),
     },
     {
         "question": "Dans quelles villes Sécu'Cycle fonctionne-t-il ?",
         "answer": (
-            "Le service est aujourd'hui optimisé pour la métropole de Bordeaux et ses "
-            "environs, la zone sur laquelle nous avons affiné les données grâce à "
-            "notre connaissance du terrain. La couverture sera étendue à d'autres villes "
-            "et régions dans le futur, en fonction des besoins. Actuellement, nous testons "
-            "l'ouverture dans la région du Hainaut en Belgique."
+            "Le service couvre Bordeaux Métropole et le sud de Bordeaux, ainsi que "
+            "Lille, Tournai, Mouscron et leurs communes environnantes, dans la zone "
+            "transfrontalière entre la France et la Belgique. Ce sont les zones sur "
+            "lesquelles nous avons affiné les données grâce à notre connaissance du "
+            "terrain. La couverture peut être étendue à d'autres communes ; en dehors "
+            "de la zone couverte, aucun itinéraire ne peut être calculé."
         ),
     },
     {
@@ -71,15 +76,36 @@ DEFAULT_FAQS = [
     {
         "question": "D'où proviennent les données utilisées ?",
         "answer": (
-            "Sécu'Cycle combine plusieurs sources ouvertes : OpenStreetMap "
-            "(openstreetmap.fr) pour la carte des routes et pistes cyclables, l'IGN "
-            "(ign.fr) pour les données topographiques, la Base Adresse Nationale "
-            "(adresse.data.gouv.fr) pour les adresses françaises, l'open data de "
-            "Bordeaux Métropole (opendata.bordeaux-metropole.fr) pour l'état du trafic "
-            "routier en temps réel, et MapTiler "
-            "(maptiler.com) pour l'affichage des fonds de carte ainsi que pour la "
-            "recherche des lieux et des adresses situés hors de France, en Belgique "
-            "notamment."
+            "Sécu'Cycle combine une quinzaine de jeux de données, très "
+            "majoritairement ouverts : OpenStreetMap (ODbL) pour le réseau routier, "
+            "les aménagements cyclables, le revêtement et l'éclairage ; l'IGN pour le "
+            "dénivelé ; le jeu « Accidents de vélo » dérivé des fichiers BAAC de "
+            "l'ONISR en France et les données de Statbel en Belgique pour "
+            "l'accidentologie ; les portails open data de Bordeaux Métropole, de "
+            "l'Eurométropole de Strasbourg, de Rennes Métropole et de Nantes "
+            "Métropole pour le trafic en temps réel ; les flux GBFS de neuf systèmes "
+            "de vélos en libre-service ; l'indice européen de qualité de l'air du "
+            "service Copernicus (CAMS), complété par le World Air Quality Index ; la "
+            "Base Adresse Nationale pour les adresses françaises ; et MapTiler pour "
+            "les fonds de carte et le géocodage hors de France. Le détail de chaque "
+            "source, son usage, sa licence et son producteur sont listés sur la page "
+            "Sources des données : secu-cycle.fr/donnees"
+        ),
+    },
+    {
+        "question": "Les données d'accidents sont-elles fiables ?",
+        "answer": (
+            "Elles proviennent des registres officiels : les fichiers BAAC de l'ONISR "
+            "en France, les données géolocalisées de Statbel en Belgique. Ces "
+            "registres ne recensent toutefois que les accidents corporels déclarés "
+            "aux forces de l'ordre : les chutes sans tiers y sont très largement "
+            "sous-représentées, et le géocodage est plus lacunaire hors "
+            "agglomération. Nous en tenons compte dans le calcul : le malus "
+            "d'accidentologie est plafonné à 1,5 point sur 10 et reste strictement "
+            "soustractif, si bien qu'un tronçon sans accident recensé conserve sa "
+            "note d'infrastructure et qu'une zone mal couverte par les données n'est "
+            "jamais avantagée. Un tronçon sans accident recensé n'est pas pour autant "
+            "un tronçon sûr."
         ),
     },
     {

@@ -78,7 +78,7 @@ export default function StepBirthDate({ birthDate, setBirthDate, hasValue, setHa
 
 const styles = StyleSheet.create({
     formContainer: { width: "100%" },
-    title: { textAlign: "center", fontSize: 24, fontWeight: "bold", marginBottom: 8 },
+    title: { textAlign: "center", fontSize: 24, lineHeight: 29, fontWeight: "bold", marginBottom: 8 },
     subtitle: { textAlign: "center", fontSize: 15, marginBottom: 30 },
     inputGroup: { width: "100%", marginBottom: 20 },
     label: { fontSize: 14, fontWeight: "bold", marginBottom: 8, marginLeft: 4 },

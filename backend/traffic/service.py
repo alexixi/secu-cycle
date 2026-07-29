@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 from graph import routing
-from graph.extent import graph_bbox
+from graph.extent import graph_zones, overlaps_any
 from traffic import config, providers
 
 logger = logging.getLogger(__name__)
@@ -69,24 +69,21 @@ def snapshot() -> dict:
     return _state.as_dict()
 
 
-def _overlaps(a, b) -> bool:
-    """Les deux emprises (w, s, e, n) se croisent-elles ?"""
-    return not (a[2] < b[0] or b[2] < a[0] or a[3] < b[1] or b[3] < a[1])
-
-
-def providers_for(bbox) -> list[str]:
-    """Sources dont l'emprise croise celle du graphe chargé.
+def providers_for(zones) -> list[str]:
+    """Sources dont l'emprise croise au moins une zone du graphe chargé.
 
     Le critère est géographique : une source de portée métropolitaine ne doit
     pas être interrogée pour un graphe situé à l'autre bout du pays, même s'ils
-    partagent un code pays.
+    partagent un code pays. Le test porte sur chaque zone et non sur leur
+    enveloppe : celle d'un profil « Bordeaux + Tournai » recouvre la moitié de la
+    France, et réveillerait Rennes, Nantes et Strasbourg.
     """
-    if bbox is None:
+    if not zones:
         return []
     return [
         name
         for name, spec in config.PROVIDERS.items()
-        if _overlaps(bbox, spec["coverage"])
+        if overlaps_any(zones, spec["coverage"])
     ]
 
 
@@ -189,8 +186,8 @@ async def refresh(G) -> bool:
     """
     global _congested_key
 
-    bbox = graph_bbox(G)
-    names = providers_for(bbox)
+    zones = graph_zones(G)
+    names = providers_for(zones)
     if not names:
         if _state.available or _state.updated_at is None:
             logger.info("[trafic] aucune source pour ce profil : couche désactivée.")
@@ -203,7 +200,7 @@ async def refresh(G) -> bool:
         return False
 
     results = await asyncio.gather(
-        *(providers.fetch(config.PROVIDERS[name], bbox) for name in names),
+        *(providers.fetch(config.PROVIDERS[name], zones) for name in names),
         return_exceptions=True,
     )
 

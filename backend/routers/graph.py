@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from air_quality import service as air_quality_service
 from database import get_db, SessionLocal
 from dependencies import require_admin
 from graph import builder, communes as communes_service, routing
@@ -14,6 +15,7 @@ from graph.config import MAX_SNAP_DISTANCE_M
 from graph.graph_manager import load_graph_with_ign, profile_paths
 from graph.route_cache import route_cache
 from traffic import service as traffic_service
+from bikeshare import service as bikeshare_service
 from limiter import limiter
 from models.commune_lighting import CommuneLighting
 from models.graph_profile import GraphBuildRun, GraphProfile
@@ -496,6 +498,16 @@ async def _reload_graph(app, name: str) -> None:
             night_extinction
         )
         await traffic_service.refresh(G)
+
+        try:
+            await bikeshare_service.refresh(G)
+        except Exception as exc:
+            print(f"[Graphe] Vélos en libre-service indisponibles : {exc}", flush=True)
+
+        try:
+            await air_quality_service.refresh(G)
+        except Exception as exc:
+            print(f"[Graphe] Qualité de l'air indisponible : {exc}", flush=True)
 
         app.state.G = G
         app.state.graph_profile = name

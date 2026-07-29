@@ -7,13 +7,13 @@ import MapContextMenu, { formatCoords } from './MapContextMenu';
 import LightingInfoModal from './LightingInfoModal';
 import AirQualityInfoModal from './AirQualityInfoModal';
 import { useTheme } from '../../context/ThemeContext';
-import { getPois, getAccidents, getStreetlights, getLitRoads, getStreetlightSources, getAirQuality } from '../../services/apiBack';
+import { getPois, getAccidents, getStreetlights, getLitRoads, getStreetlightSources, getAirQuality, getBikeshareStations } from '../../services/apiBack';
 import { getAddressFromCoordinates, getApproxLocationFromIp } from '../../services/geocodingService';
 import { trackEvent } from '../../services/analytics';
 
 import { IoMdPin } from "react-icons/io";
-import { FaLayerGroup } from "react-icons/fa";
-import { MdOutlineReportProblem, MdOutlineTraffic, MdMyLocation, MdOutlinePlace, MdOutlineLightbulb, MdInfoOutline, MdOutlineAir } from "react-icons/md";
+import { FaLayerGroup, FaBicycle } from "react-icons/fa";
+import { MdOutlineReportProblem, MdOutlineTraffic, MdMyLocation, MdOutlinePlace, MdOutlineLightbulb, MdInfoOutline, MdOutlineAir, MdElectricBike, MdLocalParking } from "react-icons/md";
 import reportAccidentIcon from '../../assets/reports/accident.png';
 import reportTravauxIcon from '../../assets/reports/travaux.png';
 import reportDangerIcon from '../../assets/reports/danger.png';
@@ -100,7 +100,19 @@ const REPORT_IMAGE_ASSETS = [
     { key: 'report-obstacle', src: reportObstacleIcon },
 ];
 
-const MAP_IMAGE_ASSETS = [...POI_IMAGE_ASSETS, ...REPORT_IMAGE_ASSETS];
+const bikeshareImageModules = import.meta.glob('../../assets/bikeshare/*.png', { eager: true, import: 'default' });
+const BIKESHARE_IMAGE_ASSETS = Object.entries(bikeshareImageModules).map(([filePath, src]) => ({
+    key: filePath.split('/').pop().replace('.png', ''),
+    src,
+}));
+
+const MAP_IMAGE_ASSETS = [...POI_IMAGE_ASSETS, ...REPORT_IMAGE_ASSETS, ...BIKESHARE_IMAGE_ASSETS];
+
+const bikeshareLogoModules = import.meta.glob('../../assets/bikeshare/logos/*.png', { eager: true, import: 'default' });
+const BIKESHARE_LOGOS = Object.fromEntries(
+    Object.entries(bikeshareLogoModules)
+        .map(([filePath, src]) => [filePath.split('/').pop().replace('.png', ''), src])
+);
 
 const IMAGE_SRC_BY_KEY = Object.fromEntries(MAP_IMAGE_ASSETS.map(({ key, src }) => [key, src]));
 
@@ -258,6 +270,34 @@ const AIR_FILL_COLOR = ['match', ['get', 'band'],
 // via la propriété `color`).
 const AIR_STATION_CIRCLE_LAYER_ID = 'air-stations-circle';
 
+// Résumé de la zone regardée.
+function airForCenter(airData, center) {
+    const zones = airData?.zones;
+    if (!Array.isArray(zones) || zones.length === 0) return airData || null;
+    if (zones.length === 1 || !center) return zones[0];
+
+    const inside = zones.find(({ bbox }) => Array.isArray(bbox)
+        && center.lon >= bbox[0] && center.lon <= bbox[2]
+        && center.lat >= bbox[1] && center.lat <= bbox[3]);
+    if (inside) return inside;
+
+    let best = zones[0];
+    let bestDistance = Infinity;
+    for (const zone of zones) {
+        if (!Array.isArray(zone.bbox)) continue;
+        const [w, s, e, n] = zone.bbox;
+        const dLon = Math.max(w - center.lon, 0, center.lon - e)
+            * Math.cos((center.lat * Math.PI) / 180);
+        const dLat = Math.max(s - center.lat, 0, center.lat - n);
+        const distance = Math.hypot(dLon, dLat);
+        if (distance < bestDistance) {
+            best = zone;
+            bestDistance = distance;
+        }
+    }
+    return best;
+}
+
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
 const POI_DETAIL_FIELDS = [
@@ -284,6 +324,130 @@ const POI_DETAIL_FIELDS = [
     { key: 'wheelchair', label: 'Accessible PMR' },
     { key: 'seasonal', label: 'Saisonnier' },
 ];
+
+const BIKESHARE_ICON_LAYER_ID = 'bikeshare-icon';
+const BIKESHARE_HITBOX_LAYER_ID = 'bikeshare-hitbox';
+const BIKESHARE_BADGE_LAYER_ID = 'bikeshare-badge';
+
+const BIKESHARE_NAVY = '#312E81';
+
+const BIKESHARE_COLORS = {
+    ok: '#16A34A',
+    low: '#F97316',
+    empty: '#EF4444',
+    off: OFF_COLOR,
+    full: '#166534',
+};
+
+const BIKESHARE_IS_OFF = ['any',
+    ['==', ['get', 'is_renting'], false],
+    ['==', ['get', 'is_installed'], false]];
+
+const BIKESHARE_BIKES = ['coalesce', ['get', 'bikes_available'], -1];
+const BIKESHARE_DOCKS = ['coalesce', ['get', 'docks_available'], -1];
+
+const BIKESHARE_STATE = (unknown, off, empty, full, low, ok) => ['case',
+    BIKESHARE_IS_OFF, off,
+    ['<', BIKESHARE_BIKES, 0], unknown,
+    ['==', BIKESHARE_BIKES, 0], empty,
+    ['==', BIKESHARE_DOCKS, 0], full,
+    ['<=', BIKESHARE_BIKES, 2], low,
+    ok];
+
+const BIKESHARE_ICON_IMAGE = BIKESHARE_STATE(
+    'bikeshare-unknown', 'bikeshare-off', 'bikeshare-0',
+    'bikeshare-3', 'bikeshare-1', 'bikeshare-2');
+
+const BIKESHARE_BADGE_IMAGE = BIKESHARE_STATE(
+    '', '', 'bikeshare-badge-empty',
+    'bikeshare-badge-full', 'bikeshare-badge-low', 'bikeshare-badge-ok');
+
+const BIKESHARE_HAS_BADGE = ['all',
+    ['!', BIKESHARE_IS_OFF],
+    ['>=', BIKESHARE_BIKES, 0]];
+
+const BIKESHARE_BADGE_TRANSLATE = ['interpolate', ['linear'], ['zoom'],
+    10, ['literal', [4, -4]],
+    12, ['literal', [7, -7]],
+    14, ['literal', [10, -10]],
+    16, ['literal', [12, -12]],
+    18, ['literal', [14, -14]]];
+
+const BIKESHARE_COUNT_FIELDS = [
+    { key: 'bikes_mechanical', label: 'Mécaniques', Icon: FaBicycle, tone: 'mechanical' },
+    { key: 'bikes_electric', label: 'Électriques', Icon: MdElectricBike, tone: 'electric' },
+    { key: 'docks_available', label: 'Places libres', Icon: MdLocalParking, tone: 'docks' },
+];
+
+const BIKESHARE_TOTAL_FIELD = {
+    key: 'bikes_available', label: 'Vélos', Icon: FaBicycle, tone: 'mechanical',
+};
+
+
+function bikeshareShare(station, ventile) {
+    const nombre = (key) => (typeof station[key] === 'number' ? station[key] : 0);
+    const bikes = nombre('bikes_available');
+    const docks = nombre('docks_available');
+    const mecha = ventile ? nombre('bikes_mechanical') : bikes;
+    const elec = ventile ? nombre('bikes_electric') : 0;
+
+    const autres = Math.max(0, bikes - mecha - elec);
+    const capacity = typeof station.capacity === 'number' ? station.capacity : 0;
+    const indispo = Math.max(0, capacity - bikes - docks);
+    const total = mecha + elec + autres + docks + indispo;
+    if (total <= 0) return null;
+    return {
+        mecha, elec, autres, docks, indispo, total,
+        indispoNotable: indispo >= 3 && indispo / total >= 0.25,
+    };
+}
+
+
+const POPUP_VIEWPORT_MARGIN = 14;
+
+function panPopupIntoView(map, margin = POPUP_VIEWPORT_MARGIN) {
+    const container = map.getContainer();
+    const popup = container.querySelector('.maplibregl-popup:not(.custom-map-tooltip)');
+    if (!popup) return;
+
+    const cadre = container.getBoundingClientRect();
+    const bulle = popup.getBoundingClientRect();
+    if (!bulle.width || !bulle.height) return;
+
+    const gauche = (cadre.left + margin) - bulle.left;
+    const droite = bulle.right - (cadre.right - margin);
+    const haut = (cadre.top + margin) - bulle.top;
+    const bas = bulle.bottom - (cadre.bottom - margin);
+
+    const dx = bulle.width + 2 * margin > cadre.width
+        ? Math.max(0, gauche)
+        : Math.max(0, gauche) - Math.max(0, droite);
+    const dy = bulle.height + 2 * margin > cadre.height
+        ? Math.max(0, haut)
+        : Math.max(0, haut) - Math.max(0, bas);
+
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+
+    map.panBy([-dx, -dy], { duration: 220 });
+}
+
+const BIKESHARE_DETAIL_FIELDS = [
+    { key: 'capacity', label: 'Capacité', format: (value) => `${value} points d'attache` },
+    { key: 'system_name', label: 'Réseau' },
+    { key: 'address', label: 'Adresse' },
+];
+
+const formatStationFreshness = (lastReported) => {
+    if (!lastReported) return null;
+    const then = new Date(lastReported).getTime();
+    if (Number.isNaN(then)) return null;
+    const minutes = Math.round((Date.now() - then) / 60000);
+    if (minutes < 1) return 'Données à jour';
+    if (minutes < 60) return `Relevé ${REPORT_AGE_RTF.format(-minutes, 'minute')}`;
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return `Relevé ${REPORT_AGE_RTF.format(-hours, 'hour')}`;
+    return 'Relevé ancien, fiabilité incertaine';
+};
 
 const formatPoiTag = (value) => {
     if (value === 'yes') return 'Oui';
@@ -343,12 +507,49 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [showAir, setShowAir] = useState(false);
     const [airData, setAirData] = useState(null);
     const [airError, setAirError] = useState(null);
+    const [mapCenter, setMapCenter] = useState(null);
     const [isAirInfoOpen, setIsAirInfoOpen] = useState(false);
+    const [showBikeshare, setShowBikeshare] = useState(false);
+    const [bikeshareData, setBikeshareData] = useState(null);
+    const [bikeshareError, setBikeshareError] = useState(null);
+    const [activeStation, setActiveStation] = useState(null);
     const [contextMenu, setContextMenu] = useState(null);
     const [contextAddress, setContextAddress] = useState(null);
     const [isContextAddressLoading, setIsContextAddressLoading] = useState(false);
     const contextGeocodeRef = useRef(null);
     const didAutoCenterRef = useRef(false);
+
+    const popupAncre = activeTraffic ? `trafic:${activeTraffic.lon},${activeTraffic.lat}`
+        : activeAirStation ? `air:${activeAirStation.lon},${activeAirStation.lat}`
+            : activeReport ? `signalement:${activeReport.longitude},${activeReport.latitude}`
+                : activePoi ? `poi:${activePoi.lon},${activePoi.lat}`
+                    : activeStation ? `vls:${activeStation.station_id}`
+                        : activeAccident ? `accident:${activeAccident.lon},${activeAccident.lat}`
+                            : null;
+
+    useEffect(() => {
+        const map = mapRef.current?.getMap?.();
+        if (!map || !isMapLoaded || !popupAncre) return undefined;
+
+        let seconde;
+        let observateur;
+        const premiere = requestAnimationFrame(() => {
+            seconde = requestAnimationFrame(() => {
+                panPopupIntoView(map);
+
+                const bulle = map.getContainer()
+                    .querySelector('.maplibregl-popup:not(.custom-map-tooltip)');
+                if (!bulle) return;
+                observateur = new ResizeObserver(() => panPopupIntoView(map));
+                observateur.observe(bulle);
+            });
+        });
+        return () => {
+            cancelAnimationFrame(premiere);
+            if (seconde) cancelAnimationFrame(seconde);
+            observateur?.disconnect();
+        };
+    }, [isMapLoaded, popupAncre]);
 
     useEffect(() => {
         const savedTheme = localStorage.getItem('userMapThemeMode');
@@ -369,6 +570,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         setShowLighting(localStorage.getItem('userMapLighting') === 'true');
         setShowLitRoads(localStorage.getItem('userMapLitRoads') === 'true');
         setShowAir(localStorage.getItem('userMapAir') === 'true');
+        setShowBikeshare(localStorage.getItem('userMapBikeshare') === 'true');
 
         const savedSubTypes = localStorage.getItem('userMapSubTypes');
         if (savedSubTypes) {
@@ -387,7 +589,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             getPois(id)
                 .then(collection => setPoiData(prev => ({ ...prev, [id]: collection })))
                 .catch(error => {
-                    poiCacheRef.current[id] = false;  // autorise une nouvelle tentative
+                    poiCacheRef.current[id] = false;
                     console.error(`Erreur chargement POI ${id}:`, error);
                 });
         });
@@ -402,7 +604,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 if (!collection?.features?.length) accidentCacheRef.current = false;
             })
             .catch(error => {
-                accidentCacheRef.current = false;  // autorise une nouvelle tentative
+                accidentCacheRef.current = false;
                 console.error("Erreur chargement des accidents :", error);
             });
     }, [showAccidents, littleMap]);
@@ -454,9 +656,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         localStorage.setItem('userMapLitRoads', String(next));
     };
 
-    // Qualité de l'air : donnée vivante, rechargée au rythme publié par la source
-    // (comme le trafic). Réessai à 60 s en cas d'échec. La couche reste affichée
-    // sur le dernier instantané entre deux tours.
     useEffect(() => {
         if (littleMap || !showAir) return;
 
@@ -488,6 +687,55 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     };
 
     const handleAirInfoToggle = () => setIsAirInfoOpen((open) => !open);
+
+    useEffect(() => {
+        if (littleMap || !showBikeshare) return;
+
+        let cancelled = false;
+        let timer = null;
+
+        const schedule = (delayMs) => {
+            clearTimeout(timer);
+            timer = setTimeout(load, delayMs);
+        };
+
+        const load = async () => {
+            if (cancelled) return;
+            if (document.visibilityState === 'hidden') return;
+            try {
+                const data = await getBikeshareStations();
+                if (cancelled) return;
+                setBikeshareData(data);
+                setBikeshareError(null);
+                schedule((data?.refresh_interval_s || 60) * 1000);
+            } catch (error) {
+                if (cancelled) return;
+                setBikeshareError("Stations momentanément indisponibles.");
+                schedule(60000);
+            }
+        };
+
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') load();
+            else clearTimeout(timer);
+        };
+
+        load();
+        document.addEventListener('visibilitychange', onVisibility);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+            document.removeEventListener('visibilitychange', onVisibility);
+        };
+    }, [showBikeshare, littleMap]);
+
+    const handleBikeshareToggle = () => {
+        const next = !showBikeshare;
+        setShowBikeshare(next);
+        if (!next) setActiveStation(null);
+        localStorage.setItem('userMapBikeshare', String(next));
+    };
 
     const lightingShown = showLighting || showLitRoads;
 
@@ -562,6 +810,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const trafficShown = !littleMap && !!onToggleTraffic && traffic?.available !== false;
     const showAirLayer = !littleMap && showAir && (airData?.geojson?.features?.length > 0);
     const showAirStations = !littleMap && showAir && (airData?.stations?.features?.length > 0);
+    const showBikeshareLayer = !littleMap && arePoiImagesReady && showBikeshare
+        && (bikeshareData?.geojson?.features?.length > 0);
 
     const showPois = !littleMap && arePoiImagesReady && poisGeoJSON.features.length > 0;
     const showReports = !littleMap && arePoiImagesReady && reportsGeoJSON.features.length > 0;
@@ -699,18 +949,47 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     }, [airData]);
 
+    const activeAir = useMemo(() => airForCenter(airData, mapCenter), [airData, mapCenter]);
+
     // Première heure de la prévision où l'indice bascule dans une bande plus
     // dégradée que l'actuelle : « dégradation prévue vers 19 h ».
     const airForecastWarning = useMemo(() => {
-        const current = airData?.summary?.aqi;
-        const forecast = airData?.forecast;
+        const current = activeAir?.summary?.aqi;
+        const forecast = activeAir?.forecast;
         if (current == null || !Array.isArray(forecast)) return null;
         const worse = forecast.find((f) => f.aqi >= current + 20);
         if (!worse) return null;
         const date = new Date(worse.time);
         if (Number.isNaN(date.getTime())) return null;
         return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    }, [airData]);
+    }, [activeAir]);
+
+    const bikeshareGeoJSON = useMemo(
+        () => bikeshareData?.geojson || { type: 'FeatureCollection', features: [] },
+        [bikeshareData]
+    );
+
+    const bikeshareUpdatedAt = useMemo(() => {
+        if (!bikeshareData?.updated_at) return null;
+        const date = new Date(bikeshareData.updated_at);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }, [bikeshareData]);
+
+    const bikeshareSources = useMemo(
+        () => (bikeshareData?.systems || []).map(s => s.attribution || s.name).filter(Boolean).join(' · ') || null,
+        [bikeshareData]
+    );
+
+    useEffect(() => {
+        setActiveStation(prev => {
+            if (!prev) return prev;
+            const fresh = bikeshareGeoJSON.features.find(
+                f => f.properties.station_id === prev.station_id
+            );
+            return fresh ? { ...prev, ...fresh.properties } : prev;
+        });
+    }, [bikeshareGeoJSON]);
 
     const handleLocate = () => {
         if (!navigator.geolocation) {
@@ -740,6 +1019,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         setActiveReport(null);
         setActiveTraffic(null);
         setActiveAirStation(null);
+        setActiveStation(null);
         setHoverInfo(null);
         setContextMenu({
             x: event.point.x,
@@ -808,6 +1088,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 setActivePoi(null);
                 setActiveTraffic(null);
                 setActiveAccident(null);
+                setActiveStation(null);
                 setActiveReport(report);
             }
             return;
@@ -819,6 +1100,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             setActiveReport(null);
             setActiveAccident(null);
             setActiveAirStation(null);
+            setActiveStation(null);
             setActiveTraffic({
                 ...trafficFeature.properties,
                 lat: event.lngLat.lat,
@@ -834,7 +1116,20 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             setActiveReport(null);
             setActiveAccident(null);
             setActiveTraffic(null);
+            setActiveStation(null);
             setActiveAirStation({ ...stationFeature.properties, lat, lon });
+            return;
+        }
+
+        const bikeshareFeature = features.find(f => f.layer?.id === BIKESHARE_HITBOX_LAYER_ID);
+        if (bikeshareFeature) {
+            const [lon, lat] = bikeshareFeature.geometry.coordinates;
+            setActivePoi(null);
+            setActiveReport(null);
+            setActiveAccident(null);
+            setActiveTraffic(null);
+            setActiveAirStation(null);
+            setActiveStation({ ...bikeshareFeature.properties, lat, lon });
             return;
         }
 
@@ -845,6 +1140,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             setActiveTraffic(null);
             setActiveAccident(null);
             setActiveAirStation(null);
+            setActiveStation(null);
             setActivePoi({ ...poiFeature.properties, lat, lon });
             return;
         }
@@ -856,6 +1152,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             setActiveReport(null);
             setActiveTraffic(null);
             setActiveAirStation(null);
+            setActiveStation(null);
             setActiveAccident({ ...accidentFeature.properties, lat, lon });
             return;
         }
@@ -871,6 +1168,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         setActiveTraffic(null);
         setActiveAccident(null);
         setActiveAirStation(null);
+        setActiveStation(null);
         if (onMapClick) {
             onMapClick({ lat: event.lngLat.lat, lon: event.lngLat.lng });
         }
@@ -900,6 +1198,20 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             name: activePoi.name || POI_CATEGORIES.find(c => c.id === activePoi.category)?.label,
         });
         setActivePoi(null);
+    };
+
+    const handleNavigateToStation = () => {
+        if (!activeStation || !onNavigateToPoi) return;
+        onNavigateToPoi({
+            lat: activeStation.lat,
+            lon: activeStation.lon,
+            name: activeStation.name || 'Station de vélos',
+        });
+        trackEvent("bikeshare_navigated", {
+            system: activeStation.system || 'inconnu',
+            bikes: activeStation.bikes_available ?? 0,
+        });
+        setActiveStation(null);
     };
 
     const mapTilerKey = import.meta.env.VITE_MAPTILER_KEY;
@@ -999,24 +1311,24 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                             </div>
                             {airError ? (
                                 <span className="air-legend-time">{airError}</span>
-                            ) : airData?.summary?.aqi != null ? (
+                            ) : activeAir?.summary?.aqi != null ? (
                                 <>
                                     <span className="air-legend-index">
                                         <span
                                             className="air-legend-dot"
-                                            style={{ backgroundColor: AIR_BAND_COLORS[airData.summary.band] || '#9ca3af' }}
+                                            style={{ backgroundColor: AIR_BAND_COLORS[activeAir.summary.band] || '#9ca3af' }}
                                         />
-                                        Indice {airData.summary.aqi} · {airData.summary.label}
+                                        Indice {activeAir.summary.aqi} · {activeAir.summary.label}
                                     </span>
-                                    {airData.summary.dominant && (
-                                        <span className="air-legend-sub">Polluant dominant : {airData.summary.dominant}</span>
+                                    {activeAir.summary.dominant && (
+                                        <span className="air-legend-sub">Polluant dominant : {activeAir.summary.dominant}</span>
                                     )}
                                     {airForecastWarning && (
                                         <span className="air-legend-sub">Dégradation prévue vers {airForecastWarning}</span>
                                     )}
                                     {airData.stale
                                         ? <span className="air-legend-time">Dernier relevé disponible{airUpdatedAt ? ` (${airUpdatedAt})` : ''}</span>
-                                        : airUpdatedAt && <span className="air-legend-time">Relevé de {airUpdatedAt} · maille ~11 km</span>}
+                                        : airUpdatedAt && <span className="air-legend-time">Relevé de {airUpdatedAt} · maille ~{airData.resolution_km || 11} km</span>}
                                 </>
                             ) : (
                                 <span className="air-legend-time">Chargement…</span>
@@ -1109,6 +1421,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             <AirQualityInfoModal
                 isOpen={isAirInfoOpen}
                 onClose={() => setIsAirInfoOpen(false)}
+                resolutionKm={airData?.resolution_km || 11}
             />
 
             {!littleMap && (
@@ -1163,6 +1476,34 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 </div>
                             ))}
                             <div className="map-poi-hint">Zoomez pour les faire apparaître.</div>
+
+                            <div className="map-style-menu-title map-poi-section">Vélos en libre-service</div>
+                            <label className="map-poi-item">
+                                {/* Bleu nuit comme le disque sur la carte : la
+                                    pastille du menu doit désigner la couche, pas
+                                    l'un de ses états. */}
+                                <span className="map-poi-badge" style={{ backgroundColor: BIKESHARE_NAVY }} />
+                                <span className="map-poi-label">Stations de vélos</span>
+                                <input
+                                    type="checkbox"
+                                    checked={showBikeshare}
+                                    onChange={handleBikeshareToggle}
+                                />
+                            </label>
+                            {showBikeshare && (
+                                <>
+                                    {bikeshareError
+                                        ? <div className="map-poi-hint">{bikeshareError}</div>
+                                        : bikeshareData?.stale
+                                            ? <div className="map-poi-hint">Dernier relevé disponible.</div>
+                                            : bikeshareUpdatedAt && (
+                                                <div className="map-poi-hint">Relevé de {bikeshareUpdatedAt}</div>
+                                            )}
+                                    {bikeshareSources && (
+                                        <div className="map-poi-hint map-poi-source">{bikeshareSources}</div>
+                                    )}
+                                </>
+                            )}
 
                             <div className="map-style-menu-title map-poi-section">Accidentologie</div>
                             <label className="map-poi-item">
@@ -1250,6 +1591,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     ...(showAccidentLayers ? [ACCIDENT_POINT_LAYER_ID] : []),
                     ...(showTraffic ? [TRAFFIC_HITBOX_LAYER_ID] : []),
                     ...(showAirStations ? [AIR_STATION_CIRCLE_LAYER_ID] : []),
+                    ...(showBikeshareLayer ? [BIKESHARE_HITBOX_LAYER_ID] : []),
                 ]}
                 onClick={onClick}
                 onMouseMove={onHover}
@@ -1257,6 +1599,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 onMoveStart={closeContextMenu}
                 onMoveEnd={littleMap ? undefined : (e) => {
                     const c = e.viewState;
+                    setMapCenter({ lat: c.latitude, lon: c.longitude });
                     try {
                         localStorage.setItem('userMapLastView', JSON.stringify({
                             longitude: c.longitude, latitude: c.latitude, zoom: c.zoom
@@ -1264,7 +1607,11 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     } catch {
                     }
                 }}
-                onLoad={() => setIsMapLoaded(true)}
+                onLoad={(e) => {
+                    setIsMapLoaded(true);
+                    const c = e.target.getCenter();
+                    setMapCenter({ lat: c.lat, lon: c.lng });
+                }}
                 style={{ width: '100%', height: '100%' }}
             >
                 <NavigationControl position="top-right" />
@@ -1356,8 +1703,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                             type="line"
                             layout={{ 'line-cap': 'round', 'line-join': 'round' }}
                             paint={{
-                                // Largeur exponentielle base 2 (jusqu'à z22) : halo lumineux
-                                // d'emprise au sol constante (~18 m, la voie et son débord éclairé).
                                 'line-color': LIT_ROADS_COLOR,
                                 'line-width': ['interpolate', ['exponential', 2], ['zoom'], 11, 4, 15, 5.3, 19, 85, 22, 680],
                                 'line-blur': ['interpolate', ['exponential', 2], ['zoom'], 11, 2, 15, 3, 19, 48, 22, 384],
@@ -1369,7 +1714,6 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                             type="line"
                             layout={{ 'line-cap': 'round', 'line-join': 'round' }}
                             paint={{
-                                // Cœur éclairé, ~9 m au sol, exponentiel base 2 jusqu'à z22.
                                 'line-color': LIT_ROADS_COLOR,
                                 'line-width': ['interpolate', ['exponential', 2], ['zoom'], 11, 1.5, 15, 2.7, 19, 43, 22, 344],
                                 'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.5, 14, 0.85],
@@ -1475,6 +1819,53 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 'text-color': resolvedTheme === 'dark' ? '#e5e7eb' : '#1f2937',
                                 'text-halo-color': resolvedTheme === 'dark' ? '#111827' : '#ffffff',
                                 'text-halo-width': 1.2,
+                            }}
+                        />
+                    </Source>
+                )}
+
+                {showBikeshareLayer && (
+                    <Source id="bikeshare" type="geojson" data={bikeshareGeoJSON}>
+                        <Layer
+                            id={BIKESHARE_HITBOX_LAYER_ID}
+                            type="circle"
+                            minzoom={10}
+                            paint={{
+                                'circle-color': 'transparent',
+                                'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 9, 12, 12, 14, 16, 16, 19, 18, 22],
+                            }}
+                        />
+                        <Layer
+                            id={BIKESHARE_ICON_LAYER_ID}
+                            type="symbol"
+                            minzoom={10}
+                            layout={{
+                                'icon-image': BIKESHARE_ICON_IMAGE,
+                                'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.35, 12, 0.56, 14, 0.81, 16, 1, 18, 1.19],
+                                'icon-allow-overlap': true,
+                                'icon-ignore-placement': true,
+                            }}
+                            paint={{
+                                'icon-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 13, 0.85, 15, 1],
+                            }}
+                        />
+                        <Layer
+                            id={BIKESHARE_BADGE_LAYER_ID}
+                            type="symbol"
+                            minzoom={10}
+                            filter={BIKESHARE_HAS_BADGE}
+                            layout={{
+                                'icon-image': BIKESHARE_BADGE_IMAGE,
+                                'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.19, 12.99, 0.38, 13, 0.64, 16, 0.86, 18, 1],
+                                'text-field': ['step', ['zoom'], '', 13, ['to-string', BIKESHARE_BIKES]],
+                                'text-size': ['interpolate', ['linear'], ['zoom'], 13, 9, 16, 11, 18, 12],
+                                'icon-allow-overlap': ['step', ['zoom'], true, 13, false],
+                                'icon-ignore-placement': ['step', ['zoom'], true, 13, false],
+                            }}
+                            paint={{
+                                'icon-translate': BIKESHARE_BADGE_TRANSLATE,
+                                'text-translate': BIKESHARE_BADGE_TRANSLATE,
+                                'text-color': '#ffffff',
                             }}
                         />
                     </Source>
@@ -1717,6 +2108,135 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                     {onNavigateToPoi && (
                                         <div className="map-popup-footer">
                                             <Button type="button" onClick={handleNavigateToPoi}>
+                                                Y aller
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
+                    </Popup>
+                )}
+
+                {activeStation && (
+                    <Popup
+                        longitude={activeStation.lon}
+                        latitude={activeStation.lat}
+                        onClose={() => setActiveStation(null)}
+                        closeOnClick={false}
+                        anchor="bottom"
+                        offset={[0, -12]}
+                    >
+                        {(() => {
+                            const isOff = activeStation.is_renting === false || activeStation.is_installed === false;
+                            const bikes = activeStation.bikes_available;
+                            const headerColor = isOff ? BIKESHARE_COLORS.off
+                                : bikes == null ? BIKESHARE_COLORS.off
+                                    : bikes === 0 ? BIKESHARE_COLORS.empty
+                                        : activeStation.docks_available === 0 ? BIKESHARE_COLORS.full
+                                            : bikes <= 2 ? BIKESHARE_COLORS.low
+                                                : BIKESHARE_COLORS.ok;
+                            const present = (key) => activeStation[key] !== undefined
+                                && activeStation[key] !== null && activeStation[key] !== '';
+                            const ventile = present('bikes_mechanical') || present('bikes_electric');
+                            const counts = (ventile
+                                ? BIKESHARE_COUNT_FIELDS
+                                : [BIKESHARE_TOTAL_FIELD, BIKESHARE_COUNT_FIELDS[2]]
+                            ).filter(f => present(f.key));
+                            const parts = bikeshareShare(activeStation, ventile);
+                            const details = BIKESHARE_DETAIL_FIELDS.filter(f => present(f.key));
+                            const freshness = formatStationFreshness(activeStation.last_reported);
+                            return (
+                                <div className="map-popup">
+                                    <div className="map-popup-header" style={{ backgroundColor: headerColor }}>
+                                        {BIKESHARE_LOGOS[activeStation.system]
+                                            ? (
+                                                <span className="map-popup-logo">
+                                                    <img
+                                                        src={BIKESHARE_LOGOS[activeStation.system]}
+                                                        alt={activeStation.system_name || 'Réseau'}
+                                                    />
+                                                </span>
+                                            )
+                                            : <FaBicycle className="map-popup-icon" aria-hidden="true" />}
+                                        <span className="map-popup-header-text">
+                                            <span className="map-popup-title">{activeStation.name || 'Station de vélos'}</span>
+                                            <span className="map-popup-subtitle">
+                                                {isOff
+                                                    ? 'Station hors service'
+                                                    : bikes == null
+                                                        ? 'Disponibilité inconnue'
+                                                        : `${bikes} vélo${bikes > 1 ? 's' : ''} disponible${bikes > 1 ? 's' : ''}`}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div className="map-popup-body">
+                                        {counts.length > 0 && (
+                                            <div className={`bikeshare-counts ${isOff ? 'bikeshare-counts-off' : ''}`}>
+                                                {counts.map(field => (
+                                                    <span
+                                                        key={field.key}
+                                                        className={`bikeshare-count bikeshare-tone-${field.tone}`}
+                                                    >
+                                                        <span className="bikeshare-count-top">
+                                                            <field.Icon className="bikeshare-count-icon" aria-hidden="true" />
+                                                            <span className="bikeshare-count-value">{activeStation[field.key]}</span>
+                                                        </span>
+                                                        <span className="bikeshare-count-label">{field.label}</span>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {parts && !isOff && (
+                                            <>
+                                                <div
+                                                    className="bikeshare-bar"
+                                                    title={`${parts.mecha + parts.elec + parts.autres} vélo(s), `
+                                                        + `${parts.docks} place(s) libre(s)`
+                                                        + (parts.indispo ? `, ${parts.indispo} indisponible(s)` : '')
+                                                        + ` — ${parts.total} points d'attache`}
+                                                >
+                                                    {[
+                                                        ['mechanical', parts.mecha],
+                                                        ['electric', parts.elec],
+                                                        ['mechanical', parts.autres],
+                                                        ['docks', parts.docks],
+                                                        ['indispo', parts.indispo],
+                                                    ].map(([tone, part], index) => part > 0 && (
+                                                        <span
+                                                            key={index}
+                                                            className={`bikeshare-bar-part bikeshare-tone-${tone}`}
+                                                            style={{ flexGrow: part }}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                {parts.indispoNotable && (
+                                                    <p className="map-popup-warning">
+                                                        {`${parts.indispo} points d'attache indisponibles.`}
+                                                    </p>
+                                                )}
+                                            </>
+                                        )}
+                                        {isOff && <p className="map-popup-warning">Ni retrait ni retour possible.</p>}
+                                        {!isOff && activeStation.is_returning === false && (
+                                            <p className="map-popup-warning">Retour de vélo impossible.</p>
+                                        )}
+                                        {!isOff && activeStation.is_returning !== false && activeStation.docks_available === 0 && (
+                                            <p className="map-popup-warning">Station pleine : aucun retour possible.</p>
+                                        )}
+                                        {details.map(field => (
+                                            <p key={field.key} className="map-popup-detail">
+                                                {field.label} : <strong>{(field.format || String)(activeStation[field.key])}</strong>
+                                            </p>
+                                        ))}
+                                        {activeStation.stale && (
+                                            <p className="map-popup-meta">Dernier relevé disponible, données non rafraîchies.</p>
+                                        )}
+                                        {freshness && <p className="map-popup-meta">{freshness}</p>}
+                                    </div>
+                                    {onNavigateToPoi && (
+                                        <div className="map-popup-footer">
+                                            <Button type="button" onClick={handleNavigateToStation}>
                                                 Y aller
                                             </Button>
                                         </div>

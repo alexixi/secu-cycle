@@ -21,6 +21,7 @@ from routers import streetlight
 from routers import navigation
 from routers import traffic
 from routers import air_quality
+from routers import bikeshare
 from routers import home_case
 from routers import faq
 from routers import task
@@ -39,6 +40,8 @@ from traffic import config as traffic_config
 from traffic import service as traffic_service
 from air_quality import config as air_quality_config
 from air_quality import service as air_quality_service
+from bikeshare import config as bikeshare_config
+from bikeshare import service as bikeshare_service
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -91,6 +94,30 @@ async def periodic_air_quality_update(app: FastAPI):
             continue
         if changed:
             route_cache.invalidate()
+
+
+async def periodic_bikeshare_update(app: FastAPI):
+    """
+    Boucle infinie qui s'exécute en arrière-plan.
+    Actualise les stations de vélos en libre-service (GBFS).
+
+    Deux cadences en une : la boucle bat toutes les TICK_S secondes, et chaque
+    système décide seul s'il doit recharger son statut (temps réel, au rythme du
+    `ttl` publié) ou ses informations de stations (quasi statiques, toutes les
+    6 h).
+
+    Le cache d'itinéraires n'est jamais purgé : cette couche est informative,
+    elle n'entre pas dans le calcul de trajet.
+    """
+    while True:
+        await asyncio.sleep(bikeshare_config.TICK_S)
+        if getattr(app.state, 'G', None) is None:
+            continue
+        try:
+            await bikeshare_service.refresh(app.state.G)
+        except Exception as exc:
+            # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
+            print(f"[Background Task] Échec de l'actualisation des vélos en libre-service : {exc}", flush=True)
 
 
 POI_SYNC_CHECK_INTERVAL = 60
@@ -238,6 +265,19 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         print(f"Qualité de l'air indisponible au démarrage : {exc}", flush=True)
 
+    print("Chargement initial des vélos en libre-service...")
+
+    try:
+        # Borné : le premier cycle enchaîne quatre requêtes par système, sur des
+        # portails open data parfois lents. En cas de dépassement, la boucle de
+        # fond rattrapera au tour suivant.
+        await asyncio.wait_for(
+            bikeshare_service.refresh(app.state.G),
+            timeout=bikeshare_config.HTTP_TIMEOUT_S * 4,
+        )
+    except Exception as exc:
+        print(f"Vélos en libre-service indisponibles au démarrage : {exc}", flush=True)
+
     print("Graphe chargé et prêt !")
 
     stale = await asyncio.to_thread(poi_runner.fail_stale_runs)
@@ -258,6 +298,7 @@ async def lifespan(app: FastAPI):
 
     traffic_task = asyncio.create_task(periodic_traffic_update(app))
     air_quality_task = asyncio.create_task(periodic_air_quality_update(app))
+    bikeshare_task = asyncio.create_task(periodic_bikeshare_update(app))
     poi_task = asyncio.create_task(periodic_poi_sync())
     accident_task = asyncio.create_task(periodic_accident_sync(app))
     lighting_task = asyncio.create_task(periodic_lighting_sync(app))
@@ -268,10 +309,12 @@ async def lifespan(app: FastAPI):
 
     traffic_task.cancel()
     air_quality_task.cancel()
+    bikeshare_task.cancel()
     poi_task.cancel()
     accident_task.cancel()
     lighting_task.cancel()
-    for task in (traffic_task, air_quality_task, poi_task, accident_task, lighting_task):
+    for task in (traffic_task, air_quality_task, bikeshare_task, poi_task,
+                 accident_task, lighting_task):
         try:
             await task
         except asyncio.CancelledError:
@@ -309,6 +352,7 @@ app.include_router(accident.router)
 app.include_router(navigation.router)
 app.include_router(traffic.router)
 app.include_router(air_quality.router)
+app.include_router(bikeshare.router)
 app.include_router(home_case.router)
 app.include_router(faq.router)
 app.include_router(task.router)

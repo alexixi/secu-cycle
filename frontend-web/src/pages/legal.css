@@ -81,6 +81,10 @@
     margin: 0.4em 0;
 }
 
+.legal-callout ul {
+    margin: 0.4em 0;
+}
+
 .legal-table-wrapper {
     overflow-x: auto;
     margin: 1.5em 0;
@@ -114,6 +118,10 @@
 }
 
 .legal-table tbody tr:nth-child(even) {
+    background-color: var(--bg-surface);
+}
+
+.legal-table tbody tr:nth-child(odd) {
     background-color: color-mix(in srgb, var(--bg-surface) 40%, transparent);
 }
 

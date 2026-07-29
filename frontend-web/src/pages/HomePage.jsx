@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import Meta from "../components/Meta";
 import './HomePage.css';
 import IconButton from "../components/ui/IconButton";
@@ -24,7 +25,7 @@ const DEFAULT_CASES = [
     },
     {
         title: "Sources des données",
-        text: "Sécu'Cycle combine différentes sources de données, principalement les données d'OpenStreetMap (openstreetmap.fr) pour la carte des routes et pistes cyclables. Nous ajoutons à cette carte des données topographiques de l'IGN (ign.fr). Pour la complétion des adresses françaises nous utilisons la BAN (Base Adresse Nationale, adresse.data.gouv.fr), complétée par MapTiler (maptiler.com) pour les lieux et les adresses situés hors de France, en Belgique notamment. Pour avoir des données de trafic de la circulation routière nous utilisons l'open data de Bordeaux Métropole (opendata.bordeaux-metropole.fr), qui publie l'état des axes en temps réel. Enfin pour l'affichage de la carte, nous utilisons les tuiles cartographiques de MapTiler, elles aussi basées sur les données d'OpenStreetMap.",
+        text: "Sécu'Cycle croise une quinzaine de jeux de données, très majoritairement ouverts : OpenStreetMap pour le réseau routier, les aménagements cyclables, le revêtement et l'éclairage, l'IGN pour le dénivelé, les registres officiels d'accidentologie français et belge, le trafic en temps réel publié par quatre métropoles, la disponibilité des vélos en libre-service au format GBFS, l'indice européen de qualité de l'air du service Copernicus, et la Base Adresse Nationale pour les adresses. Les fonds de carte sont fournis par MapTiler, eux aussi construits sur les données d'OpenStreetMap. Le détail de chaque source, son usage, sa licence et son producteur sont listés sur notre page Sources des données.",
     },
 ];
 
@@ -102,6 +103,21 @@ export default function HomePage() {
                         <p>{c.text}</p>
                     </section>
                 ))}
+                <section className="home-section">
+                    <h2>Besoin de plus d'informations ?</h2>
+                    <p>
+                        Vous pouvez consulter les <Link to="/legal">Mentions légales</Link>,
+                        les <Link to="/donnees">sources des données</Link> utilisées,
+                        la <Link to="/politique">Politique de confidentialité</Link> ou bien
+                        les <Link to="/conditions">conditions d'utilisation</Link>.
+                        <br />
+                        Vous avez des questions ? <br />
+                        N'hésitez pas à nous contacter via notre <Link to="/contact">formulaire de contact</Link>
+                        ou à nous envoyer un email à l'adresse
+                        <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>.
+
+                    </p>
+                </section>
             </div>
             <div id="app-section">
                 <img className="app-visual" src={apercuApplication} alt="Aperçu de l'application mobile" width="800" height="1334" />
