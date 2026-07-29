@@ -13,6 +13,7 @@ export default function Footer() {
             </div>
             <nav className="footer-links" aria-label="Liens légaux">
                 <Link to="/faq">FAQ</Link>
+                <Link to="/donnees">Sources des données</Link>
                 <Link to="/mentions-legales">Mentions légales</Link>
                 <Link to="/confidentialite">Politique de confidentialité</Link>
                 <Link to="/conditions-utilisation">Conditions d'utilisation</Link>
