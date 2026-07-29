@@ -12,7 +12,7 @@ const SOURCES = [
     {
         name: "OpenStreetMap",
         detail: "via Overpass",
-        usage: "Graphe routier, aménagements cyclables, revêtement, éclairage, sens de circulation et points d'intérêt",
+        usage: "Graphe routier, aménagements cyclables, itinéraires cyclables balisés (véloroutes, RAVeL, réseaux express vélo), revêtement, éclairage, sens de circulation et points d'intérêt",
         licence: ODBL,
         producer: { label: "openstreetmap.org", href: "https://www.openstreetmap.org/copyright" },
     },

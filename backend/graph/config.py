@@ -210,5 +210,53 @@ MULTILANE_LANES = 3            # nb de voies à partir duquel on pénalise
 MULTILANE_PENALTY = 1.0
 CONTRAFLOW_PENALTY = 0.5        # léger malus de confort pour un contre-sens
 
+# --- Itinéraires cyclables balisés (relations OSM `route=bicycle`) -----------
+# Une relation porte ce qu'aucun tag de voie ne dit : la continuité de l'axe et
+# son jalonnement. Deux niveaux, cf. `graph.veloroutes`.
+
+# Itinéraires écartés : non praticables aujourd'hui.
+VELOROUTE_EXCLUDED_STATES = frozenset({
+    'proposed', 'construction', 'planned', 'abandoned', 'temporary',
+})
+
+# Niveau 2 — axes cyclables structurants. Le classement s'appuie sur
+# `cycle_network` AVANT `network`, car la hiérarchie administrative des réseaux
+# ne dit rien de la qualité de l'axe et s'inverse d'un pays à l'autre : le ReVE
+# bordelais est tagué `network=lcn`, tandis qu'en Belgique `rcn` désigne le
+# réseau points-nœuds, récréatif et très dense. Le nom du réseau, lui, est
+# fiable.
+VELOROUTE_STRUCTURING_CYCLE_NETWORKS = frozenset({
+    'ReVE',                  # Réseau Express Vélo, Bordeaux Métropole
+    'BE-VLG:cycle_highway',  # fietssnelwegen flamandes
+    'BE:RAVeL',              # RAVeL wallon
+    'FR:REV Vélo+',          # REV, métropole lilloise
+})
+# Repli par motif pour les variantes régionales non énumérées
+# (BE-WAL:cycle_highway, NL:*:cycle_highway…). Comparaison SENSIBLE À LA CASSE :
+# ce sont des noms propres, et une correspondance insensible produirait des faux
+# positifs sur des réseaux sans rapport.
+VELOROUTE_STRUCTURING_MARKERS = ('cycle_highway', 'RAVeL', 'ReVE', 'REV Vélo')
+# EuroVelo et véloroutes nationales (V80, V41…) : structurantes par nature.
+VELOROUTE_STRUCTURING_NETWORKS = frozenset({'icn', 'ncn'})
+
+VELOROUTE_TIER_STRUCTURING = 2
+VELOROUTE_TIER_SIGNED = 1       # tout autre réseau balisé actif (rcn, lcn…)
+
+# Bonus de score, du même ordre que SEGREGATED_BONUS. Plafonné à 10 dans
+# `_edge_quality` : donc sans effet sur une voie déjà notée au maximum, et
+# maximal là où les tags de voie sont pauvres (véloroute passant en rue
+# résidentielle ou sur un chemin) — exactement là où la relation informe.
+VELOROUTE_SCORE_BONUS = {VELOROUTE_TIER_SIGNED: 0.5, VELOROUTE_TIER_STRUCTURING: 1.5}
+
+# Rabais multiplicatif sur le coût de l'arête, modulé par (1 - alpha) : nul sur
+# l'itinéraire « Rapide », plein sur « Sécurisé ». Récompense la CONTINUITÉ d'un
+# axe balisé même entre deux aménagements également bien notés — ce que le bonus
+# de score, plafonné, ne peut pas faire. Volontairement faible : à 8 %, aucun
+# détour de plus de ~9 % ne peut être justifié par ce seul terme.
+VELOROUTE_DISCOUNT = {VELOROUTE_TIER_SIGNED: 0.03, VELOROUTE_TIER_STRUCTURING: 0.08}
+# Doit rester égal au maximum de VELOROUTE_DISCOUNT : l'heuristique d'A* est
+# dégonflée d'autant pour rester admissible (cf. `routing._astar_nodes`).
+VELOROUTE_MAX_DISCOUNT = 0.08
+
 # Distance (m) au-delà de laquelle un point n'est plus considéré comme desservi par le graphe chargé
 MAX_SNAP_DISTANCE_M = 1000.0

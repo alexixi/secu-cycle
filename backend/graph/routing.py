@@ -102,6 +102,10 @@ def _edge_quality(data):
     if _first(data.get('segregated')) == 'yes':
         n_cycleway = min(10.0, n_cycleway + SEGREGATED_BONUS)
 
+    veloroute = data.get('_veloroute', 0)
+    if veloroute:
+        n_cycleway = min(10.0, n_cycleway + VELOROUTE_SCORE_BONUS[veloroute])
+
     width = _parse_float(_first(data.get('width')))
     if width is not None and width < NARROW_WIDTH_M:
         n_highway = max(0.0, n_highway - NARROW_WIDTH_PENALTY)
@@ -275,6 +279,10 @@ def _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light
         if air and air_intensity:
             air = min(1.0, air * (1.0 + AIR_CONGESTION_BOOST * traffic))
             base += d['_length_f'] * air * air_intensity * (AIR_BASE_PENALTY + AIR_SAFETY_FACTOR * one_minus)
+
+        veloroute = d.get('_veloroute', 0)
+        if veloroute:
+            base *= 1.0 - VELOROUTE_DISCOUNT[veloroute] * one_minus
         return base
 
     def weight(u, v, d):
@@ -309,8 +317,12 @@ def _tag_lighting_aware(res, lighting_aware):
 def _astar_nodes(G, start_node, end_node, alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx, air_intensity=0.0):
     w = _make_weight(alpha, beta, surface_sens, footway_avoid, reported_edges, light_ctx, air_intensity)
 
+    h_factor = 1.0 - VELOROUTE_MAX_DISCOUNT * (1.0 - alpha)
+
     def dist_heuristic(u, v):
-        return ox.distance.great_circle(G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x'])
+        return ox.distance.great_circle(
+            G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']
+        ) * h_factor
 
     return nx.astar_path(G, start_node, end_node, heuristic=dist_heuristic, weight=w)
 

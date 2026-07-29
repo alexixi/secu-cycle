@@ -509,6 +509,7 @@ def calculate_infra_stats(G, route):
     smooth_length = 0.0
     contraflow_length = 0.0
     low_air_exposure_length = 0.0
+    veloroute_length = 0.0
 
     # L'air a-t-il réellement pesé sur ce calcul ? Vrai seulement quand l'indice
     # régional est dégradé (intensité > 0). Sinon le terme d'exposition est inactif
@@ -547,6 +548,9 @@ def calculate_infra_stats(G, route):
         if data.get('contraflow'):
             contraflow_length += length
 
+        if data.get('_veloroute'):
+            veloroute_length += length
+
         try:
             vmax_raw = data.get('maxspeed', None)
             if vmax_raw and str(vmax_raw).lower() not in ('unknown', 'none', 'nan', ''):
@@ -580,6 +584,7 @@ def calculate_infra_stats(G, route):
     if total_length == 0:
         return {"pct_cyclable": 0.0, "pct_low_speed": 0.0, "pct_lit": 0.0,
                 "pct_smooth": 0.0, "pct_contraflow": 0.0,
+                "pct_veloroute": 0.0,
                 "pct_low_air_exposure": 0.0, "air_aware": air_aware,
                 "accidents_count": 0, "pct_accident_free": 100.0}
 
@@ -589,6 +594,7 @@ def calculate_infra_stats(G, route):
         "pct_lit": round(lit_length / total_length * 100, 1),
         "pct_smooth": round(smooth_length / total_length * 100, 1),
         "pct_contraflow": round(contraflow_length / total_length * 100, 1),
+        "pct_veloroute": round(veloroute_length / total_length * 100, 1),
         "pct_low_air_exposure": round(low_air_exposure_length / total_length * 100, 1),
         "air_aware": air_aware,
         **route_accident_stats(G, route),

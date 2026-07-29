@@ -23,6 +23,7 @@ def profile_paths(name):
     return {
         "graph_file": os.path.join(base, "graphs", f"{name}.graphml"),
         "ign_cache_file": os.path.join(base, "graphs", f"{name}.ign.json"),
+        "cycleroutes_file": os.path.join(base, "graphs", f"{name}.cycleroutes.json"),
     }
 
 
@@ -39,7 +40,8 @@ def load_graph_profile():
     produire, la migration en installant un).
 
     Retourne un dict avec des chemins absolus :
-        {"name": ..., "graph_file": ..., "ign_cache_file": ..., "communes": [...]}.
+        {"name": ..., "graph_file": ..., "ign_cache_file": ...,
+         "cycleroutes_file": ..., "communes": [...]}.
     """
     from database import SessionLocal
     from models.graph_profile import GraphProfile
@@ -330,13 +332,17 @@ def keep_strong_components(G, min_nodes=MIN_COMPONENT_NODES):
     return G.subgraph(kept).copy()
 
 
-def create_graph(filename, filepath_json, communes, on_progress=None):
+def create_graph(filename, filepath_json, communes, on_progress=None,
+                 filepath_cycleroutes=None):
     """
     Charge le graphe ou le crée s'il n'existe pas,
     puis met à jour automatiquement les données IGN.
 
     `communes` : liste des communes (format Nominatim "Nom, France") utilisée
     uniquement à la génération si le fichier `filename` n'existe pas encore.
+
+    `filepath_cycleroutes` : cache des itinéraires cyclables balisés, produit
+    s'il manque (cf. `graph.veloroutes`). Son absence n'est jamais bloquante.
 
     `on_progress(step, done, total)` : facultatif, alimente la barre de
     progression du dashboard. `total` est None pour les étapes non mesurables
@@ -388,16 +394,28 @@ def create_graph(filename, filepath_json, communes, on_progress=None):
         print("Lancement de la mise à jour des altitudes IGN...")
         create_ign_data_file(filename, filepath_json, on_progress)
 
+    # Itinéraires cyclables balisés : portés par des relations OSM, que
+    # `graph_from_polygon` ne remonte pas. Un cache par profil suffit, la donnée
+    # étant quasi statique — même contrat que les altitudes IGN.
+    if filepath_cycleroutes and not os.path.exists(filepath_cycleroutes):
+        from graph.veloroutes import create_cycleroutes_file
+        create_cycleroutes_file(G, filepath_cycleroutes, on_progress)
+
     return G
 
-def load_graph_with_ign(filepath_graph, filepath_json, communes, night_extinction=None):
+def load_graph_with_ign(filepath_graph, filepath_json, communes, night_extinction=None,
+                        filepath_cycleroutes=None):
     """Charge le graphe routier et y injecte le cache d'altitudes IGN.
 
     `night_extinction` = (start_h, end_h) du profil actif, posé sur `G.graph`
     comme fenêtre d'extinction **par défaut** : chaque commune peut la remplacer
     par la sienne (cf. `graph.lighting.resolve_extinction_windows`).
+
+    `filepath_cycleroutes` = cache des itinéraires cyclables balisés (cf.
+    `graph.veloroutes`). Absent, le routage est celui d'avant la fonctionnalité.
     """
-    G = create_graph(filepath_graph, filepath_json, communes)
+    G = create_graph(filepath_graph, filepath_json, communes,
+                     filepath_cycleroutes=filepath_cycleroutes)
     G.graph['_extinction_window'] = night_extinction
 
     with open(filepath_json, 'r') as f:
@@ -434,6 +452,12 @@ def load_graph_with_ign(filepath_graph, filepath_json, communes, night_extinctio
     # densifier le tag OSM `lit` là où il manque. Doit précéder le précalcul des
     # coûts statiques, qui en dépend.
     attach_lighting(G)
+
+    # Appartenance des arêtes aux itinéraires cyclables balisés, par appariement
+    # exact sur `osmid`. Doit précéder le précalcul des coûts statiques, qui en
+    # dépend.
+    from graph.veloroutes import attach_veloroutes
+    attach_veloroutes(G, filepath_cycleroutes)
 
     # Précalcule une fois les composantes de coût statiques des arêtes
     # et l'index spatial des nœuds (recherche du point d'accroche).

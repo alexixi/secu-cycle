@@ -22,7 +22,7 @@ Projet open source développé par 6 étudiants de l'ENSEIRB-MATMECA (Bordeaux) 
 
 Détail, licences et attributions : https://secu-cycle.fr/donnees
 
-- OpenStreetMap (ODbL) : réseau routier, aménagements cyclables, revêtement, éclairage, points d'intérêt.
+- OpenStreetMap (ODbL) : réseau routier, aménagements cyclables, itinéraires cyclables balisés (véloroutes, RAVeL, réseaux express vélo), revêtement, éclairage, points d'intérêt.
 - IGN, RGE ALTI via la Géoplateforme (Licence Ouverte) : altimétrie / dénivelé.
 - « Accidents de vélo », dérivé des BAAC de l'ONISR (Licence Ouverte 2.0) : accidentologie en France.
 - Statbel, accidents de la circulation 2017-2024 (CC BY 4.0) : accidentologie en Belgique.
