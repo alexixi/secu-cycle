@@ -267,7 +267,7 @@ async def update_profile(
 def _rename_files(old_name: str, new_name: str) -> None:
     old = profile_paths(old_name)
     new = profile_paths(new_name)
-    for key in ("graph_file", "ign_cache_file"):
+    for key in ("graph_file", "ign_cache_file", "cycleroutes_file"):
         if os.path.exists(old[key]):
             os.rename(old[key], new[key])
 
@@ -495,7 +495,7 @@ async def _reload_graph(app, name: str) -> None:
         print(f"[Graphe] Rechargement sur le profil '{name}'...", flush=True)
         G = await asyncio.to_thread(
             load_graph_with_ign, paths["graph_file"], paths["ign_cache_file"], communes,
-            night_extinction
+            night_extinction, paths["cycleroutes_file"]
         )
         await traffic_service.refresh(G)
 

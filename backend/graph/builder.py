@@ -132,9 +132,12 @@ def execute_build(run_id: int, wipe_ign: bool = False) -> None:
                 os.remove(paths["graph_file"])
             if wipe_ign and os.path.exists(paths["ign_cache_file"]):
                 os.remove(paths["ign_cache_file"])
+            if os.path.exists(paths["cycleroutes_file"]):
+                os.remove(paths["cycleroutes_file"])
 
             G = create_graph(
-                paths["graph_file"], paths["ign_cache_file"], communes, on_progress
+                paths["graph_file"], paths["ign_cache_file"], communes, on_progress,
+                paths["cycleroutes_file"]
             )
         except Exception as exc:
             _fail(db, run, str(exc))

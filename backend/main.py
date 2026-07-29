@@ -249,7 +249,7 @@ async def lifespan(app: FastAPI):
     app.state.graph_loading = False
     app.state.G = load_graph_with_ign(
         profile["graph_file"], profile["ign_cache_file"], profile["communes"],
-        profile.get("night_extinction"))
+        profile.get("night_extinction"), profile["cycleroutes_file"])
 
     print("Chargement initial du trafic...")
 

@@ -8,3 +8,4 @@ venv/
 database/venv/
 *.graphml
 graphs/*.ign.json
+graphs/*.cycleroutes.json
