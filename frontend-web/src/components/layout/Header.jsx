@@ -7,7 +7,7 @@ import ThemeToggle from '../ui/ThemeToggle';
 import Logo from "../../assets/logo.svg?react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { LuLogIn, LuLogOut, LuMenu, LuCircleHelp, LuFileText, LuShield, LuScrollText, LuMail } from "react-icons/lu";
+import { LuLogIn, LuLogOut, LuMenu, LuCircleHelp, LuFileText, LuShield, LuScrollText, LuMail, LuDatabase } from "react-icons/lu";
 import { FaUser, FaHome } from "react-icons/fa";
 import { FaPersonCirclePlus } from "react-icons/fa6";
 import { PiPathBold } from "react-icons/pi";
@@ -18,6 +18,7 @@ const isPage = (currentPage, targetPage) => {
 
 const CONTEXTUAL_PAGES = {
     "faq": { to: "/faq", label: "FAQ", Icon: LuCircleHelp },
+    "donnees": { to: "/donnees", label: "Sources des données", Icon: LuDatabase },
     "mentions-legales": { to: "/mentions-legales", label: "Mentions légales", Icon: LuFileText },
     "confidentialite": { to: "/confidentialite", label: "Politique de confidentialité", Icon: LuShield },
     "conditions-utilisation": { to: "/conditions-utilisation", label: "Conditions d'utilisation", Icon: LuScrollText },
@@ -29,6 +30,7 @@ const PATH_TO_PAGE = {
     "/": "home",
     "/itineraire": "itineraire",
     "/faq": "faq",
+    "/donnees": "donnees",
     "/mentions-legales": "mentions-legales",
     "/confidentialite": "confidentialite",
     "/conditions-utilisation": "conditions-utilisation",

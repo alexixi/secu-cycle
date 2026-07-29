@@ -11,6 +11,7 @@ Projet open source développé par 6 étudiants de l'ENSEIRB-MATMECA (Bordeaux) 
 - [Accueil](https://secu-cycle.fr/) : présentation du projet, des problématiques de sécurité à vélo et des sources de données.
 - [Calculateur d'itinéraire](https://secu-cycle.fr/itineraire) : calcul d'un trajet vélo sécurisé entre deux adresses selon le profil et le vélo de l'utilisateur. Page principale
 - [FAQ](https://secu-cycle.fr/faq) : foire aux questions sur le fonctionnement, le calcul des itinéraires sécurisés, les zones couvertes, l'application mobile, les comptes et les sources de données.
+- [Sources des données](https://secu-cycle.fr/donnees) : inventaire complet des jeux de données ouvertes réutilisés, avec pour chacun son usage, sa licence et son producteur, ainsi que la méthodologie du score de sécurité et les attributions obligatoires.
 
 ## Couverture géographique
 
@@ -19,12 +20,19 @@ Projet open source développé par 6 étudiants de l'ENSEIRB-MATMECA (Bordeaux) 
 
 ## Sources de données
 
-- OpenStreetMap : réseau routier et pistes cyclables.
-- IGN : données d'altimétrie / dénivelé.
-- Base Adresse Nationale (BAN) : complétion et géocodage d'adresses.
-- AVATAR (CEREMA) et open data Bordeaux Métropole : données de trafic.
+Détail, licences et attributions : https://secu-cycle.fr/donnees
+
+- OpenStreetMap (ODbL) : réseau routier, aménagements cyclables, revêtement, éclairage, points d'intérêt.
+- IGN, RGE ALTI via la Géoplateforme (Licence Ouverte) : altimétrie / dénivelé.
+- « Accidents de vélo », dérivé des BAAC de l'ONISR (Licence Ouverte 2.0) : accidentologie en France.
+- Statbel, accidents de la circulation 2017-2024 (CC BY 4.0) : accidentologie en Belgique.
+- Base Adresse Nationale (Licence Ouverte) : complétion et géocodage d'adresses en France.
+- Trafic temps réel des portails open data de Bordeaux Métropole, l'Eurométropole de Strasbourg, Rennes Métropole et Nantes Métropole (Licence Ouverte).
+- Éclairage public open data de Bordeaux Métropole et Nantes Métropole (Licence Ouverte).
+- GBFS : disponibilité des stations de neuf systèmes de vélos en libre-service français et belges.
+- CAMS / Copernicus, via Open-Meteo : indice européen de qualité de l'air. Complété par le World Air Quality Index.
 - Signalements communautaires : accidents et dangers remontés par les utilisateurs.
-- MapTiler : fond de carte.
+- MapTiler (service commercial) : fond de carte et géocodage hors de France.
 
 ## Notes
 

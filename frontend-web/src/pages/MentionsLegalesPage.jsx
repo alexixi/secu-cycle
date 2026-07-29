@@ -12,7 +12,7 @@ export default function MentionsLegalesPage() {
             <div className="legal-page">
                 <article className="legal-content">
                     <h1>Mentions légales</h1>
-                    <p className="legal-updated">Dernière mise à jour : 7 juillet 2026</p>
+                    <p className="legal-updated">Dernière mise à jour : 28 juillet 2026</p>
 
                     <p>
                         Conformément à l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance
@@ -64,14 +64,56 @@ export default function MentionsLegalesPage() {
                         partielle, sans autorisation préalable, est interdite.
                     </p>
                     <p>
-                        Les données cartographiques et de mobilité proviennent de sources tierces, exploitées
-                        dans le respect de leurs licences respectives&nbsp;:{" "}
-                        <a href="https://www.openstreetmap.fr/" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>{" "}
-                        (licence ODbL), l'<a href="https://www.ign.fr/" target="_blank" rel="noopener noreferrer">IGN</a>,
-                        la <a href="https://adresse.data.gouv.fr/" target="_blank" rel="noopener noreferrer">Base Adresse Nationale</a>,
-                        l'<a href="https://opendata.bordeaux-metropole.fr/" target="_blank" rel="noopener noreferrer">open data de Bordeaux Métropole</a>{" "}
-                        (licence ouverte),
-                        et <a href="https://www.maptiler.com/" target="_blank" rel="noopener noreferrer">MapTiler</a>.
+                        Les données cartographiques, d'accidentologie et de mobilité proviennent de sources
+                        tierces, restent la propriété de leurs producteurs et sont exploitées dans le respect
+                        de leurs licences respectives&nbsp;:
+                    </p>
+                    <ul>
+                        <li>
+                            © les contributeurs{" "}
+                            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>,
+                            sous licence{" "}
+                            <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener noreferrer">ODbL</a>{" "}
+                            — réseau routier, aménagements cyclables, revêtement, éclairage et points d'intérêt.
+                        </li>
+                        <li>
+                            <a href="https://geoservices.ign.fr/rgealti" target="_blank" rel="noopener noreferrer">IGN</a> (RGE ALTI),
+                            ONISR (fichiers BAAC, via le jeu «&nbsp;Accidents de vélo&nbsp;»),{" "}
+                            <a href="https://adresse.data.gouv.fr/" target="_blank" rel="noopener noreferrer">Base Adresse Nationale</a>,
+                            et les portails open data de Bordeaux Métropole, de l'Eurométropole de Strasbourg,
+                            de Rennes Métropole et de Nantes Métropole (trafic en temps réel et éclairage
+                            public), sous{" "}
+                            <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" target="_blank" rel="noopener noreferrer">Licence Ouverte</a>.
+                        </li>
+                        <li>
+                            <a href="https://statbel.fgov.be/fr/open-data/geolocalisation-des-accidents-de-la-circulation-2017-2024" target="_blank" rel="noopener noreferrer">Statbel</a>{" "}
+                            — accidents de la circulation géolocalisés, sous licence{" "}
+                            <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>.
+                        </li>
+                        <li>
+                            Generated using Copernicus Atmosphere Monitoring Service information 2026&nbsp;:
+                            les données de qualité de l'air issues du{" "}
+                            <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noopener noreferrer">CAMS</a>{" "}
+                            sont modifiées par Sécu'Cycle et obtenues par l'intermédiaire d'Open-Meteo. Ni la
+                            Commission européenne ni l'ECMWF ne sont responsables de l'usage qui en est fait.
+                        </li>
+                        <li>
+                            <a href="https://waqi.info/" target="_blank" rel="noopener noreferrer">World Air Quality Index Project</a>{" "}
+                            — mesures des stations de surveillance au sol.
+                        </li>
+                        <li>
+                            Flux GBFS des neuf systèmes de vélos en libre-service intégrés, chacun sous
+                            l'attribution de son opérateur.
+                        </li>
+                        <li>
+                            Fonds de carte et géocodage hors de France&nbsp;:{" "}
+                            <a href="https://www.maptiler.com/" target="_blank" rel="noopener noreferrer">MapTiler</a>,
+                            service commercial.
+                        </li>
+                    </ul>
+                    <p>
+                        Le détail de chaque source, son usage exact et son producteur sont listés sur notre
+                        page <Link to="/donnees">sources des données</Link>.
                     </p>
 
                     <h2>Données personnelles et conditions d'utilisation</h2>

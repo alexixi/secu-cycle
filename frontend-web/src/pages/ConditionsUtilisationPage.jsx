@@ -12,7 +12,7 @@ export default function ConditionsUtilisationPage() {
             <div className="legal-page">
                 <article className="legal-content">
                     <h1>Conditions générales d'utilisation</h1>
-                    <p className="legal-updated">Dernière mise à jour : 7 juillet 2026</p>
+                    <p className="legal-updated">Dernière mise à jour : 28 juillet 2026</p>
 
                     <h2>1. Objet</h2>
                     <p>
@@ -27,7 +27,10 @@ export default function ConditionsUtilisationPage() {
                         Sécu'Cycle est un service <strong>gratuit</strong> qui aide les cyclistes à trouver des
                         itinéraires adaptés à la sécurité, à naviguer en temps réel et à signaler des dangers. Le
                         Service repose sur des données ouvertes (OpenStreetMap, IGN, Base Adresse Nationale,
-                        AVATAR du Cerema) et propose des itinéraires à titre indicatif.
+                        registres officiels d'accidentologie, trafic en temps réel des portails open data
+                        métropolitains, qualité de l'air Copernicus), dont la liste complète figure sur la page{" "}
+                        <Link to="/donnees">sources des données</Link>, et propose des itinéraires à titre
+                        indicatif.
                     </p>
 
                     <h2>3. Accès et compte</h2>
