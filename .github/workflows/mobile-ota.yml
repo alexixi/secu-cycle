@@ -1,0 +1,147 @@
+name: Livraison mobile (OTA ou build)
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "frontend-mobile/**"
+      - ".github/workflows/mobile-ota.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # dev et main ne se bloquent pas l'un l'autre, mais deux pushes rapprochés sur la
+  # même branche publient en série plutôt que d'écraser un update à moitié uploadé.
+  group: mobile-ota-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  livraison:
+    name: OTA si possible, sinon build Android
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend-mobile
+
+    env:
+      CANAL: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
+      APP_VARIANT: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
+      BUILD_AUTO: ${{ github.ref_name == 'main' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend-mobile/package-lock.json
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: OTA possible, ou rebuild natif nécessaire ?
+        id: decision
+        run: |
+          set -euo pipefail
+
+          echo "Canal : $CANAL (build automatique : $BUILD_AUTO)"
+
+          eas fingerprint:generate --platform android --build-profile "$CANAL" \
+            --json --non-interactive > "$RUNNER_TEMP/empreinte.json"
+
+          eas build:list --platform android --profile "$CANAL" --status finished \
+            --limit 1 --json --non-interactive > "$RUNNER_TEMP/reference.json"
+
+          npx expo config --type public --json > "$RUNNER_TEMP/config.json"
+
+          cat > "$RUNNER_TEMP/decider.js" <<'EOF'
+          const fs = require("fs");
+          const tmp = process.env.RUNNER_TEMP;
+          const lire = (nom) => JSON.parse(fs.readFileSync(tmp + "/" + nom, "utf8"));
+
+          const canal = process.env.CANAL;
+          const buildAuto = process.env.BUILD_AUTO === "true";
+
+          const empreinte = lire("empreinte.json").hash;
+          const reference = lire("reference.json")[0];
+          const runtime = lire("config.json").version;
+
+          const sortir = (action) => {
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, "action=" + action + "\n");
+          };
+          const bloquer = (message) => {
+            if (buildAuto) {
+              console.log("::error::" + message);
+              process.exit(1);
+            }
+            console.log("::warning::" + message);
+            sortir("rien");
+            process.exit(0);
+          };
+          const manuel = "Build manuel : eas build -p android --profile " + canal;
+
+          if (!reference || !reference.fingerprint || !reference.fingerprint.hash) {
+            bloquer(
+              "Aucun build " + canal + " Android terminé ne porte d'empreinte : impossible de " +
+              "savoir si le natif a changé, rien n'est publié. " + manuel
+            );
+          }
+
+          console.log("Empreinte du commit        : " + empreinte);
+          console.log("Empreinte du dernier build : " + reference.fingerprint.hash +
+                      " (version " + reference.appVersion + ", " + reference.completedAt + ")");
+
+          if (empreinte === reference.fingerprint.hash) {
+            console.log("::notice::Natif inchangé — publication d'un update OTA sur " + canal + ".");
+            sortir("update");
+          } else if (reference.runtimeVersion && reference.runtimeVersion === runtime) {
+            bloquer(
+              "Le natif a changé mais 'version' est resté à " + runtime + " dans app.config.js. " +
+              "Le nouveau binaire porterait le même runtimeVersion que celui déjà distribué, et un " +
+              "futur update OTA ferait planter les téléphones restés sur l'ancien binaire. " +
+              "Bumpez 'version' dans frontend-mobile/app.config.js, puis relancez."
+            );
+          } else if (!buildAuto) {
+            console.log(
+              "::warning::Le natif a changé : aucun update " + canal + " n'est publié, les binaires " +
+              "existants ne pourraient pas l'exécuter. " + manuel
+            );
+            sortir("rien");
+          } else {
+            console.log("::notice::Natif modifié — l'OTA ne convient pas, lancement d'un build Android.");
+            sortir("build");
+          }
+          EOF
+
+          node "$RUNNER_TEMP/decider.js"
+
+      - name: Publier l'update OTA
+        if: steps.decision.outputs.action == 'update'
+        run: |
+          MSG=$(git log -1 --pretty=%s)
+          eas update \
+            --branch "$CANAL" \
+            --environment "$CANAL" \
+            --message "$MSG" \
+            --non-interactive
+
+      - name: Lancer un build de production Android
+        if: steps.decision.outputs.action == 'build'
+        run: |
+          MSG=$(git log -1 --pretty=%s)
+          eas build \
+            --platform android \
+            --profile production \
+            --message "$MSG" \
+            --non-interactive \
+            --no-wait
+          echo "::notice::Build lancé sur EAS (suivi : https://expo.dev/accounts/secu-cycle/projects/secu-cycle/builds). Il reste à le soumettre au Play Store une fois terminé."
