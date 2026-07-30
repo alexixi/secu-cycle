@@ -385,3 +385,24 @@
 .graph-extinction-row input[type="number"] {
   width: 4.5rem;
 }
+
+/* --- Import / export --- */
+.graph-head-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.graph-import-file {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.graph-modal-field small.graph-import-issue {
+  color: var(--error);
+}

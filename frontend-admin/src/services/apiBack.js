@@ -371,3 +371,18 @@ export async function updateCommuneLighting(token, schedules) {
 export async function getGraphBuilds(token, limit = 20) {
     return apiFetch(`/graph/admin/builds?limit=${limit}`, { method: "GET" }, token);
 }
+
+// Le fichier d'échange transite en JSON dans les deux sens : le navigateur
+// fabrique lui-même le téléchargement, et relit le fichier importé avant de le
+// poster. Pas de multipart, donc rien à changer à `apiFetch`.
+export async function exportGraphProfiles(token, profileId = null) {
+    const query = profileId ? `?profile_id=${profileId}` : "";
+    return apiFetch(`/graph/admin/profiles/export${query}`, { method: "GET" }, token);
+}
+
+export async function importGraphProfiles(token, bundle) {
+    return apiFetch("/graph/admin/profiles/import", {
+        method: "POST",
+        body: JSON.stringify(bundle),
+    }, token);
+}

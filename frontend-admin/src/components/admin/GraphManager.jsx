@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   LuWaypoints,
   LuSpline,
@@ -8,6 +8,8 @@ import {
   LuHammer,
   LuPlay,
   LuStar,
+  LuDownload,
+  LuUpload,
   LuX,
   LuCircleCheck,
   LuCircleX,
@@ -23,13 +25,16 @@ import {
   buildGraphProfile,
   createGraphProfile,
   deleteGraphProfile,
+  exportGraphProfiles,
   getGraphBuilds,
   getGraphProfiles,
   getGraphProfileExtent,
   getGraphStats,
+  importGraphProfiles,
   updateGraphProfile,
 } from "../../services/apiBack";
 import GraphExtentMap from "./GraphExtentMap";
+import GraphImportModal, { readBundle } from "./GraphImportModal";
 import GraphProfileModal from "./GraphProfileModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import "./UsersManager.css";
@@ -67,10 +72,24 @@ const formatSize = (bytes) => {
 const formatCount = (value) =>
   value === null || value === undefined ? "—" : value.toLocaleString("fr-FR");
 
+const downloadJson = (data, filename) => {
+  const url = URL.createObjectURL(
+    new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 const errorMessage = (err, fallback) => {
   try {
     const detail = JSON.parse(err.message)?.detail;
     if (typeof detail === "string") return detail;
+    if (Array.isArray(detail) && detail[0]?.msg) {
+      return detail[0].msg.replace(/^Value error, /, "");
+    }
   } catch {
   }
   return err.message || fallback;
@@ -111,8 +130,10 @@ export default function GraphManager() {
   const [newCommune, setNewCommune] = useState("");
   const [allCommunes, setAllCommunes] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(null);
   const [toDelete, setToDelete] = useState(null);
   const [toActivate, setToActivate] = useState(null);
+  const fileInputRef = useRef(null);
 
   const selected = profiles.find((p) => p.id === selectedId) || null;
   const runningBuild = builds.find((b) => b.status === "running") || null;
@@ -227,6 +248,47 @@ export default function GraphManager() {
     setSelectedId(profile.id);
   };
 
+  const handleExport = async (profile) => {
+    setActionError(null);
+    setBusy(true);
+    try {
+      const bundle = await exportGraphProfiles(token, profile?.id ?? null);
+      downloadJson(bundle, profile ? `${profile.name}.json` : "graph-profiles.json");
+    } catch (err) {
+      setActionError(errorMessage(err, "Export impossible."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setActionError(null);
+    try {
+      setImporting({ fileName: file.name, bundle: readBundle(await file.text()) });
+    } catch (err) {
+      setActionError(
+        err instanceof SyntaxError
+          ? "Fichier illisible : ce n'est pas un JSON valide."
+          : err.message
+      );
+    }
+  };
+
+  const handleImport = async (bundle) => {
+    let created;
+    try {
+      created = await importGraphProfiles(token, bundle);
+    } catch (err) {
+      throw new Error(errorMessage(err, "Import impossible."));
+    }
+    setImporting(null);
+    await load();
+    if (created.length > 0) setSelectedId(created[0].id);
+  };
+
   const handleAddCommune = async (e) => {
     e.preventDefault();
     if (!selected || !newCommune.trim()) return;
@@ -305,6 +367,34 @@ export default function GraphManager() {
               "Aucun profil sélectionné"
             )}
           </p>
+        </div>
+
+        <div className="graph-head-actions">
+          <input
+            type="file"
+            accept="application/json,.json"
+            ref={fileInputRef}
+            onChange={handleFile}
+            hidden
+          />
+          <button
+            className="users-refresh"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={busy}
+            title="Créer un ou plusieurs profils à partir d'un fichier exporté"
+          >
+            <LuUpload size={16} />
+            <span>Importer</span>
+          </button>
+          <button
+            className="users-refresh"
+            onClick={() => handleExport(null)}
+            disabled={busy || profiles.length === 0}
+            title="Télécharger tous les profils dans un seul fichier"
+          >
+            <LuDownload size={16} />
+            <span>Exporter tout</span>
+          </button>
         </div>
       </header>
 
@@ -419,6 +509,14 @@ export default function GraphManager() {
                         onClick={() => !profile.is_default && handleSetDefault(profile)}
                       >
                         <LuStar size={16} fill={profile.is_default ? "currentColor" : "none"} />
+                      </button>
+                      <button
+                        className="row-action"
+                        title="Exporter ce profil"
+                        disabled={busy}
+                        onClick={() => handleExport(profile)}
+                      >
+                        <LuDownload size={16} />
                       </button>
                       <button
                         className="row-action danger"
@@ -586,6 +684,16 @@ export default function GraphManager() {
           profiles={profiles}
           onCancel={() => setCreating(false)}
           onCreate={handleCreate}
+        />
+      )}
+
+      {importing && (
+        <GraphImportModal
+          fileName={importing.fileName}
+          bundle={importing.bundle}
+          profiles={profiles}
+          onCancel={() => setImporting(null)}
+          onImport={handleImport}
         />
       )}
 

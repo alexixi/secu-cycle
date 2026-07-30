@@ -1,6 +1,7 @@
 import asyncio
 import gc
 import os
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
@@ -24,7 +25,9 @@ from schemas.graph_profile import (
     CommuneLightingItem,
     CommuneLightingUpdate,
     GraphBuildRunRead,
+    GraphProfileBundle,
     GraphProfileCreate,
+    GraphProfileExportItem,
     GraphProfileRead,
     GraphProfileUpdate,
     GraphStatsRead,
@@ -315,6 +318,108 @@ async def get_profile_extent(
     return JSONResponse(geojson)
 
 
+# --- Import / export de profils ---
+
+@router.get("/admin/profiles/export", response_model=GraphProfileBundle)
+def export_profiles(
+    profile_id: int | None = Query(None, description="Profil à exporter ; tous si absent"),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Emprises et horaires d'éclairage, dans un fichier d'échange JSON.
+
+    Le graphe généré n'en fait pas partie : un `.graphml` pèse plusieurs
+    centaines de mégaoctets et se reconstruit à partir de l'emprise. Un profil
+    importé ailleurs arrive donc « graphe non généré ».
+
+    Les horaires joints sont ceux des seules communes exportées : la table est
+    globale, mais réimporter les horaires d'une autre emprise n'aurait pas de sens.
+    """
+    if profile_id is None:
+        profiles = db.query(GraphProfile).order_by(GraphProfile.name).all()
+    else:
+        profiles = [_get_profile(db, profile_id)]
+
+    communes = list(dict.fromkeys(
+        commune for profile in profiles for commune in (profile.communes or [])
+    ))
+    lighting = (
+        db.query(CommuneLighting)
+        .filter(CommuneLighting.commune.in_(communes))
+        .order_by(CommuneLighting.commune)
+        .all()
+    ) if communes else []
+
+    return GraphProfileBundle(
+        exported_at=datetime.now(),
+        profiles=[GraphProfileExportItem.model_validate(p) for p in profiles],
+        commune_lighting=[CommuneLightingItem.model_validate(row) for row in lighting],
+    )
+
+
+@router.post("/admin/profiles/import", response_model=list[GraphProfileRead], status_code=201)
+def import_profiles(
+    bundle: GraphProfileBundle,
+    request: Request,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Crée les profils d'un fichier d'échange, **sans géocoder** leurs communes.
+
+    Les vérifier auprès de Nominatim coûterait une seconde chacune, soit près
+    d'une minute pour une emprise bordelaise : plus que ce qu'une requête HTTP
+    peut tenir. Le fichier provient d'un profil déjà en service, dont les
+    communes ont été validées à la saisie ; l'emprise se géocode ensuite
+    paresseusement à l'affichage de la carte. Une commune inventée à la main
+    dans le fichier ne se signalera donc qu'à la génération.
+
+    Un profil importé n'est jamais « par défaut » : un import ne doit pas
+    changer en douce le profil chargé au démarrage.
+    """
+    if not bundle.profiles:
+        raise HTTPException(status_code=400, detail="Ce fichier ne contient aucun profil.")
+
+    seen = set()
+    for item in bundle.profiles:
+        if item.name in seen:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Le fichier contient deux profils nommés « {item.name} ».",
+            )
+        seen.add(item.name)
+
+    taken = db.query(GraphProfile).filter(GraphProfile.name.in_(list(seen))).first()
+    if taken is not None:
+        raise HTTPException(
+            status_code=400, detail=f"Un profil porte déjà ce nom : « {taken.name} »."
+        )
+
+    created = []
+    for item in bundle.profiles:
+        profile = GraphProfile(
+            name=item.name,
+            communes=item.communes,
+            is_default=False,
+            night_extinction_start=item.night_extinction_start,
+            night_extinction_end=item.night_extinction_end,
+        )
+        db.add(profile)
+        created.append(profile)
+
+    _upsert_lighting(db, bundle.commune_lighting)
+    db.commit()
+
+    # Les horaires importés valent pour toutes les emprises, y compris celle
+    # déjà chargée : autant les appliquer tout de suite, comme le fait l'éditeur.
+    if bundle.commune_lighting:
+        _reapply_extinction(request)
+
+    active = _active_name(request)
+    return [_to_read(db, profile, active) for profile in created]
+
+
+# --- Éclairage par commune ---
+
 @router.get("/admin/communes/lighting", response_model=list[CommuneLightingItem])
 def list_commune_lighting(
     db: Session = Depends(get_db),
@@ -345,7 +450,25 @@ def update_commune_lighting(
     défaut de l'emprise. La résolution est rejouée immédiatement sur le graphe
     chargé — pas besoin de le régénérer ni de redémarrer l'API.
     """
-    for item in payload.schedules:
+    _upsert_lighting(db, payload.schedules)
+    db.commit()
+
+    _reapply_extinction(request)
+
+    return (
+        db.query(CommuneLighting)
+        .order_by(CommuneLighting.commune)
+        .all()
+    )
+
+
+def _upsert_lighting(db: Session, items) -> None:
+    """Écrit des horaires d'extinction par commune, sans commiter.
+
+    Les deux heures à None effacent l'horaire ; sur une commune qui n'en avait
+    pas, il n'y a alors rien à écrire.
+    """
+    for item in items:
         row = (
             db.query(CommuneLighting)
             .filter(CommuneLighting.commune == item.commune)
@@ -361,15 +484,6 @@ def update_commune_lighting(
             db.add(row)
         row.night_extinction_start = item.night_extinction_start
         row.night_extinction_end = item.night_extinction_end
-    db.commit()
-
-    _reapply_extinction(request)
-
-    return (
-        db.query(CommuneLighting)
-        .order_by(CommuneLighting.commune)
-        .all()
-    )
 
 
 def _reapply_extinction(request: Request) -> None:
