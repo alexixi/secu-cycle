@@ -37,6 +37,9 @@ services:
       - WAQI_TOKEN=${WAQI_TOKEN:-}
       - BIKESHARE_ENABLED=${BIKESHARE_ENABLED:-1}
       - BIKESHARE_TBM_API_KEY=${BIKESHARE_TBM_API_KEY:-}
+      - WEATHER_ENABLED=${WEATHER_ENABLED:-1}
+      - OPEN_METEO_URL=${OPEN_METEO_URL:-}
+      - OPEN_METEO_API_KEY=${OPEN_METEO_API_KEY:-}
       - PYTHONUNBUFFERED=1
     volumes:
       - graphs_data:/app/graphs

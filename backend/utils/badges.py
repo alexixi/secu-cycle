@@ -18,6 +18,10 @@ COUNTERS = {
         "SELECT count(*) FROM routes "
         "WHERE user_id = :uid AND completed_at IS NOT NULL AND route_type = 'safe'"
     ),
+    "rainy_routes_completed": (
+        "SELECT count(*) FROM routes "
+        "WHERE user_id = :uid AND completed_at IS NOT NULL AND was_rainy"
+    ),
     "total_distance_km": (
         "SELECT COALESCE(SUM(distance_km), 0) FROM routes "
         "WHERE user_id = :uid AND completed_at IS NOT NULL"

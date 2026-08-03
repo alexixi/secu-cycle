@@ -343,9 +343,9 @@ d'épuiser un quota **partagé avec les tuiles de la carte**, dont l'épuisement
 Variables d'environnement associées (backend) : `MAPTILER_KEY`, `MAPTILER_GEOCODING_BUDGET`,
 `GEOCODE_CACHE_TTL_DAYS`. Sans clé, la recherche reste fonctionnelle en France mais se limite aux adresses.
 
-### Couches temps réel : trafic, vélos en libre-service, qualité de l'air, éclairage
+### Couches temps réel : trafic, vélos en libre-service, qualité de l'air, météo, éclairage
 
-Quatre couches alimentées par des sources externes rafraîchies en continu. Toutes suivent le même
+Cinq couches alimentées par des sources externes rafraîchies en continu. Toutes suivent le même
 principe de **sélection géographique** : une source n'est interrogée que si son emprise croise celle
 du graphe chargé, jamais parce qu'elle est « nationale ».
 
@@ -367,6 +367,31 @@ du graphe chargé, jamais parce qu'elle est « nationale ».
   échantillonné le long du trajet. Complété par les stations au sol du **World Air Quality Index**,
   publiées sur l'échelle AQI américaine — deux échelles distinctes, affichées comme telles. Sans
   `WAQI_TOKEN`, seule la couche CAMS est servie.
+- **Météo** (`weather/config.py`) — Open-Meteo (DWD ICON-D2 et Météo-France AROME sur notre emprise),
+  rafraîchie tous les quarts d'heure. Trois horizons pour trois usages : les conditions courantes
+  alimentent le bandeau de carte (température, vent, condition), relevées sur des **points placés
+  par densité du réseau cyclable** (`graph/extent.py`, `sample_points`) — trois pour Bruxelles,
+  vingt-quatre pour Bordeaux + Tournai, et le lecteur se voit servir le plus proche de lui.
+  L'échelle reste celle d'un quartier, jamais la position exacte d'une averse ;
+  `minutely_15` porte la promesse « pluie dans 15 minutes », et
+  n'est demandé qu'à l'intérieur de la couverture ICON-D2/AROME, faute de quoi la source
+  l'interpolerait depuis l'horaire **sans le signaler** ; la prévision horaire alimente les conseils
+  d'équipement et la suggestion de décaler l'heure de départ. Les alertes (grêle, orage, verglas,
+  rafales, gel) portent sur les **valeurs numériques**, jamais sur le code temps — sur le modèle mixé,
+  `weather_code = 61` et `precipitation = 0.0` coexistent régulièrement, et s'y fier produirait des
+  alertes fantômes à chaque cycle. Couche **informative** : elle n'entre pas dans le coût de routage.
+- **Vigilance officielle** (`vigilance/config.py`) — deux sources **indépendantes**, une par pays,
+  sur le registre de `traffic/` : la vigilance Météo-France par département (miroir Opendatasoft,
+  donc la même API `explore/v2.1` que le trafic, sans clé) et les avertissements de l'IRM relayés
+  par **MeteoAlarm** au format CAP pour la Belgique. Chacune a son emprise et peut échouer seule.
+  Le rattachement d'une zone du graphe à un département ou à une province passe par un unique
+  résolveur (`ISO3166-2-lvl6` de Nominatim : `FR-33`, `BE-WHT`), appelé une fois par zone puis mis
+  en cache. Ces alertes sont fusionnées dans le résumé de `/weather/` et sont **les seules** à
+  employer le mot « vigilance » : nos propres seuils n'ont pas l'autorité d'un institut, et le
+  vocabulaire officiel le dirait à tort.
+  Le vent corrige la durée *affichée* (`duration_wind`, posée à côté de `duration` après le cache) et
+  les ponts d'au moins 30 m sont signalés sous 3 °C — un tablier gèle une à deux heures avant la
+  chaussée voisine, faute d'inertie du sol.
 - **Éclairage public** (`lighting/config.py`) — les lampadaires OSM (`highway=street_lamp`) couvrent
   toute la zone mais inégalement ; deux jeux open data les densifient : points lumineux de Bordeaux
   Métropole (`bor_ptlum`) et luminaires de Nantes Métropole.

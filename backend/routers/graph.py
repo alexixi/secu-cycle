@@ -17,6 +17,8 @@ from graph.graph_manager import load_graph_with_ign, profile_paths
 from graph.route_cache import route_cache
 from traffic import service as traffic_service
 from bikeshare import service as bikeshare_service
+from weather import service as weather_service
+from vigilance import service as vigilance_service
 from limiter import limiter
 from models.commune_lighting import CommuneLighting
 from models.graph_profile import GraphBuildRun, GraphProfile
@@ -622,6 +624,16 @@ async def _reload_graph(app, name: str) -> None:
             await air_quality_service.refresh(G)
         except Exception as exc:
             print(f"[Graphe] Qualité de l'air indisponible : {exc}", flush=True)
+
+        try:
+            await weather_service.refresh(G)
+        except Exception as exc:
+            print(f"[Graphe] Météo indisponible : {exc}", flush=True)
+
+        try:
+            await vigilance_service.refresh(G)
+        except Exception as exc:
+            print(f"[Graphe] Vigilance indisponible : {exc}", flush=True)
 
         app.state.G = G
         app.state.graph_profile = name

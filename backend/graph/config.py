@@ -169,6 +169,52 @@ AIR_SAFETY_FACTOR = 3.0      # à calibrer
 # plein (« Très mauvais »). Barème EEA, valable France et Belgique.
 AIR_INTENSITY_LOW_EXPOSURE = 0.25  # seuil « à l'écart du trafic » pour pct_low_air_exposure
 
+# --- Vent : durée AFFICHÉE uniquement ---------------------------------------
+# Ces facteurs n'entrent PAS dans `_edge_cost` ni dans la dichotomie sur
+# `max_time_min` (routing.py, `get_optimal_routes`). Trois raisons, toutes
+# vérifiables dans le code :
+#   - la dichotomie décide de l'EXISTENCE de la variante « Compromis » : un vent
+#     qui tourne la ferait apparaître et disparaître entre deux requêtes
+#     identiques, et `alpha_final` dériverait toutes les dix minutes sans qu'aucune
+#     entrée utilisateur n'ait changé ;
+#   - la clé du cache d'itinéraires ne contient pas le vent : un utilisateur
+#     récupérerait un trajet mis en cache dont la durée a été calculée sous le vent
+#     d'il y a trois heures ;
+#   - c'est une prévision sur un instantané de dix minutes, appliquée à un trajet
+#     qui part maintenant. La laisser décider de l'itinéraire, c'est laisser une
+#     panne de source changer ce que l'utilisateur reçoit.
+# Le vent est donc appliqué après le cache, dans `routers/route.py`, sur une durée
+# `duration_wind` posée À CÔTÉ de `duration`, jamais à sa place.
+WIND_HEADWIND_SPEED_FACTOR = 0.09   # -9 % de vitesse par 10 km/h de vent de face
+WIND_CROSSWIND_SPEED_FACTOR = 0.02  # latéral : gêne et déport, pas frein
+WIND_SPEED_FLOOR = 0.55             # même dans 60 km/h de face, on avance
+WIND_SPEED_CEIL = 1.15              # le vent arrière ne fait pas voler
+WIND_MIN_SPEED_KMH = 12.0           # en deçà, terme inactif : c'est dans le bruit
+# Demi-angle du secteur « de face » pour le COMPTAGE de la part du trajet.
+# La pénalité de vitesse, elle, reste continue en cos/sin : c'est bien un
+# ralentissement progressif. Mais annoncer « vent de face » demande un seuil, et
+# le retenir dès que la composante est positive ferait qualifier de face un vent
+# à 89° du cap, c'est-à-dire un pur travers. ±45° est la convention usuelle
+# (face / travers / dos en trois secteurs égaux).
+WIND_HEADWIND_SECTOR_DEG = 45.0
+# Part de la distance en vent de face au-delà de laquelle ça vaut d'être signalé.
+WIND_HEADWIND_REPORT_PCT = 40.0
+
+# --- Ponts verglaçants -------------------------------------------------------
+# Un tablier de pont perd sa chaleur par ses deux faces : il rayonne vers le ciel
+# et se refroidit par convection en dessous, sans l'inertie du sol qui protège une
+# chaussée ordinaire. D'où 1 à 3 °C de moins et un passage sous zéro une à deux
+# heures plus tôt — le panneau « bridge ices before road » n'est pas une légende.
+# S'y ajoutent l'exposition au vent et un tablier béton/acier peu isolant.
+#
+# On INFORME, on ne fait pas dévier : un relevé par agglomération n'a pas la
+# finesse pour arbitrer un itinéraire, et `_edge_cost` reste intouché.
+ICE_BRIDGE_TEMP_C = 3.0
+# En deçà, un `bridge=yes` est un ponceau au-dessus d'un fossé : aucune inertie
+# thermique différente du sol. Sans ce filtre, on crierait au verglas sur 4 m de
+# dalle et l'avertissement perdrait tout crédit.
+BRIDGE_MIN_LENGTH_M = 30.0
+
 SURFACE_ROUGHNESS = {
     'asphalt': 0.0, 'concrete': 0.05, 'concrete:plates': 0.1, 'paved': 0.05,
     'metal': 0.1, 'wood': 0.2,
