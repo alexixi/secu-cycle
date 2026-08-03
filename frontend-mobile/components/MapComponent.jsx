@@ -3,7 +3,15 @@ import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimen
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { getReports, getPois, getAccidents, getTraffic, getAirQuality, getBikeshareStations, getLitRoads, getStreetlightSources, createReport, deleteReport, voteReport } from '../services/apiBack';
+import { getReports, getPois, getAccidents, getTraffic, getAirQuality, getWeather, getBikeshareStations, getLitRoads, getStreetlightSources, createReport, deleteReport, voteReport } from '../services/apiBack';
+import {
+    pointForCenter, weatherSummary, rainBanner,
+    snapshotAgeMin, isHintUsable, freshSteps, STALE_AGE_MIN,
+} from '../services/weather';
+import WeatherPill from './WeatherPill';
+import WeatherDetailModal from './WeatherDetailModal';
+import useWeatherAlerts from '../hooks/useWeatherAlerts';
+import WeatherAlert from './WeatherAlert';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
@@ -422,6 +430,9 @@ export default function MapComponent({
     const [showAir, setShowAir] = useState(false);
     const [airData, setAirData] = useState(null);
     const [isAirInfoVisible, setAirInfoVisible] = useState(false);
+    const [weatherData, setWeatherData] = useState(null);
+    const [isWeatherInfoVisible, setWeatherInfoVisible] = useState(false);
+    const [isWeatherDetailVisible, setWeatherDetailVisible] = useState(false);
     const [activeAirStation, setActiveAirStation] = useState(null);
     const [showBikeshare, setShowBikeshare] = useState(false);
     const [bikeshareData, setBikeshareData] = useState(null);
@@ -546,6 +557,10 @@ export default function MapComponent({
 
     const { activeAlert, dismissAlert } = useHazardAlerts(
         reports, currentPosition, activeRoute, isNavigating,
+    );
+
+    const { activeAlert: weatherAlert, dismissAlert: dismissWeatherAlert } = useWeatherAlerts(
+        weatherData, currentPosition, isNavigating,
     );
 
     useEffect(() => {
@@ -784,6 +799,71 @@ export default function MapComponent({
 
         return () => { cancelled = true; if (timer) clearTimeout(timer); };
     }, [showAir, miniMap]);
+
+    const activeWeather = useMemo(() => {
+        const point = (currentPosition?.lat != null && currentPosition?.lon != null)
+            ? { lat: currentPosition.lat, lon: currentPosition.lon }
+            : (start?.lat != null && start?.lon != null)
+                ? { lat: parseFloat(start.lat), lon: parseFloat(start.lon) }
+                : null;
+        return pointForCenter(weatherData, point);
+    }, [weatherData, currentPosition, start]);
+
+    const [nowMs, setNowMs] = useState(() => Date.now());
+    useEffect(() => {
+        if (miniMap) return;
+        const timer = setInterval(() => setNowMs(Date.now()), 60000);
+        return () => clearInterval(timer);
+    }, [miniMap]);
+
+    const weatherAgeMin = useMemo(
+        () => snapshotAgeMin(weatherData?.updated_at, nowMs),
+        [weatherData, nowMs],
+    );
+
+    const weatherStale = (weatherData?.stale === true)
+        || (weatherAgeMin != null && weatherAgeMin >= STALE_AGE_MIN);
+
+    const weatherRain = useMemo(() => {
+        if (!isHintUsable(activeWeather?.summary?.departure_hint, weatherAgeMin)) return null;
+        return rainBanner(activeWeather);
+    }, [activeWeather, weatherAgeMin]);
+
+    const weatherNowcast = useMemo(
+        () => freshSteps(activeWeather?.minutely_15, activeWeather?.utc_offset_seconds, undefined, nowMs),
+        [activeWeather, nowMs],
+    );
+    const weatherNowcastOutdated = (activeWeather?.minutely_15?.length > 0)
+        && weatherNowcast.length === 0;
+
+    const weatherUpdatedAt = useMemo(() => {
+        if (!weatherData?.updated_at) return null;
+        const date = new Date(weatherData.updated_at);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }, [weatherData]);
+
+    useEffect(() => {
+        if (miniMap) return;
+
+        let cancelled = false;
+        let timer = null;
+
+        const load = async () => {
+            try {
+                const data = await getWeather();
+                if (cancelled) return;
+                setWeatherData(data);
+                timer = setTimeout(load, (data?.refresh_interval_s || 600) * 1000);
+            } catch {
+                if (cancelled) return;
+                timer = setTimeout(load, 60000);
+            }
+        };
+        load();
+
+        return () => { cancelled = true; if (timer) clearTimeout(timer); };
+    }, [miniMap]);
 
     const bikeshareGeoJSON = useMemo(
         () => bikeshareData?.geojson?.features?.length ? bikeshareData.geojson : EMPTY_FEATURE_COLLECTION,
@@ -1096,7 +1176,7 @@ export default function MapComponent({
                 attribution={true}
                 attributionPosition={{ bottom: 5, right: 5 }}
                 compass={!miniMap}
-                compassPosition={{ bottom: 80 + bottomInset, right: 20 }}
+                compassPosition={{ bottom: 115 + bottomInset, right: 20 }}
                 compassHiddenFacingNorth={false}
             >
                 <Camera
@@ -1429,6 +1509,19 @@ export default function MapComponent({
                 )}
             </Map>
 
+            {!miniMap && !hideControls && (
+                <View style={[styles.weatherPill, { bottom: 80 + bottomInset }]} pointerEvents="box-none">
+                    <WeatherPill
+                        zone={activeWeather}
+                        stale={weatherStale}
+                        rain={weatherRain}
+                        onPress={() => { Haptics.selectionAsync(); setWeatherDetailVisible(true); }}
+                        buttonStyle={[styles.mapButton, androidButtonBg]}
+                        frost={<MapButtonFrost />}
+                    />
+                </View>
+            )}
+
             {!miniMap && isNavigating && activeAlert && (
                 <HazardAlert
                     report={activeAlert.report}
@@ -1437,6 +1530,14 @@ export default function MapComponent({
                     onVote={(isPresent) => handleVoteReport(activeAlert.report.id, isPresent)}
                     onDismiss={dismissAlert}
                     bottomOffset={bottomInset}
+                />
+            )}
+
+            {weatherAlert && (
+                <WeatherAlert
+                    alert={weatherAlert}
+                    onDismiss={dismissWeatherAlert}
+                    bottomOffset={bottomInset + (activeAlert ? 110 : 0)}
                 />
             )}
 
@@ -1674,6 +1775,88 @@ export default function MapComponent({
                         <TouchableOpacity
                             style={[styles.lightingInfoClose, { backgroundColor: colors.primary }]}
                             onPress={() => setLightingInfoVisible(false)}
+                        >
+                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Fermer</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
+            <WeatherDetailModal
+                visible={isWeatherDetailVisible}
+                zone={activeWeather}
+                stale={weatherStale}
+                updatedAt={weatherUpdatedAt}
+                minutely={weatherNowcast}
+                outdated={weatherNowcastOutdated}
+                rain={weatherRain}
+                onClose={() => setWeatherDetailVisible(false)}
+                onOpenInfo={() => {
+                    setWeatherDetailVisible(false);
+                    setWeatherInfoVisible(true);
+                }}
+            />
+
+            <Modal
+                visible={isWeatherInfoVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setWeatherInfoVisible(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setWeatherInfoVisible(false)}
+                >
+                    <View
+                        style={[styles.lightingInfoCard, { backgroundColor: colors.bgMain }]}
+                        onStartShouldSetResponder={() => true}
+                    >
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>
+                            Météo
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            {"Le relevé est pris en un point au centre de l'agglomération, et le bandeau "}
+                            {"porte le niveau de vigilance le plus élevé du moment. C'est un niveau "}
+                            {"régional : une cellule orageuse fait 5 à 15 km, nous n'échantillonnons "}
+                            {"qu'un point. D'où « Risque d'orage », jamais « Orage sur votre trajet »."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary, fontStyle: 'italic' }]}>
+                            {"On parle donc de risque d'orage, jamais d'orage sur votre trajet. La météo "}
+                            {"ne modifie pas le tracé calculé : elle vous informe, elle ne vous fait pas "}
+                            {"faire un détour sur une prévision de cette résolution."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
+                            Pluie dans les 30 minutes
+                        </Text>
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            {"La prévision au pas de 15 minutes vient des modèles à fine maille AROME "}
+                            {"(Météo-France) et ICON-D2 (DWD). Hors de leur couverture, elle n'est pas "}
+                            {"affichée du tout plutôt que d'être interpolée en silence depuis l'horaire."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
+                            Vent et ponts
+                        </Text>
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            {"Le vent ajuste la durée affichée de l'itinéraire, jamais le tracé retenu. "}
+                            {"Sous 3 °C, les ponts d'au moins 30 m sont signalés : un tablier perd sa "}
+                            {"chaleur par ses deux faces et gèle une à deux heures avant la chaussée voisine."}
+                        </Text>
+
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
+                            Sources
+                        </Text>
+                        <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
+                            {"Prévisions : Open-Meteo (DWD ICON-D2, Météo-France AROME, NOAA GFS)."}
+                        </Text>
+
+                        <TouchableOpacity
+                            style={[styles.lightingInfoClose, { backgroundColor: colors.primary }]}
+                            onPress={() => setWeatherInfoVisible(false)}
                         >
                             <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Fermer</Text>
                         </TouchableOpacity>
@@ -2406,6 +2589,12 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 20,
         left: 20,
+    },
+    weatherPill: {
+        position: 'absolute',
+        right: 20,
+        alignItems: 'flex-end',
+        zIndex: 9,
     },
     recenterButton: {
         position: 'absolute',

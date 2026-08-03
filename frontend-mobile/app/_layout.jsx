@@ -8,6 +8,7 @@ import { ANDROID_REVEAL, androidOpaque } from '../constants/navigation';
 import { useTheme } from '../hooks/useTheme';
 import '../services/backgroundLocation';
 import { stopNavigationNotification } from '../services/navigationNotification';
+import { ensureNotificationHandler } from '../services/weatherNotification';
 import { initAnalytics, trackScreen } from '../services/analytics';
 
 initAnalytics();
@@ -20,6 +21,7 @@ function RootNavigator() {
 
   useEffect(() => {
     stopNavigationNotification();
+    ensureNotificationHandler();
   }, []);
 
   useEffect(() => {
