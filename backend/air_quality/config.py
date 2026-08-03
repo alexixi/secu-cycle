@@ -23,10 +23,14 @@ REFRESH_INTERVAL_S = 900
 # Maille réelle du CAMS européen, et pas le plus fin qu'on échantillonne. L'API
 # recale de toute façon chaque coordonnée sur le nœud CAMS le plus proche.
 GRID_STEP_DEG = 0.1
-# Garde-fou si un profil couvre une très grande emprise. Ce n'est pas une limite
-# de quota — Open-Meteo compte une requête multi-points comme un seul appel, et
-# 96 appels/jour restent très loin des 10 000 — mais une limite de longueur d'URL,
-# de taille de réponse et de latence.
+# Garde-fou si un profil couvre une très grande emprise : longueur d'URL, taille
+# de réponse et latence.
+#
+# Ce n'est **pas** une limite de quota, mais pas pour la raison qu'on lisait ici :
+# Open-Meteo pondère par point, pas par requête (`poids = (jours/14) ×
+# (variables/10) × points`, cf. `weather/config.py`). 150 points × 96 cycles × 7
+# variables restent sous le plafond gratuit grâce au facteur temporel, pas parce
+# qu'une requête multi-points compterait pour une.
 #
 # Le dépassement **ne coupe jamais des cellules** : la maille entière s'élargit
 # d'un multiple du pas (cf. `service.grid_points`) jusqu'à tenir dans le budget.

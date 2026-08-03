@@ -28,6 +28,14 @@ DEFAULT_BADGES = [
         "goal_value": 10,
     },
     {
+        "code": "rain_rider",
+        "name": "Rouleur sous la pluie",
+        "description": "Terminer 5 trajets partis sous la pluie.",
+        "criteria": "rainy_routes_completed",
+        "icon": "rainy",
+        "goal_value": 5,
+    },
+    {
         "code": "safe_routes_10",
         "name": "10 itinéraires sécurisés",
         "description": "Terminer 10 trajets en suivant l'itinéraire sécurisé.",

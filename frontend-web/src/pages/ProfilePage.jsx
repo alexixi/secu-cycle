@@ -18,7 +18,7 @@ import HistoricModal from "../components/layout/modals/HistoricModal";
 
 // Icons
 import { PiPathBold } from "react-icons/pi";
-import { MdOutlineTimer, MdDirectionsBike, MdStraighten, MdOutlineRoute } from "react-icons/md";
+import { MdOutlineTimer, MdDirectionsBike, MdStraighten, MdOutlineRoute, MdOutlineWaterDrop } from "react-icons/md";
 import { MdOutlineSpeed, MdHealthAndSafety } from "react-icons/md";
 import { FaFlagCheckered, FaStar, FaBalanceScale } from "react-icons/fa";
 import { MdOutlineWork, MdEditLocationAlt } from "react-icons/md";
@@ -39,6 +39,7 @@ const BADGE_ICONS = {
   safe_routes_10: MdHealthAndSafety,
   distance_50: MdOutlineRoute,
   distance_200: MdStraighten,
+  rain_rider: MdOutlineWaterDrop,
 };
 
 const formatProgress = (value, criteria) =>

@@ -21,6 +21,7 @@ export default function Index() {
     const [endPoint, setEndPoint] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [routePaths, setRoutePaths] = useState(null);
+    const [routeWeather, setRouteWeather] = useState(null);
     const [selectedItineraire, setSelectedItineraire] = useState(null);
     const [selectedBike, setSelectedBike] = useState('classic');
     const [maxDuration, setMaxDuration] = useState(null);
@@ -108,17 +109,19 @@ export default function Index() {
 
         setIsLoading(true);
         setRoutePaths(null);
+        setRouteWeather(null);
         setSelectedItineraire(null);
         setErrorPath(false);
         setIsNavigating(false);
         completedRouteRef.current = null;
 
         try {
-            const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint?.name, endPoint?.name);
+            const { routes: itineraries, weather } = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint?.name, endPoint?.name);
 
             if (itineraries && itineraries.length > 0) {
                 setErrorPath(false);
                 setRoutePaths(itineraries);
+                setRouteWeather(weather);
                 setSelectedItineraire(itineraries[0].id);
                 trackEvent('route_calculated', { bike: selectedBike, count: itineraries.length });
             } else {
@@ -286,6 +289,7 @@ export default function Index() {
             {!isNavigating && (
                 <ItineraryPanel
                     itineraires={routePaths}
+                    weather={routeWeather}
                     selectedItineraire={selectedItineraire}
                     setSelectedItineraire={handleSelectItineraire}
                     bottomOffset={tabClear}

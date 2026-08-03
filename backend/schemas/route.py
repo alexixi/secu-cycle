@@ -53,6 +53,12 @@ class ComputedRoute(BaseModel):
     score: float
     maneuvers: List[ManeuverOut] = []
     infra_stats: Optional[Dict[str, Any]] = None
+    # Durée corrigée du vent, posée À CÔTÉ de `duration` et jamais à sa place :
+    # `duration` reste la valeur qui a servi au calcul et qui est en cache, celle-ci
+    # est purement indicative. None quand la météo est indisponible ou périmée.
+    duration_wind: Optional[float] = None
+    wind_effect_min: Optional[float] = None
+    pct_headwind: Optional[float] = None
 
 class ComputeRoutesResponse(BaseModel):
     """Réponse complète de ton endpoint POST /routes/compute."""
@@ -60,3 +66,7 @@ class ComputeRoutesResponse(BaseModel):
     routes: List[ComputedRoute] = []
     bounded_error: Optional[str] = None
     error: Optional[str] = None
+    # Conditions au départ : condition, vent, vigilance, équipement, décalage de
+    # départ, ponts verglaçants. Un seul bloc au niveau réponse, pas un par
+    # variante : le conseil dépend du lieu et de l'heure, pas du tracé choisi.
+    weather: Optional[Dict[str, Any]] = None

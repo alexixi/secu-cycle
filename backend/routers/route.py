@@ -17,6 +17,10 @@ from models.report import Report
 from reports_lifecycle import compute_status, load_votes_by_report
 from datetime import datetime, timedelta
 from graph.guidance import build_maneuvers
+from graph.statistique import route_bridge_stats, wind_adjusted_travel_time
+from graph.config import ICE_BRIDGE_TEMP_C, WIND_HEADWIND_REPORT_PCT
+from weather import config as weather_config
+from weather import service as weather_service
 from limiter import limiter
 router = APIRouter(prefix="/routes", tags=["Routes"])
 
@@ -38,6 +42,53 @@ def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends
     if not route:
         raise HTTPException(status_code=404, detail="Route introuvable")
     return route
+
+def _apply_weather(G, result, start, bike_type, is_electric, cyclist_level):
+    """Pose les conditions au départ et l'effet du vent sur un résultat de calcul.
+
+    Ne touche jamais `duration` ni le tracé : la météo informe, elle ne fait pas
+    dévier un trajet. Même échantillonné à quelques kilomètres, un relevé n'a pas
+    la finesse pour arbitrer un itinéraire, et le faire entrer dans le coût
+    rendrait la variante « Compromis » dépendante d'une prévision qui change à
+    chaque cycle de collecte (cf. `graph/config.py`, section vent).
+
+    Aucun appel réseau : tout vient de l'instantané tenu à jour par la tâche de
+    fond. Silencieux si la météo est indisponible ou périmée — les champs restent
+    simplement à None et les fronts n'affichent rien.
+    """
+    conditions = weather_service.conditions_at(G, start[0], start[1])
+    if not conditions:
+        return
+
+    wind = weather_service.wind_at(G, start[0], start[1])
+    for route in result.get("routes", []):
+        if wind:
+            duration, pct_headwind = wind_adjusted_travel_time(
+                G, route["nodes"], bike_type, is_electric, cyclist_level, *wind
+            )
+            route["duration_wind"] = round(duration, 1)
+            route["wind_effect_min"] = round(duration - route["duration"], 1)
+            route["pct_headwind"] = pct_headwind
+
+    # Ponts verglaçants : un avertissement, pas une pénalité. Seulement quand la
+    # température s'en approche — compter les ouvrages par 20 °C n'aurait aucun
+    # sens et alourdirait chaque calcul pour rien.
+    temperature = conditions.get("temperature")
+    if temperature is not None and temperature <= ICE_BRIDGE_TEMP_C:
+        routes = result.get("routes") or []
+        if routes:
+            count, length_m, first_offset_m = route_bridge_stats(G, routes[0]["nodes"])
+            if count:
+                conditions["ice_bridges"] = {
+                    "count": count,
+                    "total_length_m": length_m,
+                    "first_offset_m": first_offset_m,
+                }
+
+    headwind = max((r.get("pct_headwind") or 0.0 for r in result.get("routes", [])), default=0.0)
+    conditions["headwind_notable"] = headwind >= WIND_HEADWIND_REPORT_PCT
+    result["weather"] = conditions
+
 
 @router.post("/route", response_model=ComputeRoutesResponse)
 @limiter.limit("60/minute")
@@ -126,6 +177,15 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
             "message": result.get("error", "Calcul échoué."),
         })
 
+    # Enrichissement météo, APRÈS `get_optimal_routes` donc hors du cache, et
+    # inconditionnel : il s'applique aussi bien sur un hit que sur un miss. Le
+    # placer dans le `try` du calcul le sauterait sur les hits, et la durée vent
+    # resterait figée sur la valeur du tout premier calcul.
+    #
+    # Muter `result` est sans risque : `route_cache.get()` renvoie une copie
+    # profonde — c'est déjà ce sur quoi repose l'ajout de `route_id` plus bas.
+    _apply_weather(G, result, start, bike_type, is_electric, cyclist_level)
+
     for route in result.get("routes", []):
             maneuvers = build_maneuvers(route["nodes"], G)
 
@@ -139,6 +199,10 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
     if current_user:
         start_address = data.start_address or f"{start[0]}, {start[1]}"
         end_address = data.end_address or f"{end[0]}, {end[1]}"
+        # Figé ici, à la création : c'est le seul moment où l'on dispose des
+        # conditions du point de départ, et le seul qui ait du sens pour le badge
+        # — le mérite est d'être parti sous l'averse, pas d'être arrivé après.
+        was_rainy = weather_config.is_wet(result.get("weather"))
 
         for route_info in result.get("routes", []):
             db_route = Route(
@@ -151,6 +215,7 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
                 path=route_info.get("path"),
                 bike_type=bike_type,
                 is_electric=str(is_electric),
+                was_rainy=was_rainy,
             )
             db.add(db_route)
             db.flush()

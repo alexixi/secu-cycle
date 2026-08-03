@@ -3,11 +3,12 @@ import './ItinerariesSelect.css';
 import { useState } from "react";
 import { FaArrowTrendUp, FaArrowTrendDown, FaBicycle } from "react-icons/fa6";
 import { PiPathBold } from "react-icons/pi";
-import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdOutlineReportProblem, MdOutlineDarkMode, MdOutlineAir } from "react-icons/md";
+import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdOutlineReportProblem, MdOutlineDarkMode, MdOutlineAir, MdOutlineWaterDrop, MdOutlineAir as MdWind, MdOutlineWarningAmber } from "react-icons/md";
+import { weatherSummary } from "../../modules/map/weather";
 
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
-function buildSafetyExplanation(id, stats) {
+function buildSafetyExplanation(id, stats, weather) {
     if (!stats) return null;
 
     const points = [];
@@ -44,12 +45,25 @@ function buildSafetyExplanation(id, stats) {
         points.push("Ce trajet équilibre sécurité et durée : il reste dans le temps imparti tout en maximisant le passage sur des voies sécurisées.");
     }
 
+    const summary = weatherSummary(weather);
+    const bridges = summary?.ice_bridges;
+    if (bridges?.count) {
+        points.push(`Il fait ${Math.round(summary.temperature)} °C et ce trajet franchit `
+            + `${bridges.count} pont${bridges.count > 1 ? 's' : ''} : un tablier perd sa chaleur `
+            + `par ses deux faces et peut être verglacé alors que la chaussée voisine ne l'est pas.`);
+    }
+    for (const alert of (summary?.alerts || []).slice(0, 2)) {
+        points.push(`${alert.label}${alert.at ? ` vers ${alert.at.slice(11, 16).replace(':', 'h')}` : ' en cours'} `
+            + `sur la zone de départ. Cette information n'a pas modifié le tracé : à cette résolution `
+            + `(~28 km), la météo vous avertit sans faire dévier l'itinéraire.`);
+    }
+
     return points;
 }
 
-function SafetyInfo({ id, stats }) {
+function SafetyInfo({ id, stats, weather }) {
     const [open, setOpen] = useState(false);
-    const points = buildSafetyExplanation(id, stats);
+    const points = buildSafetyExplanation(id, stats, weather);
     if (!points) return null;
 
     return (
@@ -73,8 +87,11 @@ function SafetyInfo({ id, stats }) {
     );
 }
 
-function InfraStats({ stats, lightingAware }) {
+function InfraStats({ stats, lightingAware, weather, route }) {
     if (!stats) return null;
+    const summary = weatherSummary(weather);
+    const headwind = route?.pct_headwind;
+    const windEffect = route?.wind_effect_min;
     return (
         <div className="path-infra-stats">
             <span className="infra-badge badge-green">
@@ -105,11 +122,46 @@ function InfraStats({ stats, lightingAware }) {
                     <MdOutlineAir /> {stats.pct_low_air_exposure}% à l'écart du trafic
                 </span>
             )}
+            {summary?.headwind_notable && headwind != null && (
+                <span
+                    className="infra-badge badge-cyan"
+                    title={`Vent de ${Math.round(summary.wind?.speed ?? 0)} km/h. `
+                        + `L'estimation de durée en tient compte, mais le tracé n'a pas été modifié.`}
+                >
+                    <MdWind /> Vent de face sur {Math.round(headwind)}%
+                    {windEffect > 0 && ` · +${Math.round(windEffect)} min`}
+                </span>
+            )}
+            {summary?.ice_bridges?.count > 0 && (
+                <span
+                    className="infra-badge badge-red"
+                    title="Un tablier de pont perd sa chaleur par ses deux faces et gèle une à deux heures avant la chaussée voisine."
+                >
+                    <MdOutlineWarningAmber /> {summary.ice_bridges.count} pont{summary.ice_bridges.count > 1 ? 's' : ''} · risque de verglas
+                </span>
+            )}
         </div>
     );
 }
 
-export default function ItinerariesSelect({ itineraires, selectedItineraire, setSelectedItineraire }) {
+function WeatherAdvice({ weather }) {
+    const items = weatherSummary(weather)?.equipment;
+    if (!items?.length) return null;
+    return (
+        <div className="weather-advice">
+            <span className="weather-advice-title"><MdOutlineWaterDrop /> À prévoir</span>
+            <div className="weather-advice-chips">
+                {items.map((item) => (
+                    <span key={item.key} className="weather-advice-chip" title={item.reason}>
+                        {item.label}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+export default function ItinerariesSelect({ itineraires, weather, selectedItineraire, setSelectedItineraire }) {
     if (itineraires && itineraires.length > 0) {
         return (
             <div className="itineraries-select">
@@ -129,7 +181,7 @@ export default function ItinerariesSelect({ itineraires, selectedItineraire, set
                                 <div className="path-top">
                                     <div className="path-title-row">
                                         <h3>{itineraire.name}</h3>
-                                        <SafetyInfo id={itineraire.id} stats={itineraire.infra_stats} />
+                                        <SafetyInfo id={itineraire.id} stats={itineraire.infra_stats} weather={weather} />
                                     </div>
                                     <div className='path-info'>
                                         <span className='color-red'><FaArrowTrendUp /> {itineraire.height_difference[0]} m</span>
@@ -142,8 +194,11 @@ export default function ItinerariesSelect({ itineraires, selectedItineraire, set
                                     <InfraStats
                                         stats={itineraire.infra_stats}
                                         lightingAware={itineraire.lighting_aware}
+                                        weather={weather}
+                                        route={itineraire}
                                     />
                                 )}
+                                {isSelected && <WeatherAdvice weather={weather} />}
                                 {elevationData.length > 0 && (
                                     <div className="path-elevation">
                                         <ResponsiveContainer width="100%" height="100%">

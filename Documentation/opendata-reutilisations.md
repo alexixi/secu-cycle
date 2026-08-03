@@ -25,6 +25,9 @@ Relevé dans le code, pas dans la plaquette. Toute description publiée doit s'e
 | GBFS — 9 systèmes de vélos en libre-service | disponibilité des stations en temps réel | flux ouverts, attribution par système | `backend/bikeshare/config.py` |
 | CAMS / Copernicus, via Open-Meteo | indice de qualité de l'air européen le long du trajet | Copernicus (attribution) | `backend/air_quality/config.py` |
 | World Air Quality Index (WAQI) | mesures de stations au sol, complément du CAMS | attribution WAQI | `backend/air_quality/config.py` |
+| Open-Meteo (DWD ICON-D2, Météo-France AROME, NOAA GFS) | conditions courantes, prévision de pluie au pas de 15 min, alertes dérivées de seuils (grêle, orage, verglas, rafales), vent le long du trajet | CC BY 4.0 ; attribution DWD, Météo-France, NOAA. Offre gratuite **non commerciale** | `backend/weather/config.py` |
+| Vigilance météorologique Météo-France (via le miroir Opendatasoft) | vigilance **officielle** par département, France | Licence Ouverte 2.0 | `backend/vigilance/config.py` |
+| MeteoAlarm (EUMETNET), relayant l'IRM | avertissements **officiels** par province, Belgique | attribution EUMETNET et IRM | `backend/vigilance/config.py` |
 | MapTiler | fonds de carte, géocodage hors France | commercial (hors open data) | `backend/geocoding/service.py` |
 
 Systèmes GBFS branchés : **Le Vélo** (Bordeaux Métropole / Keolis), **Vélib' Métropole**

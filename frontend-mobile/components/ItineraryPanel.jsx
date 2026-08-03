@@ -8,6 +8,7 @@ import { GrabHandle } from './ui/GrabHandle';
 import { GestureHandlerRootView, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated from 'react-native-reanimated';
 import { VictoryArea, VictoryChart, VictoryAxis, VictoryTooltip, VictoryVoronoiContainer } from 'victory-native';
+import { weatherSummary } from '../services/weather';
 
 const ROUTE_LABELS = {
     fast: { label: "Rapide", icon: "lightning-bolt", color: "#F59E0B" },
@@ -15,7 +16,8 @@ const ROUTE_LABELS = {
     compromise: { label: "Compromis", icon: "scale-balance", color: "#6366F1" },
 };
 
-function DetailModal({ itineraire, visible, onClose, colors, typography }) {
+function DetailModal({ itineraire, visible, onClose, colors, typography, weather }) {
+    const summary = weatherSummary(weather);
     const screenWidth = Dimensions.get('window').width;
     const { gesture, sheetStyle, close } = useDragToDismiss({ visible, onClose });
 
@@ -240,7 +242,55 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
                                         </Text>
                                     </View>
                                 )}
+                                {summary?.headwind_notable && itineraire.pct_headwind != null && (
+                                    <View style={[styles.infraCard, { backgroundColor: '#0891B215', borderColor: '#0891B230' }]}>
+                                        <MaterialCommunityIcons name="weather-windy-variant" size={20} color="#0891B2" />
+                                        <Text style={[styles.infraValue, { color: '#0891B2' }]}>
+                                            {Math.round(itineraire.pct_headwind)}%
+                                        </Text>
+                                        <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
+                                            {itineraire.wind_effect_min > 0
+                                                ? `Vent de face · +${Math.round(itineraire.wind_effect_min)} min`
+                                                : 'Vent de face'}
+                                        </Text>
+                                    </View>
+                                )}
+                                {summary?.ice_bridges?.count > 0 && (
+                                    <View style={[styles.infraCard, { backgroundColor: '#DC262615', borderColor: '#DC262630' }]}>
+                                        <MaterialCommunityIcons name="snowflake-alert" size={20} color="#DC2626" />
+                                        <Text style={[styles.infraValue, { color: '#DC2626' }]}>
+                                            {summary.ice_bridges.count}
+                                        </Text>
+                                        <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
+                                            {summary.ice_bridges.count > 1
+                                                ? 'Ponts · risque de verglas' : 'Pont · risque de verglas'}
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
+
+                            {summary?.equipment?.length > 0 && (
+                                <>
+                                    <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 18 }]}>
+                                        À prévoir
+                                    </Text>
+                                    <View style={styles.equipmentRow}>
+                                        {summary.equipment.map((item) => (
+                                            <View
+                                                key={item.key}
+                                                style={[styles.equipmentChip, { backgroundColor: colors.bgSurface, borderColor: colors.borderStrong }]}
+                                            >
+                                                <Text style={[styles.equipmentLabel, { color: colors.textMain }]}>
+                                                    {item.label}
+                                                </Text>
+                                                <Text style={[styles.equipmentReason, { color: colors.textSecondary }]}>
+                                                    {item.reason}
+                                                </Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </>
+                            )}
                         </View>
                     )}
                 </Reanimated.View>
@@ -250,7 +300,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography }) {
     );
 }
 
-export default function ItineraryPanel({ itineraires, selectedItineraire, setSelectedItineraire, bottomOffset = 0, detailItineraire = null, setDetailItineraire = () => { } }) {
+export default function ItineraryPanel({ itineraires, weather, selectedItineraire, setSelectedItineraire, bottomOffset = 0, detailItineraire = null, setDetailItineraire = () => { } }) {
     const { colors, typography } = useTheme();
     const slideAnim = useRef(new Animated.Value(200)).current;
 
@@ -345,12 +395,33 @@ export default function ItineraryPanel({ itineraires, selectedItineraire, setSel
                 onClose={() => setDetailItineraire(null)}
                 colors={colors}
                 typography={typography}
+                weather={weather}
             />
         </>
     );
 }
 
 const styles = StyleSheet.create({
+    equipmentRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginTop: 8,
+    },
+    equipmentChip: {
+        borderWidth: 1,
+        borderRadius: 12,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+    },
+    equipmentLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    equipmentReason: {
+        fontSize: 11,
+        marginTop: 1,
+    },
     container: {
         position: 'absolute',
         bottom: 90,
