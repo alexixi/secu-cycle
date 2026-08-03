@@ -9,9 +9,13 @@ import { MdDirectionsBike } from "react-icons/md";
 import { FaFlagCheckered } from "react-icons/fa";
 import { PiPathBold } from "react-icons/pi";
 import { FaRegClock } from "react-icons/fa6";
+import { MdOutlineWaterDrop } from "react-icons/md";
+import { departureSuggestion } from "../../modules/map/weather";
 
 
-export default function SearchAside({ startAdress, endAdress, onStartSelect, onEndSelect, onSearchClick, onSwap, maxTime, onMaxTimeChange, maxDuration, onMaxDurationChange, selectedBike, onBikeSelect, itineraires, selectedItineraire, setSelectedItineraire, errorPath, isReady }) {
+export default function SearchAside({ startAdress, endAdress, onStartSelect, onEndSelect, onSearchClick, onSwap, maxTime, onMaxTimeChange, maxDuration, onMaxDurationChange, selectedBike, onBikeSelect, itineraires, weather, selectedItineraire, setSelectedItineraire, errorPath, isReady }) {
+    const departure = departureSuggestion(weather);
+
     return (
         <aside className="search-aside">
             <div className="adress-input-wrapper">
@@ -31,9 +35,14 @@ export default function SearchAside({ startAdress, endAdress, onStartSelect, onE
                     <label htmlFor="duree-max-input">Durée maximale <span>(minutes)</span></label>
                     <input type="number" className="input input-number" id="duree-max-input" name="duree-max" onChange={onMaxDurationChange} value={maxDuration || ""} min="0" />
                 </div>
+                {departure && (
+                    <p className="departure-hint">
+                        <MdOutlineWaterDrop size={15} /> {departure.text}
+                    </p>
+                )}
             </div>
             <BikeSelect selectedBike={selectedBike} onSelect={onBikeSelect} />
-            <ItinerariesSelect itineraires={itineraires} selectedItineraire={selectedItineraire} setSelectedItineraire={setSelectedItineraire} />
+            <ItinerariesSelect itineraires={itineraires} weather={weather} selectedItineraire={selectedItineraire} setSelectedItineraire={setSelectedItineraire} />
             <Button id="search-button" onClick={onSearchClick} disabled={!isReady}><PiPathBold /> Calculer les itinéraires</Button>
             {errorPath && <div className="error-text">{errorPath}</div>}
         </aside>

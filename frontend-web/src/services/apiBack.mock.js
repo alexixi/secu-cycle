@@ -57,7 +57,7 @@ export async function calculateItineraries(token, start, end, bikeId, maxDuratio
             ]
         }
     ];
-    return itineraries;
+    return { routes: itineraries, weather: null };
 }
 
 export async function login(email, password) {

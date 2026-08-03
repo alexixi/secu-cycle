@@ -130,6 +130,27 @@ const SOURCES = [
         producer: { label: "waqi.info", href: "https://waqi.info/" },
     },
     {
+        name: "Open-Meteo",
+        detail: "modèles ICON-D2 (DWD) et AROME (Météo-France)",
+        usage: "Conditions météo, prévision de pluie au pas de 15 minutes, vent, et alertes dérivées de seuils (orage, grêle, verglas, rafales)",
+        licence: { label: "CC BY 4.0", href: "https://creativecommons.org/licenses/by/4.0/deed.fr" },
+        producer: { label: "open-meteo.com", href: "https://open-meteo.com/" },
+    },
+    {
+        name: "Vigilance Météo-France",
+        detail: "via le miroir Opendatasoft",
+        usage: "Vigilance météorologique officielle par département (orages, vent, neige-verglas, canicule…) en France",
+        licence: LO2,
+        producer: { label: "meteofrance.com", href: "https://vigilance.meteofrance.fr/" },
+    },
+    {
+        name: "MeteoAlarm",
+        detail: "EUMETNET, relayant l'IRM",
+        usage: "Avertissements météorologiques officiels par province en Belgique",
+        licence: { label: "Attribution EUMETNET et IRM requise", href: "https://meteoalarm.org/en/live/page/disclaimer" },
+        producer: { label: "meteoalarm.org", href: "https://meteoalarm.org/" },
+    },
+    {
         name: "MapTiler",
         usage: "Fonds de carte et géocodage hors de France",
         licence: { label: "Service commercial — hors open data" },

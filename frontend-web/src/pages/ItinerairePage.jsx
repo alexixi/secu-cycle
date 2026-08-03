@@ -17,6 +17,7 @@ export default function ItinerairePage() {
     const [startPoint, setStartPoint] = useState(null);
     const [endPoint, setEndPoint] = useState(null);
     const [routePaths, setRoutePaths] = useState(null);
+    const [routeWeather, setRouteWeather] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedBike, setSelectedBike] = useState(null);
     const [selectedItineraire, setSelectedItineraire] = useState(null);
@@ -63,11 +64,13 @@ export default function ItinerairePage() {
 
     const handleStartSelect = (coords) => {
         setRoutePaths(null);
+        setRouteWeather(null);
         setStartPoint(coords);
     };
 
     const handleEndSelect = (coords) => {
         setRoutePaths(null);
+        setRouteWeather(null);
         setEndPoint(coords);
     };
 
@@ -78,11 +81,13 @@ export default function ItinerairePage() {
 
         setIsLoading(true);
         setRoutePaths(null);
+        setRouteWeather(null);
         try {
-            const itineraries = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint.name, endPoint.name);
+            const { routes: itineraries, weather } = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint.name, endPoint.name);
             if (itineraries && itineraries.length > 0) {
                 setErrorPath(null);
                 setRoutePaths(itineraries);
+                setRouteWeather(weather);
                 trackEvent("route_calculated", { bike: bikeLabel(selectedBike), count: itineraries.length });
             } else {
                 setErrorPath(GENERIC_ROUTE_ERROR);
@@ -223,6 +228,7 @@ export default function ItinerairePage() {
                     selectedBike={selectedBike}
                     onBikeSelect={setSelectedBike}
                     itineraires={routePaths}
+                    weather={routeWeather}
                     selectedItineraire={selectedItineraire}
                     setSelectedItineraire={handleSelectItineraire}
                     errorPath={errorPath}
