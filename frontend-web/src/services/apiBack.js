@@ -128,7 +128,7 @@ export async function calculateItineraries(token, start, end, bikeId, maxDuratio
             method: "POST",
             body: JSON.stringify(body)
         }, token);
-        return data.routes;
+        return { routes: data.routes, weather: data.weather || null };
     } catch (error) {
         throw error;
     }
@@ -535,6 +535,15 @@ export async function getTraffic() {
 export async function getAirQuality() {
     try {
         const data = await apiFetch("/air-quality/", { method: "GET" });
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getWeather() {
+    try {
+        const data = await apiFetch("/weather/", { method: "GET" });
         return data;
     } catch (error) {
         throw error;

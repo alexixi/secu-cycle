@@ -12,7 +12,7 @@ const SOURCES = [
     {
         name: "OpenStreetMap",
         detail: "via Overpass",
-        usage: "Graphe routier, aménagements cyclables, revêtement, éclairage, sens de circulation et points d'intérêt",
+        usage: "Graphe routier, aménagements cyclables, itinéraires cyclables balisés (véloroutes, RAVeL, réseaux express vélo), revêtement, éclairage, sens de circulation et points d'intérêt",
         licence: ODBL,
         producer: { label: "openstreetmap.org", href: "https://www.openstreetmap.org/copyright" },
     },
@@ -128,6 +128,27 @@ const SOURCES = [
         usage: "Mesures des stations de surveillance au sol, en complément du CAMS",
         licence: { label: "Attribution requise" },
         producer: { label: "waqi.info", href: "https://waqi.info/" },
+    },
+    {
+        name: "Open-Meteo",
+        detail: "modèles ICON-D2 (DWD) et AROME (Météo-France)",
+        usage: "Conditions météo, prévision de pluie au pas de 15 minutes, vent, et alertes dérivées de seuils (orage, grêle, verglas, rafales)",
+        licence: { label: "CC BY 4.0", href: "https://creativecommons.org/licenses/by/4.0/deed.fr" },
+        producer: { label: "open-meteo.com", href: "https://open-meteo.com/" },
+    },
+    {
+        name: "Vigilance Météo-France",
+        detail: "via le miroir Opendatasoft",
+        usage: "Vigilance météorologique officielle par département (orages, vent, neige-verglas, canicule…) en France",
+        licence: LO2,
+        producer: { label: "meteofrance.com", href: "https://vigilance.meteofrance.fr/" },
+    },
+    {
+        name: "MeteoAlarm",
+        detail: "EUMETNET, relayant l'IRM",
+        usage: "Avertissements météorologiques officiels par province en Belgique",
+        licence: { label: "Attribution EUMETNET et IRM requise", href: "https://meteoalarm.org/en/live/page/disclaimer" },
+        producer: { label: "meteoalarm.org", href: "https://meteoalarm.org/" },
     },
     {
         name: "MapTiler",

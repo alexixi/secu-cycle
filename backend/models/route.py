@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text, JSON
+from sqlalchemy import Boolean, Column, Integer, String, Float, ForeignKey, DateTime, Text, JSON
 from sqlalchemy.sql import func
 from database import Base
 
@@ -20,3 +20,7 @@ class Route(Base):
     # Renseigné à l'arrivée via POST /routes/{id}/complete. Une ligne est créée dès le
     # calcul (2-3 variantes par recherche) : seule celle réellement parcourue est complétée.
     completed_at = Column(DateTime(timezone=True), nullable=True)
+    # Temps qu'il faisait au point de départ, figé au calcul (cf. `_apply_weather`).
+    # Alimente le badge « Rouleur sous la pluie ». Reste à false si la météo était
+    # indisponible : on n'invente pas une condition qu'on n'a pas mesurée.
+    was_rainy = Column(Boolean, nullable=False, server_default="false")

@@ -169,6 +169,52 @@ AIR_SAFETY_FACTOR = 3.0      # à calibrer
 # plein (« Très mauvais »). Barème EEA, valable France et Belgique.
 AIR_INTENSITY_LOW_EXPOSURE = 0.25  # seuil « à l'écart du trafic » pour pct_low_air_exposure
 
+# --- Vent : durée AFFICHÉE uniquement ---------------------------------------
+# Ces facteurs n'entrent PAS dans `_edge_cost` ni dans la dichotomie sur
+# `max_time_min` (routing.py, `get_optimal_routes`). Trois raisons, toutes
+# vérifiables dans le code :
+#   - la dichotomie décide de l'EXISTENCE de la variante « Compromis » : un vent
+#     qui tourne la ferait apparaître et disparaître entre deux requêtes
+#     identiques, et `alpha_final` dériverait toutes les dix minutes sans qu'aucune
+#     entrée utilisateur n'ait changé ;
+#   - la clé du cache d'itinéraires ne contient pas le vent : un utilisateur
+#     récupérerait un trajet mis en cache dont la durée a été calculée sous le vent
+#     d'il y a trois heures ;
+#   - c'est une prévision sur un instantané de dix minutes, appliquée à un trajet
+#     qui part maintenant. La laisser décider de l'itinéraire, c'est laisser une
+#     panne de source changer ce que l'utilisateur reçoit.
+# Le vent est donc appliqué après le cache, dans `routers/route.py`, sur une durée
+# `duration_wind` posée À CÔTÉ de `duration`, jamais à sa place.
+WIND_HEADWIND_SPEED_FACTOR = 0.09   # -9 % de vitesse par 10 km/h de vent de face
+WIND_CROSSWIND_SPEED_FACTOR = 0.02  # latéral : gêne et déport, pas frein
+WIND_SPEED_FLOOR = 0.55             # même dans 60 km/h de face, on avance
+WIND_SPEED_CEIL = 1.15              # le vent arrière ne fait pas voler
+WIND_MIN_SPEED_KMH = 12.0           # en deçà, terme inactif : c'est dans le bruit
+# Demi-angle du secteur « de face » pour le COMPTAGE de la part du trajet.
+# La pénalité de vitesse, elle, reste continue en cos/sin : c'est bien un
+# ralentissement progressif. Mais annoncer « vent de face » demande un seuil, et
+# le retenir dès que la composante est positive ferait qualifier de face un vent
+# à 89° du cap, c'est-à-dire un pur travers. ±45° est la convention usuelle
+# (face / travers / dos en trois secteurs égaux).
+WIND_HEADWIND_SECTOR_DEG = 45.0
+# Part de la distance en vent de face au-delà de laquelle ça vaut d'être signalé.
+WIND_HEADWIND_REPORT_PCT = 40.0
+
+# --- Ponts verglaçants -------------------------------------------------------
+# Un tablier de pont perd sa chaleur par ses deux faces : il rayonne vers le ciel
+# et se refroidit par convection en dessous, sans l'inertie du sol qui protège une
+# chaussée ordinaire. D'où 1 à 3 °C de moins et un passage sous zéro une à deux
+# heures plus tôt — le panneau « bridge ices before road » n'est pas une légende.
+# S'y ajoutent l'exposition au vent et un tablier béton/acier peu isolant.
+#
+# On INFORME, on ne fait pas dévier : un relevé par agglomération n'a pas la
+# finesse pour arbitrer un itinéraire, et `_edge_cost` reste intouché.
+ICE_BRIDGE_TEMP_C = 3.0
+# En deçà, un `bridge=yes` est un ponceau au-dessus d'un fossé : aucune inertie
+# thermique différente du sol. Sans ce filtre, on crierait au verglas sur 4 m de
+# dalle et l'avertissement perdrait tout crédit.
+BRIDGE_MIN_LENGTH_M = 30.0
+
 SURFACE_ROUGHNESS = {
     'asphalt': 0.0, 'concrete': 0.05, 'concrete:plates': 0.1, 'paved': 0.05,
     'metal': 0.1, 'wood': 0.2,
@@ -209,6 +255,54 @@ NARROW_WIDTH_PENALTY = 1.0
 MULTILANE_LANES = 3            # nb de voies à partir duquel on pénalise
 MULTILANE_PENALTY = 1.0
 CONTRAFLOW_PENALTY = 0.5        # léger malus de confort pour un contre-sens
+
+# --- Itinéraires cyclables balisés (relations OSM `route=bicycle`) -----------
+# Une relation porte ce qu'aucun tag de voie ne dit : la continuité de l'axe et
+# son jalonnement. Deux niveaux, cf. `graph.veloroutes`.
+
+# Itinéraires écartés : non praticables aujourd'hui.
+VELOROUTE_EXCLUDED_STATES = frozenset({
+    'proposed', 'construction', 'planned', 'abandoned', 'temporary',
+})
+
+# Niveau 2 — axes cyclables structurants. Le classement s'appuie sur
+# `cycle_network` AVANT `network`, car la hiérarchie administrative des réseaux
+# ne dit rien de la qualité de l'axe et s'inverse d'un pays à l'autre : le ReVE
+# bordelais est tagué `network=lcn`, tandis qu'en Belgique `rcn` désigne le
+# réseau points-nœuds, récréatif et très dense. Le nom du réseau, lui, est
+# fiable.
+VELOROUTE_STRUCTURING_CYCLE_NETWORKS = frozenset({
+    'ReVE',                  # Réseau Express Vélo, Bordeaux Métropole
+    'BE-VLG:cycle_highway',  # fietssnelwegen flamandes
+    'BE:RAVeL',              # RAVeL wallon
+    'FR:REV Vélo+',          # REV, métropole lilloise
+})
+# Repli par motif pour les variantes régionales non énumérées
+# (BE-WAL:cycle_highway, NL:*:cycle_highway…). Comparaison SENSIBLE À LA CASSE :
+# ce sont des noms propres, et une correspondance insensible produirait des faux
+# positifs sur des réseaux sans rapport.
+VELOROUTE_STRUCTURING_MARKERS = ('cycle_highway', 'RAVeL', 'ReVE', 'REV Vélo')
+# EuroVelo et véloroutes nationales (V80, V41…) : structurantes par nature.
+VELOROUTE_STRUCTURING_NETWORKS = frozenset({'icn', 'ncn'})
+
+VELOROUTE_TIER_STRUCTURING = 2
+VELOROUTE_TIER_SIGNED = 1       # tout autre réseau balisé actif (rcn, lcn…)
+
+# Bonus de score, du même ordre que SEGREGATED_BONUS. Plafonné à 10 dans
+# `_edge_quality` : donc sans effet sur une voie déjà notée au maximum, et
+# maximal là où les tags de voie sont pauvres (véloroute passant en rue
+# résidentielle ou sur un chemin) — exactement là où la relation informe.
+VELOROUTE_SCORE_BONUS = {VELOROUTE_TIER_SIGNED: 0.5, VELOROUTE_TIER_STRUCTURING: 1.5}
+
+# Rabais multiplicatif sur le coût de l'arête, modulé par (1 - alpha) : nul sur
+# l'itinéraire « Rapide », plein sur « Sécurisé ». Récompense la CONTINUITÉ d'un
+# axe balisé même entre deux aménagements également bien notés — ce que le bonus
+# de score, plafonné, ne peut pas faire. Volontairement faible : à 8 %, aucun
+# détour de plus de ~9 % ne peut être justifié par ce seul terme.
+VELOROUTE_DISCOUNT = {VELOROUTE_TIER_SIGNED: 0.03, VELOROUTE_TIER_STRUCTURING: 0.08}
+# Doit rester égal au maximum de VELOROUTE_DISCOUNT : l'heuristique d'A* est
+# dégonflée d'autant pour rester admissible (cf. `routing._astar_nodes`).
+VELOROUTE_MAX_DISCOUNT = 0.08
 
 # Distance (m) au-delà de laquelle un point n'est plus considéré comme desservi par le graphe chargé
 MAX_SNAP_DISTANCE_M = 1000.0

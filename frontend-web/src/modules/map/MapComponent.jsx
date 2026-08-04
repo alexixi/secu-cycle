@@ -6,8 +6,11 @@ import ThemeToggle from '../../components/ui/ThemeToggle';
 import MapContextMenu, { formatCoords } from './MapContextMenu';
 import LightingInfoModal from './LightingInfoModal';
 import AirQualityInfoModal from './AirQualityInfoModal';
+import WeatherInfoModal from './WeatherInfoModal';
+import WeatherBar from './WeatherBar';
+import { zoneForPoint, pointForCenter, rainBanner, snapshotAgeMin, isHintUsable, STALE_AGE_MIN } from './weather';
 import { useTheme } from '../../context/ThemeContext';
-import { getPois, getAccidents, getStreetlights, getLitRoads, getStreetlightSources, getAirQuality, getBikeshareStations } from '../../services/apiBack';
+import { getPois, getAccidents, getStreetlights, getLitRoads, getStreetlightSources, getAirQuality, getBikeshareStations, getWeather } from '../../services/apiBack';
 import { getAddressFromCoordinates, getApproxLocationFromIp } from '../../services/geocodingService';
 import { trackEvent } from '../../services/analytics';
 
@@ -270,33 +273,6 @@ const AIR_FILL_COLOR = ['match', ['get', 'band'],
 // via la propriété `color`).
 const AIR_STATION_CIRCLE_LAYER_ID = 'air-stations-circle';
 
-// Résumé de la zone regardée.
-function airForCenter(airData, center) {
-    const zones = airData?.zones;
-    if (!Array.isArray(zones) || zones.length === 0) return airData || null;
-    if (zones.length === 1 || !center) return zones[0];
-
-    const inside = zones.find(({ bbox }) => Array.isArray(bbox)
-        && center.lon >= bbox[0] && center.lon <= bbox[2]
-        && center.lat >= bbox[1] && center.lat <= bbox[3]);
-    if (inside) return inside;
-
-    let best = zones[0];
-    let bestDistance = Infinity;
-    for (const zone of zones) {
-        if (!Array.isArray(zone.bbox)) continue;
-        const [w, s, e, n] = zone.bbox;
-        const dLon = Math.max(w - center.lon, 0, center.lon - e)
-            * Math.cos((center.lat * Math.PI) / 180);
-        const dLat = Math.max(s - center.lat, 0, center.lat - n);
-        const distance = Math.hypot(dLon, dLat);
-        if (distance < bestDistance) {
-            best = zone;
-            bestDistance = distance;
-        }
-    }
-    return best;
-}
 
 const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
@@ -509,6 +485,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     const [airError, setAirError] = useState(null);
     const [mapCenter, setMapCenter] = useState(null);
     const [isAirInfoOpen, setIsAirInfoOpen] = useState(false);
+    const [weatherData, setWeatherData] = useState(null);
+    const [isWeatherInfoOpen, setIsWeatherInfoOpen] = useState(false);
     const [showBikeshare, setShowBikeshare] = useState(false);
     const [bikeshareData, setBikeshareData] = useState(null);
     const [bikeshareError, setBikeshareError] = useState(null);
@@ -687,6 +665,30 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
     };
 
     const handleAirInfoToggle = () => setIsAirInfoOpen((open) => !open);
+
+    useEffect(() => {
+        if (littleMap) return;
+
+        let cancelled = false;
+        let timer = null;
+
+        const load = async () => {
+            try {
+                const data = await getWeather();
+                if (cancelled) return;
+                setWeatherData(data);
+                timer = setTimeout(load, (data?.refresh_interval_s || 600) * 1000);
+            } catch {
+                if (cancelled) return;
+                timer = setTimeout(load, 60000);
+            }
+        };
+        load();
+
+        return () => { cancelled = true; if (timer) clearTimeout(timer); };
+    }, [littleMap]);
+
+    const handleWeatherInfoToggle = () => setIsWeatherInfoOpen((open) => !open);
 
     useEffect(() => {
         if (littleMap || !showBikeshare) return;
@@ -942,6 +944,38 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         [airData]
     );
 
+    const activeWeather = useMemo(
+        () => pointForCenter(weatherData, mapCenter),
+        [weatherData, mapCenter]
+    );
+
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => {
+        if (littleMap) return;
+        const timer = setInterval(() => setNow(Date.now()), 60000);
+        return () => clearInterval(timer);
+    }, [littleMap]);
+
+    const weatherAgeMin = useMemo(
+        () => snapshotAgeMin(weatherData?.updated_at, now),
+        [weatherData, now]
+    );
+
+    const weatherStale = (weatherData?.stale === true)
+        || (weatherAgeMin != null && weatherAgeMin >= STALE_AGE_MIN);
+
+    const rainWarning = useMemo(() => {
+        if (!isHintUsable(activeWeather?.summary?.departure_hint, weatherAgeMin)) return null;
+        return rainBanner(activeWeather);
+    }, [activeWeather, weatherAgeMin]);
+
+    const weatherUpdatedAt = useMemo(() => {
+        if (!weatherData?.updated_at) return null;
+        const date = new Date(weatherData.updated_at);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }, [weatherData]);
+
     const airUpdatedAt = useMemo(() => {
         if (!airData?.updated_at) return null;
         const date = new Date(airData.updated_at);
@@ -949,7 +983,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     }, [airData]);
 
-    const activeAir = useMemo(() => airForCenter(airData, mapCenter), [airData, mapCenter]);
+    const activeAir = useMemo(() => zoneForPoint(airData, mapCenter), [airData, mapCenter]);
 
     // Première heure de la prévision où l'indice bascule dans une bande plus
     // dégradée que l'actuelle : « dégradation prévue vers 19 h ».
@@ -1254,6 +1288,18 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
 
     return (
         <div className={`map-container ${littleMap ? 'little-map' : ''} ${resolvedTheme === 'dark' ? 'map-dark' : ''}`}>
+            {!littleMap && (
+                <WeatherBar
+                    zone={activeWeather}
+                    stale={weatherStale}
+                    ageMin={weatherAgeMin}
+                    now={now}
+                    updatedAt={weatherUpdatedAt}
+                    rain={rainWarning}
+                    onOpenInfo={handleWeatherInfoToggle}
+                />
+            )}
+
             <div className="map-left-controls">
             {!littleMap && canReport && (
                 <div className="map-report-control">
@@ -1422,6 +1468,11 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 isOpen={isAirInfoOpen}
                 onClose={() => setIsAirInfoOpen(false)}
                 resolutionKm={airData?.resolution_km || 11}
+            />
+
+            <WeatherInfoModal
+                isOpen={isWeatherInfoOpen}
+                onClose={() => setIsWeatherInfoOpen(false)}
             />
 
             {!littleMap && (

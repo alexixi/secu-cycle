@@ -22,6 +22,7 @@ from routers import navigation
 from routers import traffic
 from routers import air_quality
 from routers import bikeshare
+from routers import weather
 from routers import home_case
 from routers import faq
 from routers import task
@@ -42,6 +43,10 @@ from air_quality import config as air_quality_config
 from air_quality import service as air_quality_service
 from bikeshare import config as bikeshare_config
 from bikeshare import service as bikeshare_service
+from weather import config as weather_config
+from weather import service as weather_service
+from vigilance import config as vigilance_config
+from vigilance import service as vigilance_service
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -94,6 +99,48 @@ async def periodic_air_quality_update(app: FastAPI):
             continue
         if changed:
             route_cache.invalidate()
+
+
+async def periodic_vigilance_update(app: FastAPI):
+    """
+    Boucle infinie qui s'exécute en arrière-plan.
+    Actualise la vigilance officielle (Météo-France, IRM via MeteoAlarm).
+
+    Cadence bien plus lente que la météo : ces instituts publient deux fois par
+    jour et à chaque changement de situation, pas toutes les dix minutes.
+
+    Les alertes ne sont pas servies par un endpoint dédié : elles sont fusionnées
+    dans le résumé de `/weather/`, là où l'utilisateur les attend.
+    """
+    while True:
+        await asyncio.sleep(vigilance_config.REFRESH_INTERVAL_S)
+        if getattr(app.state, 'G', None) is None:
+            continue
+        try:
+            await vigilance_service.refresh(app.state.G)
+        except Exception as exc:
+            # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
+            print(f"[Background Task] Échec de l'actualisation de la vigilance : {exc}", flush=True)
+
+
+async def periodic_weather_update(app: FastAPI):
+    """
+    Boucle infinie qui s'exécute en arrière-plan.
+    Actualise la météo au rythme de publication des modèles (AROME, ICON-D2).
+
+    Le cache d'itinéraires n'est jamais purgé : la météo n'entre pas dans le coût
+    de routage. Le vent n'agit que sur la durée affichée, posée après le cache
+    (cf. `routers/route.py`), et les alertes informent sans faire dévier de trajet.
+    """
+    while True:
+        await asyncio.sleep(weather_config.REFRESH_INTERVAL_S)
+        if getattr(app.state, 'G', None) is None:
+            continue
+        try:
+            await weather_service.refresh(app.state.G)
+        except Exception as exc:
+            # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
+            print(f"[Background Task] Échec de l'actualisation de la météo : {exc}", flush=True)
 
 
 async def periodic_bikeshare_update(app: FastAPI):
@@ -249,7 +296,7 @@ async def lifespan(app: FastAPI):
     app.state.graph_loading = False
     app.state.G = load_graph_with_ign(
         profile["graph_file"], profile["ign_cache_file"], profile["communes"],
-        profile.get("night_extinction"))
+        profile.get("night_extinction"), profile["cycleroutes_file"])
 
     print("Chargement initial du trafic...")
 
@@ -264,6 +311,28 @@ async def lifespan(app: FastAPI):
         await air_quality_service.refresh(app.state.G)
     except Exception as exc:
         print(f"Qualité de l'air indisponible au démarrage : {exc}", flush=True)
+
+    print("Chargement initial de la météo...")
+
+    try:
+        # Borné : deux requêtes vers Open-Meteo, dont une multi-points. En cas de
+        # dépassement, la boucle de fond rattrapera au tour suivant.
+        await asyncio.wait_for(
+            weather_service.refresh(app.state.G),
+            timeout=weather_config.HTTP_TIMEOUT_S * 3,
+        )
+    except Exception as exc:
+        print(f"Météo indisponible au démarrage : {exc}", flush=True)
+
+    print("Chargement initial de la vigilance officielle...")
+
+    try:
+        await asyncio.wait_for(
+            vigilance_service.refresh(app.state.G),
+            timeout=vigilance_config.HTTP_TIMEOUT_S * 3,
+        )
+    except Exception as exc:
+        print(f"Vigilance indisponible au démarrage : {exc}", flush=True)
 
     print("Chargement initial des vélos en libre-service...")
 
@@ -298,6 +367,8 @@ async def lifespan(app: FastAPI):
 
     traffic_task = asyncio.create_task(periodic_traffic_update(app))
     air_quality_task = asyncio.create_task(periodic_air_quality_update(app))
+    weather_task = asyncio.create_task(periodic_weather_update(app))
+    vigilance_task = asyncio.create_task(periodic_vigilance_update(app))
     bikeshare_task = asyncio.create_task(periodic_bikeshare_update(app))
     poi_task = asyncio.create_task(periodic_poi_sync())
     accident_task = asyncio.create_task(periodic_accident_sync(app))
@@ -309,12 +380,14 @@ async def lifespan(app: FastAPI):
 
     traffic_task.cancel()
     air_quality_task.cancel()
+    weather_task.cancel()
+    vigilance_task.cancel()
     bikeshare_task.cancel()
     poi_task.cancel()
     accident_task.cancel()
     lighting_task.cancel()
-    for task in (traffic_task, air_quality_task, bikeshare_task, poi_task,
-                 accident_task, lighting_task):
+    for task in (traffic_task, air_quality_task, weather_task, vigilance_task,
+                 bikeshare_task, poi_task, accident_task, lighting_task):
         try:
             await task
         except asyncio.CancelledError:
@@ -352,6 +425,7 @@ app.include_router(accident.router)
 app.include_router(navigation.router)
 app.include_router(traffic.router)
 app.include_router(air_quality.router)
+app.include_router(weather.router)
 app.include_router(bikeshare.router)
 app.include_router(home_case.router)
 app.include_router(faq.router)

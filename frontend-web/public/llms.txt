@@ -2,7 +2,7 @@
 
 > Application web et mobile (android et ios) open source qui calcule des itinéraires à vélo sécurisés, personnalisés et adaptés au profil de l'utilisateur. Le calcul privilégie la sécurité du cycliste plutôt que la seule vitesse, en s'adaptant au profil sportif, au type de vélo et au type d'aménagement, au type de sol, à la vitesse des automobiliste, aux embouteillages et à l'éclairage public. Zones couvertes : la métropole de Bordeaux et le sud Bordeaux, ainsi que Lille, Tournai et leurs communes environnantes (secteur transfrontalier France–Belgique) ; couverture en cours d'extension.
 
-Sécu'Cycle propose plusieurs itinéraires (rapide, sécurisé, compromis) en s'appuyant sur des données de trafic temps réel, des données topographiques et des signalements de dangers remontés par la communauté. L'application gère les profils utilisateurs, plusieurs vélos (standard ou électrique), l'historique des trajets et la navigation guidée.
+Sécu'Cycle propose plusieurs itinéraires (rapide, sécurisé, compromis) en s'appuyant sur des données de trafic temps réel, des données topographiques, la météo (pluie, vent, vigilance) et des signalements de dangers remontés par la communauté. L'application gère les profils utilisateurs, plusieurs vélos (standard ou électrique), l'historique des trajets et la navigation guidée.
 
 Projet open source développé par 6 étudiants de l'ENSEIRB-MATMECA (Bordeaux) dans le cadre d'un PFA. Service gratuit, en français.
 
@@ -22,7 +22,7 @@ Projet open source développé par 6 étudiants de l'ENSEIRB-MATMECA (Bordeaux) 
 
 Détail, licences et attributions : https://secu-cycle.fr/donnees
 
-- OpenStreetMap (ODbL) : réseau routier, aménagements cyclables, revêtement, éclairage, points d'intérêt.
+- OpenStreetMap (ODbL) : réseau routier, aménagements cyclables, itinéraires cyclables balisés (véloroutes, RAVeL, réseaux express vélo), revêtement, éclairage, points d'intérêt.
 - IGN, RGE ALTI via la Géoplateforme (Licence Ouverte) : altimétrie / dénivelé.
 - « Accidents de vélo », dérivé des BAAC de l'ONISR (Licence Ouverte 2.0) : accidentologie en France.
 - Statbel, accidents de la circulation 2017-2024 (CC BY 4.0) : accidentologie en Belgique.
@@ -31,6 +31,8 @@ Détail, licences et attributions : https://secu-cycle.fr/donnees
 - Éclairage public open data de Bordeaux Métropole et Nantes Métropole (Licence Ouverte).
 - GBFS : disponibilité des stations de neuf systèmes de vélos en libre-service français et belges.
 - CAMS / Copernicus, via Open-Meteo : indice européen de qualité de l'air. Complété par le World Air Quality Index.
+- Open-Meteo (CC BY 4.0), modèles ICON-D2 (DWD) et AROME (Météo-France) : conditions météo, prévision de pluie au pas de 15 minutes, vent et alertes dérivées (orage, grêle, verglas, rafales).
+- Vigilance météorologique officielle : Météo-France (Licence Ouverte) pour la France, MeteoAlarm/EUMETNET relayant l'IRM pour la Belgique.
 - Signalements communautaires : accidents et dangers remontés par les utilisateurs.
 - MapTiler (service commercial) : fond de carte et géocodage hors de France.
 

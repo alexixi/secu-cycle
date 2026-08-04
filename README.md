@@ -1,4 +1,6 @@
 # Sécu'Cycle
+[Sécu'Cycle](https://secu-cycle.fr/) est une application web et mobile qui calcule des itinéraires cyclables sécurisés, en tenant compte de la qualité des infrastructures et des accidents corporels recensés. 
+
 
 ### Prérequis
 - [Make](https://www.gnu.org/software/make/)
@@ -102,6 +104,72 @@ ressource), utile par exemple pour reconstruire le frontend sans nouveau commit.
 - **API à 1 worker** : en production l'API tourne avec un seul worker uvicorn (chaque worker charge sa propre copie
   du graphe de Bordeaux, ~0,5–1 Go ; le VPS ~3,8 Go sans swap est sensible à l'OOM). Le calcul d'itinéraire étant
   déporté hors de l'event loop, un worker async reste réactif.
+
+### Mises à jour de l'application mobile (OTA)
+L'application mobile utilise [**EAS Update**](https://docs.expo.dev/eas-update/introduction/) : les changements
+**JavaScript et assets** sont livrés directement aux applications déjà installées, sans rebuild ni resoumission
+aux stores. Le passage par l'App Store et le Play Store n'est plus nécessaire que pour les modifications
+**natives**.
+
+La publication est **automatique au merge** (workflow `.github/workflows/mobile-ota.yml`), sur le même principe
+que le site : aucune commande à lancer à la main. Le workflow ne se déclenche que si le commit touche
+`frontend-mobile/`, et **choisit lui-même** entre publier un update OTA et lancer un build Android —
+voir « Détection automatique » plus bas.
+
+- **Branches** : un merge sur `main` alimente le flux **production** (binaires des stores), un merge sur `dev`
+  alimente le flux **preview** (builds internes de recette).
+- **Channels** : `production` (builds des stores), `preview` (builds internes de recette), `development`
+  (dev clients). Un update publié sur un channel n'atteint jamais les autres.
+- **Application côté téléphone** : l'update est téléchargé **en arrière-plan** au lancement et devient actif au
+  **lancement suivant**. Le démarrage n'attend jamais le réseau (`fallbackToCacheTimeout: 0`) — une navigation
+  en cours n'est jamais interrompue.
+- **Publication manuelle** (recette ou secours) : `make ota-preview` / `make ota` depuis `frontend-mobile/`.
+
+#### Ce qui exige quand même un rebuild et une resoumission
+Le lien entre un update et les binaires compatibles est le `runtimeVersion`, calculé depuis le champ `version`
+de `app.config.js` (policy `appVersion`). **Il faut bumper `version` puis rebuilder** dès qu'un changement
+touche le natif :
+
+- ajout, suppression ou mise à jour d'une **dépendance native** ;
+- modification d'un **config plugin**, d'une **permission**, du nom, de l'icône ou du splash screen ;
+- modification du **module natif local** `frontend-mobile/modules/nav-notification` (Kotlin) ;
+- montée de version du **SDK Expo**.
+
+Sans ce bump, l'update partirait vers des binaires qui n'embarquent pas le code natif correspondant, et
+l'application planterait au démarrage.
+
+#### Détection automatique
+Le workflow ne se contente pas d'avertir : avant de publier quoi que ce soit, il calcule l'**empreinte
+native** du commit (`eas fingerprint:generate`) et la compare à celle du **dernier build Android terminé sur
+le même profil**, qu'EAS conserve pour chaque build.
+
+La règle est **`dev` informe, `main` applique** :
+
+| Empreinte native | `version` | `main` (production) | `dev` (preview) |
+| --- | --- | --- | --- |
+| identique | — | **update OTA** | **update OTA** |
+| différente | bumpée | **build Android** (`eas build --no-wait`) | rien, avertissement ⚠️ |
+| différente | inchangée | **échec du workflow** | rien, avertissement ⚠️ |
+| aucun build de référence | — | **échec du workflow** | rien, avertissement ⚠️ |
+
+Le cas « empreinte différente, `version` inchangée » est le garde-fou : un binaire natif neuf portant le même
+`runtimeVersion` que celui déjà distribué rendrait tout update ultérieur dangereux pour les téléphones restés
+sur l'ancien binaire.
+
+**Aucun build preview n'est déclenché automatiquement.** Un binaire preview s'installe à la main sur quelques
+téléphones ; en rebuilder un à chaque changement natif produirait surtout des artefacts que personne n'installe,
+et qui expirent au bout de 30 jours sur EAS. Le workflow se contente donc d'un avertissement, sans passer au
+rouge — un job rouge sur `dev` le resterait à chaque push tant que personne n'aurait rebuildé. Quand un test sur
+téléphone est nécessaire : `eas build -p android --profile preview`.
+
+Côté production, le build est lancé pour **Android uniquement** — il n'y a pas de compte Apple Developer à ce
+jour — et **n'est pas soumis automatiquement** au Play Store : la soumission reste manuelle
+(`eas submit -p android`) tant qu'aucun compte de service Google n'est configuré dans le bloc `submit`
+d'`eas.json`.
+
+> L'empreinte calculée en local diffère de celle du CI tant que le dossier `frontend-mobile/android/` existe
+> sur la machine : il est gitignoré, donc absent aussi bien du CI que de l'archive envoyée à EAS Build. Cette
+> comparaison n'a de sens que dans le workflow.
 
 ### Points d'intérêt (POI)
 Les POI (eau, toilettes, stationnement, réparation) sont stockés en base et servis par `GET /pois/` :
@@ -275,9 +343,9 @@ d'épuiser un quota **partagé avec les tuiles de la carte**, dont l'épuisement
 Variables d'environnement associées (backend) : `MAPTILER_KEY`, `MAPTILER_GEOCODING_BUDGET`,
 `GEOCODE_CACHE_TTL_DAYS`. Sans clé, la recherche reste fonctionnelle en France mais se limite aux adresses.
 
-### Couches temps réel : trafic, vélos en libre-service, qualité de l'air, éclairage
+### Couches temps réel : trafic, vélos en libre-service, qualité de l'air, météo, éclairage
 
-Quatre couches alimentées par des sources externes rafraîchies en continu. Toutes suivent le même
+Cinq couches alimentées par des sources externes rafraîchies en continu. Toutes suivent le même
 principe de **sélection géographique** : une source n'est interrogée que si son emprise croise celle
 du graphe chargé, jamais parce qu'elle est « nationale ».
 
@@ -299,6 +367,31 @@ du graphe chargé, jamais parce qu'elle est « nationale ».
   échantillonné le long du trajet. Complété par les stations au sol du **World Air Quality Index**,
   publiées sur l'échelle AQI américaine — deux échelles distinctes, affichées comme telles. Sans
   `WAQI_TOKEN`, seule la couche CAMS est servie.
+- **Météo** (`weather/config.py`) — Open-Meteo (DWD ICON-D2 et Météo-France AROME sur notre emprise),
+  rafraîchie tous les quarts d'heure. Trois horizons pour trois usages : les conditions courantes
+  alimentent le bandeau de carte (température, vent, condition), relevées sur des **points placés
+  par densité du réseau cyclable** (`graph/extent.py`, `sample_points`) — trois pour Bruxelles,
+  vingt-quatre pour Bordeaux + Tournai, et le lecteur se voit servir le plus proche de lui.
+  L'échelle reste celle d'un quartier, jamais la position exacte d'une averse ;
+  `minutely_15` porte la promesse « pluie dans 15 minutes », et
+  n'est demandé qu'à l'intérieur de la couverture ICON-D2/AROME, faute de quoi la source
+  l'interpolerait depuis l'horaire **sans le signaler** ; la prévision horaire alimente les conseils
+  d'équipement et la suggestion de décaler l'heure de départ. Les alertes (grêle, orage, verglas,
+  rafales, gel) portent sur les **valeurs numériques**, jamais sur le code temps — sur le modèle mixé,
+  `weather_code = 61` et `precipitation = 0.0` coexistent régulièrement, et s'y fier produirait des
+  alertes fantômes à chaque cycle. Couche **informative** : elle n'entre pas dans le coût de routage.
+- **Vigilance officielle** (`vigilance/config.py`) — deux sources **indépendantes**, une par pays,
+  sur le registre de `traffic/` : la vigilance Météo-France par département (miroir Opendatasoft,
+  donc la même API `explore/v2.1` que le trafic, sans clé) et les avertissements de l'IRM relayés
+  par **MeteoAlarm** au format CAP pour la Belgique. Chacune a son emprise et peut échouer seule.
+  Le rattachement d'une zone du graphe à un département ou à une province passe par un unique
+  résolveur (`ISO3166-2-lvl6` de Nominatim : `FR-33`, `BE-WHT`), appelé une fois par zone puis mis
+  en cache. Ces alertes sont fusionnées dans le résumé de `/weather/` et sont **les seules** à
+  employer le mot « vigilance » : nos propres seuils n'ont pas l'autorité d'un institut, et le
+  vocabulaire officiel le dirait à tort.
+  Le vent corrige la durée *affichée* (`duration_wind`, posée à côté de `duration` après le cache) et
+  les ponts d'au moins 30 m sont signalés sous 3 °C — un tablier gèle une à deux heures avant la
+  chaussée voisine, faute d'inertie du sol.
 - **Éclairage public** (`lighting/config.py`) — les lampadaires OSM (`highway=street_lamp`) couvrent
   toute la zone mais inégalement ; deux jeux open data les densifient : points lumineux de Bordeaux
   Métropole (`bor_ptlum`) et luminaires de Nantes Métropole.

@@ -10,6 +10,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import {
     areNotificationsEnabled,
+    areWeatherAlertsEnabled,
+    setWeatherAlertsEnabled,
     getNotificationPermission,
     requestNotificationPermission,
     setNotificationsEnabled,
@@ -45,10 +47,12 @@ export default function SettingsPage() {
     const { user } = useAuth();
 
     const [notifEnabled, setNotifEnabled] = useState(true);
+    const [weatherAlertsEnabled, setWeatherAlerts] = useState(true);
     const [permission, setPermission] = useState('granted');
 
     useEffect(() => {
         areNotificationsEnabled().then(setNotifEnabled);
+        areWeatherAlertsEnabled().then(setWeatherAlerts);
     }, []);
 
     useFocusEffect(
@@ -87,7 +91,30 @@ export default function SettingsPage() {
         await setNotificationsEnabled(value);
     };
 
-    const isBlocked = notifEnabled && permission !== 'granted';
+    const handleWeatherAlertsToggle = async (value) => {
+        Haptics.selectionAsync().catch(() => { });
+
+        if (value) {
+            const status = await requestNotificationPermission();
+            setPermission(status);
+            if (status !== 'granted') {
+                Alert.alert(
+                    'Notifications bloquées',
+                    "Autorisez les notifications pour Sécu'Cycle dans les réglages de votre téléphone.",
+                    [
+                        { text: 'Annuler', style: 'cancel' },
+                        { text: 'Ouvrir les réglages', onPress: () => Linking.openSettings() },
+                    ],
+                );
+                return;
+            }
+        }
+
+        setWeatherAlerts(value);
+        await setWeatherAlertsEnabled(value);
+    };
+
+    const isBlocked = (notifEnabled || weatherAlertsEnabled) && permission !== 'granted';
 
     return (
         <SwipeBackScreen background={colors.bgMain}>
@@ -194,6 +221,26 @@ export default function SettingsPage() {
                                 trackColor={{ false: colors.borderStrong, true: colors.primary }}
                                 thumbColor={colors.bgMain}
                                 accessibilityLabel="Activer les notifications"
+                            />
+                        </View>
+
+                        <View style={styles.switchRow}>
+                            <View style={styles.switchLabel}>
+                                <Text style={[styles.rowTitle, { color: colors.textMain }]}>
+                                    Alertes météo
+                                </Text>
+                                <Text style={[styles.hint, { color: colors.textSecondary }]}>
+                                    Prévient d'une averse, d'un orage, de la grêle ou du verglas
+                                    pendant un trajet.
+                                </Text>
+                            </View>
+
+                            <Switch
+                                value={weatherAlertsEnabled}
+                                onValueChange={handleWeatherAlertsToggle}
+                                trackColor={{ false: colors.borderStrong, true: colors.primary }}
+                                thumbColor={colors.bgMain}
+                                accessibilityLabel="Activer les alertes météo"
                             />
                         </View>
 

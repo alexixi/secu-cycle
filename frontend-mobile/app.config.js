@@ -5,7 +5,14 @@ export default {
     expo: {
         name: IS_DEV ? "Sécu Cycle Dev" : "Sécu Cycle",
         slug: "secu-cycle",
-        version: "1.0.0",
+        version: "1.1.0",
+        runtimeVersion: {
+            policy: "appVersion"
+        },
+        updates: {
+            url: "https://u.expo.dev/6fffe32f-044e-4033-8da0-4431b0a81f3a",
+            fallbackToCacheTimeout: 0
+        },
         orientation: "portrait",
         icon: "./assets/images/icon.png",
         scheme: "secucycle",

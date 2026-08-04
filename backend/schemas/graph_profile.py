@@ -148,6 +148,71 @@ class CommuneLightingUpdate(BaseModel):
     schedules: list[CommuneLightingItem] = []
 
 
+# --- Import / export de profils ---
+
+# Marqueurs du fichier d'échange, pour refuser tout de suite un JSON qui n'a
+# rien à voir plutôt que de laisser Pydantic se plaindre champ par champ.
+EXPORT_KIND = "secu-cycle.graph-profile"
+EXPORT_VERSION = 1
+
+
+class GraphProfileExportItem(BaseModel):
+    """Un profil dans un fichier d'échange.
+
+    Ni `is_default` ni les compteurs de génération n'y figurent : ils décrivent
+    l'état d'une instance, pas l'emprise elle-même.
+    """
+
+    name: str
+    communes: list[str]
+    night_extinction_start: Optional[int] = None
+    night_extinction_end: Optional[int] = None
+
+    @field_validator("name")
+    @classmethod
+    def check_name(cls, value):
+        return _validate_name(value)
+
+    @field_validator("communes")
+    @classmethod
+    def check_communes(cls, value):
+        return _validate_communes(value)
+
+    @field_validator("night_extinction_start", "night_extinction_end")
+    @classmethod
+    def check_extinction(cls, value):
+        return _validate_hour(value)
+
+    class Config:
+        from_attributes = True
+
+
+class GraphProfileBundle(BaseModel):
+    """Le fichier d'échange complet : un ou plusieurs profils et leurs horaires."""
+
+    kind: str = EXPORT_KIND
+    version: int = EXPORT_VERSION
+    exported_at: Optional[datetime] = None
+    profiles: list[GraphProfileExportItem] = []
+    commune_lighting: list[CommuneLightingItem] = []
+
+    @field_validator("kind")
+    @classmethod
+    def check_kind(cls, value):
+        if value != EXPORT_KIND:
+            raise ValueError("Ce fichier n'est pas un export de profil de graphe.")
+        return value
+
+    @field_validator("version")
+    @classmethod
+    def check_version(cls, value):
+        if value > EXPORT_VERSION:
+            raise ValueError(
+                "Ce fichier a été produit par une version plus récente de Sécu'Cycle."
+            )
+        return value
+
+
 class GraphBuildRunRead(BaseModel):
     id: int
     profile_id: int

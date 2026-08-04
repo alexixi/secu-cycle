@@ -17,7 +17,8 @@ def main():
     print("\nChargement de la carte en cours...")
     profile = load_graph_profile()
     G = load_graph_with_ign(
-        profile["graph_file"], profile["ign_cache_file"], profile["communes"])
+        profile["graph_file"], profile["ign_cache_file"], profile["communes"],
+        profile.get("night_extinction"), profile["cycleroutes_file"])
 
     start_time = time.perf_counter()
 

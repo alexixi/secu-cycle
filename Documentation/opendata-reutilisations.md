@@ -11,7 +11,7 @@ Relevé dans le code, pas dans la plaquette. Toute description publiée doit s'e
 
 | Source | Usage | Licence / cadre | Référence code |
 | --- | --- | --- | --- |
-| OpenStreetMap (Overpass) | graphe routier, aménagements cyclables, revêtement, éclairage, POI | ODbL | `backend/graph/builder.py`, `pois/sync.py` |
+| OpenStreetMap (Overpass) | graphe routier, aménagements cyclables, itinéraires cyclables balisés (relations `route=bicycle` : véloroutes, EuroVelo, RAVeL, réseaux express vélo), revêtement, éclairage, POI | ODbL | `backend/graph/builder.py`, `graph/veloroutes.py`, `pois/sync.py` |
 | IGN — altimétrie | dénivelé de chaque tronçon | Licence Ouverte | `backend/graph/elevation.py` |
 | « Accidents de vélo » (dérivé BAAC/ONISR, publié par Koumoul) | malus accidentologie sur les arêtes, France | Licence Ouverte 2.0 | `backend/accidents/providers.py` |
 | Statbel — géolocalisation des accidents de la circulation 2017-2024 | idem, Belgique | CC BY 4.0 | `backend/accidents/providers.py` |
@@ -25,6 +25,9 @@ Relevé dans le code, pas dans la plaquette. Toute description publiée doit s'e
 | GBFS — 9 systèmes de vélos en libre-service | disponibilité des stations en temps réel | flux ouverts, attribution par système | `backend/bikeshare/config.py` |
 | CAMS / Copernicus, via Open-Meteo | indice de qualité de l'air européen le long du trajet | Copernicus (attribution) | `backend/air_quality/config.py` |
 | World Air Quality Index (WAQI) | mesures de stations au sol, complément du CAMS | attribution WAQI | `backend/air_quality/config.py` |
+| Open-Meteo (DWD ICON-D2, Météo-France AROME, NOAA GFS) | conditions courantes, prévision de pluie au pas de 15 min, alertes dérivées de seuils (grêle, orage, verglas, rafales), vent le long du trajet | CC BY 4.0 ; attribution DWD, Météo-France, NOAA. Offre gratuite **non commerciale** | `backend/weather/config.py` |
+| Vigilance météorologique Météo-France (via le miroir Opendatasoft) | vigilance **officielle** par département, France | Licence Ouverte 2.0 | `backend/vigilance/config.py` |
+| MeteoAlarm (EUMETNET), relayant l'IRM | avertissements **officiels** par province, Belgique | attribution EUMETNET et IRM | `backend/vigilance/config.py` |
 | MapTiler | fonds de carte, géocodage hors France | commercial (hors open data) | `backend/geocoding/service.py` |
 
 Systèmes GBFS branchés : **Le Vélo** (Bordeaux Métropole / Keolis), **Vélib' Métropole**
@@ -59,7 +62,6 @@ apparaît ensuite sur la page de chacun. Jeux à rattacher :
 
 - https://www.data.gouv.fr/datasets/accidents-de-velo — le plus visible, 23 réutilisations déjà listées
 - https://www.data.gouv.fr/datasets/base-adresse-nationale
-- https://www.data.gouv.fr/datasets/amenagements-cyclables-france-metropolitaine
 - les jeux GBFS « vélos en libre-service » de Bordeaux, Lille, Rennes, Nantes, Lyon, Strasbourg
 - les jeux « trafic temps réel » des quatre métropoles moissonnées
 
@@ -106,7 +108,7 @@ Le slug varie d'un portail à l'autre — vérifier au moment du dépôt.
 
 | Portail | Page réutilisations | Angle à mettre en avant |
 | --- | --- | --- |
-| Bordeaux Métropole | `/pages/reutilisation/` | trafic `ci_trafi_l` + Le Vélo + campus ENSEIRB-MATMECA |
+| Bordeaux Métropole | `/pages/reutilisation/` | trafic `ci_trafi_l` + Le Vélo |
 | MEL Lille | `/pages/reutilisations/` | V'Lille + versant français du profil transfrontalier |
 | Nantes Métropole | `/pages/reutilisations/` | fluidité des axes + Naolib |
 | Rennes Métropole | à vérifier | trafic temps réel + LE vélo STAR |

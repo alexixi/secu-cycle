@@ -26,6 +26,33 @@ export async function setNotificationsEnabled(enabled) {
     }
 }
 
+// Préférence distincte de celle du guidage : on peut vouloir la notification de
+// navigation sans être alerté d'une averse, et réciproquement.
+export const WEATHER_ALERTS_KEY = 'userWeatherAlerts';
+
+let cachedWeatherAlerts = null;
+
+export async function areWeatherAlertsEnabled() {
+    if (cachedWeatherAlerts !== null) return cachedWeatherAlerts;
+
+    try {
+        const saved = await AsyncStorage.getItem(WEATHER_ALERTS_KEY);
+        cachedWeatherAlerts = saved === null ? true : saved === 'true';
+    } catch {
+        cachedWeatherAlerts = true;
+    }
+    return cachedWeatherAlerts;
+}
+
+export async function setWeatherAlertsEnabled(enabled) {
+    cachedWeatherAlerts = enabled;
+    try {
+        await AsyncStorage.setItem(WEATHER_ALERTS_KEY, String(enabled));
+    } catch (e) {
+        console.warn('Préférence d\'alertes météo non sauvegardée :', e);
+    }
+}
+
 export async function getNotificationPermission() {
     try {
         const { status } = await Notifications.getPermissionsAsync();

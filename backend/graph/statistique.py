@@ -12,11 +12,17 @@ from graph.config import (
     PEDESTRIAN_SHARED_HIGHWAYS, FOOTWAY_SPEED_FACTOR,
     NIGHT_EXTINCTION_WINDOW,
     DEFAULT_AIR_EXPOSURE, AIR_INTENSITY_LOW_EXPOSURE,
+    WIND_HEADWIND_SPEED_FACTOR, WIND_CROSSWIND_SPEED_FACTOR,
+    WIND_SPEED_FLOOR, WIND_SPEED_CEIL, WIND_MIN_SPEED_KMH,
+    WIND_HEADWIND_SECTOR_DEG, BRIDGE_MIN_LENGTH_M,
 )
 from graph.extent import graph_zones, zone_center, zone_of
 
 # Repli lorsqu'aucun centre de graphe n'est connu (place de la Bourse, Bordeaux).
 BORDEAUX_LAT, BORDEAUX_LON = 44.8378, -0.5792
+
+# Seuil de comptage du vent de face, dérivé une fois du demi-angle du secteur.
+_HEADWIND_COS = math.cos(math.radians(WIND_HEADWIND_SECTOR_DEG))
 
 def calculer_statistiques_osm(G):
     """
@@ -161,13 +167,47 @@ def calculate_route_elevation(G, route, window_size=7, threshold=0.15):
     return round(elevation_gain, 1), round(elevation_loss, 1)
 
 
-def calculate_exact_travel_time(G, route_nodes, bike_type, is_electric, cyclist_level):
-    total_time_min = 0.0
-
+def _speed_settings(bike_type, is_electric, cyclist_level):
+    """(indice de vitesse, multiplicateur de niveau, sensibilité au revêtement)."""
     idx = 1 if is_electric else BIKE_TYPE_INDEX.get(bike_type.lower(), 0)
     multiplier = 1.0 if is_electric else LEVEL_MULTIPLIER.get(cyclist_level.lower(), 1.0)
     surface_factor = (ELECTRIC_SURFACE_SPEED_FACTOR if is_electric
                       else BIKE_SURFACE_SPEED_FACTOR.get(bike_type.lower(), DEFAULT_SURFACE_SPEED_FACTOR))
+    return idx, multiplier, surface_factor
+
+
+def _edge_speed_kmh(data, idx, multiplier, surface_factor):
+    """Vitesse sur un segment : infrastructure × niveau × revêtement × piéton.
+
+    Source unique de vérité des vitesses : `calculate_exact_travel_time` et
+    `wind_adjusted_travel_time` l'appellent toutes deux, pour que la correction du
+    vent s'applique exactement à la vitesse que l'on affiche par ailleurs.
+    """
+    cycleway = data.get("cycleway", "none")
+    if isinstance(cycleway, list):
+        cycleway = cycleway[0]
+
+    speeds = SPEED_BY_INFRASTRUCTURE.get(cycleway, DEFAULT_SPEED)
+    speed_kmh = speeds[idx] * multiplier
+    roughness = float(data.get('_roughness', DEFAULT_ROUGHNESS))
+    speed_kmh *= max(0.2, 1.0 - roughness * surface_factor)
+
+    h_type = data.get('highway', 'unclassified')
+    if isinstance(h_type, list):
+        h_type = h_type[0]
+    bicycle = data.get('bicycle')
+    if isinstance(bicycle, list):
+        bicycle = bicycle[0]
+    if h_type in PEDESTRIAN_SHARED_HIGHWAYS and bicycle != 'designated':
+        speed_kmh *= FOOTWAY_SPEED_FACTOR
+
+    return speed_kmh
+
+
+def calculate_exact_travel_time(G, route_nodes, bike_type, is_electric, cyclist_level):
+    total_time_min = 0.0
+
+    idx, multiplier, surface_factor = _speed_settings(bike_type, is_electric, cyclist_level)
     for i in range(len(route_nodes) - 1):
         u, v = route_nodes[i], route_nodes[i + 1]
         edge_data = G.get_edge_data(u, v)
@@ -176,29 +216,132 @@ def calculate_exact_travel_time(G, route_nodes, bike_type, is_electric, cyclist_
             data = edge_data[0] if 0 in edge_data else edge_data
 
             length_m = float(data.get('length', 1.0))
-            cycleway = data.get("cycleway", "none")
-            if isinstance(cycleway, list):
-                cycleway = cycleway[0]
-
-            speeds = SPEED_BY_INFRASTRUCTURE.get(cycleway, DEFAULT_SPEED)
-            speed_kmh = speeds[idx] * multiplier
-            roughness = float(data.get('_roughness', DEFAULT_ROUGHNESS))
-            speed_kmh *= max(0.2, 1.0 - roughness * surface_factor)
-
-            h_type = data.get('highway', 'unclassified')
-            if isinstance(h_type, list):
-                h_type = h_type[0]
-            bicycle = data.get('bicycle')
-            if isinstance(bicycle, list):
-                bicycle = bicycle[0]
-            if h_type in PEDESTRIAN_SHARED_HIGHWAYS and bicycle != 'designated':
-                speed_kmh *= FOOTWAY_SPEED_FACTOR
-
+            speed_kmh = _edge_speed_kmh(data, idx, multiplier, surface_factor)
             speed_m_min = (speed_kmh * 1000) / 60
 
             total_time_min += (length_m / speed_m_min)
 
     return total_time_min
+
+
+def wind_adjusted_travel_time(G, route_nodes, bike_type, is_electric, cyclist_level,
+                              wind_speed_kmh, wind_from_deg):
+    """(durée corrigée du vent en minutes, part de la distance en vent de face en %).
+
+    `wind_from_deg` est la direction **d'où vient** le vent, convention Open-Meteo
+    (`wind_direction_10m`) : 0° = vent de nord, soufflant vers le sud. L'erreur de
+    180° est le piège classique de ce calcul — vérification : un cycliste cap
+    ouest (b = 270) sous un vent d'ouest (wind_from_deg = 270) a `cos(0) = 1`,
+    donc vent de face plein, ce qui est bien le résultat attendu.
+
+    Le résultat ne sert qu'à l'AFFICHAGE : il est posé à côté de `duration`, après
+    le cache d'itinéraires, et n'entre jamais dans le coût de routage (voir la
+    justification détaillée dans `graph/config.py`, section vent).
+
+    Les parts sont pondérées par la longueur et non par le nombre d'arêtes : un
+    itinéraire découpé en micro-segments dans un giratoire ferait autrement peser
+    le giratoire autant que la ligne droite qui y mène.
+    """
+    # Import local : `graph.guidance` importe `graph.statistique`, un import
+    # module-level serait circulaire. Même précédent que `graph.accidents`
+    # plus bas dans ce fichier.
+    from graph.guidance import get_bearing
+
+    nominal = calculate_exact_travel_time(G, route_nodes, bike_type, is_electric, cyclist_level)
+    if wind_speed_kmh is None or wind_from_deg is None or wind_speed_kmh < WIND_MIN_SPEED_KMH:
+        return nominal, 0.0
+
+    idx, multiplier, surface_factor = _speed_settings(bike_type, is_electric, cyclist_level)
+    total_time_min = 0.0
+    headwind_m = 0.0
+    total_m = 0.0
+
+    for i in range(len(route_nodes) - 1):
+        u, v = route_nodes[i], route_nodes[i + 1]
+        edge_data = G.get_edge_data(u, v)
+        if not edge_data:
+            continue
+        data = edge_data[0] if 0 in edge_data else edge_data
+
+        length_m = float(data.get('length', 1.0))
+        speed_kmh = _edge_speed_kmh(data, idx, multiplier, surface_factor)
+
+        node_u, node_v = G.nodes[u], G.nodes[v]
+        bearing = get_bearing(node_u['y'], node_u['x'], node_v['y'], node_v['x'])
+        delta = math.radians(wind_from_deg - bearing)
+        # Composante signée : positive quand on roule vers l'origine du vent.
+        cos_delta = math.cos(delta)
+        head = wind_speed_kmh * cos_delta
+        cross = wind_speed_kmh * abs(math.sin(delta))
+
+        factor = 1.0 - (WIND_HEADWIND_SPEED_FACTOR * head / 10.0) \
+                     - (WIND_CROSSWIND_SPEED_FACTOR * cross / 10.0)
+        factor = max(WIND_SPEED_FLOOR, min(WIND_SPEED_CEIL, factor))
+
+        speed_m_min = (speed_kmh * factor * 1000) / 60
+        total_time_min += length_m / speed_m_min
+
+        total_m += length_m
+        # Le ralentissement est continu, mais le COMPTAGE demande un secteur :
+        # sinon un vent à 89° du cap — un pur travers — serait annoncé « de face ».
+        if cos_delta > _HEADWIND_COS:
+            headwind_m += length_m
+
+    if not total_m:
+        return nominal, 0.0
+    return total_time_min, round(headwind_m / total_m * 100, 1)
+
+
+def route_bridge_stats(G, route_nodes):
+    """(nombre d'ouvrages, longueur cumulée en m, distance au premier en m).
+
+    Ne comptabilise que les ponts d'au moins `BRIDGE_MIN_LENGTH_M` : un
+    `bridge=yes` de quatre mètres au-dessus d'un fossé n'a pas l'inertie thermique
+    d'un tablier, et l'inclure noierait l'avertissement de verglas sous du bruit.
+
+    Les segments consécutifs portant `bridge` sont regroupés en un seul ouvrage :
+    OSM découpe un viaduc à chaque changement d'attribut, et compter les segments
+    annoncerait « 7 ponts » là où le cycliste n'en traverse qu'un.
+    """
+    bridges = []
+    run_length = 0.0
+    run_offset = None
+    travelled = 0.0
+
+    for i in range(len(route_nodes) - 1):
+        u, v = route_nodes[i], route_nodes[i + 1]
+        edge_data = G.get_edge_data(u, v)
+        if not edge_data:
+            continue
+        data = edge_data[0] if 0 in edge_data else edge_data
+
+        length_m = float(data.get('length', 1.0))
+        bridge = data.get('bridge')
+        if isinstance(bridge, list):
+            bridge = bridge[0] if bridge else None
+        on_bridge = bool(bridge) and str(bridge).lower() not in ('no', 'false')
+
+        if on_bridge:
+            if run_offset is None:
+                run_offset = travelled
+            run_length += length_m
+        elif run_offset is not None:
+            bridges.append((run_length, run_offset))
+            run_length, run_offset = 0.0, None
+
+        travelled += length_m
+
+    if run_offset is not None:
+        bridges.append((run_length, run_offset))
+
+    long_enough = [b for b in bridges if b[0] >= BRIDGE_MIN_LENGTH_M]
+    if not long_enough:
+        return 0, 0.0, None
+    return (
+        len(long_enough),
+        round(sum(length for length, _ in long_enough), 1),
+        round(min(offset for _, offset in long_enough), 1),
+    )
 
 def calculate_route_distance(G, route):
     """Calcule la distance réelle d'un itinéraire."""
@@ -509,6 +652,7 @@ def calculate_infra_stats(G, route):
     smooth_length = 0.0
     contraflow_length = 0.0
     low_air_exposure_length = 0.0
+    veloroute_length = 0.0
 
     # L'air a-t-il réellement pesé sur ce calcul ? Vrai seulement quand l'indice
     # régional est dégradé (intensité > 0). Sinon le terme d'exposition est inactif
@@ -547,6 +691,9 @@ def calculate_infra_stats(G, route):
         if data.get('contraflow'):
             contraflow_length += length
 
+        if data.get('_veloroute'):
+            veloroute_length += length
+
         try:
             vmax_raw = data.get('maxspeed', None)
             if vmax_raw and str(vmax_raw).lower() not in ('unknown', 'none', 'nan', ''):
@@ -580,6 +727,7 @@ def calculate_infra_stats(G, route):
     if total_length == 0:
         return {"pct_cyclable": 0.0, "pct_low_speed": 0.0, "pct_lit": 0.0,
                 "pct_smooth": 0.0, "pct_contraflow": 0.0,
+                "pct_veloroute": 0.0,
                 "pct_low_air_exposure": 0.0, "air_aware": air_aware,
                 "accidents_count": 0, "pct_accident_free": 100.0}
 
@@ -589,6 +737,7 @@ def calculate_infra_stats(G, route):
         "pct_lit": round(lit_length / total_length * 100, 1),
         "pct_smooth": round(smooth_length / total_length * 100, 1),
         "pct_contraflow": round(contraflow_length / total_length * 100, 1),
+        "pct_veloroute": round(veloroute_length / total_length * 100, 1),
         "pct_low_air_exposure": round(low_air_exposure_length / total_length * 100, 1),
         "air_aware": air_aware,
         **route_accident_stats(G, route),

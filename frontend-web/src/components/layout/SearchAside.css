@@ -38,6 +38,23 @@
     font-style: italic;
 }
 
+.departure-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0 0;
+    padding: 6px 9px;
+    border-radius: 6px;
+    background-color: var(--bg-surface-alt, rgba(100, 108, 255, 0.08));
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    line-height: 1.35;
+}
+
+.departure-hint svg {
+    flex-shrink: 0;
+}
+
 .heure-max, .temps-max {
     width: 100%;
     display: flex;
