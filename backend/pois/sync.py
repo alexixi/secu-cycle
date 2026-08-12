@@ -12,12 +12,13 @@ from datetime import datetime
 
 import osmnx as ox
 import pandas as pd
+from osmnx._errors import InsufficientResponseError
 from sqlalchemy import select, delete
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.sql import func
 
 from database import SessionLocal
-from graph.graph_manager import load_graph_profile
+from graph.graph_manager import contiguous_zones, load_graph_profile
 from models.poi import MapPoi
 
 
@@ -63,16 +64,62 @@ def classify(tags: dict) -> str | None:
     return None
 
 
-def _fetch(communes):
-    """Interroge Overpass, avec backoff : les grandes emprises déclenchent des 429/504."""
+def _fetch_zone(zone, rang, total):
+    """Interroge Overpass sur une emprise, avec backoff sur 429/504."""
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            return ox.features_from_place(communes, POI_TAGS)
+            return ox.features_from_polygon(zone, POI_TAGS)
+        except InsufficientResponseError:
+            # Emprise sans aucun POI de nos catégories : légitime, pas un échec.
+            print(f"[sync-pois] emprise {rang}/{total} : aucun objet.", flush=True)
+            return None
         except Exception as exc:
-            print(f"[sync-pois] tentative {attempt}/{MAX_RETRIES} échouée : {exc}", flush=True)
+            print(
+                f"[sync-pois] emprise {rang}/{total}, tentative {attempt}/{MAX_RETRIES} "
+                f"échouée : {exc}",
+                flush=True,
+            )
             if attempt == MAX_RETRIES:
                 raise
             time.sleep(15 * attempt)
+
+
+def _fetch(communes):
+    """Interroge Overpass zone contiguë par zone contiguë, et concatène.
+
+    Passer les communes d'un bloc à `features_from_place` ne marche pas au-delà
+    d'une agglomération : osmnx en fait une seule géométrie, puis
+    `utils_geo._consolidate_subdivide_geometry` remplace **toute** MultiPolygon
+    par son enveloppe convexe. Sur un profil Bordeaux + Rennes + Nantes +
+    Tournai, cette enveloppe couvre 117 000 km² — l'ouest de la France et un
+    bout de Belgique — pour 4 100 km² utiles, et osmnx la redécoupe en une
+    cinquantaine de sous-requêtes tirées coup sur coup. L'instance publique
+    finit par couper au pare-feu, ce qui remonte en ConnectTimeoutError
+    trompeur : le réseau n'y est pour rien.
+
+    `contiguous_zones` règle cela pour le graphe depuis toujours ; on s'aligne
+    dessus. Chaque zone est un polygone simple sous `max_query_area_size`, donc
+    une requête par agglomération.
+
+    Tout ou rien : si une zone échoue malgré ses tentatives, l'exception remonte
+    et `sync()` n'écrit rien. C'est délibéré — une synchro partielle suivie de
+    la purge `updated_at < run_start` effacerait les villes non traitées.
+    """
+    zones = contiguous_zones(communes)
+
+    parts = []
+    for rang, zone in enumerate(zones, start=1):
+        part = _fetch_zone(zone, rang, len(zones))
+        if part is not None and len(part) > 0:
+            print(f"[sync-pois] emprise {rang}/{len(zones)} : {len(part)} objets.", flush=True)
+            parts.append(part)
+
+    if not parts:
+        raise RuntimeError(
+            "Aucun objet OSM reçu sur l'ensemble des emprises : synchro abandonnée "
+            "plutôt que de purger la base."
+        )
+    return pd.concat(parts)
 
 
 def _clean_tags(feature) -> dict:
