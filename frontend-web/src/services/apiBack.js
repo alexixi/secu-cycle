@@ -478,27 +478,30 @@ export async function createReport(token, reportType, description, latitude, lon
     }
 }
 
-export async function getPois(category) {
+export async function getPois(category, bbox = null) {
     try {
-        const data = await apiFetch(`/pois/?categories=${encodeURIComponent(category)}`, { method: "GET" });
+        const filtre = bbox ? `&bbox=${encodeURIComponent(bbox)}` : "";
+        const data = await apiFetch(`/pois/?categories=${encodeURIComponent(category)}${filtre}`, { method: "GET" });
         return data;
     } catch (error) {
         throw error;
     }
 }
 
-export async function getAccidents() {
+export async function getAccidents(bbox = null) {
     try {
-        const data = await apiFetch("/accidents/", { method: "GET" });
+        const filtre = bbox ? `?bbox=${encodeURIComponent(bbox)}` : "";
+        const data = await apiFetch(`/accidents/${filtre}`, { method: "GET" });
         return data;
     } catch (error) {
         throw error;
     }
 }
 
-export async function getStreetlights() {
+export async function getStreetlights(bbox = null) {
     try {
-        const data = await apiFetch("/streetlights/", { method: "GET" });
+        const filtre = bbox ? `?bbox=${encodeURIComponent(bbox)}` : "";
+        const data = await apiFetch(`/streetlights/${filtre}`, { method: "GET" });
         return data;
     } catch (error) {
         throw error;
