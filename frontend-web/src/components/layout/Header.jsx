@@ -7,7 +7,7 @@ import ThemeToggle from '../ui/ThemeToggle';
 import Logo from "../../assets/logo.svg?react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { LuLogIn, LuLogOut, LuMenu, LuCircleHelp, LuFileText, LuShield, LuScrollText, LuMail, LuDatabase } from "react-icons/lu";
+import { LuLogIn, LuLogOut, LuMenu, LuCircleHelp, LuFileText, LuShield, LuScrollText, LuMail, LuDatabase, LuMap } from "react-icons/lu";
 import { FaUser, FaHome } from "react-icons/fa";
 import { FaPersonCirclePlus } from "react-icons/fa6";
 import { PiPathBold } from "react-icons/pi";
@@ -17,6 +17,7 @@ const isPage = (currentPage, targetPage) => {
 };
 
 const CONTEXTUAL_PAGES = {
+    "carte": { to: "/carte", label: "Cartes par ville", Icon: LuMap },
     "faq": { to: "/faq", label: "FAQ", Icon: LuCircleHelp },
     "donnees": { to: "/donnees", label: "Sources des données", Icon: LuDatabase },
     "mentions-legales": { to: "/mentions-legales", label: "Mentions légales", Icon: LuFileText },
@@ -29,6 +30,7 @@ const CONTEXTUAL_PAGES = {
 const PATH_TO_PAGE = {
     "/": "home",
     "/itineraire": "itineraire",
+    "/carte": "carte",
     "/faq": "faq",
     "/donnees": "donnees",
     "/mentions-legales": "mentions-legales",
@@ -59,7 +61,7 @@ const Header = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
     const { pathname } = useLocation();
-    const page = PATH_TO_PAGE[pathname] ?? "";
+    const page = PATH_TO_PAGE[pathname] ?? (pathname.startsWith("/carte") ? "carte" : "");
 
     const [contextual, setContextual] = useState(() => (CONTEXTUAL_PAGES[page] ? page : null));
     const [isContextualLeaving, setIsContextualLeaving] = useState(false);

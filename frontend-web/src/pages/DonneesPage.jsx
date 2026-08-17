@@ -93,7 +93,7 @@ const SOURCES = [
         name: "État du trafic en temps réel",
         detail: "Rennes Métropole",
         usage: "État de circulation des axes routiers",
-        licence: LO,
+        licence: ODBL,
         producer: {
             label: "data.rennesmetropole.fr",
             href: "https://data.rennesmetropole.fr/explore/dataset/etat-du-trafic-en-temps-reel/",
@@ -103,7 +103,7 @@ const SOURCES = [
         name: "Fluidité des axes routiers",
         detail: "Nantes Métropole",
         usage: "État de circulation des axes routiers",
-        licence: LO,
+        licence: ODBL,
         producer: {
             label: "data.nantesmetropole.fr",
             href: "https://data.nantesmetropole.fr/explore/dataset/244400404_fluidite-axes-routiers-nantes-metropole/",
@@ -192,7 +192,7 @@ export default function DonneesPage() {
         <>
             <Meta
                 title="Sécu'Cycle | Sources des données"
-                description="Les données ouvertes qui font tourner Sécu'Cycle : OpenStreetMap, IGN, accidentologie BAAC/ONISR et Statbel, trafic temps réel, GBFS, qualité de l'air Copernicus."
+                description="Les données ouvertes qui font tourner Sécu'Cycle : OpenStreetMap, IGN, accidentologie BAAC et Statbel, trafic temps réel, GBFS, qualité de l'air."
             />
             <Helmet>
                 <script type="application/ld+json">{JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>
