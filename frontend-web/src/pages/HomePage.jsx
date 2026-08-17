@@ -13,7 +13,7 @@ import { getHomeCases } from "../services/apiBack";
 const DEFAULT_CASES = [
     {
         title: "Qu'est-ce que Sécu'Cycle ?",
-        text: "Sécu'Cycle est un projet développé par 6 étudiants de l'ENSEIRB-MATMECA dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous avons d'abord affiné les résultats sur la zone de Bordeaux et de notre campus universitaire grâce à nos connaissances locales du terrain, et la couverture s'étend désormais à Lille, Tournai et leurs environs.",
+        text: "Sécu'Cycle est un projet développé par 6 étudiants de l'ENSEIRB-MATMECA dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous avons d'abord affiné les résultats sur la zone de Bordeaux et de notre campus universitaire grâce à nos connaissances locales du terrain, et la couverture s'étend désormais à Rennes, Nantes, Tournai et leurs environs.",
     },
     {
         title: "Problématiques",
@@ -106,10 +106,11 @@ export default function HomePage() {
                 <section className="home-section">
                     <h2>Besoin de plus d'informations ?</h2>
                     <p>
-                        Vous pouvez consulter les <Link to="/legal">Mentions légales</Link>,
+                        Vous pouvez consulter les <Link to="/mentions-legales">Mentions légales</Link>,
                         les <Link to="/donnees">sources des données</Link> utilisées,
-                        la <Link to="/politique">Politique de confidentialité</Link> ou bien
-                        les <Link to="/conditions">conditions d'utilisation</Link>.
+                        nos <Link to="/carte">cartes par ville</Link>,
+                        la <Link to="/confidentialite">Politique de confidentialité</Link> ou bien
+                        les <Link to="/conditions-utilisation">conditions d'utilisation</Link>.
                         <br />
                         Vous avez des questions ? <br />
                         N'hésitez pas à nous contacter via notre <Link to="/contact">formulaire de contact</Link>

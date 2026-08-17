@@ -5,14 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/generate-seo.mjs",
     "build": "vite build",
-    "postbuild": "react-snap",
+    "postbuild": "react-snap && node scripts/verify-prerender.mjs",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check-coverage": "node scripts/check-coverage.mjs"
   },
   "reactSnap": {
     "source": "dist",
-    "include": ["/", "/itineraire", "/login", "/signin", "/mentions-legales", "/confidentialite", "/conditions-utilisation", "/contact", "/faq", "/donnees"],
+    "//": "react-snap suit aussi les liens internes : /carte suffit à faire découvrir les hubs de ville puis les cartes thématiques.",
+    "include": ["/", "/itineraire", "/login", "/signin", "/mentions-legales", "/confidentialite", "/conditions-utilisation", "/contact", "/faq", "/donnees", "/carte"],
     "inlineCss": false,
     "skipThirdPartyRequests": true,
     "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"]

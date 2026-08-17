@@ -17,6 +17,7 @@ import time
 import httpx
 import osmnx as ox
 import pandas as pd
+from osmnx._errors import InsufficientResponseError
 from shapely.geometry import Point
 from shapely.prepared import prep
 
@@ -53,7 +54,7 @@ class OsmStreetLampProvider:
     _NON_TAG_COLUMNS = {"geometry", "nodes", "ways", "members"}
 
     def fetch(self, communes, zones):
-        gdf = self._features(communes)
+        gdf = self._features(zones)
         if gdf is None or gdf.empty:
             print("[sync-lighting] OSM : aucun lampadaire retourné.", flush=True)
             return []
@@ -78,14 +79,38 @@ class OsmStreetLampProvider:
         print(f"[sync-lighting] OSM : {len(rows)} lampadaire(s) retenu(s).", flush=True)
         return list(rows.values())
 
-    def _features(self, communes):
-        """Interroge Overpass, avec backoff : les grandes emprises tombent en 429/504."""
+    def _features(self, zones):
+        """Interroge Overpass zone contiguë par zone contiguë, avec backoff.
+
+        On interroge les polygones de `profile_zones` plutôt que la liste de
+        communes : `features_from_place` les unirait en une MultiPolygon, dont
+        osmnx ne retient que l'enveloppe convexe
+        (`utils_geo._consolidate_subdivide_geometry`). Sur un profil
+        multi-métropoles, cette enveloppe couvre des dizaines de milliers de
+        kilomètres carrés inutiles, qu'osmnx redécoupe en autant de
+        sous-requêtes — jusqu'à se faire couper par l'instance publique, avec un
+        ConnectTimeoutError qui fait croire à tort à une panne réseau.
+
+        Une zone sans aucun lampadaire n'est pas une erreur : Overpass lève
+        `InsufficientResponseError`, qu'on absorbe.
+        """
+        parts = []
+        for rang, zone in enumerate(zones, start=1):
+            parts.append(self._features_for_zone(zone, rang, len(zones)))
+        parts = [part for part in parts if part is not None and not part.empty]
+        return pd.concat(parts) if parts else None
+
+    def _features_for_zone(self, zone, rang, total):
         for attempt in range(1, config.MAX_RETRIES + 1):
             try:
-                return ox.features_from_place(communes, {"highway": "street_lamp"})
+                return ox.features_from_polygon(zone, {"highway": "street_lamp"})
+            except InsufficientResponseError:
+                print(f"[sync-lighting] OSM zone {rang}/{total} : aucun lampadaire.",
+                      flush=True)
+                return None
             except Exception as exc:
-                print(f"[sync-lighting] OSM tentative {attempt}/{config.MAX_RETRIES} "
-                      f"échouée : {exc}", flush=True)
+                print(f"[sync-lighting] OSM zone {rang}/{total}, tentative "
+                      f"{attempt}/{config.MAX_RETRIES} échouée : {exc}", flush=True)
                 if attempt == config.MAX_RETRIES:
                     raise LightingSourceError(f"Overpass indisponible : {exc}") from exc
                 time.sleep(15 * attempt)

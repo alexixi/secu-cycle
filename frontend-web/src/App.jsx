@@ -20,6 +20,9 @@ const ConditionsUtilisationPage = lazy(() => import('./pages/ConditionsUtilisati
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const FaqPage = lazy(() => import('./pages/FaqPage'));
 const DonneesPage = lazy(() => import('./pages/DonneesPage'));
+const CarteHubPage = lazy(() => import('./pages/CarteHubPage'));
+const CarteVillePage = lazy(() => import('./pages/CarteVillePage'));
+const CarteThematiquePage = lazy(() => import('./pages/CarteThematiquePage'));
 
 const LoadingFallback = () => (
   <div className="loader-container">
@@ -84,6 +87,12 @@ function App() {
             <Route path="/faq" element={<FaqPage />} />
 
             <Route path="/donnees" element={<DonneesPage />} />
+
+            <Route path="/carte" element={<CarteHubPage />} />
+
+            <Route path="/carte/:citySlug" element={<CarteVillePage />} />
+
+            <Route path="/carte/:citySlug/:themeSlug" element={<CarteThematiquePage />} />
 
             <Route path="*" element={<ErrorPage />} />
 

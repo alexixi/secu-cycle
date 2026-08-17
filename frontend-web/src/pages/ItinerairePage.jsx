@@ -30,7 +30,9 @@ export default function ItinerairePage() {
     const [isReportMode, setIsReportMode] = useState(false);
     const [traffic, setTraffic] = useState(null);
     const [trafficError, setTrafficError] = useState(null);
-    const [showTraffic, setShowTraffic] = useState(false);
+    const [showTraffic, setShowTraffic] = useState(
+        () => new URLSearchParams(window.location.search).get('couche') === 'traffic'
+    );
 
     const { token, user } = useAuth();
 
@@ -206,13 +208,13 @@ export default function ItinerairePage() {
         <>
             <Meta
                 title="Sécu'Cycle | Itinéraires"
-                description="Calculez un itinéraire à vélo sécurisé à Bordeaux, Lille et Tournai avec Sécu'Cycle : trajet adapté à votre profil, votre vélo et au type de route."
+                description="Calculez un itinéraire à vélo sécurisé à Bordeaux, Rennes, Nantes et Tournai avec Sécu'Cycle : trajet adapté à votre profil, votre vélo et au type de route."
                 preconnect={[
                     "https://api.secu-cycle.fr",
                     { href: "https://api.maptiler.com", crossOrigin: true },
                 ]}
             />
-            <h1 className="sr-only">Calculateur d'itinéraire à vélo sécurisé à Bordeaux, Lille et Tournai</h1>
+            <h1 className="sr-only">Calculateur d'itinéraire à vélo sécurisé à Bordeaux, Rennes, Nantes et Tournai</h1>
             <div className="main-page-itineraire">
                 <SearchAside
                     startAdress={startPoint ? startPoint.name : ""}
