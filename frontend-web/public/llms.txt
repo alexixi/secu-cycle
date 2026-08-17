@@ -1,6 +1,6 @@
 # Sécu'Cycle
 
-> Application web et mobile (android et ios) open source qui calcule des itinéraires à vélo sécurisés, personnalisés et adaptés au profil de l'utilisateur. Le calcul privilégie la sécurité du cycliste plutôt que la seule vitesse, en s'adaptant au profil sportif, au type de vélo et au type d'aménagement, au type de sol, à la vitesse des automobiliste, aux embouteillages et à l'éclairage public. Zones couvertes : la métropole de Bordeaux et le sud Bordeaux, ainsi que Lille, Tournai et leurs communes environnantes (secteur transfrontalier France–Belgique) ; couverture en cours d'extension.
+> Application web et mobile (android et ios) open source qui calcule des itinéraires à vélo sécurisés, personnalisés et adaptés au profil de l'utilisateur. Le calcul privilégie la sécurité du cycliste plutôt que la seule vitesse, en s'adaptant au profil sportif, au type de vélo et au type d'aménagement, au type de sol, à la vitesse des automobiliste, aux embouteillages et à l'éclairage public. Zones couvertes : la métropole de Bordeaux et le sud Bordeaux, Rennes Métropole, Nantes Métropole, ainsi que Tournai et ses communes environnantes (secteur transfrontalier France–Belgique) ; couverture en cours d'extension.
 
 Sécu'Cycle propose plusieurs itinéraires (rapide, sécurisé, compromis) en s'appuyant sur des données de trafic temps réel, des données topographiques, la météo (pluie, vent, vigilance) et des signalements de dangers remontés par la communauté. L'application gère les profils utilisateurs, plusieurs vélos (standard ou électrique), l'historique des trajets et la navigation guidée.
 
@@ -12,11 +12,25 @@ Projet open source développé par 6 étudiants de l'ENSEIRB-MATMECA (Bordeaux) 
 - [Calculateur d'itinéraire](https://secu-cycle.fr/itineraire) : calcul d'un trajet vélo sécurisé entre deux adresses selon le profil et le vélo de l'utilisateur. Page principale
 - [FAQ](https://secu-cycle.fr/faq) : foire aux questions sur le fonctionnement, le calcul des itinéraires sécurisés, les zones couvertes, l'application mobile, les comptes et les sources de données.
 - [Sources des données](https://secu-cycle.fr/donnees) : inventaire complet des jeux de données ouvertes réutilisés, avec pour chacun son usage, sa licence et son producteur, ainsi que la méthodologie du score de sécurité et les attributions obligatoires.
+- [Cartes par ville](https://secu-cycle.fr/carte) : cartes thématiques dérivées des mêmes données, une par couple ville / thème.
+
+## Cartes thématiques
+
+Chaque carte affiche une seule couche de données sur une ville, avec ses chiffres clés, sa méthodologie et ses sources.
+
+- [Cartes cyclables à Bordeaux](https://secu-cycle.fr/carte/bordeaux) : stationnements vélo, toilettes publiques, points d'eau potable, éclairage public, vélos en libre-service, trafic routier, accidents à vélo, réparation de vélo.
+- [Cartes cyclables à Rennes](https://secu-cycle.fr/carte/rennes) : stationnements vélo, toilettes publiques, points d'eau potable, vélos en libre-service, trafic routier, accidents à vélo, réparation de vélo.
+- [Cartes cyclables à Nantes](https://secu-cycle.fr/carte/nantes) : stationnements vélo, toilettes publiques, points d'eau potable, éclairage public, vélos en libre-service, trafic routier, accidents à vélo, réparation de vélo.
+- [Cartes cyclables à Tournai](https://secu-cycle.fr/carte/tournai) : stationnements vélo, accidents à vélo, toilettes et points d'eau.
+
+Une carte n'est publiée que si le recensement en données ouvertes du territoire est suffisamment complet pour être utile ; c'est pourquoi certaines villes ont moins de cartes que d'autres.
 
 ## Couverture géographique
 
 - Bordeaux, Bordeaux Métropole et le sud Bordeaux (45 communes).
-- Lille, Tournai et les communes environnantes (secteur transfrontalier France–Belgique).
+- Rennes et les 43 communes de Rennes Métropole.
+- Nantes et les 24 communes de Nantes Métropole.
+- Tournai, Mouscron et les communes environnantes (secteur transfrontalier France–Belgique).
 
 ## Sources de données
 
@@ -27,7 +41,7 @@ Détail, licences et attributions : https://secu-cycle.fr/donnees
 - « Accidents de vélo », dérivé des BAAC de l'ONISR (Licence Ouverte 2.0) : accidentologie en France.
 - Statbel, accidents de la circulation 2017-2024 (CC BY 4.0) : accidentologie en Belgique.
 - Base Adresse Nationale (Licence Ouverte) : complétion et géocodage d'adresses en France.
-- Trafic temps réel des portails open data de Bordeaux Métropole, l'Eurométropole de Strasbourg, Rennes Métropole et Nantes Métropole (Licence Ouverte).
+- Trafic temps réel des portails open data de Bordeaux Métropole et de l'Eurométropole de Strasbourg (Licence Ouverte), de Rennes Métropole et de Nantes Métropole (ODbL).
 - Éclairage public open data de Bordeaux Métropole et Nantes Métropole (Licence Ouverte).
 - GBFS : disponibilité des stations de neuf systèmes de vélos en libre-service français et belges.
 - CAMS / Copernicus, via Open-Meteo : indice européen de qualité de l'air. Complété par le World Air Quality Index.
