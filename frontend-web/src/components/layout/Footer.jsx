@@ -12,6 +12,7 @@ export default function Footer() {
                 <span className="footer-title">Sécu'Cycle</span>
             </div>
             <nav className="footer-links" aria-label="Liens légaux">
+                <Link to="/carte">Cartes par ville</Link>
                 <Link to="/faq">FAQ</Link>
                 <Link to="/donnees">Sources des données</Link>
                 <Link to="/mentions-legales">Mentions légales</Link>
