@@ -13,12 +13,13 @@ from datetime import datetime
 import osmnx as ox
 import pandas as pd
 from osmnx._errors import InsufficientResponseError
-from sqlalchemy import select, delete
+from sqlalchemy import and_, select, delete
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.sql import func
 
 from database import SessionLocal
-from graph.graph_manager import contiguous_zones, load_graph_profile
+from graph.extent import bbox_clause
+from graph.graph_manager import contiguous_zones, load_data_profile
 from models.poi import MapPoi
 
 
@@ -101,25 +102,48 @@ def _fetch(communes):
     dessus. Chaque zone est un polygone simple sous `max_query_area_size`, donc
     une requête par agglomération.
 
-    Tout ou rien : si une zone échoue malgré ses tentatives, l'exception remonte
-    et `sync()` n'écrit rien. C'est délibéré — une synchro partielle suivie de
-    la purge `updated_at < run_start` effacerait les villes non traitées.
+    Renvoie `(objets, zones_couvertes, complet)` : les emprises effectivement
+    rafraîchies, et si toutes l'ont été. Une zone qui échoue malgré ses
+    tentatives n'interrompt plus la synchro — elle en est simplement exclue, et
+    `sync()` restreint sa purge aux zones couvertes. Sans cette précision, une
+    seule requête en échec effacerait les POI d'une ville entière, puisque la
+    purge porte sur `updated_at < run_start`. C'est le prix de l'élargissement :
+    à une poignée d'emprises l'échec est rare, à quinze il devient courant.
+
+    Une emprise sans aucun POI de nos catégories compte comme couverte : c'est
+    une réponse valide d'Overpass, et ses POI disparus doivent être purgés.
     """
     zones = contiguous_zones(communes)
 
     parts = []
+    covered = []
     for rang, zone in enumerate(zones, start=1):
-        part = _fetch_zone(zone, rang, len(zones))
+        try:
+            part = _fetch_zone(zone, rang, len(zones))
+        except Exception as exc:
+            print(
+                f"[sync-pois] emprise {rang}/{len(zones)} abandonnée : {exc}. "
+                f"Ses POI sont conservés en l'état.",
+                flush=True,
+            )
+            continue
+
+        covered.append(tuple(zone.bounds))
         if part is not None and len(part) > 0:
             print(f"[sync-pois] emprise {rang}/{len(zones)} : {len(part)} objets.", flush=True)
             parts.append(part)
 
-    if not parts:
+    if not covered:
         raise RuntimeError(
-            "Aucun objet OSM reçu sur l'ensemble des emprises : synchro abandonnée "
-            "plutôt que de purger la base."
+            "Aucune emprise n'a pu être interrogée : synchro abandonnée plutôt "
+            "que de purger la base."
         )
-    return pd.concat(parts)
+    if len(covered) < len(zones):
+        print(f"[sync-pois] {len(zones) - len(covered)} emprise(s) sur {len(zones)} "
+              f"non rafraîchie(s) : la purge les épargnera.", flush=True)
+
+    objets = pd.concat(parts) if parts else pd.DataFrame()
+    return objets, covered, len(covered) == len(zones)
 
 
 def _clean_tags(feature) -> dict:
@@ -203,11 +227,11 @@ def sync() -> dict:
     en base à l'issue du run, ceux qui n'y étaient pas, et ceux qui ont disparu
     d'OSM. Ces compteurs alimentent l'historique des synchros (`poi_sync_runs`).
     """
-    profile = load_graph_profile()
+    profile = load_data_profile()
     communes = profile["communes"]
 
     print(f"[sync-pois] Interrogation d'Overpass pour {len(communes)} communes...", flush=True)
-    gdf = _fetch(communes)
+    gdf, covered, complete = _fetch(communes)
     rows = _rows_from_gdf(gdf)
     print(f"[sync-pois] {len(gdf)} objets OSM reçus, {len(rows)} POI retenus.", flush=True)
 
@@ -224,8 +248,15 @@ def sync() -> dict:
 
         _upsert(db, rows)
 
+        # Purge globale quand toutes les emprises ont répondu — c'est ce qui
+        # retire les POI des communes sorties du profil. Dès qu'une emprise a
+        # manqué, on se limite à celles qui sont à jour.
+        stale = MapPoi.updated_at < run_start
         purged = db.execute(
-            delete(MapPoi).where(MapPoi.updated_at < run_start)
+            delete(MapPoi).where(
+                stale if complete
+                else and_(stale, bbox_clause(MapPoi.latitude, MapPoi.longitude, covered))
+            )
         ).rowcount
         db.commit()
 

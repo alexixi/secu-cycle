@@ -13,7 +13,7 @@ from accidents.providers import providers_for
 from database import SessionLocal
 from geocoding.service import countries_of
 from graph.communes import CommuneNotFound, geometry_of
-from graph.graph_manager import load_graph_profile
+from graph.graph_manager import load_data_profile
 from models.accident import RoadAccident
 
 
@@ -69,10 +69,14 @@ def _upsert(db, rows):
 
 
 def sync(since_year: int | None = None) -> dict:
-    """Synchronise la base avec les sources d'accidentologie du profil actif."""
+    """Synchronise la base avec les sources d'accidentologie de l'emprise de données.
+
+    Emprise donnée par `load_data_profile()` : le profil de graphe actif, ou
+    celui que désigne `DATA_PROFILE` quand les deux sont découplés.
+    """
     since_year = since_year or config.DEFAULT_SINCE_YEAR
 
-    profile = load_graph_profile()
+    profile = load_data_profile()
     communes = profile["communes"]
     countries = countries_of(communes)
 

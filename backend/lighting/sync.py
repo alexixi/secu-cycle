@@ -19,13 +19,14 @@ import numpy as np
 from shapely.geometry import shape
 from shapely.ops import unary_union
 from sklearn.neighbors import BallTree
-from sqlalchemy import select, delete
+from sqlalchemy import and_, select, delete
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.sql import func
 
 from database import SessionLocal
 from graph.communes import CommuneNotFound, geometry_of
-from graph.graph_manager import load_graph_profile
+from graph.extent import bbox_clause
+from graph.graph_manager import load_data_profile
 from lighting import config
 from lighting.providers import OsmStreetLampProvider, ods_providers_for
 from models.street_lamp import StreetLamp
@@ -96,11 +97,14 @@ def _upsert(db, rows):
 
 
 def sync() -> dict:
-    """Synchronise `street_lamps` avec les sources d'éclairage du profil actif.
+    """Synchronise `street_lamps` avec les sources d'éclairage de l'emprise de données.
+
+    Emprise donnée par `load_data_profile()` : le profil de graphe actif, ou
+    celui que désigne `DATA_PROFILE` quand les deux sont découplés.
 
     Retourne {"total", "created", "deleted"}.
     """
-    profile = load_graph_profile()
+    profile = load_data_profile()
     communes = profile["communes"]
 
     db = SessionLocal()
@@ -116,13 +120,15 @@ def sync() -> dict:
         )
 
         official_rows = []
+        ods_failed = False
         for provider in ods_providers:
             try:
                 official_rows.extend(provider.fetch(communes, zones))
             except Exception as exc:
+                ods_failed = True
                 print(f"[sync-lighting] {provider.label} ignorée : {exc}", flush=True)
 
-        osm_rows = OsmStreetLampProvider().fetch(communes, zones)
+        osm_rows, covered = OsmStreetLampProvider().fetch(communes, zones)
         osm_rows = _dedup_osm(osm_rows, official_rows)
 
         rows = official_rows + osm_rows
@@ -138,9 +144,27 @@ def sync() -> dict:
         created = _count_created(db, rows)
         _upsert(db, rows)
 
-        purged = db.execute(
-            delete(StreetLamp).where(StreetLamp.updated_at < run_start)
-        ).rowcount
+        # La purge ne doit toucher que ce qui vient d'être rafraîchi. Une source
+        # officielle en panne est le cas le plus dangereux : ses dizaines de
+        # milliers de luminaires ne sont pas dans le lot, et une purge globale
+        # les effacerait tous. On s'abstient alors complètement, quitte à garder
+        # des points périmés — ils reviendront au prochain passage.
+        stale = StreetLamp.updated_at < run_start
+        if ods_failed:
+            purged = 0
+            print("[sync-lighting] Source officielle en échec : purge suspendue.",
+                  flush=True)
+        elif len(covered) < len(zones):
+            print(f"[sync-lighting] {len(zones) - len(covered)} zone(s) sur "
+                  f"{len(zones)} non rafraîchie(s) : la purge les épargne.", flush=True)
+            purged = db.execute(
+                delete(StreetLamp).where(and_(
+                    stale,
+                    bbox_clause(StreetLamp.latitude, StreetLamp.longitude, covered),
+                ))
+            ).rowcount
+        else:
+            purged = db.execute(delete(StreetLamp).where(stale)).rowcount
         db.commit()
 
         print(
