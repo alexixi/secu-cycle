@@ -146,6 +146,95 @@ def graph_zones(G) -> list[tuple[float, float, float, float]]:
     return zones
 
 
+# Zones de l'emprise de données, gardées d'un appel à l'autre : la boucle des
+# vélos en libre-service bat toutes les quelques dizaines de secondes, et le
+# calcul demande une lecture en base par commune.
+_data_zones_cache: dict = {"communes": None, "zones": None}
+
+
+def data_zones() -> list[tuple[float, float, float, float]]:
+    """Emprises (w, s, e, n) de l'emprise **de données**, dans le même format
+    que `graph_zones()`.
+
+    Pendant de `graph_zones()` pour les couches qui n'ont pas besoin du graphe.
+    Une carte de stations n'a besoin que de savoir *où regarder* ; seul le
+    calcul d'itinéraire a besoin du réseau lui-même. Dériver ces zones des
+    communes plutôt que des nœuds permet donc de couvrir des villes que le
+    graphe n'embarque pas — il doit tenir en RAM, pas elles.
+
+    Les contours viennent du cache `commune_geometries` (`graph.communes`), donc
+    sans réseau une fois les communes validées. **Bloquant** malgré tout :
+    appeler via `asyncio.to_thread` depuis l'event loop.
+
+    Les zones sont triées par surface décroissante, pour offrir le même repli
+    « zone principale d'abord » que `graph_zones()`.
+    """
+    from shapely.geometry import shape
+    from shapely.ops import unary_union
+
+    from database import SessionLocal
+    from graph.communes import CommuneNotFound, geometry_of
+    from graph.graph_manager import load_data_profile
+
+    profile = load_data_profile(announce=False)
+    communes = profile["communes"]
+
+    if _data_zones_cache["communes"] == communes:
+        return _data_zones_cache["zones"]
+
+    db = SessionLocal()
+    try:
+        geometries = []
+        for name in communes:
+            try:
+                geometries.append(shape(geometry_of(db, name)))
+            except CommuneNotFound as exc:
+                print(f"[emprise-données] {exc}", flush=True)
+    finally:
+        db.close()
+
+    if not geometries:
+        # Ne rien renvoyer plutôt qu'une emprise fausse : les consommateurs
+        # traitent la liste vide comme « aucune couverture » et se désactivent,
+        # ce qui vaut mieux que d'afficher les stations d'une autre ville.
+        print("[emprise-données] aucun contour de commune obtenu : emprise vide.",
+              flush=True)
+        _data_zones_cache.update({"communes": communes, "zones": []})
+        return []
+
+    merged = unary_union(geometries)
+    parts = list(merged.geoms) if merged.geom_type == "MultiPolygon" else [merged]
+    parts.sort(key=lambda part: part.area, reverse=True)
+    zones = [tuple(part.bounds) for part in parts]
+
+    print(f"[emprise-données] {len(communes)} commune(s) en {len(zones)} zone(s).",
+          flush=True)
+    _data_zones_cache.update({"communes": communes, "zones": zones})
+    return zones
+
+
+def bbox_clause(latitude, longitude, zones):
+    """Clause SQLAlchemy « ce point tombe dans l'une de ces emprises ».
+
+    Sert aux purges de synchro : quand une emprise n'a pas pu être rafraîchie
+    (Overpass indisponible sur cette zone-là), il faut restreindre la purge aux
+    zones réellement à jour, faute de quoi une seule requête en échec effacerait
+    les données d'une ville entière.
+
+    Rend `False` sur une liste vide — aucune ligne ne correspond, plutôt que
+    toutes.
+    """
+    from sqlalchemy import and_, false, or_
+
+    if not zones:
+        return false()
+
+    return or_(*[
+        and_(longitude >= w, longitude <= e, latitude >= s, latitude <= n)
+        for w, s, e, n in zones
+    ])
+
+
 def overlaps(a, b) -> bool:
     """Les deux emprises (w, s, e, n) se croisent-elles ?
 

@@ -79,6 +79,66 @@ def load_graph_profile():
     return result
 
 
+def load_data_profile(announce: bool = True):
+    """Profil dont les communes délimitent les synchronisations de données.
+
+    Le graphe de routage et les données cartographiques n'ont pas la même
+    contrainte : le premier doit tenir **en RAM** dans le conteneur, alors que
+    les secondes vivent en base et ne coûtent que du disque. Rien n'oblige donc
+    à leur donner la même emprise — les pages thématiques d'une ville n'ont
+    besoin que des données (`routers/poi.py`, `accident.py`, `streetlight.py`
+    ignorent le graphe) ; seul le calcul d'itinéraire réclame le graphe.
+
+    Le profil marqué `is_data_scope` en base l'emporte : comme pour le profil de
+    graphe, **la base fait autorité**, si bien qu'une emprise choisie depuis le
+    dashboard survit aux redémarrages. Son graphe n'a besoin ni d'exister ni
+    d'être généré — seule sa liste de communes est lue.
+
+    `DATA_PROFILE` n'est qu'un filet d'amorçage, sur le modèle de
+    `GRAPH_PROFILE` : elle désigne l'emprise tant qu'aucun profil ne porte le
+    drapeau. Sans l'un ni l'autre, les données suivent le profil de graphe actif
+    — le comportement d'origine.
+
+    Attention : les trois synchros purgent ce qu'elles n'ont pas rafraîchi.
+    Rétrécir cette emprise efface donc les données des communes qui en sortent.
+    """
+    from database import SessionLocal
+    from models.graph_profile import GraphProfile
+
+    db = SessionLocal()
+    try:
+        profile = db.query(GraphProfile).filter(
+            GraphProfile.is_data_scope.is_(True)
+        ).first()
+
+        origin = "dashboard"
+        if profile is None:
+            name = os.getenv("DATA_PROFILE")
+            if not name:
+                return load_graph_profile()
+            origin = "DATA_PROFILE"
+            profile = db.query(GraphProfile).filter(GraphProfile.name == name).first()
+            if profile is None:
+                raise RuntimeError(
+                    f"DATA_PROFILE désigne le profil '{name}', absent de la base."
+                )
+
+        name = profile.name
+        communes = list(profile.communes or [])
+    finally:
+        db.close()
+
+    if not communes:
+        raise RuntimeError(
+            f"Le profil de données '{name}' ne contient aucune commune."
+        )
+
+    if announce:
+        print(f"Emprise des données : profil '{name}' ({len(communes)} communes, "
+              f"source : {origin})", flush=True)
+    return {"name": name, "communes": communes}
+
+
 def create_ign_data_file(filepath_graph, filepath_json, on_progress=None):
     """Télécharge et lisse les altitudes IGN le plus rapidement possible.
 
