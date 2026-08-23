@@ -8,6 +8,7 @@ import {
   LuHammer,
   LuPlay,
   LuStar,
+  LuDatabase,
   LuDownload,
   LuUpload,
   LuX,
@@ -31,6 +32,7 @@ import {
   getGraphProfileExtent,
   getGraphStats,
   importGraphProfiles,
+  setGraphDataScope,
   updateGraphProfile,
 } from "../../services/apiBack";
 import GraphExtentMap from "./GraphExtentMap";
@@ -133,6 +135,7 @@ export default function GraphManager() {
   const [importing, setImporting] = useState(null);
   const [toDelete, setToDelete] = useState(null);
   const [toActivate, setToActivate] = useState(null);
+  const [toDataScope, setToDataScope] = useState(null);
   const fileInputRef = useRef(null);
 
   const selected = profiles.find((p) => p.id === selectedId) || null;
@@ -348,6 +351,22 @@ export default function GraphManager() {
     );
   };
 
+  const dataScope = profiles.find((p) => p.is_data_scope) || null;
+  const leavingScope =
+    toDataScope && dataScope
+      ? dataScope.communes.filter((c) => !toDataScope.communes.includes(c))
+      : [];
+
+  const handleSetDataScope = async () => {
+    if (!toDataScope) return;
+    const profile = toDataScope;
+    setToDataScope(null);
+    await runAction(
+      () => setGraphDataScope(token, profile.id),
+      "Impossible de définir l'emprise des données."
+    );
+  };
+
   return (
     <div className="users-manager">
       <header className="users-manager-head">
@@ -461,11 +480,16 @@ export default function GraphManager() {
                   >
                     <div className="graph-profile-main">
                       <span className="graph-profile-name">
-                        {profile.name}
+                        <span className="graph-profile-label" title={profile.name}>
+                          {profile.name}
+                        </span>
                         {profile.is_active && (
                           <span className="pois-status pois-status-success">Actif</span>
                         )}
                         {profile.is_default && <span className="pois-status">Par défaut</span>}
+                        {profile.is_data_scope && (
+                          <span className="pois-status">Données</span>
+                        )}
                       </span>
                       <span className="graph-profile-sub">
                         {profile.communes.length} commune{profile.communes.length > 1 ? "s" : ""}
@@ -511,6 +535,18 @@ export default function GraphManager() {
                         <LuStar size={16} fill={profile.is_default ? "currentColor" : "none"} />
                       </button>
                       <button
+                        className={`row-action ${profile.is_data_scope ? "graph-star-on" : ""}`}
+                        title={
+                          profile.is_data_scope
+                            ? "Emprise des synchronisations de données"
+                            : "Faire de ce profil l'emprise des données"
+                        }
+                        disabled={busy || !profile.communes.length}
+                        onClick={() => !profile.is_data_scope && setToDataScope(profile)}
+                      >
+                        <LuDatabase size={16} />
+                      </button>
+                      <button
                         className="row-action"
                         title="Exporter ce profil"
                         disabled={busy}
@@ -521,7 +557,9 @@ export default function GraphManager() {
                       <button
                         className="row-action danger"
                         title="Supprimer"
-                        disabled={busy || profile.is_active || profile.is_default}
+                        disabled={
+                          busy || profile.is_active || profile.is_default || profile.is_data_scope
+                        }
                         onClick={() => setToDelete(profile)}
                       >
                         <LuTrash2 size={16} />
@@ -705,6 +743,43 @@ export default function GraphManager() {
           busyLabel="Suppression…"
           onCancel={() => setToDelete(null)}
           onConfirm={handleDelete}
+        />
+      )}
+
+      {toDataScope && (
+        <ConfirmDeleteModal
+          title="Emprise des données"
+          message={
+            <>
+              Les synchronisations de POI, d'accidents et d'éclairage porteront sur les{" "}
+              <strong>
+                {toDataScope.communes.length} commune
+                {toDataScope.communes.length > 1 ? "s" : ""}
+              </strong>{" "}
+              de « {toDataScope.name} ». Le graphe de routage n'est pas concerné, et
+              celui de ce profil n'a pas besoin d'exister.{" "}
+              {leavingScope.length > 0 ? (
+                <>
+                  <strong>
+                    {leavingScope.length} commune{leavingScope.length > 1 ? "s" : ""} en
+                    sort{leavingScope.length > 1 ? "ent" : ""}
+                  </strong>{" "}
+                  ({leavingScope.slice(0, 6).join(", ")}
+                  {leavingScope.length > 6 ? `, et ${leavingScope.length - 6} autres` : ""})
+                  : leurs POI, accidents et lampadaires seront supprimés à la prochaine
+                  synchronisation, et les cartes thématiques correspondantes se videront.
+                </>
+              ) : (
+                "Aucune commune ne sort de l'emprise actuelle : rien ne sera supprimé."
+              )}{" "}
+              Le changement n'a aucun effet visible immédiat — il s'applique à la
+              prochaine synchronisation.
+            </>
+          }
+          confirmLabel="Définir comme emprise"
+          busyLabel="Enregistrement…"
+          onCancel={() => setToDataScope(null)}
+          onConfirm={handleSetDataScope}
         />
       )}
 
