@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Map, { Source, Layer, Popup, NavigationControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { FaLayerGroup } from 'react-icons/fa';
 import { useTheme } from '../../context/ThemeContext';
+import { trackEvent } from '../../services/analytics';
 import {
     getPois, getAccidents, getStreetlights, getLitRoads, getBikeshareStations, getTraffic,
 } from '../../services/apiBack';
 import {
-    mapStyleUrl,
+    mapStyleUrl, MAP_STYLES,
     POI_IMAGE_ASSETS, BIKESHARE_IMAGE_ASSETS,
     POI_CATEGORIES, POI_DETAIL_FIELDS, formatPoiTag, poiIconSrc, poiAccentColor,
     POI_LAYER_ID, POI_LAYER_LAYOUT, poiLayerPaint,
@@ -30,6 +32,17 @@ export const isPrerender = () => typeof navigator !== 'undefined'
     && /ReactSnap/i.test(navigator.userAgent || '');
 
 const THEMATIC_IMAGE_ASSETS = [...POI_IMAGE_ASSETS, ...BIKESHARE_IMAGE_ASSETS];
+
+const BASE_STYLE_KEY = 'userMapBaseStyle';
+
+const readSavedStyle = () => {
+    try {
+        const saved = localStorage.getItem(BASE_STYLE_KEY);
+        return MAP_STYLES.some(s => s.id === saved) ? saved : null;
+    } catch {
+        return null;
+    }
+};
 
 const EMPTY = { type: 'FeatureCollection', features: [] };
 
@@ -104,6 +117,8 @@ const INTERACTIVE_LAYERS = {
 
 export default function ThematicMap({ city, theme, onData }) {
     const mapRef = useRef();
+    const imagesRef = useRef({});
+    const fondsRef = useRef(null);
     const { effectiveTheme } = useTheme();
     const [collection, setCollection] = useState(null);
     const [extra, setExtra] = useState({});
@@ -111,6 +126,8 @@ export default function ThematicMap({ city, theme, onData }) {
     const [isMapLoaded, setIsMapLoaded] = useState(false);
     const [imagesReady, setImagesReady] = useState(false);
     const [active, setActive] = useState(null);
+    const [baseStyle, setBaseStyle] = useState('base');
+    const [menuFonds, setMenuFonds] = useState(false);
 
     const prerender = isPrerender();
 
@@ -138,31 +155,76 @@ export default function ThematicMap({ city, theme, onData }) {
         return () => { annule = true; };
     }, [theme, city, onData, prerender]);
 
-    const registerImages = useCallback(() => {
+    useEffect(() => {
+        const saved = readSavedStyle();
+        if (saved) setBaseStyle(saved);
+    }, []);
+
+    useEffect(() => {
+        if (prerender || !isMapLoaded) return undefined;
         const map = mapRef.current?.getMap?.();
-        if (!map) return;
+        if (!map) return undefined;
+
+        const registerImages = () => {
+            THEMATIC_IMAGE_ASSETS.forEach(({ key }) => {
+                const image = imagesRef.current[key];
+                if (image && !map.hasImage(key)) map.addImage(key, image, { pixelRatio: 2 });
+            });
+        };
+
+        let annule = false;
         Promise.all(THEMATIC_IMAGE_ASSETS.map(({ key, src }) => new Promise((resolve) => {
-            if (map.hasImage(key)) return resolve();
+            if (imagesRef.current[key]) return resolve();
             const image = new Image();
-            image.onload = () => {
-                if (!map.hasImage(key)) map.addImage(key, image, { pixelRatio: 2 });
-                resolve();
-            };
+            image.onload = () => { imagesRef.current[key] = image; resolve(); };
             image.onerror = () => resolve();
             image.src = src;
             return undefined;
-        }))).then(() => setImagesReady(true));
-    }, []);
+        }))).then(() => {
+            if (annule) return;
+            registerImages();
+            map.on('styledata', registerImages);
+            setImagesReady(true);
+        });
+
+        return () => {
+            annule = true;
+            map.off('styledata', registerImages);
+        };
+    }, [isMapLoaded, prerender]);
 
     const handleLoad = useCallback(() => {
         setIsMapLoaded(true);
-        registerImages();
         const map = mapRef.current?.getMap?.();
         map?.fitBounds([[city.bbox[0], city.bbox[1]], [city.bbox[2], city.bbox[3]]], {
             padding: 24,
             duration: 0,
         });
-    }, [registerImages, city.bbox]);
+    }, [city.bbox]);
+
+    const handleStyleChange = useCallback((styleId) => {
+        setBaseStyle(styleId);
+        setMenuFonds(false);
+        try {
+            localStorage.setItem(BASE_STYLE_KEY, styleId);
+        } catch {
+        }
+        trackEvent('carte_fond', { ville: city.slug, fond: styleId });
+    }, [city.slug]);
+
+    useEffect(() => {
+        if (!menuFonds) return undefined;
+        const surClic = (event) => {
+            if (!fondsRef.current?.contains(event.target)) setMenuFonds(false);
+        };
+        const surTouche = (event) => { if (event.key === 'Escape') setMenuFonds(false); };
+        document.addEventListener('mousedown', surClic);
+        document.addEventListener('keydown', surTouche);
+        return () => {
+            document.removeEventListener('mousedown', surClic);
+            document.removeEventListener('keydown', surTouche);
+        };
+    }, [menuFonds]);
 
     const interactiveLayerIds = useMemo(
         () => (isMapLoaded ? (INTERACTIVE_LAYERS[theme.layer.kind] || []) : []),
@@ -183,6 +245,11 @@ export default function ThematicMap({ city, theme, onData }) {
 
     const featureCount = collection?.features.length ?? 0;
 
+    const legende = useMemo(
+        () => (theme.legend || []).filter(item => !item.needsGraph || city.routing !== false),
+        [theme.legend, city.routing]
+    );
+
     if (prerender) {
         return (
             <div className="thematic-map thematic-map--placeholder">
@@ -200,7 +267,7 @@ export default function ThematicMap({ city, theme, onData }) {
                     latitude: city.center[1],
                     zoom: city.zoom,
                 }}
-                mapStyle={mapStyleUrl('base', effectiveTheme)}
+                mapStyle={mapStyleUrl(baseStyle, effectiveTheme)}
                 style={{ width: '100%', height: '100%' }}
                 interactiveLayerIds={interactiveLayerIds}
                 onLoad={handleLoad}
@@ -320,9 +387,41 @@ export default function ThematicMap({ city, theme, onData }) {
                 )}
             </Map>
 
-            {theme.legend?.length > 0 && (
+            <div className="thematic-map-fonds" ref={fondsRef}>
+                {menuFonds && (
+                    <div className="thematic-map-fonds-menu" role="menu">
+                        {MAP_STYLES.map(style => (
+                            <button
+                                key={style.id}
+                                type="button"
+                                role="menuitemradio"
+                                aria-checked={baseStyle === style.id}
+                                className={`thematic-map-fonds-item${baseStyle === style.id ? ' active' : ''}`}
+                                onClick={() => handleStyleChange(style.id)}
+                            >
+                                <span aria-hidden="true">{style.icon}</span>
+                                {style.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                <button
+                    type="button"
+                    className="thematic-map-fonds-toggle"
+                    aria-expanded={menuFonds}
+                    aria-haspopup="true"
+                    aria-label="Changer le fond de carte"
+                    title="Changer le fond de carte"
+                    onClick={() => setMenuFonds(ouvert => !ouvert)}
+                >
+                    <FaLayerGroup size={16} aria-hidden="true" />
+                </button>
+            </div>
+
+            {legende.length > 0 && (
                 <div className="thematic-map-legend">
-                    {theme.legend.map(item => (
+                    {legende.map(item => (
                         <span key={item.label} className="thematic-legend-item">
                             <span className="thematic-legend-dot" style={{ backgroundColor: item.color }} />
                             {item.label}

@@ -317,8 +317,10 @@ export default function DonneesPage() {
                         L'état de circulation des axes est collecté toutes les cinq minutes auprès des portails
                         open data de quatre métropoles&nbsp;: Bordeaux Métropole, l'Eurométropole de
                         Strasbourg, Rennes Métropole et Nantes Métropole. Une source n'est interrogée que si
-                        son emprise croise celle du graphe chargé. Un axe embouteillé devient plus coûteux pour
-                        le calcul d'itinéraire, sans jamais être interdit.
+                        son emprise croise celle des données que nous synchronisons. Là où le calcul
+                        d'itinéraire est disponible, un axe embouteillé y devient plus coûteux, sans jamais
+                        être interdit&nbsp;; ailleurs, la couche reste consultable sur la carte thématique
+                        de la ville.
                     </p>
 
                     <h2>Vélos en libre-service</h2>

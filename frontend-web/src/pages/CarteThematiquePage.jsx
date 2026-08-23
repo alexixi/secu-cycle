@@ -7,15 +7,44 @@ import ThematicMap from '../modules/map/ThematicMap';
 import ErrorPage from './ErrorPage';
 import ThemeIcon from '../components/carte/ThemeIcon';
 import { trackEvent } from '../services/analytics';
-import { SITE_URL, findPage, pagesForCity, pagesForTheme } from '../data/thematicMaps';
+import {
+    SITE_URL, findPage, pagesForCity, pagesForTheme, routableCitiesLabel,
+} from '../data/thematicMaps';
 import './CartePages.css';
 
 function CtaItineraire({ page, position }) {
+    const { city } = page;
+
+    if (city.routing === false) {
+        return (
+            <aside className="carte-cta">
+                <div>
+                    <p className="carte-cta-titre">Itinéraires : pas encore {city.prep}</p>
+                    <p className="carte-cta-texte">
+                        {city.routingNote} Les itinéraires sont pour l’instant calculés
+                        à {routableCitiesLabel()}.
+                    </p>
+                </div>
+                <Link
+                    className="button carte-cta-bouton"
+                    to="/carte"
+                    onClick={() => trackEvent('carte_cta_villes_couvertes', {
+                        ville: city.slug,
+                        theme: page.themeSlug,
+                        position,
+                    })}
+                >
+                    Voir les villes couvertes
+                </Link>
+            </aside>
+        );
+    }
+
     const cible = `/itineraire?couche=${page.theme.itineraireLayer}`;
     return (
         <aside className="carte-cta">
             <div>
-                <p className="carte-cta-titre">Un trajet à vélo {page.city.prep} ?</p>
+                <p className="carte-cta-titre">Un trajet à vélo {city.prep} ?</p>
                 <p className="carte-cta-texte">
                     Sécu’Cycle calcule un itinéraire cyclable sécurisé qui tient compte des
                     aménagements, de l’éclairage, du trafic et des accidents recensés — avec cette
@@ -26,7 +55,7 @@ function CtaItineraire({ page, position }) {
                 className="button carte-cta-bouton"
                 to={cible}
                 onClick={() => trackEvent('carte_cta_itineraire', {
-                    ville: page.city.slug,
+                    ville: city.slug,
                     theme: page.themeSlug,
                     position,
                 })}

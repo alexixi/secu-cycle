@@ -73,6 +73,7 @@ def _to_read(db: Session, profile: GraphProfile, active_name: str | None) -> Gra
         name=profile.name,
         communes=communes,
         is_default=profile.is_default,
+        is_data_scope=profile.is_data_scope,
         is_active=profile.name == active_name,
         graph_exists=stats["exists"],
         is_stale=stats["exists"] and built is not None and list(built) != communes,
@@ -295,6 +296,13 @@ def delete_profile(
         raise HTTPException(
             status_code=409,
             detail="Impossible de supprimer le profil par défaut : désignez-en un autre d'abord.",
+        )
+    if profile.is_data_scope:
+        raise HTTPException(
+            status_code=409,
+            detail="Ce profil délimite les données : le supprimer ferait retomber les "
+                   "synchros sur l'emprise du graphe, qui purgerait les communes hors "
+                   "de celle-ci. Désignez une autre emprise de données d'abord.",
         )
 
     paths = profile_paths(profile.name)
@@ -585,6 +593,57 @@ async def activate_profile(
     return {"status": "loading", "profile_name": profile.name}
 
 
+@router.post("/admin/profiles/{profile_id}/data-scope", response_model=GraphProfileRead)
+def set_data_scope(
+    profile_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Fait de ce profil l'emprise des synchronisations de données.
+
+    Distincte de l'emprise du graphe : celui-ci doit tenir en RAM, les données
+    non, et les cartes thématiques d'une ville ne consultent que la base (cf.
+    `routers/poi.py`, `accident.py`, `streetlight.py`, qui ignorent le graphe).
+    On peut donc servir les cartes de plusieurs métropoles avec un graphe
+    restreint à celles où l'itinéraire est proposé.
+
+    Le graphe de ce profil n'a besoin ni d'exister ni d'être généré : seule sa
+    liste de communes est lue.
+
+    **Sans effet immédiat, et irréversible à la synchro suivante** : les trois
+    synchros purgent ce qu'elles n'ont pas rafraîchi (`updated_at < run_start`),
+    si bien que les communes sorties de l'emprise perdent leurs POI, accidents
+    et lampadaires — et que les pages thématiques correspondantes se vident.
+    C'est au dashboard de prévenir avant d'appeler cet endpoint.
+    """
+    profile = _get_profile(db, profile_id)
+
+    if not profile.communes:
+        raise HTTPException(
+            status_code=409,
+            detail="Ce profil ne contient aucune commune : les synchros n'auraient "
+                   "rien à récupérer et purgeraient toute la base.",
+        )
+    if profile.is_data_scope:
+        raise HTTPException(
+            status_code=409,
+            detail="Ce profil délimite déjà les données.",
+        )
+
+    db.query(GraphProfile).filter(GraphProfile.id != profile.id).update(
+        {"is_data_scope": False}
+    )
+    profile.is_data_scope = True
+    db.commit()
+    db.refresh(profile)
+
+    print(f"[Graphe] Emprise des données : profil '{profile.name}' "
+          f"({len(profile.communes)} communes).", flush=True)
+
+    return _to_read(db, profile, _active_name(request))
+
+
 async def _reload_graph(app, name: str) -> None:
     """Remplace `app.state.G` par le graphe de `name`."""
     app.state.graph_loading = True
@@ -616,7 +675,7 @@ async def _reload_graph(app, name: str) -> None:
         await traffic_service.refresh(G)
 
         try:
-            await bikeshare_service.refresh(G)
+            await bikeshare_service.refresh()
         except Exception as exc:
             print(f"[Graphe] Vélos en libre-service indisponibles : {exc}", flush=True)
 

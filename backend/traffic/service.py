@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 from graph import routing
-from graph.extent import graph_zones, overlaps_any
+from graph.extent import data_zones, graph_zones, overlaps_any
 from traffic import config, providers
 
 logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ def snapshot() -> dict:
 
 
 def providers_for(zones) -> list[str]:
-    """Sources dont l'emprise croise au moins une zone du graphe chargé.
+    """Sources dont l'emprise croise au moins une zone de l'emprise de collecte.
 
     Le critère est géographique : une source de portée métropolitaine ne doit
     pas être interrogée pour un graphe situé à l'autre bout du pays, même s'ils
@@ -177,6 +177,26 @@ def _feature(segment):
     }
 
 
+def _collect_zones(G):
+    """Emprise de **collecte** : celle des données, plus large que le graphe.
+
+    Une ville peut avoir ses cartes thématiques sans être desservie par le calcul
+    d'itinéraire ; se limiter à l'emprise du graphe viderait ces cartes de leur
+    couche trafic. L'application au graphe, elle, reste bornée par
+    `MAX_MATCH_DISTANCE_M` : un tronçon collecté hors emprise ne s'accroche à
+    aucune arête, il n'alourdit que la couche affichée.
+
+    **Bloquant** (base + shapely) : à appeler via `asyncio.to_thread`.
+    """
+    try:
+        return data_zones()
+    except Exception as exc:
+        logger.warning(
+            "[trafic] emprise des données indisponible (%s) : repli sur celle du graphe.", exc
+        )
+        return graph_zones(G)
+
+
 async def refresh(G) -> bool:
     """Collecte le trafic et l'applique au graphe.
 
@@ -186,7 +206,7 @@ async def refresh(G) -> bool:
     """
     global _congested_key
 
-    zones = graph_zones(G)
+    zones = await asyncio.to_thread(_collect_zones, G)
     names = providers_for(zones)
     if not names:
         if _state.available or _state.updated_at is None:

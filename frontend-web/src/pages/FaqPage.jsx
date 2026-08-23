@@ -23,7 +23,7 @@ const DEFAULT_FAQS = [
     {
         question: "Dans quelles villes Sécu'Cycle fonctionne-t-il ?",
         answer:
-            "Le service couvre Bordeaux Métropole et le sud de Bordeaux, Rennes Métropole, Nantes Métropole, ainsi que Tournai, Mouscron et leurs communes environnantes, dans la zone transfrontalière entre la France et la Belgique. Ce sont les zones sur lesquelles nous avons affiné les données grâce à notre connaissance du terrain. La couverture peut être étendue à d'autres communes ; en dehors de la zone couverte, aucun itinéraire ne peut être calculé.",
+            "Le calcul d'itinéraire couvre Bordeaux Métropole et le sud de Bordeaux, ainsi que Tournai, Mouscron et leurs communes environnantes, dans la zone transfrontalière entre la France et la Belgique. Ce sont les zones sur lesquelles nous avons affiné les données grâce à notre connaissance du terrain. En dehors, aucun itinéraire ne peut être calculé : le réseau routier utilisé pour le calcul est chargé en mémoire, ce qui en limite l'étendue. Les cartes thématiques, elles, portent sur un territoire plus large — Rennes, Nantes, Paris, Lyon, Lille, Strasbourg et Bruxelles s'y ajoutent.",
     },
     {
         question: "Ai-je besoin d'un compte pour utiliser Sécu'Cycle ?",

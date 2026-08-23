@@ -2,7 +2,9 @@ import { Link } from 'react-router';
 import { Helmet } from 'react-helmet-async';
 import Meta from '../components/Meta';
 import ThemeIcon from '../components/carte/ThemeIcon';
-import { SITE_URL, CITIES, PAGES, pagesForCity } from '../data/thematicMaps';
+import {
+    SITE_URL, CITIES, PAGES, pagesForCity, routableCitiesLabel,
+} from '../data/thematicMaps';
 import './CartePages.css';
 
 const VILLES = CITIES.map(city => city.name)
@@ -63,6 +65,12 @@ export default function CarteHubPage() {
                         couches séparément, ville par ville : où garer son vélo, où trouver de l’eau,
                         quelles rues sont éclairées, où les cyclistes sont accidentés.
                     </p>
+                    <p className="carte-note">
+                        Les cartes couvrent plus de villes que le calcul d’itinéraire, qui s’appuie
+                        sur un réseau routier chargé en mémoire par notre serveur : il est
+                        aujourd’hui disponible à {routableCitiesLabel()}. Les autres villes sont
+                        cartographiées, mais pas encore navigables — chaque page le précise.
+                    </p>
                 </div>
 
                 {CITIES.map(city => {
@@ -73,7 +81,11 @@ export default function CarteHubPage() {
                             <h2>
                                 <Link to={`/carte/${city.slug}`}>{city.label}</Link>
                             </h2>
-                            <p className="carte-note">{city.intro}</p>
+                            <p className="carte-note">
+                                {city.intro}
+                                {city.routing === false
+                                    && ' Le calcul d’itinéraire n’y est pas encore disponible.'}
+                            </p>
                             <ul className="carte-cartes">
                                 {pages.map(page => (
                                     <li key={page.key}>

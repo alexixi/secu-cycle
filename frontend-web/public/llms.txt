@@ -1,6 +1,6 @@
 # Sécu'Cycle
 
-> Application web et mobile (android et ios) open source qui calcule des itinéraires à vélo sécurisés, personnalisés et adaptés au profil de l'utilisateur. Le calcul privilégie la sécurité du cycliste plutôt que la seule vitesse, en s'adaptant au profil sportif, au type de vélo et au type d'aménagement, au type de sol, à la vitesse des automobiliste, aux embouteillages et à l'éclairage public. Zones couvertes : la métropole de Bordeaux et le sud Bordeaux, Rennes Métropole, Nantes Métropole, ainsi que Tournai et ses communes environnantes (secteur transfrontalier France–Belgique) ; couverture en cours d'extension.
+> Application web et mobile (android et ios) open source qui calcule des itinéraires à vélo sécurisés, personnalisés et adaptés au profil de l'utilisateur. Le calcul privilégie la sécurité du cycliste plutôt que la seule vitesse, en s'adaptant au profil sportif, au type de vélo et au type d'aménagement, au type de sol, à la vitesse des automobiliste, aux embouteillages et à l'éclairage public. Zones couvertes par le calcul d'itinéraire : la métropole de Bordeaux et le sud Bordeaux, ainsi que Tournai et ses communes environnantes (secteur transfrontalier France–Belgique). Les cartes thématiques en données ouvertes couvrent en plus Rennes, Nantes, Paris, Lyon, Lille, Strasbourg et Bruxelles.
 
 Sécu'Cycle propose plusieurs itinéraires (rapide, sécurisé, compromis) en s'appuyant sur des données de trafic temps réel, des données topographiques, la météo (pluie, vent, vigilance) et des signalements de dangers remontés par la communauté. L'application gère les profils utilisateurs, plusieurs vélos (standard ou électrique), l'historique des trajets et la navigation guidée.
 
@@ -21,16 +21,33 @@ Chaque carte affiche une seule couche de données sur une ville, avec ses chiffr
 - [Cartes cyclables à Bordeaux](https://secu-cycle.fr/carte/bordeaux) : stationnements vélo, toilettes publiques, points d'eau potable, éclairage public, vélos en libre-service, trafic routier, accidents à vélo, réparation de vélo.
 - [Cartes cyclables à Rennes](https://secu-cycle.fr/carte/rennes) : stationnements vélo, toilettes publiques, points d'eau potable, vélos en libre-service, trafic routier, accidents à vélo, réparation de vélo.
 - [Cartes cyclables à Nantes](https://secu-cycle.fr/carte/nantes) : stationnements vélo, toilettes publiques, points d'eau potable, éclairage public, vélos en libre-service, trafic routier, accidents à vélo, réparation de vélo.
+- [Cartes cyclables à Paris](https://secu-cycle.fr/carte/paris) : stationnements vélo, toilettes publiques, points d'eau potable, vélos en libre-service, accidents à vélo, réparation de vélo.
+- [Cartes cyclables à Lyon](https://secu-cycle.fr/carte/lyon) : stationnements vélo, toilettes publiques, points d'eau potable, vélos en libre-service, accidents à vélo, réparation de vélo.
+- [Cartes cyclables à Lille](https://secu-cycle.fr/carte/lille) : stationnements vélo, toilettes publiques, points d'eau potable, vélos en libre-service, accidents à vélo, réparation de vélo.
+- [Cartes cyclables à Strasbourg](https://secu-cycle.fr/carte/strasbourg) : stationnements vélo, toilettes publiques, points d'eau potable, vélos en libre-service, accidents à vélo, réparation de vélo.
 - [Cartes cyclables à Tournai](https://secu-cycle.fr/carte/tournai) : stationnements vélo, accidents à vélo, toilettes et points d'eau.
+- [Cartes cyclables à Bruxelles](https://secu-cycle.fr/carte/bruxelles) : stationnements vélo, toilettes publiques, points d'eau potable, vélos en libre-service, accidents à vélo, réparation de vélo.
 
 Une carte n'est publiée que si le recensement en données ouvertes du territoire est suffisamment complet pour être utile ; c'est pourquoi certaines villes ont moins de cartes que d'autres.
 
 ## Couverture géographique
 
+Le calcul d'itinéraire s'appuie sur un réseau routier chargé en mémoire, dont l'emprise est plus étroite que celle des données cartographiées.
+
+Calcul d'itinéraire :
+
 - Bordeaux, Bordeaux Métropole et le sud Bordeaux (45 communes).
+- Tournai, Mouscron et les communes environnantes (secteur transfrontalier France–Belgique).
+
+Cartes thématiques en données ouvertes, en plus des précédentes :
+
 - Rennes et les 43 communes de Rennes Métropole.
 - Nantes et les 24 communes de Nantes Métropole.
-- Tournai, Mouscron et les communes environnantes (secteur transfrontalier France–Belgique).
+- Paris et les 130 communes de la Métropole du Grand Paris.
+- Lyon et les 58 communes de la Métropole de Lyon.
+- Lille et les 95 communes de la Métropole Européenne de Lille.
+- Strasbourg et les 33 communes de l'Eurométropole.
+- Les 19 communes de la Région de Bruxelles-Capitale.
 
 ## Sources de données
 
