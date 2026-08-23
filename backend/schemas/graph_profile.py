@@ -99,6 +99,7 @@ class GraphProfileRead(BaseModel):
     name: str
     communes: list[str]
     is_default: bool
+    is_data_scope: bool = False
 
     is_active: bool = False
     graph_exists: bool = False
@@ -159,8 +160,9 @@ EXPORT_VERSION = 1
 class GraphProfileExportItem(BaseModel):
     """Un profil dans un fichier d'échange.
 
-    Ni `is_default` ni les compteurs de génération n'y figurent : ils décrivent
-    l'état d'une instance, pas l'emprise elle-même.
+    Ni les drapeaux d'une instance (`is_default`, `is_data_scope`) ni les
+    compteurs de génération n'y figurent : ils décrivent l'état d'une instance,
+    pas l'emprise elle-même.
     """
 
     name: str

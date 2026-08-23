@@ -101,9 +101,16 @@ ressource), utile par exemple pour reconstruire le frontend sans nouveau commit.
   `DEFAULT_*` et balisage JSON-LD) est régénéré **au build de l'image**. Les contenus éditables depuis le dashboard
   admin et stockés en base (cases de la page d'accueil, **FAQ**) sont servis en direct pour les visiteurs, mais ne
   deviennent visibles pour les crawlers qu'au **prochain build/redéploiement Coolify**.
-- **API à 1 worker** : en production l'API tourne avec un seul worker uvicorn (chaque worker charge sa propre copie
-  du graphe de Bordeaux, ~0,5–1 Go ; le VPS ~3,8 Go sans swap est sensible à l'OOM). Le calcul d'itinéraire étant
-  déporté hors de l'event loop, un worker async reste réactif.
+- **API à 1 worker** : en production l'API tourne avec un seul worker uvicorn, car chaque worker charge sa propre
+  copie du graphe. Le coût mémoire suit la taille du `.graphml`, à raison d'environ **1,5 Gio par 100 Mo de
+  fichier** : Bordeaux seul (105 Mo) tient dans ~1,8 Gio, Bordeaux + Tournai (126 Mo) dans ~2,1 Gio. Le VPS
+  n'ayant que 3,8 Gio, c'est cette règle qui décide de l'emprise du graphe tenable — pas le confort. Le calcul
+  d'itinéraire étant déporté hors de l'event loop, un worker async reste réactif.
+- **Limites mémoire** : elles se règlent dans l'UI Coolify (*Resource Limits*), pas dans un compose, et ne
+  prennent effet qu'au **redéploiement** du conteneur — « Save » seul ne les applique pas. Sans limite, un
+  dépassement part en swap au lieu d'échouer : l'API répond alors avec des secondes de latence sans que rien
+  n'alerte. Ne jamais **générer** un graphe sur le serveur de production : le pic de construction vaut
+  plusieurs fois la taille du graphe fini, et il s'ajoute au graphe déjà chargé (voir « Profils de graphe »).
 
 ### Mises à jour de l'application mobile (OTA)
 L'application mobile utilise [**EAS Update**](https://docs.expo.dev/eas-update/introduction/) : les changements
@@ -181,7 +188,8 @@ bouton « Synchroniser maintenant », réglage de l'intervalle de synchronisatio
 et historique des récupérations (manuelle ou automatique, date, nombre de POI, nouveaux, supprimés, échecs).
 Après un premier déploiement, il faut donc lancer une synchro depuis cette page pour peupler la carte.
 
-La synchro interroge Overpass sur l'emprise du profil `GRAPH_PROFILE` actif (quelques minutes), met à jour
+La synchro interroge Overpass sur l'emprise des données — le profil de graphe actif, ou celui que désigne
+`DATA_PROFILE` (voir « Profils de graphe ») — pendant quelques minutes, met à jour
 les POI existants et purge ceux qui ont disparu d'OSM. Elle est idempotente, tourne en tâche de fond et ne
 nécessite aucun redémarrage. En cas d'échec Overpass, rien n'est écrit : la base reste inchangée et le run
 apparaît en échec dans l'historique.
@@ -298,6 +306,24 @@ Deux comportements à connaître :
 - **Activer** un profil recharge le graphe à chaud, sans redémarrage. L'ancien graphe est libéré *avant* le
   chargement du nouveau, pour ne jamais en tenir deux en mémoire : en contrepartie, le calcul d'itinéraire
   répond `503` pendant 1 à 2 minutes.
+
+L'emprise du graphe et celle des **données** (POI, accidents, éclairage) sont **découplables**. Le graphe doit
+tenir en RAM ; les données ne coûtent que du disque, et les cartes thématiques d'une ville n'ont besoin que
+d'elles — `routers/poi.py`, `accident.py` et `streetlight.py` ne consultent jamais le graphe. Restent liées au
+graphe les couches qui ont besoin du réseau lui-même : le trafic (il projette la congestion sur les arêtes), la
+météo, la qualité de l'air et la vigilance (leurs points de mesure sont tirés des nœuds par `sample_points`),
+ainsi que les voies éclairées de `GET /streetlights/lit-roads` et, bien sûr, le calcul d'itinéraire. Un profil peut donc être marqué **« emprise des données »** depuis la page Graphe, indépendamment du profil
+marqué « par défaut » : ses communes délimitent les trois synchros **et les vélos en libre-service**, et **son
+graphe n'a besoin ni d'exister ni d'être généré**, seules ses communes sont lues. Les zones correspondantes
+sont calculées par `graph.extent.data_zones()`, pendant de `graph_zones()` qui, lui, part des nœuds du graphe. Comme pour le graphe, la base fait autorité ; `DATA_PROFILE`
+n'est qu'un amorçage tant qu'aucun profil ne porte le drapeau. Sans l'un ni l'autre, les données suivent le
+profil de graphe actif. Cela permet de servir les cartes de plusieurs métropoles
+avec un graphe restreint à celles où l'itinéraire est proposé. **Attention** : les trois synchros purgent tout
+ce qu'elles n'ont pas rafraîchi, donc rétrécir cette emprise — ou laisser un petit profil de graphe la dicter —
+efface les données des communes qui en sortent, et vide les pages thématiques correspondantes. Le changement
+n'a d'ailleurs **aucun effet visible immédiat** : c'est la synchro suivante qui purge, d'où la confirmation
+demandée par le dashboard. Pour la même raison, le profil qui porte le drapeau ne peut pas être supprimé sans
+qu'un autre le reprenne.
 
 Un profil peut couvrir **plusieurs zones sans continuité routière** entre elles. Overpass est alors interrogé
 une fois par zone contiguë, et les graphes sont composés. C'est indispensable : osmnx n'envoie à Overpass

@@ -18,7 +18,9 @@ MAX_PAGES = 40
 # Registre des sources de trafic. Toutes exposent la même API Opendatasoft
 # `explore/v2.1`, ne diffèrent que par le jeu, le champ d'état et son vocabulaire.
 # Une source n'est interrogée que si son emprise (`coverage`, en (w, s, e, n))
-# croise celle du graphe chargé — la sélection est géographique, jamais nationale.
+# croise celle des données synchronisées — la sélection est géographique, jamais
+# nationale. Cette emprise est plus large que celle du graphe : une ville peut avoir
+# sa carte du trafic sans que le calcul d'itinéraire la desserve.
 #
 # level_map traduit l'état publié vers l'échelle unique green/orange/red/gray,
 # via `str(record[level_field])` (Bordeaux : états en majuscules ; Strasbourg :

@@ -62,7 +62,7 @@ async def fetch(spec: dict, zones=None) -> list[dict]:
     """Tous les tronçons d'une source, paginés puis filtrés sur les zones.
 
     `zones` (liste d'emprises `(w, s, e, n)`) restreint côté client aux tronçons
-    touchant l'une des zones du graphe chargé ; `zones` absent laisse tout passer.
+    touchant l'une des zones de l'emprise de collecte ; `zones` absent laisse tout passer.
     Filtrer sur l'enveloppe plutôt que sur les zones ne filtrerait rien d'utile
     sur un profil multi-villes : entre Bordeaux et Tournai, tout est « dedans ».
     """

@@ -13,7 +13,7 @@ import { getHomeCases } from "../services/apiBack";
 const DEFAULT_CASES = [
     {
         title: "Qu'est-ce que Sécu'Cycle ?",
-        text: "Sécu'Cycle est un projet développé par 6 étudiants de l'ENSEIRB-MATMECA dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous avons d'abord affiné les résultats sur la zone de Bordeaux et de notre campus universitaire grâce à nos connaissances locales du terrain, et la couverture s'étend désormais à Rennes, Nantes, Tournai et leurs environs.",
+        text: "Sécu'Cycle est un projet développé par 6 étudiants de l'ENSEIRB-MATMECA dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous avons d'abord affiné les résultats sur la zone de Bordeaux et de notre campus universitaire grâce à nos connaissances locales du terrain, puis étendu le calcul d'itinéraire à Tournai et ses environs. Les cartes thématiques en données ouvertes couvrent un territoire plus large, de Rennes et Nantes à Paris, Lyon, Lille, Strasbourg et Bruxelles.",
     },
     {
         title: "Problématiques",

@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 import httpx
 
 from bikeshare import config, providers
-from graph.extent import contains_any, graph_zones, overlaps_any
+from graph.extent import contains_any, data_zones, overlaps_any
 
 logger = logging.getLogger(__name__)
 
@@ -355,20 +355,24 @@ def _compose(names: list[str], now: datetime) -> None:
 
 # --- Boucle ------------------------------------------------------------------
 
-async def refresh(G) -> None:
+async def refresh() -> None:
     """Rafraîchit ce qui est dû et recompose l'instantané.
 
-    `G` ne sert qu'à connaître l'emprise : ni le graphe ni le cache d'itinéraires
-    ne sont touchés.
+    L'emprise vient des communes (`data_zones`), pas du graphe : une station se
+    pose sur la carte à partir de ses coordonnées, sans qu'aucun réseau routier
+    soit nécessaire. La couche couvre donc les villes de l'emprise de données,
+    que le graphe chargé les embarque ou non. Le cache d'itinéraires n'est pas
+    touché.
     """
     if not config.ENABLED:
         return
 
-    zones = graph_zones(G)
+    # Lecture en base (contours des communes) : hors de l'event loop.
+    zones = await asyncio.to_thread(data_zones)
     names = systems_for(zones)
 
     if zones != _state.zones:
-        # Changement de profil : les stations retenues l'ont été sur les
+        # Changement d'emprise : les stations retenues l'ont été sur les
         # anciennes zones. Sans cette remise à zéro, une bascule Bordeaux →
         # Tournai laisserait les stations bordelaises sur la carte de Tournai.
         for name in list(_systems):
@@ -382,7 +386,7 @@ async def refresh(G) -> None:
 
     if not names:
         if _state.available or _state.updated_at is None:
-            logger.info("[vls] aucun système pour ce profil : couche désactivée.")
+            logger.info("[vls] aucun système sur l'emprise de données : couche désactivée.")
         _reset()
         return
 

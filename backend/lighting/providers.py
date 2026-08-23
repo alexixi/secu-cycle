@@ -54,10 +54,17 @@ class OsmStreetLampProvider:
     _NON_TAG_COLUMNS = {"geometry", "nodes", "ways", "members"}
 
     def fetch(self, communes, zones):
-        gdf = self._features(zones)
+        """Renvoie `(lignes, zones_couvertes)`.
+
+        Contrairement aux sources Opendatasoft, interrogées d'un bloc, celle-ci
+        va chercher zone par zone : elle rend donc aussi la liste de celles qui
+        ont répondu, pour que `sync()` sache quelles emprises sa purge peut
+        toucher sans risque.
+        """
+        gdf, covered = self._features(zones)
         if gdf is None or gdf.empty:
             print("[sync-lighting] OSM : aucun lampadaire retourné.", flush=True)
-            return []
+            return [], covered
 
         inside = _zone_filter(zones)
         rows = {}
@@ -77,7 +84,7 @@ class OsmStreetLampProvider:
                 "tags": self._clean_tags(feature),
             }
         print(f"[sync-lighting] OSM : {len(rows)} lampadaire(s) retenu(s).", flush=True)
-        return list(rows.values())
+        return list(rows.values()), covered
 
     def _features(self, zones):
         """Interroge Overpass zone contiguë par zone contiguë, avec backoff.
@@ -93,12 +100,30 @@ class OsmStreetLampProvider:
 
         Une zone sans aucun lampadaire n'est pas une erreur : Overpass lève
         `InsufficientResponseError`, qu'on absorbe.
+
+        Une zone qui échoue malgré ses tentatives n'interrompt pas la collecte :
+        elle est laissée de côté et exclue des zones rendues, pour que la purge
+        l'épargne. Sur une emprise à quinze métropoles, tout abandonner à la
+        première zone muette reviendrait à ne plus jamais réussir une synchro.
         """
         parts = []
+        covered = []
         for rang, zone in enumerate(zones, start=1):
-            parts.append(self._features_for_zone(zone, rang, len(zones)))
-        parts = [part for part in parts if part is not None and not part.empty]
-        return pd.concat(parts) if parts else None
+            try:
+                part = self._features_for_zone(zone, rang, len(zones))
+            except LightingSourceError as exc:
+                print(f"[sync-lighting] OSM zone {rang}/{len(zones)} abandonnée : "
+                      f"{exc}. Ses lampadaires sont conservés en l'état.", flush=True)
+                continue
+            covered.append(tuple(zone.bounds))
+            if part is not None and not part.empty:
+                parts.append(part)
+
+        if not covered:
+            raise LightingSourceError(
+                "Aucune zone n'a pu être interrogée sur Overpass."
+            )
+        return (pd.concat(parts) if parts else None), covered
 
     def _features_for_zone(self, zone, rang, total):
         for attempt in range(1, config.MAX_RETRIES + 1):

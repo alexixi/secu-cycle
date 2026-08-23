@@ -357,6 +357,10 @@ export async function activateGraphProfile(token, profileId) {
     return apiFetch(`/graph/admin/profiles/${profileId}/activate`, { method: "POST" }, token);
 }
 
+export async function setGraphDataScope(token, profileId) {
+    return apiFetch(`/graph/admin/profiles/${profileId}/data-scope`, { method: "POST" }, token);
+}
+
 export async function getCommuneLighting(token) {
     return apiFetch("/graph/admin/communes/lighting", { method: "GET" }, token);
 }

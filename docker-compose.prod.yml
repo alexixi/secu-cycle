@@ -1,3 +1,10 @@
+# ⚠️ Ce fichier ne décrit PLUS la production : Coolify construit chaque brique
+# comme une ressource distincte à partir de son `Dockerfile` et ignore ce
+# compose (voir README, « Organisation dans Coolify »). Ce qui gouverne la prod
+# est donc `backend/Dockerfile` — d'où le `command:` ci-dessous, recopié de son
+# `CMD` — et l'UI Coolify pour tout le reste, limites mémoire comprises.
+# Ce fichier ne sert plus qu'à `make prod`, conservé en secours.
+
 services:
   api:
     # 1 seul worker en prod : chaque worker charge sa propre copie du graphe

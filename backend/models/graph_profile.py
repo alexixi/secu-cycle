@@ -22,6 +22,11 @@ class GraphProfile(Base):
 
     is_default = Column(Boolean, nullable=False, default=False)
 
+    # Emprise des synchronisations de données (POI, accidents, éclairage). Elle
+    # est distincte de `is_default` : le graphe doit tenir en RAM, les données
+    # non, et les cartes thématiques d'une ville n'ont besoin que des secondes.
+    is_data_scope = Column(Boolean, nullable=False, default=False)
+
     # Fenêtre d'extinction de l'éclairage public (heures locales, 0–24), repli
     # quand une voie ne porte pas d'horaire OSM `lit:conditional`. NULL = repli
     # sur NIGHT_EXTINCTION_WINDOW ; start == end = pas d'extinction.
