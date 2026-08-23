@@ -158,10 +158,10 @@ async def periodic_bikeshare_update(app: FastAPI):
     """
     while True:
         await asyncio.sleep(bikeshare_config.TICK_S)
-        if getattr(app.state, 'G', None) is None:
-            continue
         try:
-            await bikeshare_service.refresh(app.state.G)
+            # Pas de garde sur `app.state.G` : cette couche ne dépend plus du
+            # graphe, elle suit l'emprise de données.
+            await bikeshare_service.refresh()
         except Exception as exc:
             # Une erreur ici ne doit pas tuer la boucle : le prochain tour réessaiera.
             print(f"[Background Task] Échec de l'actualisation des vélos en libre-service : {exc}", flush=True)
@@ -341,7 +341,7 @@ async def lifespan(app: FastAPI):
         # portails open data parfois lents. En cas de dépassement, la boucle de
         # fond rattrapera au tour suivant.
         await asyncio.wait_for(
-            bikeshare_service.refresh(app.state.G),
+            bikeshare_service.refresh(),
             timeout=bikeshare_config.HTTP_TIMEOUT_S * 4,
         )
     except Exception as exc:
