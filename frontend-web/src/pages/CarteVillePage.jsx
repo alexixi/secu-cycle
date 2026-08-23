@@ -4,7 +4,9 @@ import Meta from '../components/Meta';
 import ErrorPage from './ErrorPage';
 import ThemeIcon from '../components/carte/ThemeIcon';
 import { trackEvent } from '../services/analytics';
-import { SITE_URL, CITY_BY_SLUG, pagesForCity } from '../data/thematicMaps';
+import {
+    SITE_URL, CITY_BY_SLUG, pagesForCity, routableCitiesLabel,
+} from '../data/thematicMaps';
 import './CartePages.css';
 
 export default function CarteVillePage() {
@@ -82,34 +84,63 @@ export default function CarteVillePage() {
                     ))}
                 </ul>
 
-                <aside className="carte-cta">
-                    <div>
-                        <p className="carte-cta-titre">Un trajet à vélo {city.prep} ?</p>
-                        <p className="carte-cta-texte">
-                            Toutes ces couches alimentent le calculateur d’itinéraires : il en tient
-                            compte pour proposer un trajet cyclable réellement praticable, adapté à
-                            votre vélo et à votre profil.
-                        </p>
-                    </div>
-                    <Link
-                        className="button carte-cta-bouton"
-                        to="/itineraire"
-                        onClick={() => trackEvent('carte_cta_itineraire', {
-                            ville: city.slug,
-                            theme: 'hub-ville',
-                            position: 'hub',
-                        })}
-                    >
-                        Calculer mon itinéraire
-                    </Link>
-                </aside>
+                {city.routing === false ? (
+                    <aside className="carte-cta">
+                        <div>
+                            <p className="carte-cta-titre">Itinéraires : pas encore {city.prep}</p>
+                            <p className="carte-cta-texte">
+                                {city.routingNote} Les itinéraires sont pour l’instant
+                                calculés à {routableCitiesLabel()}.
+                            </p>
+                        </div>
+                        <Link
+                            className="button carte-cta-bouton"
+                            to="/carte"
+                            onClick={() => trackEvent('carte_cta_villes_couvertes', {
+                                ville: city.slug,
+                                theme: 'hub-ville',
+                                position: 'hub',
+                            })}
+                        >
+                            Voir les villes couvertes
+                        </Link>
+                    </aside>
+                ) : (
+                    <aside className="carte-cta">
+                        <div>
+                            <p className="carte-cta-titre">Un trajet à vélo {city.prep} ?</p>
+                            <p className="carte-cta-texte">
+                                Toutes ces couches alimentent le calculateur d’itinéraires : il en
+                                tient compte pour proposer un trajet cyclable réellement praticable,
+                                adapté à votre vélo et à votre profil.
+                            </p>
+                        </div>
+                        <Link
+                            className="button carte-cta-bouton"
+                            to="/itineraire"
+                            onClick={() => trackEvent('carte_cta_itineraire', {
+                                ville: city.slug,
+                                theme: 'hub-ville',
+                                position: 'hub',
+                            })}
+                        >
+                            Calculer mon itinéraire
+                        </Link>
+                    </aside>
+                )}
 
                 <section className="carte-maillage">
                     <h2>Zone couverte</h2>
                     <p className="carte-note">
-                        Le calculateur d’itinéraires couvre {city.communes}. Les cartes ci-dessus
-                        portent sur cette même emprise. Le détail des jeux de données et de leurs
-                        licences figure sur la page <Link to="/donnees">Données et sources</Link>.
+                        {city.routing === false
+                            ? <>Les cartes ci-dessus couvrent {city.communes}. Le calcul
+                                d’itinéraire, lui, n’y est pas encore proposé : il s’appuie sur un
+                                réseau routier chargé en mémoire par notre serveur, dont l’emprise
+                                est plus étroite que celle des données.</>
+                            : <>Le calculateur d’itinéraires couvre {city.communes}. Les cartes
+                                ci-dessus portent sur cette même emprise.</>}
+                        {' '}Le détail des jeux de données et de leurs licences figure sur la
+                        page <Link to="/donnees">Données et sources</Link>.
                     </p>
                 </section>
             </article>
