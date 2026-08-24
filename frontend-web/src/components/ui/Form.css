@@ -115,6 +115,15 @@
     outline-offset: 2px;
 }
 
+.secondary-action-card-danger:hover {
+    border-color: var(--error);
+}
+
+.secondary-action-card-danger .secondary-action-icon,
+.secondary-action-card-danger .secondary-action-text strong {
+    color: var(--error);
+}
+
 .secondary-action-icon {
     flex-shrink: 0;
     color: var(--primary);

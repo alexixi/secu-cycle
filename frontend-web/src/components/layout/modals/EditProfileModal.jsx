@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../../context/AuthContext";
 import Button from "../../ui/Button";
-import { FaUserEdit, FaEnvelope, FaLock, FaChevronRight } from "react-icons/fa";
+import { FaUserEdit, FaEnvelope, FaLock, FaChevronRight, FaTrashAlt } from "react-icons/fa";
 import EditPasswordModal from "./EditPasswordModal"
-import { changePassword } from "../../../services/apiBack";
+import DeleteAccountModal from "./DeleteAccountModal";
+import { changePassword, deleteAccount } from "../../../services/apiBack";
 
 import "../../ui/Input.css"
 import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 
 export default function EditProfileModal({ isOpen, hasError, onClose, userData, onConfirm }) {
-    const { token } = useAuth();
+    const { token, logoutAuth } = useAuth();
     const navigate = useNavigate();
     const [passwordError, setPasswordError] = useState(false);
     const [generalError, setGeneralError] = useState(false);
@@ -23,6 +24,9 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
     });
 
     const [isModalOpenPassword, setIsModalOpenPassword] = useState(false);
+    const [isModalOpenDelete, setIsModalOpenDelete] = useState(false);
+    const [deletePasswordError, setDeletePasswordError] = useState(false);
+    const [deleteError, setDeleteError] = useState(false);
 
 
     useEffect(() => {
@@ -86,6 +90,25 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                 console.error("Error changing password:", error);
                 setGeneralError(true);
                 setPasswordError(false);
+            }
+        }
+    };
+
+    const handleDeleteAccount = async (password) => {
+        setDeletePasswordError(false);
+        setDeleteError(false);
+        try {
+            await deleteAccount(token, password);
+            setIsModalOpenDelete(false);
+            onClose();
+            logoutAuth();
+            navigate("/", { replace: true });
+        } catch (error) {
+            if (error?.status === 401) {
+                setDeletePasswordError(true);
+            } else {
+                console.error("Erreur suppression du compte:", error);
+                setDeleteError(true);
             }
         }
     };
@@ -180,6 +203,19 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                             </span>
                             <FaChevronRight className="secondary-action-chevron" size={13} />
                         </button>
+
+                        <button
+                            type="button"
+                            className="secondary-action-card secondary-action-card-danger"
+                            onClick={() => setIsModalOpenDelete(true)}
+                        >
+                            <FaTrashAlt className="secondary-action-icon" size={18} />
+                            <span className="secondary-action-text">
+                                <strong>Supprimer mon compte</strong>
+                                <small>Effacer définitivement vos données</small>
+                            </span>
+                            <FaChevronRight className="secondary-action-chevron" size={13} />
+                        </button>
                     </div>
 
                     <div className="modal-actions">
@@ -195,6 +231,14 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                 onConfirm={handleSubmitPassword}
                 passwordError={passwordError}
                 generalError={generalError}
+            />
+
+            <DeleteAccountModal
+                isOpen={isModalOpenDelete}
+                passwordError={deletePasswordError}
+                generalError={deleteError}
+                onClose={() => { setIsModalOpenDelete(false); setDeletePasswordError(false); setDeleteError(false); }}
+                onConfirm={handleDeleteAccount}
             />
         </div>
     )
