@@ -303,7 +303,9 @@ export default function ContactPage() {
                             <strong>Données personnelles (RGPD)</strong> — pour exercer vos droits d'accès, de
                             rectification, d'effacement, de limitation, d'opposition ou de portabilité. Les
                             modalités sont détaillées dans notre{" "}
-                            <Link to="/confidentialite">politique de confidentialité</Link>.
+                            <Link to="/confidentialite">politique de confidentialité</Link>. Pour{" "}
+                            <Link to="/suppression-compte">supprimer votre compte</Link>, nul besoin de nous
+                            écrire&nbsp;: vous pouvez le faire vous-même, en quelques secondes.
                         </li>
                         <li>
                             <strong>Signalement</strong> — pour nous signaler un contenu ou un usage

@@ -12,7 +12,7 @@ export default function ConfidentialitePage() {
             <div className="legal-page">
                 <article className="legal-content">
                     <h1>Politique de confidentialité</h1>
-                    <p className="legal-updated">Dernière mise à jour : 7 juillet 2026</p>
+                    <p className="legal-updated">Dernière mise à jour : 24 août 2026</p>
 
                     <p>
                         La présente politique explique quelles données personnelles sont traitées lorsque vous
@@ -186,9 +186,15 @@ export default function ConfidentialitePage() {
                         l'autorisation de localisation dans les réglages de votre téléphone).
                     </p>
                     <p>
-                        Vous pouvez exercer ces droits en écrivant à{" "}
-                        <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>. Vous pouvez également
-                        supprimer directement votre historique depuis l'application.
+                        Vous pouvez <strong>supprimer votre compte vous-même</strong>, sans nous
+                        contacter, depuis l'application mobile comme depuis ce site&nbsp;: la marche à
+                        suivre et le détail de ce qui est effacé figurent sur la page{" "}
+                        <Link to="/suppression-compte">Supprimer mon compte</Link>. Votre historique de
+                        trajets peut également être supprimé seul, depuis votre profil.
+                    </p>
+                    <p>
+                        Pour les autres droits, ou si vous n'avez plus accès à votre compte, écrivez-nous
+                        à <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>.
                     </p>
                     <p>
                         Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés, vous

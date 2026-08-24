@@ -17,6 +17,7 @@ const ErrorPage = lazy(() => import('./pages/ErrorPage'));
 const MentionsLegalesPage = lazy(() => import('./pages/MentionsLegalesPage'));
 const ConfidentialitePage = lazy(() => import('./pages/ConfidentialitePage'));
 const ConditionsUtilisationPage = lazy(() => import('./pages/ConditionsUtilisationPage'));
+const SuppressionComptePage = lazy(() => import('./pages/SuppressionComptePage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const FaqPage = lazy(() => import('./pages/FaqPage'));
 const DonneesPage = lazy(() => import('./pages/DonneesPage'));
@@ -81,6 +82,8 @@ function App() {
             <Route path="/confidentialite" element={<ConfidentialitePage />} />
 
             <Route path="/conditions-utilisation" element={<ConditionsUtilisationPage />} />
+
+            <Route path="/suppression-compte" element={<SuppressionComptePage />} />
 
             <Route path="/contact" element={<ContactPage />} />
 
