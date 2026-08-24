@@ -291,6 +291,18 @@ export async function changePassword(token, oldPassword, newPassword) {
     }
 }
 
+export async function deleteAccount(token, password) {
+    try {
+        const data = await apiFetch("/users/me", {
+            method: "DELETE",
+            body: JSON.stringify({ password: password }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function requestEmailChange(token, newEmail, password) {
     try {
         const data = await apiFetch("/users/me/email", {

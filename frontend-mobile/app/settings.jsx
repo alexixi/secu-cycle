@@ -23,7 +23,7 @@ const THEME_OPTIONS = [
     { mode: 'dark', label: 'Sombre', icon: 'moon' },
 ];
 
-function LinkRow({ icon, label, onPress, colors, isLast }) {
+function LinkRow({ icon, label, onPress, colors, isLast, tint }) {
     return (
         <TouchableOpacity
             style={[
@@ -34,8 +34,8 @@ function LinkRow({ icon, label, onPress, colors, isLast }) {
             accessibilityRole="button"
             accessibilityLabel={label}
         >
-            <Ionicons name={icon} size={20} color={colors.textMain} />
-            <Text style={[styles.linkLabel, { color: colors.textMain }]}>{label}</Text>
+            <Ionicons name={icon} size={20} color={tint ?? colors.textMain} />
+            <Text style={[styles.linkLabel, { color: tint ?? colors.textMain }]}>{label}</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
     );
@@ -257,6 +257,29 @@ export default function SettingsPage() {
                             </TouchableOpacity>
                         )}
                     </View>
+
+                    {user && (
+                        <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
+                            <View style={styles.sectionTitleRow}>
+                                <Ionicons name="alert-circle-outline" size={24} color={colors.error} />
+                                <Text style={[styles.sectionTitle, { color: colors.error }]}>Zone de danger</Text>
+                            </View>
+
+                            <Text style={[styles.hint, { color: colors.textSecondary }]}>
+                                La suppression efface définitivement votre compte et les données
+                                qui y sont rattachées.
+                            </Text>
+
+                            <LinkRow
+                                icon="trash-outline"
+                                label="Supprimer mon compte"
+                                onPress={() => router.push('/deleteaccount')}
+                                colors={colors}
+                                tint={colors.error}
+                                isLast
+                            />
+                        </View>
+                    )}
                 </ScrollView>
             )}
         </SwipeBackScreen>
