@@ -26,8 +26,7 @@ export default {
                 ITSAppUsesNonExemptEncryption: false,
                 UIBackgroundModes: ["location"],
                 NSLocationWhenInUseUsageDescription: "Sécu'Cycle a besoin de votre position pour vous guider en temps réel.",
-                NSLocationAlwaysAndWhenInUseUsageDescription: "Sécu Cycle utilise votre position en arrière-plan pour continuer la navigation avec le téléphone dans votre poche.",
-                NSMicrophoneUsageDescription: "Sécu'Cycle utilise la synthèse vocale pour les instructions de navigation."
+                NSLocationAlwaysAndWhenInUseUsageDescription: "Sécu Cycle utilise votre position en arrière-plan pour continuer la navigation avec le téléphone dans votre poche."
             }
         },
         android: {
