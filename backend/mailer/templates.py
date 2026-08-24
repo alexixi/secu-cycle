@@ -201,6 +201,57 @@ def email_change_alert_email(new_email: str) -> tuple[str, str, str]:
     return subject, html, text
 
 
+def account_deleted_email() -> tuple[str, str, str]:
+    """E-mail de confirmation envoyé juste après la suppression d'un compte.
+
+    Comme `email_change_alert_email`, il ne contient aucun lien d'action : le
+    compte n'existe plus, il n'y a rien à annuler. Il ne sert qu'à laisser une
+    trace à l'utilisateur et à lui donner un recours si la suppression ne vient
+    pas de lui.
+    """
+    subject = "Votre compte Sécu'Cycle a été supprimé"
+
+    html = _shell(
+        "Compte supprimé",
+        f"""\
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Votre compte
+         Sécu'Cycle vient d'être supprimé, ainsi que les données qui y étaient
+         rattachées&nbsp;: vos informations personnelles, vos adresses, vos vélos, vos
+         itinéraires et leurs tracés, votre historique et vos badges.</p>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Les signalements
+         de dangers que vous aviez créés restent visibles pour les autres cyclistes, mais
+         ils ne sont plus reliés à votre compte.</p>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Cette suppression
+         est définitive&nbsp;: aucune restauration n'est possible. Vous pouvez bien sûr
+         créer un nouveau compte à tout moment.</p>
+      <div style="padding: 14px; border-radius: 10px; background-color: #fff1f1;
+                  border: 1px solid #ffd5d5;">
+        <p style="margin: 0; font-size: 14px; line-height: 21px; color: #b00020;">
+           <strong>Si vous n'êtes pas à l'origine de cette suppression</strong>,
+           écrivez-nous à contact@secu-cycle.fr.</p>
+      </div>
+      <p style="margin: 16px 0 0; font-size: 13px; line-height: 19px; color: {TEXT_MUTED};">
+         Cet e-mail est purement informatif&nbsp;: il ne contient volontairement aucun
+         lien.</p>""",
+    )
+
+    text = (
+        "Votre compte Sécu'Cycle a été supprimé\n\n"
+        "Votre compte vient d'être supprimé, ainsi que les données qui y étaient "
+        "rattachées : vos informations personnelles, vos adresses, vos vélos, vos "
+        "itinéraires et leurs tracés, votre historique et vos badges.\n\n"
+        "Les signalements de dangers que vous aviez créés restent visibles pour les "
+        "autres cyclistes, mais ils ne sont plus reliés à votre compte.\n\n"
+        "Cette suppression est définitive : aucune restauration n'est possible. Vous "
+        "pouvez créer un nouveau compte à tout moment.\n\n"
+        "Si vous n'êtes pas à l'origine de cette suppression, écrivez-nous à "
+        "contact@secu-cycle.fr.\n\n"
+        "Cet e-mail est purement informatif : il ne contient volontairement aucun lien."
+    )
+
+    return subject, html, text
+
+
 def contact_email(
     first_name: str,
     last_name: str,

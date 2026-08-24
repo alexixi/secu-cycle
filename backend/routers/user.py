@@ -10,8 +10,10 @@ from database import get_db
 from models.user import User
 from models.email_verification import EmailVerification
 from models.refresh_session import RefreshSession
+from models.route import Route
 from schemas.user import (
     UserCreate, UserRead, UserLogin, UserUpdate, UserAdminUpdate, PasswordChange,
+    AccountDelete,
     TokenRefresh, EmailVerifyRequest, ResendVerificationRequest,
     ForgotPasswordRequest, ResetPasswordRequest,
     EmailChangeRequest, EmailChangeConfirm, EmailChangeRequested, EmailChangeResult,
@@ -27,7 +29,7 @@ from limiter import limiter
 import mailer
 from mailer.templates import (
     verification_email, password_reset_email,
-    email_change_code_email, email_change_alert_email,
+    email_change_code_email, email_change_alert_email, account_deleted_email,
 )
 
 logger = logging.getLogger(__name__)
@@ -68,6 +70,22 @@ def _send_reset_code(db: Session, user: User) -> None:
         mailer.send_email(user.email, subject, html, text)
     except Exception:
         logger.exception("Échec de l'envoi du code de réinitialisation à %s", user.email)
+
+
+def _purge_user(db: Session, user: User) -> None:
+    """Supprime un compte et les données personnelles qui ne partent pas d'elles-mêmes.
+
+    Les cascades sont déclarées côté base (`ondelete=`) : vélos, badges obtenus,
+    historique, votes, codes de vérification et sessions de refresh s'effacent
+    avec le compte. `routes` et `reports` sont en SET NULL — c'est le
+    comportement voulu pour les signalements, qui restent visibles sans lien
+    avec leur auteur (politique de confidentialité §7), mais pas pour les
+    itinéraires : ils portent les adresses de départ et d'arrivée ainsi que le
+    tracé, on les supprime donc explicitement.
+    """
+    db.query(Route).filter(Route.user_id == user.id).delete(synchronize_session=False)
+    db.delete(user)
+    db.commit()
 
 
 def _with_effective_admin(db: Session, user: User) -> User:
@@ -278,6 +296,34 @@ def update_password(
         raise HTTPException(status_code=401, detail="Ancien mot de passe incorrect.")
     current_user.password_hash = hash_password(data.new_password)
     db.commit()
+
+
+@router.delete("/me", status_code=204)
+@limiter.limit("5/minute")
+def delete_me(
+    request: Request,
+    data: AccountDelete,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Suppression définitive du compte par son propriétaire.
+
+    Le mot de passe est redemandé : un jeton volé ne doit pas suffire à effacer
+    un compte. L'e-mail de confirmation part après coup, en best effort — un
+    serveur SMTP indisponible ne doit pas laisser croire que la suppression a
+    échoué alors qu'elle est déjà actée.
+    """
+    if not verify_password(data.password, current_user.password_hash):
+        raise HTTPException(status_code=401, detail="Mot de passe incorrect.")
+
+    email = current_user.email
+    _purge_user(db, current_user)
+
+    try:
+        subject, html, text = account_deleted_email()
+        mailer.send_email(email, subject, html, text)
+    except Exception:
+        logger.exception("Échec de l'envoi de la confirmation de suppression à %s", email)
 
 
 @router.post("/me/email", response_model=EmailChangeRequested, status_code=202)
@@ -528,5 +574,4 @@ def admin_delete_user(
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
-    db.delete(user)
-    db.commit()
+    _purge_user(db, user)
