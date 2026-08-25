@@ -21,6 +21,7 @@ from models import (  # noqa: F401
     poi_sync,
     refresh_session,
     report,
+    report_abuse,
     report_vote,
     route,
     street_lamp,
@@ -28,4 +29,5 @@ from models import (  # noqa: F401
     tag,
     task,
     user,
+    user_block,
 )

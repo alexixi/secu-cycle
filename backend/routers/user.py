@@ -11,9 +11,10 @@ from models.user import User
 from models.email_verification import EmailVerification
 from models.refresh_session import RefreshSession
 from models.route import Route
+from models.user_block import UserBlock
 from schemas.user import (
     UserCreate, UserRead, UserLogin, UserUpdate, UserAdminUpdate, PasswordChange,
-    AccountDelete,
+    AccountDelete, UserBlockRead,
     TokenRefresh, EmailVerifyRequest, ResendVerificationRequest,
     ForgotPasswordRequest, ResetPasswordRequest,
     EmailChangeRequest, EmailChangeConfirm, EmailChangeRequested, EmailChangeResult,
@@ -295,6 +296,35 @@ def update_password(
     if not verify_password(data.old_password, current_user.password_hash):
         raise HTTPException(status_code=401, detail="Ancien mot de passe incorrect.")
     current_user.password_hash = hash_password(data.new_password)
+    db.commit()
+
+
+@router.get("/me/blocks", response_model=list[UserBlockRead])
+def list_my_blocks(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Auteurs bloqués par l'appelant, pour pouvoir revenir sur un blocage."""
+    return (
+        db.query(UserBlock)
+        .filter(UserBlock.blocker_id == current_user.id)
+        .order_by(UserBlock.created_at.desc())
+        .all()
+    )
+
+
+@router.delete("/me/blocks/{blocked_id}", status_code=204)
+def unblock_user(
+    blocked_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Lève un blocage. Silencieux s'il n'existait pas : l'appelant veut un état
+    final, pas un compte rendu."""
+    db.query(UserBlock).filter(
+        UserBlock.blocker_id == current_user.id,
+        UserBlock.blocked_id == blocked_id,
+    ).delete(synchronize_session=False)
     db.commit()
 
 
