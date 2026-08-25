@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { FaLayerGroup } from 'react-icons/fa';
 import { useTheme } from '../../context/ThemeContext';
 import { trackEvent } from '../../services/analytics';
+import { legendLabel, themeLabel } from '../../i18n/carteLabels';
 import {
     getPois, getAccidents, getStreetlights, getLitRoads, getBikeshareStations, getTraffic,
 } from '../../services/apiBack';
@@ -253,7 +254,7 @@ export default function ThematicMap({ city, theme, onData }) {
     if (prerender) {
         return (
             <div className="thematic-map thematic-map--placeholder">
-                <p>Carte interactive {city.prep} — {theme.label.toLowerCase()}.</p>
+                <p>Carte interactive {city.prep} — {themeLabel(theme).toLowerCase()}.</p>
             </div>
         );
     }
@@ -422,9 +423,9 @@ export default function ThematicMap({ city, theme, onData }) {
             {legende.length > 0 && (
                 <div className="thematic-map-legend">
                     {legende.map(item => (
-                        <span key={item.label} className="thematic-legend-item">
+                        <span key={item.key} className="thematic-legend-item">
                             <span className="thematic-legend-dot" style={{ backgroundColor: item.color }} />
-                            {item.label}
+                            {legendLabel(theme.slug, item.key)}
                         </span>
                     ))}
                 </div>
