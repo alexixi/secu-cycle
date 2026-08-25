@@ -22,7 +22,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { SITE_URL, PAGES, CITIES } from '../src/data/thematicMaps.js';
+import { SITE_URL, PAGES, CITIES, cityHubTitle } from '../src/data/thematicMaps.js';
 import { langFromPathname } from '../src/i18n/routes.js';
 
 const ici = dirname(fileURLToPath(import.meta.url));
@@ -42,7 +42,7 @@ const ATTENDU = {
     '/confidentialite/': 'confidentialité',
     '/conditions-utilisation/': 'utilisation',
     '/carte/': 'Cartes cyclables par ville',
-    ...Object.fromEntries(CITIES.map(c => [`/carte/${c.slug}/`, `Cartes cyclables ${c.prep}`])),
+    ...Object.fromEntries(CITIES.map(c => [`/carte/${c.slug}/`, cityHubTitle(c)])),
     ...Object.fromEntries(PAGES.map(p => [`${p.path}/`, p.content.h1])),
 };
 
