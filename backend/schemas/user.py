@@ -56,6 +56,20 @@ class PasswordChange(BaseModel):
     old_password: str
     new_password: str = Field(min_length=10, max_length=PASSWORD_MAX)
 
+class AccountDelete(BaseModel):
+    """Suppression définitive du compte, confirmée par le mot de passe."""
+    password: str = Field(max_length=PASSWORD_MAX)
+
+class UserBlockRead(BaseModel):
+    """Un auteur bloqué. Volontairement sans identité : le blocage naît d'un
+    signalement sur la carte, pas d'un annuaire d'utilisateurs à parcourir."""
+    blocked_id: int
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
 class TokenRefresh(BaseModel):
     refresh_token: str
 

@@ -291,6 +291,18 @@ export async function changePassword(token, oldPassword, newPassword) {
     }
 }
 
+export async function deleteAccount(token, password) {
+    try {
+        const data = await apiFetch("/users/me", {
+            method: "DELETE",
+            body: JSON.stringify({ password: password }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function requestEmailChange(token, newEmail, password) {
     try {
         const data = await apiFetch("/users/me/email", {
@@ -428,6 +440,47 @@ export async function deleteAllHistoric(token) {
     }
 }
 
+export async function reportAbuse(token, reportId, reason) {
+    try {
+        const data = await apiFetch(`/reports/${reportId}/abuse`, {
+            method: "POST",
+            body: JSON.stringify({ reason: reason || "other" }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function blockReportAuthor(token, reportId) {
+    try {
+        const data = await apiFetch(`/reports/${reportId}/block-author`, {
+            method: "POST",
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getMyBlocks(token) {
+    try {
+        const data = await apiFetch("/users/me/blocks", { method: "GET" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function unblockUser(token, blockedId) {
+    try {
+        const data = await apiFetch(`/users/me/blocks/${blockedId}`, { method: "DELETE" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function deleteReport(token, reportId) {
     try {
         const data = await apiFetch(`/reports/${reportId}`, { method: "DELETE" }, token);
@@ -437,9 +490,9 @@ export async function deleteReport(token, reportId) {
     }
 }
 
-export async function getReports() {
+export async function getReports(token = null) {
     try {
-        const data = await apiFetch("/reports/", { method: "GET" });
+        const data = await apiFetch("/reports/", { method: "GET" }, token);
         return data;
     } catch (error) {
         throw error;

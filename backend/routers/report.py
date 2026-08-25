@@ -5,8 +5,10 @@ from typing import List
 from datetime import datetime
 from database import get_db
 from models.report import Report
+from models.report_abuse import ReportAbuse
 from models.report_vote import ReportVote
 from models.user import User
+from models.user_block import UserBlock
 from schemas.report import (
     ReportCreate,
     ReportRead,
@@ -14,11 +16,19 @@ from schemas.report import (
     ReportVoteCreate,
     ReportVoteResult,
     ReportVerifyUpdate,
+    ReportAbuseCreate,
+    ReportAbuseResult,
 )
-from dependencies import get_current_user, require_admin
+from dependencies import get_current_user, get_current_user_optional, require_admin
 from admin_emails import is_user_admin
 from graph.route_cache import route_cache
-from reports_lifecycle import compute_status, load_votes_by_report
+from reports_lifecycle import (
+    compute_status,
+    load_votes_by_report,
+    load_abuse_counts,
+    load_abuse_reasons,
+    is_hidden_for_abuse,
+)
 from limiter import limiter
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
@@ -51,23 +61,50 @@ def create_report(
     db_report.denials_count = 0
     return db_report
 
+def _blocked_author_ids(db: Session, current_user) -> set:
+    """Auteurs que l'appelant a bloqués. Vide pour un visiteur non connecté."""
+    if current_user is None:
+        return set()
+    rows = (
+        db.query(UserBlock.blocked_id)
+        .filter(UserBlock.blocker_id == current_user.id)
+        .all()
+    )
+    return {row[0] for row in rows}
+
+
 @router.get("/", response_model=List[ReportRead])
-def get_all_reports(db: Session = Depends(get_db)):
+def get_all_reports(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_optional),
+):
+    """Signalements visibles. L'authentification est facultative : elle ne sert
+    qu'à retirer les auteurs que l'appelant a bloqués."""
     now = datetime.utcnow()
     reports = db.query(Report).order_by(Report.created_at.desc()).all()
-    votes_by_report = load_votes_by_report(db, [r.id for r in reports])
+    report_ids = [r.id for r in reports]
+    votes_by_report = load_votes_by_report(db, report_ids)
+    abuse_counts = load_abuse_counts(db, report_ids)
+    blocked = _blocked_author_ids(db, current_user)
 
     visible = []
     for report in reports:
         status = compute_status(report, votes_by_report.get(report.id, []), now)
         if status["is_expired"] or status["is_disabled"]:
             continue
+        if is_hidden_for_abuse(report, abuse_counts.get(report.id, 0)):
+            continue
+        if report.user_id is not None and report.user_id in blocked:
+            continue
         report.confirmations_count = status["confirmations_count"]
         report.denials_count = status["denials_count"]
         visible.append(report)
     return visible
 
-def _to_admin_read(report: Report, author, votes, now: datetime) -> ReportAdminRead:
+def _to_admin_read(
+    report: Report, author, votes, now: datetime,
+    abuse_count: int = 0, abuse_reasons: dict | None = None,
+) -> ReportAdminRead:
     """Construit la vue admin d'un signalement (statut recalculé + infos auteur)."""
     author_name = None
     if author is not None:
@@ -88,6 +125,9 @@ def _to_admin_read(report: Report, author, votes, now: datetime) -> ReportAdminR
         is_verified=bool(report.is_verified),
         is_expired=status["is_expired"],
         is_disabled=status["is_disabled"],
+        abuse_count=abuse_count,
+        is_hidden_for_abuse=is_hidden_for_abuse(report, abuse_count),
+        abuse_reasons=abuse_reasons or {},
         author_email=author.email if author else None,
         author_name=author_name,
         author_is_banned=bool(author.is_banned) if author else False,
@@ -108,9 +148,15 @@ def get_all_reports_admin(
         .order_by(Report.created_at.desc())
         .all()
     )
-    votes_by_report = load_votes_by_report(db, [report.id for report, _ in rows])
+    report_ids = [report.id for report, _ in rows]
+    votes_by_report = load_votes_by_report(db, report_ids)
+    abuse_counts = load_abuse_counts(db, report_ids)
+    abuse_reasons = load_abuse_reasons(db, report_ids)
     return [
-        _to_admin_read(report, author, votes_by_report.get(report.id, []), now)
+        _to_admin_read(
+            report, author, votes_by_report.get(report.id, []), now,
+            abuse_counts.get(report.id, 0), abuse_reasons.get(report.id),
+        )
         for report, author in rows
     ]
 
@@ -135,7 +181,11 @@ def set_report_verified(
     now = datetime.utcnow()
     author = db.query(User).filter(User.id == report.user_id).first() if report.user_id else None
     votes = db.query(ReportVote).filter(ReportVote.report_id == report_id).all()
-    return _to_admin_read(report, author, votes, now)
+    # Sans ces deux-là, la ligne renvoyée après le basculement repartirait avec
+    # zéro dénonciation et effacerait le motif de l'écran du modérateur.
+    abuse_count = load_abuse_counts(db, [report_id]).get(report_id, 0)
+    abuse_reasons = load_abuse_reasons(db, [report_id]).get(report_id)
+    return _to_admin_read(report, author, votes, now, abuse_count, abuse_reasons)
 
 @router.get("/me", response_model=List[ReportRead])
 def get_my_reports(
@@ -209,6 +259,88 @@ def vote_report(
         is_disabled=status["is_disabled"],
         my_vote=vote.is_present,
     )
+
+@router.post("/{report_id}/abuse", response_model=ReportAbuseResult, status_code=201)
+@limiter.limit("10/hour")
+def report_abuse(
+    request: Request,
+    report_id: int,
+    data: ReportAbuseCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Dénonce un signalement pour contenu répréhensible.
+
+    Distinct du vote « Pas là », qui juge l'exactitude : un signalement peut être
+    exact et inacceptable. Au-delà d'ABUSE_THRESHOLD dénonciations distinctes le
+    signalement disparaît de la carte, en attendant la décision d'un modérateur.
+    """
+    report = db.query(Report).filter(Report.id == report_id).first()
+    if report is None:
+        raise HTTPException(status_code=404, detail="Signalement introuvable.")
+
+    if report.user_id == current_user.id:
+        raise HTTPException(
+            status_code=400,
+            detail="Vous ne pouvez pas dénoncer votre propre signalement.",
+        )
+
+    existing = (
+        db.query(ReportAbuse)
+        .filter(ReportAbuse.report_id == report_id, ReportAbuse.user_id == current_user.id)
+        .first()
+    )
+    if existing is None:
+        db.add(ReportAbuse(report_id=report_id, user_id=current_user.id, reason=data.reason))
+        db.commit()
+    else:
+        # Re-dénoncer ne compte pas double, mais met le motif à jour : la
+        # première réaction est souvent la moins précise.
+        existing.reason = data.reason
+        db.commit()
+
+    count = load_abuse_counts(db, [report_id]).get(report_id, 0)
+    hidden = is_hidden_for_abuse(report, count)
+    if hidden:
+        # Le signalement ne doit plus peser sur les itinéraires déjà calculés.
+        route_cache.invalidate()
+    return ReportAbuseResult(id=report_id, abuse_count=count, is_hidden=hidden)
+
+
+@router.post("/{report_id}/block-author", status_code=204)
+@limiter.limit("30/hour")
+def block_report_author(
+    request: Request,
+    report_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Masque tous les signalements de l'auteur de ce signalement, pour l'appelant.
+
+    Le blocage part d'un signalement et non d'un identifiant d'utilisateur :
+    l'auteur n'est jamais exposé au client, et il n'y a pas d'annuaire à parcourir.
+    """
+    report = db.query(Report).filter(Report.id == report_id).first()
+    if report is None:
+        raise HTTPException(status_code=404, detail="Signalement introuvable.")
+
+    if report.user_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Ce signalement n'a plus d'auteur, il n'y a personne à bloquer.",
+        )
+    if report.user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas vous bloquer vous-même.")
+
+    already = (
+        db.query(UserBlock)
+        .filter(UserBlock.blocker_id == current_user.id, UserBlock.blocked_id == report.user_id)
+        .first()
+    )
+    if already is None:
+        db.add(UserBlock(blocker_id=current_user.id, blocked_id=report.user_id))
+        db.commit()
+
 
 @router.delete("/{report_id}", status_code=204)
 def delete_report(report_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):

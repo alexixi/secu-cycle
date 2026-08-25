@@ -3,7 +3,8 @@ import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimen
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { getReports, getPois, getAccidents, getTraffic, getAirQuality, getWeather, getBikeshareStations, getLitRoads, getStreetlightSources, createReport, deleteReport, voteReport } from '../services/apiBack';
+import ReportAbuseModal from './ReportAbuseModal';
+import { getReports, getPois, getAccidents, getTraffic, getAirQuality, getWeather, getBikeshareStations, getLitRoads, getStreetlightSources, createReport, deleteReport, voteReport, reportAbuse, blockReportAuthor } from '../services/apiBack';
 import {
     pointForCenter, weatherSummary, rainBanner,
     snapshotAgeMin, isHintUsable, freshSteps, STALE_AGE_MIN,
@@ -415,6 +416,8 @@ export default function MapComponent({
     const [reportDescription, setReportDescription] = useState("");
     const [reports, setReports] = useState([]);
     const [activeReport, setActiveReport] = useState(null);
+    const [abuseTarget, setAbuseTarget] = useState(null);
+    const [abuseStatus, setAbuseStatus] = useState(null);
     const [isPoiSheetVisible, setPoiSheetVisible] = useState(false);
     const [enabledPoiCats, setEnabledPoiCats] = useState({});
     const [enabledSubTypes, setEnabledSubTypes] = useState(DEFAULT_SUB_TYPES);
@@ -547,8 +550,8 @@ export default function MapComponent({
     }, [currentPosition, hasCenteredOnce]);
 
     useEffect(() => {
-        getReports().then(setReports).catch(console.error);
-    }, []);
+        getReports(token).then(setReports).catch(console.error);
+    }, [token]);
 
     const activeRoute = useMemo(
         () => itineraires?.find(it => it.id === selectedItineraire) || null,
@@ -1126,6 +1129,47 @@ export default function MapComponent({
         } catch (error) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             console.error("Erreur suppression signalement:", error);
+        }
+    };
+
+    const _dropReport = (reportId) => {
+        setReports(prev => prev.filter(r => r.id !== reportId));
+        setActiveReport(prev => (prev?.id === reportId ? null : prev));
+    };
+
+    const closeAbuseModal = () => {
+        setAbuseTarget(null);
+        setAbuseStatus(null);
+        setActiveReport(null);
+    };
+
+    const handleReportAbuse = async (reason) => {
+        const target = abuseTarget;
+        if (!target) return;
+        setAbuseStatus('sending');
+        try {
+            const res = await reportAbuse(token, target.id, reason);
+            trackEvent('report_abuse_reported', { reason });
+            if (res?.is_hidden) _dropReport(target.id);
+            setAbuseStatus('reported');
+        } catch (error) {
+            console.error('Erreur dénonciation:', error);
+            setAbuseStatus('error');
+        }
+    };
+
+    const handleBlockAuthor = async () => {
+        const target = abuseTarget;
+        if (!target) return;
+        setAbuseStatus('sending');
+        try {
+            await blockReportAuthor(token, target.id);
+            trackEvent('report_author_blocked');
+            setReports(prev => prev.filter(r => r.user_id !== target.user_id));
+            setAbuseStatus('blocked');
+        } catch (error) {
+            console.error('Erreur blocage:', error);
+            setAbuseStatus('error');
         }
     };
 
@@ -2221,6 +2265,20 @@ export default function MapComponent({
                             </View>
                         )}
 
+                        {token && activeReport && activeReport.user_id !== user?.id && (
+                            <TouchableOpacity
+                                style={styles.abuseLink}
+                                onPress={() => setAbuseTarget(activeReport)}
+                                accessibilityRole="button"
+                                accessibilityLabel="Signaler ce contenu"
+                            >
+                                <Ionicons name="flag-outline" size={15} color={colors.textSecondary} />
+                                <Text style={[styles.abuseLinkText, { color: colors.textSecondary }]}>
+                                    Signaler ce contenu
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+
                         {activeReport && activeReport.user_id === user?.id && (
                             <TouchableOpacity
                                 style={[styles.submitButton, { backgroundColor: colors.error }]}
@@ -2238,6 +2296,14 @@ export default function MapComponent({
                     </View>
                 </TouchableOpacity>
             </Modal>
+
+            <ReportAbuseModal
+                visible={!!abuseTarget}
+                status={abuseStatus}
+                onClose={closeAbuseModal}
+                onReport={handleReportAbuse}
+                onBlock={handleBlockAuthor}
+            />
 
             <Modal
                 visible={!!activePoi}
@@ -2567,6 +2633,14 @@ export default function MapComponent({
 }
 
 const styles = StyleSheet.create({
+    abuseLink: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingVertical: 8,
+    },
+    abuseLinkText: { fontSize: 13, textDecorationLine: 'underline' },
     container: { flex: 1 },
     map: { flex: 1 },
     mapButton: {

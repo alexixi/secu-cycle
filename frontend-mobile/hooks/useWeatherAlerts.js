@@ -46,8 +46,10 @@ export default function useWeatherAlerts(weatherData, currentPosition, isNavigat
         if (!isNavigating || !weatherData || activeAlert) return;
 
         // Le relevé le plus proche de la position, pas celui de la zone : en
-        // navigation, c'est justement la position qui bouge.
-        const summary = weatherSummary(pointForCenter(weatherData, currentPosition));
+        // navigation, c'est justement la position qui bouge. Gardé en variable :
+        // `rainBanner` a besoin du relevé lui-même, pas de son résumé.
+        const point = pointForCenter(weatherData, currentPosition);
+        const summary = weatherSummary(point);
         if (!summary) return;
 
         const candidates = [];
@@ -75,7 +77,7 @@ export default function useWeatherAlerts(weatherData, currentPosition, isNavigat
         }
 
         // 2. Début d'averse dans la demi-heure.
-        const rain = rainBanner(zone);
+        const rain = rainBanner(point);
         if (rain?.kind === 'onset') {
             const imminent = (rain.minutes ?? 99) <= 15;
             candidates.push({

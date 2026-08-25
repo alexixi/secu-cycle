@@ -24,6 +24,7 @@ CASES = [
      t.email_change_code_email("123456", "nouvelle@exemple.fr")),
     ("Changement d'e-mail — alerte (ancienne adresse)",
      t.email_change_alert_email("nouvelle@exemple.fr")),
+    ("Suppression de compte", t.account_deleted_email()),
     ("Formulaire de contact", t.contact_email(
         "Jean", "Dupont", "jean.dupont@exemple.fr", "Question sur un itinéraire",
         "Bonjour,\n\nJ'ai une question à propos d'un trajet.\n\nMerci !",

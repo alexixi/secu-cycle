@@ -4,7 +4,7 @@ import Meta from "../components/Meta";
 import MapComponent from "../modules/map/MapComponent";
 import SearchAside from "../components/layout/SearchAside";
 import ReportModal from "../components/layout/modals/ReportModal";
-import { calculateItineraries, getReports, createReport, deleteReport, getTraffic, voteReport } from "../services/apiBack";
+import { calculateItineraries, getReports, createReport, deleteReport, getTraffic, voteReport, reportAbuse, blockReportAuthor } from "../services/apiBack";
 import { trackEvent } from "../services/analytics";
 import "./ItinerairePage.css";
 
@@ -37,8 +37,8 @@ export default function ItinerairePage() {
     const { token, user } = useAuth();
 
     useEffect(() => {
-        getReports().then(setReports).catch(console.error);
-    }, []);
+        getReports(token).then(setReports).catch(console.error);
+    }, [token]);
 
     useEffect(() => {
         if (!showTraffic) return;
@@ -121,6 +121,26 @@ export default function ItinerairePage() {
         if (!token) return;
         setReportCoords(coords);
         setIsReportModalOpen(true);
+    };
+
+    const handleReportAbuse = async (report, reason) => {
+        try {
+            const res = await reportAbuse(token, report.id, reason);
+            trackEvent("report_abuse_reported", { reason });
+            if (res?.is_hidden) setReports(prev => prev.filter(r => r.id !== report.id));
+        } catch (error) {
+            console.error("Erreur dénonciation:", error);
+        }
+    };
+
+    const handleBlockAuthor = async (report) => {
+        try {
+            await blockReportAuthor(token, report.id);
+            trackEvent("report_author_blocked");
+            setReports(prev => prev.filter(r => r.user_id !== report.user_id));
+        } catch (error) {
+            console.error("Erreur blocage:", error);
+        }
     };
 
     const handleDeleteReport = async (reportId) => {
@@ -251,6 +271,8 @@ export default function ItinerairePage() {
                     onMapClick={handleMapClick}
                     onDeleteReport={token ? handleDeleteReport : null}
                     onVote={token ? handleVoteReport : null}
+                    onReportAbuse={token ? handleReportAbuse : null}
+                    onBlockAuthor={token ? handleBlockAuthor : null}
                     canVote={!!token}
                     currentUserId={user?.id}
                     isReportMode={isReportMode}

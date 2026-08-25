@@ -1,0 +1,150 @@
+.delete-account-modal {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.delete-account-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.delete-account-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--error-bg);
+    color: var(--error);
+}
+
+.delete-account-modal h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    color: var(--text-main);
+}
+
+.delete-account-lead {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+}
+
+.delete-account-section-title {
+    margin: 0 0 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--text-secondary);
+}
+
+.delete-account-list {
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.delete-account-list li {
+    position: relative;
+    padding-left: 1.4rem;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    text-align: left;
+    color: var(--text-main);
+}
+
+.delete-account-list li::before {
+    content: "✕";
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--error);
+}
+
+.delete-account-keep {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.8rem 0.9rem;
+    margin-bottom: 1.5rem;
+    border-radius: 10px;
+    background-color: var(--bg-surface);
+    border-left: 3px solid var(--border-strong);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    text-align: left;
+    color: var(--text-secondary);
+}
+
+.delete-account-keep svg {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.delete-account-field {
+    align-items: stretch;
+    margin-bottom: 1rem;
+}
+
+.delete-account-field label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: left;
+    color: var(--text-main);
+    margin-bottom: 0.4rem;
+}
+
+.delete-account-field .password-container {
+    width: 100%;
+}
+
+.delete-account-ack {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    background-color: var(--bg-main);
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.delete-account-ack:hover {
+    border-color: var(--border-strong);
+}
+
+.delete-account-ack input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--error);
+    cursor: pointer;
+}
+
+.delete-account-ack label {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    text-align: left;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+.delete-account-modal .error-text {
+    margin-top: 0.75rem;
+    text-align: center;
+}

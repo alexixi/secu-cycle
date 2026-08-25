@@ -1,6 +1,7 @@
 import { Alert, DeviceEventEmitter } from 'react-native';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
+import { hasAcceptedBackgroundLocation } from './locationDisclosure';
 
 export const LOCATION_TASK = 'background-location-task';
 export const BACKGROUND_LOCATION_EVENT = 'background-location';
@@ -20,6 +21,8 @@ TaskManager.defineTask(LOCATION_TASK, ({ data, error }) => {
 });
 
 export const startBackgroundLocation = async () => {
+    if (!(await hasAcceptedBackgroundLocation())) return;
+
     const foreground = await Location.requestForegroundPermissionsAsync();
     if (foreground.status !== 'granted') {
         Alert.alert("Permission requise", "Le GPS est nécessaire pour la navigation.");
