@@ -1,30 +1,43 @@
 import { Suspense, lazy, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Routes, Route, useLocation } from 'react-router';
 import { ENABLED_LANGS, ROUTE_PATHS, patternFor, routeKeys } from './i18n/routes';
+import i18n from './i18n';
+import { ensureNamespaces } from './i18n/catalogues';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import './App.css';
 
-const HomePage = lazy(() => import('./pages/HomePage'));
-const ItinerairePage = lazy(() => import('./pages/ItinerairePage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
-const ChangeEmailPage = lazy(() => import('./pages/ChangeEmailPage'));
-const ProfileCreationPage = lazy(() => import('./pages/ProfileCreationPage'));
-const AdminPage = lazy(() => import('./pages/AdminPage'));
-const ErrorPage = lazy(() => import('./pages/ErrorPage'));
-const MentionsLegalesPage = lazy(() => import('./pages/MentionsLegalesPage'));
-const ConfidentialitePage = lazy(() => import('./pages/ConfidentialitePage'));
-const ConditionsUtilisationPage = lazy(() => import('./pages/ConditionsUtilisationPage'));
-const SuppressionComptePage = lazy(() => import('./pages/SuppressionComptePage'));
-const ContactPage = lazy(() => import('./pages/ContactPage'));
-const FaqPage = lazy(() => import('./pages/FaqPage'));
-const DonneesPage = lazy(() => import('./pages/DonneesPage'));
-const CarteHubPage = lazy(() => import('./pages/CarteHubPage'));
-const CarteVillePage = lazy(() => import('./pages/CarteVillePage'));
-const CarteThematiquePage = lazy(() => import('./pages/CarteThematiquePage'));
+// Une page n'est montée qu'une fois ses catalogues dans le magasin. C'est ce qui
+// rend le prérendu sûr : si t() renvoyait la clé au premier rendu, react-snap
+// figerait un HTML de clés et verify-prerender ferait échouer le build.
+//
+// La langue est celle fixée à l'initialisation depuis l'URL. Il n'y a pas de
+// bascule à chaud — changer de langue recharge la page — donc elle est constante
+// pendant toute la vie du document.
+const lazyPage = (charger, namespace) => lazy(() =>
+  Promise.all([charger(), ensureNamespaces(i18n.language, [namespace])]).then(([module]) => module));
+
+const HomePage = lazyPage(() => import('./pages/HomePage'), 'home');
+const ItinerairePage = lazyPage(() => import('./pages/ItinerairePage'), 'itineraire');
+const ProfilePage = lazyPage(() => import('./pages/ProfilePage'), 'auth');
+const LoginPage = lazyPage(() => import('./pages/LoginPage'), 'auth');
+const ForgotPasswordPage = lazyPage(() => import('./pages/ForgotPasswordPage'), 'auth');
+const ChangeEmailPage = lazyPage(() => import('./pages/ChangeEmailPage'), 'auth');
+const ProfileCreationPage = lazyPage(() => import('./pages/ProfileCreationPage'), 'auth');
+const AdminPage = lazyPage(() => import('./pages/AdminPage'), 'auth');
+const ErrorPage = lazyPage(() => import('./pages/ErrorPage'), 'common');
+const MentionsLegalesPage = lazyPage(() => import('./pages/MentionsLegalesPage'), 'legal');
+const ConfidentialitePage = lazyPage(() => import('./pages/ConfidentialitePage'), 'legal');
+const ConditionsUtilisationPage = lazyPage(() => import('./pages/ConditionsUtilisationPage'), 'legal');
+const SuppressionComptePage = lazyPage(() => import('./pages/SuppressionComptePage'), 'legal');
+const ContactPage = lazyPage(() => import('./pages/ContactPage'), 'legal');
+const FaqPage = lazyPage(() => import('./pages/FaqPage'), 'faq');
+const DonneesPage = lazyPage(() => import('./pages/DonneesPage'), 'donnees');
+const CarteHubPage = lazyPage(() => import('./pages/CarteHubPage'), 'carte');
+const CarteVillePage = lazyPage(() => import('./pages/CarteVillePage'), 'carte');
+const CarteThematiquePage = lazyPage(() => import('./pages/CarteThematiquePage'), 'carte');
 
 const PAGE_ELEMENTS = {
   home: <HomePage />,
@@ -59,12 +72,15 @@ const PAGE_ELEMENTS = {
   carteTheme: <CarteThematiquePage />,
 };
 
-const LoadingFallback = () => (
-  <div className="loader-container">
-    <div className="spinner"></div>
-    <p style={{ color: '#6b7280', fontWeight: '500' }}>Chargement de la page...</p>
-  </div>
-);
+const LoadingFallback = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="loader-container">
+      <div className="spinner"></div>
+      <p style={{ color: '#6b7280', fontWeight: '500' }}>{t('chargement')}</p>
+    </div>
+  );
+};
 
 function ScrollToTop() {
   const { pathname } = useLocation();

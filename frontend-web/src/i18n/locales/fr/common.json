@@ -1,0 +1,38 @@
+{
+    "nav": {
+        "home": "Accueil",
+        "itineraire": "Itinéraire",
+        "itineraires": "Itinéraires",
+        "carteHub": "Cartes par ville",
+        "faq": "FAQ",
+        "donnees": "Sources des données",
+        "mentionsLegales": "Mentions légales",
+        "confidentialite": "Politique de confidentialité",
+        "conditions": "Conditions d'utilisation",
+        "contact": "Contact",
+        "profil": "Profil"
+    },
+    "compte": {
+        "connexion": "Connexion",
+        "seConnecter": "Se connecter",
+        "seDeconnecter": "Se déconnecter",
+        "creerCompte": "Créer un compte",
+        "monProfil": "Mon Profil"
+    },
+    "a11y": {
+        "menuProfil": "Menu profil",
+        "ouvrirMenu": "Ouvrir le menu",
+        "fermerMenu": "Fermer le menu",
+        "liensLegaux": "Liens légaux",
+        "filAriane": "Fil d’Ariane"
+    },
+    "chargement": "Chargement de la page…",
+    "erreur404": {
+        "titrePage": "Page non trouvée | Sécu'Cycle",
+        "metaDescription": "La page que vous recherchez n'existe pas.",
+        "h1": "Page non trouvée (404)",
+        "introuvable": "La page que vous recherchez n'existe pas.",
+        "verifier": "Veuillez vérifier l'URL ou revenir à la page d'accueil.",
+        "retour": "Retour à l'accueil"
+    }
+}

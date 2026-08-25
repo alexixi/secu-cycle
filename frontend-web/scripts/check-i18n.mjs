@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { THEMES } from '../src/data/thematicMapsCore.js';
-import { LANGS } from '../src/i18n/routes.js';
+import { ENABLED_LANGS, LANGS } from '../src/i18n/routes.js';
 
 const ici = dirname(fileURLToPath(import.meta.url));
 
@@ -50,16 +50,23 @@ const ECHANTILLON = Array.from({ length: 40 }, (_, i) => ({
 const valeur = (objet, chemin) => chemin.split('.').reduce((n, p) => n?.[p], objet);
 
 let anomalies = 0;
+let restantes = 0;
 
 for (const lang of LANGS) {
+    // Seules les langues servies doivent être complètes. Une langue déclarée mais pas
+    // encore activée est en cours de traduction : exiger sa complétude bloquerait le
+    // build pendant tout le temps où on la rédige, ce qui pousserait à contourner le
+    // garde-fou plutôt qu'à s'en servir.
+    const bloquante = ENABLED_LANGS.includes(lang);
+
     let catalogue;
     try {
         catalogue = JSON.parse(readFileSync(join(ici, '..', 'src', 'i18n', 'locales', lang, 'carte.json'), 'utf-8'));
     } catch {
-        // Une langue déclarée mais pas encore traduite n'est pas une anomalie : les
-        // catalogues arrivent après la mécanique. Elle le devient quand la langue est
-        // activée dans ENABLED_LANGS, ce que verify-prerender attrape au build.
-        console.log(`${lang} : pas de catalogue carte.json, langue ignorée.`);
+        if (bloquante) {
+            console.error(`MANQUANT   ${lang} — locales/${lang}/carte.json absent alors que la langue est servie`);
+            anomalies += 1;
+        }
         continue;
     }
 
@@ -85,12 +92,22 @@ for (const lang of LANGS) {
         controlees += 1 + (theme.legend?.length ?? 0) + new Set(tuiles.map(t => t.key)).size;
 
         for (const cle of [...new Set(manquantes)]) {
-            console.error(`MANQUANT   ${lang} — ${cle}`);
-            anomalies += 1;
+            if (bloquante) {
+                console.error(`MANQUANT   ${lang} — ${cle}`);
+                anomalies += 1;
+            } else {
+                restantes += 1;
+            }
         }
     }
 
-    if (!anomalies) console.log(`${lang} : ${controlees} clés de libellé résolues.`);
+    if (!bloquante) {
+        console.log(`${lang} : ${controlees - restantes}/${controlees} clés traduites `
+            + `(langue non encore servie, non bloquant).`);
+        restantes = 0;
+    } else if (!anomalies) {
+        console.log(`${lang} : ${controlees} clés de libellé résolues.`);
+    }
 }
 
 if (anomalies > 0) {
