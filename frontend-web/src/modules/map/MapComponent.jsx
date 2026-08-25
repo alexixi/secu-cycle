@@ -134,12 +134,15 @@ function panPopupIntoView(map, margin = POPUP_VIEWPORT_MARGIN) {
 
 const isRouteFeature = (feature) => feature?.layer?.id?.startsWith('route-hitbox-');
 
-export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, onVote, canVote, currentUserId, isReportMode, onToggleReportMode, canReport, traffic = null, trafficError = null, showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
+import ReportAbuseModal from "../../components/layout/modals/ReportAbuseModal";
+
+export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, onVote, onReportAbuse, onBlockAuthor, canVote, currentUserId, isReportMode, onToggleReportMode, canReport, traffic = null, trafficError = null, showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
 
     const mapRef = useRef();
     const { effectiveTheme } = useTheme();
     const [hoverInfo, setHoverInfo] = useState(null);
     const [activeReport, setActiveReport] = useState(null);
+    const [abuseTarget, setAbuseTarget] = useState(null);
 
     const handleVote = async (reportId, isPresent) => {
         if (!onVote) return;
@@ -152,6 +155,22 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 : prev));
         }
     };
+    const handleReportAbuse = async (reason) => {
+        const target = abuseTarget;
+        setAbuseTarget(null);
+        if (!target || !onReportAbuse) return;
+        await onReportAbuse(target, reason);
+        setActiveReport(null);
+    };
+
+    const handleBlockAuthor = async () => {
+        const target = abuseTarget;
+        setAbuseTarget(null);
+        if (!target || !onBlockAuthor) return;
+        await onBlockAuthor(target);
+        setActiveReport(null);
+    };
+
     const [activeTraffic, setActiveTraffic] = useState(null);
     const [activeAirStation, setActiveAirStation] = useState(null);
     const [isMapSelectOpen, setIsMapSelectOpen] = useState(false);
@@ -1698,7 +1717,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 const isOwnReport = activeReport.user_id != null && activeReport.user_id === currentUserId;
                                 const showVote = canVote && onVote && !isOwnReport;
                                 const showDelete = onDeleteReport && isOwnReport;
-                                if (!showVote && !showDelete) return null;
+                                const showAbuse = canVote && onReportAbuse && !isOwnReport;
+                                if (!showVote && !showDelete && !showAbuse) return null;
                                 return (
                                     <div className="map-popup-footer">
                                         {showVote && (
@@ -1728,12 +1748,28 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                                 Supprimer
                                             </Button>
                                         )}
+                                        {showAbuse && (
+                                            <button
+                                                type="button"
+                                                className="map-popup-abuse"
+                                                onClick={() => setAbuseTarget(activeReport)}
+                                            >
+                                                Signaler ce contenu
+                                            </button>
+                                        )}
                                     </div>
                                 );
                             })()}
                         </div>
                     </Popup>
                 )}
+
+                <ReportAbuseModal
+                    isOpen={!!abuseTarget}
+                    onClose={() => setAbuseTarget(null)}
+                    onReport={handleReportAbuse}
+                    onBlock={handleBlockAuthor}
+                />
 
                 {activePoi && (
                     <Popup

@@ -21,8 +21,10 @@ from datetime import datetime, timedelta
 from typing import Dict, List
 
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 
 from models.report import Report
+from models.report_abuse import ReportAbuse
 from models.report_vote import ReportVote
 
 # Durée de vie par défaut d'un signalement selon son type.
@@ -37,6 +39,11 @@ DEFAULT_EXPIRY = timedelta(hours=4)
 
 # Écart (pas là - confirmé) à partir duquel un signalement est désactivé.
 DISABLE_THRESHOLD = 3
+
+# Nombre de dénonciations distinctes à partir duquel un signalement est masqué,
+# en attendant la décision d'un modérateur. Deux et non une : il faut se
+# coordonner à deux pour faire taire à tort un signalement de danger légitime.
+ABUSE_THRESHOLD = 2
 
 
 def _window(report_type: str) -> timedelta:
@@ -87,3 +94,47 @@ def load_votes_by_report(db: Session, report_ids: List[int]) -> Dict[int, List[R
     for vote in votes:
         grouped.setdefault(vote.report_id, []).append(vote)
     return grouped
+
+
+def load_abuse_counts(db: Session, report_ids: List[int]) -> Dict[int, int]:
+    """Nombre de dénonciations par signalement, en une requête."""
+    counts: Dict[int, int] = {}
+    if not report_ids:
+        return counts
+    rows = (
+        db.query(ReportAbuse.report_id, func.count(ReportAbuse.id))
+        .filter(ReportAbuse.report_id.in_(report_ids))
+        .group_by(ReportAbuse.report_id)
+        .all()
+    )
+    for report_id, count in rows:
+        counts[report_id] = count
+    return counts
+
+
+def load_abuse_reasons(db: Session, report_ids: List[int]) -> Dict[int, Dict[str, int]]:
+    """Répartition des dénonciations par motif, pour la modération.
+
+    Requête distincte de `load_abuse_counts` : le détail n'intéresse que la file
+    de modération, alors que le total sert à chaque lecture de la carte.
+    """
+    breakdown: Dict[int, Dict[str, int]] = {}
+    if not report_ids:
+        return breakdown
+    rows = (
+        db.query(ReportAbuse.report_id, ReportAbuse.reason, func.count(ReportAbuse.id))
+        .filter(ReportAbuse.report_id.in_(report_ids))
+        .group_by(ReportAbuse.report_id, ReportAbuse.reason)
+        .all()
+    )
+    for report_id, reason, count in rows:
+        breakdown.setdefault(report_id, {})[reason or "other"] = count
+    return breakdown
+
+
+def is_hidden_for_abuse(report: Report, abuse_count: int) -> bool:
+    """Un signalement vérifié par un modérateur ne peut plus être masqué par des
+    dénonciations : la décision humaine prime sur le seuil automatique."""
+    if getattr(report, "is_verified", False):
+        return False
+    return abuse_count >= ABUSE_THRESHOLD

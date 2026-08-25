@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from typing import Optional, Literal
+from typing import Dict, Optional, Literal
 
 
 class ReportBase(BaseModel):
@@ -42,6 +42,11 @@ class ReportAdminRead(ReportRead):
     """Vue enrichie pour la modération : infos sur l'auteur + statut d'expiration."""
     is_expired: bool = False
     is_disabled: bool = False
+    abuse_count: int = 0
+    is_hidden_for_abuse: bool = False
+    # Motifs invoqués et leur nombre : « Signalé ×3 » sans le pourquoi n'aide pas
+    # le modérateur à trancher.
+    abuse_reasons: Dict[str, int] = {}
     author_email: Optional[str] = None
     author_name: Optional[str] = None
     author_is_banned: bool = False
@@ -65,3 +70,19 @@ class ReportVoteResult(BaseModel):
     denials_count: int
     is_disabled: bool
     my_vote: Optional[bool] = None
+
+
+class ReportAbuseCreate(BaseModel):
+    """Dénonciation d'un signalement pour contenu répréhensible.
+
+    Le motif est une liste fermée : un champ libre serait un second vecteur de
+    contenu répréhensible, adressé cette fois aux modérateurs.
+    """
+    reason: Literal["offensive", "spam", "wrong_place", "other"] = "other"
+
+
+class ReportAbuseResult(BaseModel):
+    """Réponse après une dénonciation, du point de vue du dénonciateur."""
+    id: int
+    abuse_count: int
+    is_hidden: bool

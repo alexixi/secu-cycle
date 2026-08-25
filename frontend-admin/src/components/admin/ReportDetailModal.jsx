@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { LuBan, LuShieldCheck, LuOctagonX, LuCircleCheck, LuMapPin } from "react-icons/lu";
 import Button from "../ui/Button";
 import ReportMap from "./ReportMap";
+import { ABUSE_REASONS } from "./ReportsManager";
 import "../ui/PopUp.css";
 import "./UserDetailModal.css";
 import "./ReportsManager.css";
@@ -111,6 +112,27 @@ export default function ReportDetailModal({
                 <span>Description</span>
                 <p className="user-detail-value">{report.report_description || "—"}</p>
               </div>
+
+              {report.abuse_count > 0 && (
+                <div className="user-detail-field">
+                  <span>Signalements d&apos;utilisateurs</span>
+                  <div className="abuse-breakdown">
+                    {Object.entries(report.abuse_reasons || {})
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([reason, count]) => (
+                        <span key={reason} className="abuse-reason-chip">
+                          {ABUSE_REASONS[reason] || reason}
+                          <strong>×{count}</strong>
+                        </span>
+                      ))}
+                  </div>
+                  <p className="abuse-note">
+                    {report.is_hidden_for_abuse
+                      ? "Masqué de la carte en attendant votre décision. Le marquer « vérifié » le rétablit."
+                      : "Encore visible sur la carte : le seuil de masquage n'est pas atteint."}
+                  </p>
+                </div>
+              )}
 
               <div className="user-detail-field">
                 <span>Votes de la communauté</span>

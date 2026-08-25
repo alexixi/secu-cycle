@@ -15,6 +15,13 @@ import ItineraryPanel from '../../components/ItineraryPanel';
 import BadgeUnlockedModal from '../../components/BadgeUnlockedModal';
 import * as Haptics from 'expo-haptics';
 import { trackEvent } from '../../services/analytics';
+import BackgroundLocationDisclosure from '../../components/BackgroundLocationDisclosure';
+import {
+    ACCEPTED,
+    DECLINED,
+    getBackgroundLocationChoice,
+    setBackgroundLocationChoice,
+} from '../../services/locationDisclosure';
 
 export default function Index() {
     const [startPoint, setStartPoint] = useState(null);
@@ -34,17 +41,43 @@ export default function Index() {
     const [unlockedBadges, setUnlockedBadges] = useState([]);
     // Garde anti-double-appel : un trajet n'est complété qu'une fois par calcul.
     const completedRouteRef = useRef(null);
+    // Divulgation Play : affichée avant la toute première demande de localisation.
+    const [showLocationDisclosure, setShowLocationDisclosure] = useState(false);
 
     const { token, user, bikes } = useAuth();
     const { colors, typography } = useTheme();
 
-    const handleStartNavigation = () => {
+    const _beginNavigation = () => {
+        trackEvent('navigation_started', { bike: selectedBike });
+        setIsNavigating(true);
+    };
+
+    const handleStartNavigation = async () => {
         if (!selectedItineraire) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             return;
         }
-        trackEvent('navigation_started', { bike: selectedBike });
-        setIsNavigating(true);
+        // La divulgation doit précéder la demande système : tant qu'aucun choix
+        // n'est enregistré, le guidage attend la réponse.
+        if ((await getBackgroundLocationChoice()) === null) {
+            setShowLocationDisclosure(true);
+            return;
+        }
+        _beginNavigation();
+    };
+
+    const handleAcceptLocation = async () => {
+        await setBackgroundLocationChoice(ACCEPTED);
+        setShowLocationDisclosure(false);
+        _beginNavigation();
+    };
+
+    // Refus : le guidage démarre quand même, mais s'arrêtera à l'extinction de
+    // l'écran, faute de relevé en arrière-plan.
+    const handleDeclineLocation = async () => {
+        await setBackgroundLocationChoice(DECLINED);
+        setShowLocationDisclosure(false);
+        _beginNavigation();
     };
 
     const handleStopNavigation = () => {
@@ -361,6 +394,12 @@ export default function Index() {
                 remaining={Math.max(0, unlockedBadges.length - 1)}
                 onNext={() => setUnlockedBadges(prev => prev.slice(1))}
                 colors={colors}
+            />
+
+            <BackgroundLocationDisclosure
+                visible={showLocationDisclosure}
+                onAccept={handleAcceptLocation}
+                onDecline={handleDeclineLocation}
             />
 
         </View>

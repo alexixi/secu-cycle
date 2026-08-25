@@ -14,7 +14,12 @@ from graph.routing import get_optimal_routes
 from models.bike import Bike
 from models.history import UserHistory
 from models.report import Report
-from reports_lifecycle import compute_status, load_votes_by_report
+from reports_lifecycle import (
+    compute_status,
+    load_votes_by_report,
+    load_abuse_counts,
+    is_hidden_for_abuse,
+)
 from datetime import datetime, timedelta
 from graph.guidance import build_maneuvers
 from graph.statistique import route_bridge_stats, wind_adjusted_travel_time
@@ -119,12 +124,18 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
     candidate_reports = db.query(Report).filter(Report.created_at >= limite_temps).all()
 
     now_utc = datetime.utcnow()
-    votes_by_report = load_votes_by_report(db, [r.id for r in candidate_reports])
+    candidate_ids = [r.id for r in candidate_reports]
+    votes_by_report = load_votes_by_report(db, candidate_ids)
+    # Un signalement masqué pour contenu répréhensible ne doit pas non plus peser
+    # sur le calcul : invisible sur la carte mais détournant les itinéraires, il
+    # resterait un moyen de nuire.
+    abuse_counts = load_abuse_counts(db, candidate_ids)
     recent_reports = [
         r for r in candidate_reports
         if not (
             (status := compute_status(r, votes_by_report.get(r.id, []), now_utc))["is_expired"]
             or status["is_disabled"]
+            or is_hidden_for_abuse(r, abuse_counts.get(r.id, 0))
         )
     ]
 

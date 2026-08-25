@@ -8,6 +8,13 @@ import { SwipeBackScreen } from '../components/SwipeBackScreen';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import { LEGAL_LINKS, openLegalPage } from '../constants/legal';
+import {
+    ACCEPTED,
+    DECLINED,
+    getBackgroundLocationChoice,
+    setBackgroundLocationChoice,
+} from '../services/locationDisclosure';
 import {
     areNotificationsEnabled,
     areWeatherAlertsEnabled,
@@ -23,7 +30,7 @@ const THEME_OPTIONS = [
     { mode: 'dark', label: 'Sombre', icon: 'moon' },
 ];
 
-function LinkRow({ icon, label, onPress, colors, isLast }) {
+function LinkRow({ icon, label, onPress, colors, isLast, tint }) {
     return (
         <TouchableOpacity
             style={[
@@ -34,8 +41,8 @@ function LinkRow({ icon, label, onPress, colors, isLast }) {
             accessibilityRole="button"
             accessibilityLabel={label}
         >
-            <Ionicons name={icon} size={20} color={colors.textMain} />
-            <Text style={[styles.linkLabel, { color: colors.textMain }]}>{label}</Text>
+            <Ionicons name={icon} size={20} color={tint ?? colors.textMain} />
+            <Text style={[styles.linkLabel, { color: tint ?? colors.textMain }]}>{label}</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
     );
@@ -49,10 +56,12 @@ export default function SettingsPage() {
     const [notifEnabled, setNotifEnabled] = useState(true);
     const [weatherAlertsEnabled, setWeatherAlerts] = useState(true);
     const [permission, setPermission] = useState('granted');
+    const [backgroundLocation, setBackgroundLocation] = useState(false);
 
     useEffect(() => {
         areNotificationsEnabled().then(setNotifEnabled);
         areWeatherAlertsEnabled().then(setWeatherAlerts);
+        getBackgroundLocationChoice().then((choice) => setBackgroundLocation(choice === ACCEPTED));
     }, []);
 
     useFocusEffect(
@@ -114,6 +123,12 @@ export default function SettingsPage() {
         await setWeatherAlertsEnabled(value);
     };
 
+    const handleBackgroundLocationToggle = async (value) => {
+        Haptics.selectionAsync().catch(() => { });
+        setBackgroundLocation(value);
+        await setBackgroundLocationChoice(value ? ACCEPTED : DECLINED);
+    };
+
     const isBlocked = (notifEnabled || weatherAlertsEnabled) && permission !== 'granted';
 
     return (
@@ -148,6 +163,12 @@ export default function SettingsPage() {
                                 icon="lock-closed-outline"
                                 label="Changer le mot de passe"
                                 onPress={() => router.push('/editpassword')}
+                                colors={colors}
+                            />
+                            <LinkRow
+                                icon="person-remove-outline"
+                                label="Auteurs bloqués"
+                                onPress={() => router.push('/blockedauthors')}
                                 colors={colors}
                                 isLast
                             />
@@ -257,6 +278,85 @@ export default function SettingsPage() {
                             </TouchableOpacity>
                         )}
                     </View>
+
+                    <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
+                        <View style={styles.sectionTitleRow}>
+                            <Ionicons name="location-outline" size={24} color={colors.textMain} />
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Localisation</Text>
+                        </View>
+
+                        <View style={styles.switchRow}>
+                            <View style={styles.switchLabel}>
+                                <Text style={[styles.rowTitle, { color: colors.textMain }]}>
+                                    Guidage en arrière-plan
+                                </Text>
+                                <Text style={[styles.hint, { color: colors.textSecondary }]}>
+                                    Poursuit le guidage quand l&apos;écran est éteint ou que
+                                    l&apos;application n&apos;est plus au premier plan. Votre position
+                                    n&apos;est relevée que pendant un trajet, uniquement pour vous guider,
+                                    et n&apos;est pas conservée.
+                                </Text>
+                            </View>
+
+                            <Switch
+                                value={backgroundLocation}
+                                onValueChange={handleBackgroundLocationToggle}
+                                trackColor={{ false: colors.borderStrong, true: colors.primary }}
+                                thumbColor={colors.bgMain}
+                                accessibilityLabel="Activer le guidage en arrière-plan"
+                            />
+                        </View>
+                    </View>
+
+                    <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
+                        <View style={styles.sectionTitleRow}>
+                            <Ionicons name="document-text-outline" size={24} color={colors.textMain} />
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Informations légales</Text>
+                        </View>
+
+                        <LinkRow
+                            icon="shield-checkmark-outline"
+                            label="Politique de confidentialité"
+                            onPress={() => openLegalPage(LEGAL_LINKS.privacy)}
+                            colors={colors}
+                        />
+                        <LinkRow
+                            icon="reader-outline"
+                            label="Conditions d'utilisation"
+                            onPress={() => openLegalPage(LEGAL_LINKS.terms)}
+                            colors={colors}
+                        />
+                        <LinkRow
+                            icon="business-outline"
+                            label="Mentions légales"
+                            onPress={() => openLegalPage(LEGAL_LINKS.legalNotice)}
+                            colors={colors}
+                            isLast
+                        />
+                    </View>
+
+                    {user && (
+                        <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
+                            <View style={styles.sectionTitleRow}>
+                                <Ionicons name="alert-circle-outline" size={24} color={colors.error} />
+                                <Text style={[styles.sectionTitle, { color: colors.error }]}>Zone de danger</Text>
+                            </View>
+
+                            <Text style={[styles.hint, { color: colors.textSecondary }]}>
+                                La suppression efface définitivement votre compte et les données
+                                qui y sont rattachées.
+                            </Text>
+
+                            <LinkRow
+                                icon="trash-outline"
+                                label="Supprimer mon compte"
+                                onPress={() => router.push('/deleteaccount')}
+                                colors={colors}
+                                tint={colors.error}
+                                isLast
+                            />
+                        </View>
+                    )}
                 </ScrollView>
             )}
         </SwipeBackScreen>

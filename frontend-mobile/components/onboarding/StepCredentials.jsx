@@ -5,6 +5,7 @@ import { Button, OutlineButton } from "../ui/Button";
 import EmailInput from "../ui/EmailInput";
 import PasswordInput from "../ui/PasswordInput";
 import { useTheme } from "../../hooks/useTheme";
+import { LEGAL_LINKS, openLegalPage } from "../../constants/legal";
 
 export const MIN_PASSWORD_LENGTH = 10;
 
@@ -104,6 +105,24 @@ export default function StepCredentials({
                     iconName="arrow-forward-outline"
                 />
 
+                <Text style={[styles.consentText, { color: colors.textSecondary }]}>
+                    En créant un compte, vous acceptez nos{" "}
+                    <Text
+                        style={[styles.consentLink, { color: colors.primary }]}
+                        onPress={() => openLegalPage(LEGAL_LINKS.terms)}
+                    >
+                        conditions d&apos;utilisation
+                    </Text>
+                    {" "}et notre{" "}
+                    <Text
+                        style={[styles.consentLink, { color: colors.primary }]}
+                        onPress={() => openLegalPage(LEGAL_LINKS.privacy)}
+                    >
+                        politique de confidentialité
+                    </Text>
+                    .
+                </Text>
+
                 <View style={styles.separatorContainer}>
                     <View style={[styles.separatorLine, { backgroundColor: colors.borderLight }]} />
                     <Text style={[styles.separatorText, { color: colors.textSecondary }]}>ou</Text>
@@ -140,6 +159,8 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     footer: { marginTop: 15 },
+    consentText: { fontSize: 12, lineHeight: 17, textAlign: "center", marginTop: 14 },
+    consentLink: { textDecorationLine: "underline" },
     separatorContainer: { flexDirection: "row", alignItems: "center", marginVertical: 24 },
     separatorLine: { flex: 1, height: 1 },
     separatorText: { marginHorizontal: 10, fontSize: 14 },

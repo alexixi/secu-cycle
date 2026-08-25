@@ -25,6 +25,7 @@ const PAGES_STATIQUES = [
     { path: '/donnees', changefreq: 'monthly', priority: '0.6' },
     { path: '/confidentialite', changefreq: 'yearly', priority: '0.5' },
     { path: '/conditions-utilisation', changefreq: 'yearly', priority: '0.4' },
+    { path: '/suppression-compte', changefreq: 'yearly', priority: '0.4' },
     { path: '/contact', changefreq: 'yearly', priority: '0.4' },
     { path: '/mentions-legales', changefreq: 'yearly', priority: '0.3' },
 ];

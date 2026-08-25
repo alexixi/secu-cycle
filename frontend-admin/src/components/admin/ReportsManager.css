@@ -291,6 +291,46 @@
   color: #2563eb;
 }
 
+.status-badge.reported {
+  background: rgba(217, 70, 239, 0.18);
+  color: #a21caf;
+}
+
+.status-badge.flagged {
+  background: rgba(234, 88, 12, 0.15);
+  color: #ea580c;
+}
+
+.abuse-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.abuse-reason-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(234, 88, 12, 0.12);
+  color: #ea580c;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.abuse-reason-chip strong {
+  font-weight: 700;
+}
+
+.abuse-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
 .report-verified-toggle {
   display: flex;
   align-items: flex-start;

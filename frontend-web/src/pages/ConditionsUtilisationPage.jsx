@@ -91,8 +91,10 @@ export default function ConditionsUtilisationPage() {
                     <h2>9. Modification et résiliation</h2>
                     <p>
                         Les éditeurs peuvent faire évoluer le Service et les présentes CGU. Vous pouvez cesser
-                        d'utiliser le Service et supprimer votre compte à tout moment. En cas de manquement aux
-                        CGU, l'accès au Service peut être suspendu ou résilié.
+                        d'utiliser le Service et{" "}
+                        <Link to="/suppression-compte">supprimer votre compte</Link> à tout moment, depuis
+                        l'application comme depuis le site. En cas de manquement aux CGU, l'accès au Service
+                        peut être suspendu ou résilié.
                     </p>
 
                     <h2>10. Droit applicable et litiges</h2>

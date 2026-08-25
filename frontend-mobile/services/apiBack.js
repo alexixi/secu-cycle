@@ -43,6 +43,15 @@ async function refreshAccessToken() {
     }
 }
 
+// Signal machine posé par get_current_user quand c'est la SESSION qui est morte.
+// Les autres 401 sont métier (mot de passe erroné dans le corps de la requête)
+// et ne doivent surtout pas déclencher de déconnexion.
+const SESSION_INVALID_HEADER = "X-Auth-Error";
+const SESSION_INVALID_CODE = "session_invalid";
+
+// Repli sur les messages, pour les API pas encore passées à l'en-tête. Cette
+// liste ne survivra pas à la traduction du backend — c'est exactement pourquoi
+// l'en-tête existe — et elle disparaîtra une fois l'API déployée partout.
 const SESSION_INVALID_DETAILS = [
     "Invalid token",
     "Invalid token payload",
@@ -50,7 +59,11 @@ const SESSION_INVALID_DETAILS = [
     "Compte suspendu.",
 ];
 
-function isSessionInvalid(errorData) {
+function isSessionInvalid(response, errorData) {
+    if (response.headers.get(SESSION_INVALID_HEADER) === SESSION_INVALID_CODE) {
+        return true;
+    }
+
     let detail = errorData;
     try {
         const parsed = JSON.parse(errorData)?.detail;
@@ -78,7 +91,7 @@ export async function apiFetch(endpoint, options = {}, token = null, _retried = 
     if (!response.ok) {
         const errorData = await response.text();
         const isAuthEndpoint = url.includes("/login") || url.includes("/refresh");
-        if (response.status === 401 && !isAuthEndpoint && isSessionInvalid(errorData)) {
+        if (response.status === 401 && !isAuthEndpoint && isSessionInvalid(response, errorData)) {
             if (!_retried) {
                 const newToken = await refreshAccessToken();
                 if (newToken) {
@@ -291,6 +304,18 @@ export async function changePassword(token, oldPassword, newPassword) {
     }
 }
 
+export async function deleteAccount(token, password) {
+    try {
+        const data = await apiFetch("/users/me", {
+            method: "DELETE",
+            body: JSON.stringify({ password: password }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function requestEmailChange(token, newEmail, password) {
     try {
         const data = await apiFetch("/users/me/email", {
@@ -428,6 +453,47 @@ export async function deleteAllHistoric(token) {
     }
 }
 
+export async function reportAbuse(token, reportId, reason) {
+    try {
+        const data = await apiFetch(`/reports/${reportId}/abuse`, {
+            method: "POST",
+            body: JSON.stringify({ reason: reason || "other" }),
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function blockReportAuthor(token, reportId) {
+    try {
+        const data = await apiFetch(`/reports/${reportId}/block-author`, {
+            method: "POST",
+        }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getMyBlocks(token) {
+    try {
+        const data = await apiFetch("/users/me/blocks", { method: "GET" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function unblockUser(token, blockedId) {
+    try {
+        const data = await apiFetch(`/users/me/blocks/${blockedId}`, { method: "DELETE" }, token);
+        return data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function deleteReport(token, reportId) {
     try {
         const data = await apiFetch(`/reports/${reportId}`, { method: "DELETE" }, token);
@@ -437,9 +503,9 @@ export async function deleteReport(token, reportId) {
     }
 }
 
-export async function getReports() {
+export async function getReports(token = null) {
     try {
-        const data = await apiFetch("/reports/", { method: "GET" });
+        const data = await apiFetch("/reports/", { method: "GET" }, token);
         return data;
     } catch (error) {
         throw error;

@@ -36,6 +36,7 @@ import hashlib
 import logging
 from datetime import datetime, timedelta, timezone
 
+from i18n import DEFAULT_LOCALE
 from graph.extent import contains, distance_km, graph_zones, sample_points
 from vigilance import service as vigilance_service
 from weather import config, providers
@@ -109,7 +110,7 @@ def snapshot() -> dict:
     return _state.as_dict()
 
 
-def etag() -> str | None:
+def etag(locale: str = DEFAULT_LOCALE) -> str | None:
     """Empreinte de la réponse *telle qu'elle sera servie maintenant*.
 
     L'empreinte de collecte ne suffit pas : à données constantes, le payload
@@ -128,7 +129,7 @@ def etag() -> str | None:
         minute=(now.minute // config.MINUTELY_STEP_MIN) * config.MINUTELY_STEP_MIN,
         second=0, microsecond=0,
     )
-    return f'W/"{_state.etag}-{int(bucket.timestamp())}"'
+    return f'W/"{_state.etag}-{int(bucket.timestamp())}-{locale}"'
 
 
 # --- Fraîcheur ---------------------------------------------------------------

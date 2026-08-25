@@ -14,6 +14,18 @@ import ReportDetailModal from "./ReportDetailModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import "./ReportsManager.css";
 
+export const ABUSE_REASONS = {
+  offensive: "Contenu offensant",
+  spam: "Spam ou publicité",
+  wrong_place: "Signalement fantaisiste",
+  other: "Autre motif",
+};
+
+export const abuseSummary = (report) => Object.entries(report?.abuse_reasons || {})
+  .sort((a, b) => b[1] - a[1])
+  .map(([reason, count]) => `${ABUSE_REASONS[reason] || reason} ×${count}`)
+  .join(" · ");
+
 export const REPORT_TYPES = {
   accident: { label: "Accident", className: "type-accident", icon: "🚨" },
   travaux: { label: "Travaux", className: "type-travaux", icon: "🚧" },
@@ -78,6 +90,7 @@ export default function ReportsManager() {
       if (statusFilter === "active" && (r.is_expired || r.is_disabled)) return false;
       if (statusFilter === "expired" && !r.is_expired) return false;
       if (statusFilter === "disabled" && !r.is_disabled) return false;
+      if (statusFilter === "reported" && !(r.abuse_count > 0)) return false;
       if (!q) return true;
       return [r.report_description, r.author_email, r.author_name, r.report_type]
         .filter(Boolean)
@@ -87,6 +100,7 @@ export default function ReportsManager() {
 
   const activeCount = reports.filter((r) => !r.is_expired && !r.is_disabled).length;
   const disabledCount = reports.filter((r) => r.is_disabled).length;
+  const reportedCount = reports.filter((r) => r.abuse_count > 0).length;
 
   // Applique une sanction (is_banned / reports_blocked) à l'auteur d'un signalement
   // et répercute le nouvel état sur tous ses signalements listés.
@@ -141,7 +155,21 @@ export default function ReportsManager() {
   };
 
   const renderStatus = (r) => {
+    if (r.is_hidden_for_abuse) {
+      return (
+        <span className="status-badge reported" title={abuseSummary(r)}>
+          Masqué · {r.abuse_count} signalement{r.abuse_count > 1 ? "s" : ""}
+        </span>
+      );
+    }
     if (r.is_verified) return <span className="status-badge verified">Vérifié</span>;
+    if (r.abuse_count > 0) {
+      return (
+        <span className="status-badge flagged" title={abuseSummary(r)}>
+          Signalé ×{r.abuse_count}
+        </span>
+      );
+    }
     if (r.is_disabled) return <span className="status-badge disabled">Désactivé</span>;
     return (
       <span className={`status-badge ${r.is_expired ? "expired" : "active"}`}>
@@ -197,6 +225,7 @@ export default function ReportsManager() {
           <option value="active">Actifs</option>
           <option value="expired">Expirés</option>
           <option value="disabled">Désactivés</option>
+          <option value="reported">Signalés {reportedCount > 0 ? `(${reportedCount})` : ""}</option>
         </select>
       </div>
 

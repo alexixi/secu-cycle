@@ -14,11 +14,16 @@
   },
   "reactSnap": {
     "source": "dist",
-    "//": "react-snap suit aussi les liens internes : /carte suffit à faire découvrir les hubs de ville puis les cartes thématiques.",
-    "include": ["/", "/itineraire", "/login", "/signin", "/mentions-legales", "/confidentialite", "/conditions-utilisation", "/contact", "/faq", "/donnees", "/carte"],
+    "include": ["/", "/itineraire", "/login", "/signin", "/mentions-legales", "/confidentialite", "/conditions-utilisation", "/suppression-compte", "/contact", "/faq", "/donnees", "/carte"],
     "inlineCss": false,
     "skipThirdPartyRequests": true,
-    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"]
+    "concurrency": 1,
+    "puppeteerArgs": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu"
+    ]
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",

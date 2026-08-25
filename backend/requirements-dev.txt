@@ -1,0 +1,6 @@
+# Dépendances de développement — délibérément séparées de requirements.txt, qui
+# est installé dans l'image de production (Dockerfile). Rien d'ici ne doit s'y
+# retrouver.
+-r requirements.txt
+
+pytest==8.4.2
