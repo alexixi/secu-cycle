@@ -1,8 +1,10 @@
 import { Link } from "react-router";
 import Meta from "../components/Meta";
 import "./legal.css";
+import { useLocalizedPath } from '../i18n/useLang';
 
 export default function ConditionsUtilisationPage() {
+    const path = useLocalizedPath();
     return (
         <>
             <Meta
@@ -29,7 +31,7 @@ export default function ConditionsUtilisationPage() {
                         Service repose sur des données ouvertes (OpenStreetMap, IGN, Base Adresse Nationale,
                         registres officiels d'accidentologie, trafic en temps réel des portails open data
                         métropolitains, qualité de l'air Copernicus), dont la liste complète figure sur la page{" "}
-                        <Link to="/donnees">sources des données</Link>, et propose des itinéraires à titre
+                        <Link to={path("donnees")}>sources des données</Link>, et propose des itinéraires à titre
                         indicatif.
                     </p>
 
@@ -84,7 +86,7 @@ export default function ConditionsUtilisationPage() {
                     <h2>8. Données personnelles</h2>
                     <p>
                         Le traitement de vos données personnelles est décrit dans notre{" "}
-                        <Link to="/confidentialite">politique de confidentialité</Link>, qui fait partie
+                        <Link to={path("confidentialite")}>politique de confidentialité</Link>, qui fait partie
                         intégrante des présentes CGU.
                     </p>
 
@@ -92,7 +94,7 @@ export default function ConditionsUtilisationPage() {
                     <p>
                         Les éditeurs peuvent faire évoluer le Service et les présentes CGU. Vous pouvez cesser
                         d'utiliser le Service et{" "}
-                        <Link to="/suppression-compte">supprimer votre compte</Link> à tout moment, depuis
+                        <Link to={path("suppressionCompte")}>supprimer votre compte</Link> à tout moment, depuis
                         l'application comme depuis le site. En cas de manquement aux CGU, l'accès au Service
                         peut être suspendu ou résilié.
                     </p>
@@ -113,7 +115,7 @@ export default function ConditionsUtilisationPage() {
                         Pour toute question relative aux présentes CGU :{" "}
                         <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>. Les informations
                         relatives à l'éditeur et à l'hébergeur figurent dans les{" "}
-                        <Link to="/mentions-legales">mentions légales</Link>.
+                        <Link to={path("mentionsLegales")}>mentions légales</Link>.
                     </p>
                 </article>
             </div>

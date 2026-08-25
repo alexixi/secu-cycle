@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { Helmet } from "react-helmet-async";
 import Meta from "../components/Meta";
 import "./legal.css";
+import { useLocalizedPath } from '../i18n/useLang';
 
 const ODBL = { label: "ODbL", href: "https://opendatacommons.org/licenses/odbl/" };
 const LO = { label: "Licence Ouverte", href: "https://www.etalab.gouv.fr/licence-ouverte-open-licence/" };
@@ -188,6 +189,7 @@ const jsonLd = {
 };
 
 export default function DonneesPage() {
+    const path = useLocalizedPath();
     return (
         <>
             <Meta
@@ -398,8 +400,8 @@ export default function DonneesPage() {
                         <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>.
                     </p>
                     <p>
-                        Voir aussi nos <Link to="/mentions-legales">mentions légales</Link> et notre{" "}
-                        <Link to="/faq">foire aux questions</Link>.
+                        Voir aussi nos <Link to={path("mentionsLegales")}>mentions légales</Link> et notre{" "}
+                        <Link to={path("faq")}>foire aux questions</Link>.
                     </p>
                 </article>
             </div>

@@ -1,8 +1,10 @@
 import { Link } from "react-router";
 import Meta from "../components/Meta";
 import "./legal.css";
+import { useLocalizedPath } from '../i18n/useLang';
 
 export default function ConfidentialitePage() {
+    const path = useLocalizedPath();
     return (
         <>
             <Meta
@@ -33,7 +35,7 @@ export default function ConfidentialitePage() {
                         Pour toute question ou pour exercer vos droits :{" "}
                         <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>. Les informations
                         d'identification complètes figurent dans les{" "}
-                        <Link to="/mentions-legales">mentions légales</Link>.
+                        <Link to={path("mentionsLegales")}>mentions légales</Link>.
                     </p>
 
                     <h2>2. Données que nous traitons</h2>
@@ -189,7 +191,7 @@ export default function ConfidentialitePage() {
                         Vous pouvez <strong>supprimer votre compte vous-même</strong>, sans nous
                         contacter, depuis l'application mobile comme depuis ce site&nbsp;: la marche à
                         suivre et le détail de ce qui est effacé figurent sur la page{" "}
-                        <Link to="/suppression-compte">Supprimer mon compte</Link>. Votre historique de
+                        <Link to={path("suppressionCompte")}>Supprimer mon compte</Link>. Votre historique de
                         trajets peut également être supprimé seul, depuis votre profil.
                     </p>
                     <p>

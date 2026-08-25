@@ -1,8 +1,10 @@
 import { Link } from "react-router";
 import Meta from "../components/Meta";
 import "./legal.css";
+import { useLocalizedPath } from '../i18n/useLang';
 
 export default function MentionsLegalesPage() {
+    const path = useLocalizedPath();
     return (
         <>
             <Meta
@@ -113,14 +115,14 @@ export default function MentionsLegalesPage() {
                     </ul>
                     <p>
                         Le détail de chaque source, son usage exact et son producteur sont listés sur notre
-                        page <Link to="/donnees">sources des données</Link>.
+                        page <Link to={path("donnees")}>sources des données</Link>.
                     </p>
 
                     <h2>Données personnelles et conditions d'utilisation</h2>
                     <p>
                         Le traitement de vos données personnelles est décrit dans notre{" "}
-                        <Link to="/confidentialite">politique de confidentialité</Link>. L'utilisation du service
-                        est régie par nos <Link to="/conditions-utilisation">conditions générales d'utilisation</Link>.
+                        <Link to={path("confidentialite")}>politique de confidentialité</Link>. L'utilisation du service
+                        est régie par nos <Link to={path("conditions")}>conditions générales d'utilisation</Link>.
                     </p>
                 </article>
             </div>

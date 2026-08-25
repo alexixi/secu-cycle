@@ -7,6 +7,7 @@ import { ImSad2 } from "react-icons/im";
 import "../ui/Input.css";
 import "../ui/Form.css";
 import "./Onboarding.css";
+import { useLocalizedPath } from '../../i18n/useLang';
 
 export const MIN_PASSWORD_LENGTH = 10;
 
@@ -25,6 +26,7 @@ export default function StepCredentials({
     onSubmit,
     isLoading,
 }) {
+    const path = useLocalizedPath();
     const passwordTooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
 
     const handleSubmit = (e) => {
@@ -110,7 +112,7 @@ export default function StepCredentials({
 
         <div className="separator">ou</div>
 
-        <LinkButton to="/login">J&apos;ai déjà un compte <LuLogIn /></LinkButton>
+        <LinkButton to={path("login")}>J&apos;ai déjà un compte <LuLogIn /></LinkButton>
         </div>
     );
 }

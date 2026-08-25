@@ -10,10 +10,12 @@ import { useAuth } from "../context/AuthContext";
 import { trackEvent } from "../services/analytics";
 import { LuLogIn } from "react-icons/lu";
 import { FaPersonCirclePlus } from "react-icons/fa6";
+import { useLocalizedPath } from '../i18n/useLang';
 import "../components/ui/Input.css"
 import "../components/ui/Form.css"
 
 export default function Login() {
+    const path = useLocalizedPath();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
@@ -43,10 +45,10 @@ export default function Login() {
             const response_historic = await getUserHistoric(response_login.access_token);
             updateHistoric(response_historic);
             trackEvent("logged_in");
-            navigate("/profil");
+            navigate(path("profil"));
         } catch (error) {
             if (error?.status === 403) {
-                navigate("/signin", { state: { email, password, verify: true } });
+                navigate(path("signin"), { state: { email, password, verify: true } });
                 return;
             }
             console.error("Login error:", error);
@@ -118,7 +120,7 @@ export default function Login() {
                                 </div>
                             )}
                             <Link
-                                to="/forgot-password"
+                                to={path("forgotPassword")}
                                 state={{ email }}
                                 className="forgot-password-link"
                             >

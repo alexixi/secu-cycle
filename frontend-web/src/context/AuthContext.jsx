@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from "react-router";
+import { useLocalizedPath } from '../i18n/useLang';
 
 const AuthContext = createContext();
 
@@ -19,6 +20,7 @@ const readStored = (key, { parse = false, fallback = null } = {}) => {
 };
 
 export const AuthProvider = ({ children }) => {
+    const path = useLocalizedPath();
     const [user, setUser] = useState(() => readStored('user', { parse: true }));
     const [token, setToken] = useState(() => readStored('access_token'));
     const [userBikes, setUserBikes] = useState(() => readStored('bikes', { parse: true, fallback: [] }));
@@ -58,7 +60,7 @@ export const AuthProvider = ({ children }) => {
         setToken(null);
         setUserBikes([]);
         setHistoric([]);
-        navigate("/login");
+        navigate(path("login"));
     };
 
     useEffect(() => {
@@ -81,7 +83,7 @@ export const AuthProvider = ({ children }) => {
             setToken(null);
             setUserBikes([]);
             setHistoric([]);
-            navigate("/login", {
+            navigate(path("login"), {
                 state: {
                     sessionExpired: true,
                     message: "Votre session a expiré pour des raisons de sécurité. Veuillez vous reconnecter."

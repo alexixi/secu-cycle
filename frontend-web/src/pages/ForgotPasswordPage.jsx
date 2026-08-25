@@ -9,10 +9,12 @@ import PasswordInput from "../components/ui/PasswordInput";
 import { forgotPassword, resetPassword } from "../services/apiBack";
 import "../components/ui/Input.css";
 import "../components/ui/Form.css";
+import { useLocalizedPath } from '../i18n/useLang';
 const MIN_PASSWORD_LENGTH = 10;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function ForgotPasswordPage() {
+    const path = useLocalizedPath();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -89,7 +91,7 @@ export default function ForgotPasswordPage() {
         setIsLoading(true);
         try {
             await resetPassword(email, code, password);
-            navigate("/login", {
+            navigate(path("login"), {
                 state: { message: "Mot de passe réinitialisé. Vous pouvez vous connecter." },
             });
         } catch (error) {
@@ -158,7 +160,7 @@ export default function ForgotPasswordPage() {
                                 {isLoading ? "Envoi…" : <>Envoyer le code <LuKeyRound /></>}
                             </Button>
 
-                            <Link to="/login" className="forgot-password-link" style={{ textAlign: "center" }}>
+                            <Link to={path("login")} className="forgot-password-link" style={{ textAlign: "center" }}>
                                 Retour à la connexion
                             </Link>
                         </form>
