@@ -164,6 +164,12 @@ export default function SettingsPage() {
                                 label="Changer le mot de passe"
                                 onPress={() => router.push('/editpassword')}
                                 colors={colors}
+                            />
+                            <LinkRow
+                                icon="person-remove-outline"
+                                label="Auteurs bloqués"
+                                onPress={() => router.push('/blockedauthors')}
+                                colors={colors}
                                 isLast
                             />
                         </View>
