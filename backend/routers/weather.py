@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, Response
 
 from limiter import limiter
+from i18n import get_locale
 from weather import service
 
 router = APIRouter(prefix="/weather", tags=["Weather"])
@@ -14,7 +15,7 @@ CACHE_CONTROL = "no-cache"
 
 @router.get("/")
 @limiter.limit("60/minute")
-async def get_weather(request: Request):
+async def get_weather(request: Request, locale: str = Depends(get_locale)):
     """Météo, nowcast pluie 15 min et vigilance sur l'emprise couverte.
 
     Sert l'instantané tenu à jour par la tâche de fond : aucun appel sortant n'est
@@ -40,7 +41,7 @@ async def get_weather(request: Request):
     | Panne > 3 h                   | `true`      | `true`  | sans alertes, équipement, hint |
     | Panne au démarrage, ou coupé  | `false`     | `false` | listes vides, `summary: null`  |
     """
-    etag = service.etag()
+    etag = service.etag(locale)
     headers = {"Cache-Control": CACHE_CONTROL}
     if etag:
         headers["ETag"] = etag

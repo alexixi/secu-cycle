@@ -1,5 +1,4 @@
 import asyncio
-import hashlib
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response
@@ -8,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from accidents import runner
 from database import get_db
+from i18n import etag_for, get_locale
 from dependencies import require_admin
 from models.accident import RoadAccident, SEVERITY_LABELS, SOURCE_ATTRIBUTIONS
 from models.accident_sync import AccidentSyncRun
@@ -49,6 +49,7 @@ def get_accidents(
     since_year: int | None = Query(None, ge=1990, le=2100),
     severity_min: int | None = Query(None, ge=0, le=10),
     db: Session = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     """Accidents corporels recensés, en GeoJSON FeatureCollection. Public, sans authentification."""
     bounds = _parse_bbox(bbox)
@@ -70,10 +71,7 @@ def get_accidents(
         db.query(func.count(RoadAccident.id), func.max(RoadAccident.updated_at))
     ).one()
 
-    etag = 'W/"' + hashlib.md5(
-        f"{count}-{last_sync}-{bbox}-{since_year}-{severity_min}".encode(),
-        usedforsecurity=False,
-    ).hexdigest() + '"'
+    etag = etag_for(f"{count}-{last_sync}-{bbox}-{since_year}-{severity_min}", locale)
     headers = {"ETag": etag, "Cache-Control": CACHE_CONTROL}
 
     if request.headers.get("if-none-match") == etag:

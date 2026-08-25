@@ -1,5 +1,4 @@
 import asyncio
-import hashlib
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response
@@ -7,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
+from i18n import etag_for, get_locale
 from dependencies import require_admin
 from models.poi import MapPoi, POI_CATEGORIES, parking_type_of, toilet_fee_of, repair_kind_of
 from models.poi_sync import PoiSyncRun
@@ -59,6 +59,7 @@ def get_pois(
     categories: str | None = Query(None, description="Liste séparée par des virgules : water,toilets,parking,repair"),
     bbox: str | None = Query(None, description="lon_min,lat_min,lon_max,lat_max"),
     db: Session = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     """Points d'intérêt cyclables, en GeoJSON FeatureCollection. Public, sans authentification."""
     cats = _parse_categories(categories)
@@ -79,10 +80,7 @@ def get_pois(
         db.query(func.count(MapPoi.id), func.max(MapPoi.updated_at))
     ).one()
 
-    etag = 'W/"' + hashlib.md5(
-        f"{count}-{last_sync}-{','.join(cats)}-{bbox}".encode(),
-        usedforsecurity=False,
-    ).hexdigest() + '"'
+    etag = etag_for(f"{count}-{last_sync}-{','.join(cats)}-{bbox}", locale)
     headers = {"ETag": etag, "Cache-Control": CACHE_CONTROL}
 
     if request.headers.get("if-none-match") == etag:

@@ -104,4 +104,13 @@ mail:
 		|| open $(MAIL_PREVIEW) >/dev/null 2>&1 \
 		|| echo "   Ouvrez $(MAIL_PREVIEW) dans un navigateur."
 
-.PHONY: all api api-background api-build api-stop web web-docker web-install mobile mobile-install appli install logs shell stop down clean prod deploy deploy-static regen-graph sync-pois sync-accidents sync-lighting screen mail
+test:
+	@python3 -c "import pytest" 2>/dev/null \
+		|| { echo "pytest absent : pip install -r backend/requirements-dev.txt"; exit 1; }
+	@echo "-> Tests du backend (fonctions pures : ni base, ni graphe)"
+	cd backend && PYTHONPATH=. python3 -m pytest tests/
+
+check-i18n:
+	@cd backend && PYTHONPATH=. python3 -m i18n.check
+
+.PHONY: all api api-background api-build api-stop web web-docker web-install mobile mobile-install appli install logs shell stop down clean prod deploy deploy-static regen-graph sync-pois sync-accidents sync-lighting screen mail test check-i18n

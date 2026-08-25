@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, Response
 
 from limiter import limiter
+from i18n import get_locale
 from bikeshare import service
 
 router = APIRouter(prefix="/bikeshare", tags=["Bikeshare"])
@@ -14,7 +15,7 @@ CACHE_CONTROL = "no-cache"
 
 @router.get("/")
 @limiter.limit("60/minute")
-async def get_bikeshare(request: Request):
+async def get_bikeshare(request: Request, locale: str = Depends(get_locale)):
     """Stations de vélos en libre-service (GBFS) sur la zone couverte, en GeoJSON.
 
     Sert l'instantané tenu à jour par la tâche de fond : aucun appel sortant n'est
@@ -25,7 +26,7 @@ async def get_bikeshare(request: Request):
     jour où un profil dépassera le millier de stations (Paris) — il faudra alors
     faire entrer le bbox demandé dans le calcul de l'ETag.
     """
-    etag = service.etag()
+    etag = service.etag(locale)
     headers = {"Cache-Control": CACHE_CONTROL}
     if etag:
         headers["ETag"] = etag

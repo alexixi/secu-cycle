@@ -9,6 +9,8 @@ from admin_emails import is_user_admin
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
+SESSION_INVALID = {"X-Auth-Error": "session_invalid"}
+
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -17,17 +19,17 @@ def get_current_user(
     payload = verify_token(token)
 
     if payload is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid token", headers=SESSION_INVALID)
 
     user_id = payload.get("sub")
 
     if user_id is None:
-        raise HTTPException(status_code=401, detail="Invalid token payload")
+        raise HTTPException(status_code=401, detail="Invalid token payload", headers=SESSION_INVALID)
 
     try:
         user_id = int(user_id)
     except (TypeError, ValueError):
-        raise HTTPException(status_code=401, detail="Invalid token payload")
+        raise HTTPException(status_code=401, detail="Invalid token payload", headers=SESSION_INVALID)
 
     user = db.query(User).filter(User.id == user_id).first()
 
@@ -35,10 +37,10 @@ def get_current_user(
         raise HTTPException(status_code=404, detail="User not found")
 
     if user.is_banned:
-        raise HTTPException(status_code=401, detail="Compte suspendu.")
+        raise HTTPException(status_code=401, detail="Compte suspendu.", headers=SESSION_INVALID)
 
     if payload.get("tv", 0) != (user.token_version or 0):
-        raise HTTPException(status_code=401, detail="Token révoqué")
+        raise HTTPException(status_code=401, detail="Token révoqué", headers=SESSION_INVALID)
 
     return user
 
