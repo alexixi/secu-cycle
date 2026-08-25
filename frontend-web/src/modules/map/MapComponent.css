@@ -224,6 +224,20 @@
     width: 100%;
 }
 
+.map-popup-abuse {
+    background: none;
+    border: none;
+    padding: 2px 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.map-popup-abuse:hover {
+    color: var(--error);
+}
+
 .map-popup-votes {
     margin: 4px 0 0;
     display: flex;

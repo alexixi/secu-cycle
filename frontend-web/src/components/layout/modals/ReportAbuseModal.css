@@ -1,0 +1,109 @@
+.abuse-modal h2 {
+    margin: 0 0 0.4rem;
+    font-size: 1.3rem;
+    text-align: left;
+    color: var(--text-main);
+}
+
+.abuse-lead {
+    margin: 0 0 1.25rem;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    text-align: left;
+    color: var(--text-secondary);
+}
+
+.abuse-reason {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    width: 100%;
+    padding: 0.8rem 0.9rem;
+    margin-bottom: 0.6rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    color: var(--text-main);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.abuse-reason:hover {
+    background-color: var(--bg-surface-hover);
+    border-color: var(--error);
+}
+
+.abuse-reason svg {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    color: var(--error);
+}
+
+.abuse-reason-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.abuse-reason-text strong {
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.abuse-reason-text small {
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--text-secondary);
+}
+
+.abuse-block {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-light);
+}
+
+.abuse-block .abuse-reason svg {
+    color: var(--text-secondary);
+}
+
+.abuse-block .abuse-reason:hover {
+    border-color: var(--border-strong);
+}
+
+/* Réutilise la carte des motifs pour la liste des auteurs bloqués : même
+   géométrie, mais ce n'est plus un bouton, l'action est le lien de droite. */
+.blocked-row {
+    cursor: default;
+    align-items: center;
+}
+
+.blocked-row:hover {
+    background-color: var(--bg-surface);
+    border-color: var(--border-light);
+}
+
+.blocked-row svg {
+    color: var(--text-secondary);
+}
+
+.blocked-row .abuse-reason-text {
+    flex: 1;
+}
+
+.blocked-unblock {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+}
+
+.blocked-unblock:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
