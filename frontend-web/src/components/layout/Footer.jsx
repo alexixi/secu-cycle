@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router";
+import { useTranslation } from "react-i18next";
 import Logo from "../../assets/logo.svg?react";
 import { langFromPathname, pathFor } from "../../i18n/routes";
 import "./Footer.css";
@@ -8,17 +9,11 @@ import "./Footer.css";
 // un <button> et non une ancre. C'est donc d'ici que react-snap et les moteurs
 // découvrent l'arbre des pages — d'où l'usage de <Link>, à ne pas remplacer par
 // un bouton.
-const LIENS = [
-    { routeKey: "carteHub", label: "Cartes par ville" },
-    { routeKey: "faq", label: "FAQ" },
-    { routeKey: "donnees", label: "Sources des données" },
-    { routeKey: "mentionsLegales", label: "Mentions légales" },
-    { routeKey: "confidentialite", label: "Politique de confidentialité" },
-    { routeKey: "conditions", label: "Conditions d'utilisation" },
-    { routeKey: "contact", label: "Contact" },
-];
+// Clés de route : le libellé se résout au rendu, dans la langue de la page.
+const LIENS = ["carteHub", "faq", "donnees", "mentionsLegales", "confidentialite", "conditions", "contact"];
 
 export default function Footer() {
+    const { t } = useTranslation();
     const year = new Date().getFullYear();
     const lang = langFromPathname(useLocation().pathname);
 
@@ -28,9 +23,9 @@ export default function Footer() {
                 <Logo className="footer-logo" />
                 <span className="footer-title">Sécu'Cycle</span>
             </div>
-            <nav className="footer-links" aria-label="Liens légaux">
-                {LIENS.map(({ routeKey, label }) => (
-                    <Link key={routeKey} to={pathFor(routeKey, lang)}>{label}</Link>
+            <nav className="footer-links" aria-label={t('a11y.liensLegaux')}>
+                {LIENS.map((routeKey) => (
+                    <Link key={routeKey} to={pathFor(routeKey, lang)}>{t(`nav.${routeKey}`)}</Link>
                 ))}
             </nav>
             <div className="footer-copy">

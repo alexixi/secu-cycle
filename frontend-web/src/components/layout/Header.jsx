@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from "react-router";
 import { langFromPathname, matchPath, pathFor } from "../../i18n/routes";
 import './Header.css';
@@ -20,14 +21,14 @@ const isPage = (currentPage, targetPage) => {
 // Indexé par clé de route : le chemin est résolu au rendu, dans la langue
 // courante, plutôt que codé en dur ici.
 const CONTEXTUAL_PAGES = {
-    carteHub: { label: "Cartes par ville", Icon: LuMap },
-    faq: { label: "FAQ", Icon: LuCircleHelp },
-    donnees: { label: "Sources des données", Icon: LuDatabase },
-    mentionsLegales: { label: "Mentions légales", Icon: LuFileText },
-    confidentialite: { label: "Politique de confidentialité", Icon: LuShield },
-    conditions: { label: "Conditions d'utilisation", Icon: LuScrollText },
-    contact: { label: "Contact", Icon: LuMail },
-    profil: { label: "Profil", Icon: FaUser, mobile: false },
+    carteHub: { Icon: LuMap },
+    faq: { Icon: LuCircleHelp },
+    donnees: { Icon: LuDatabase },
+    mentionsLegales: { Icon: LuFileText },
+    confidentialite: { Icon: LuShield },
+    conditions: { Icon: LuScrollText },
+    contact: { Icon: LuMail },
+    profil: { Icon: FaUser, mobile: false },
 };
 
 // Routes qui allument la même entrée de navigation qu'une autre : les trois
@@ -41,7 +42,7 @@ const PAGE_ALIASES = {
 
 const CONTEXTUAL_EXIT_MS = 200;
 
-const ProfileButton = ({ className, onClick }) => {
+const ProfileButton = ({ className, onClick, ariaLabel }) => {
     return (
         <button id="profile-button" className={className} onClick={onClick} aria-label="Menu profil" aria-haspopup="true">
             <FaUser size={20} />
@@ -50,6 +51,7 @@ const ProfileButton = ({ className, onClick }) => {
 };
 
 const Header = () => {
+    const { t } = useTranslation();
     const { user, logoutAuth } = useAuth();
     const { mode, setMode } = useTheme();
     const [isProfileMenuOpen, setisProfileMenuOpen] = useState(false);
@@ -111,14 +113,14 @@ const Header = () => {
                 <div id="header-title">Sécu'Cycle</div>
             </span>
             <nav className='media-large'>
-                <LinkButton to={pathFor("home", lang)} className={isPage(page, "home")}>Accueil</LinkButton>
-                <LinkButton to={pathFor("itineraire", lang)} className={isPage(page, "itineraire")}>Itinéraire</LinkButton>
+                <LinkButton to={pathFor("home", lang)} className={isPage(page, "home")}>{t('nav.home')}</LinkButton>
+                <LinkButton to={pathFor("itineraire", lang)} className={isPage(page, "itineraire")}>{t('nav.itineraire')}</LinkButton>
                 {contextual && (
                     <LinkButton
                         to={pathFor(contextual, lang)}
                         className={`active nav-contextual${isContextualLeaving ? " nav-contextual-out" : ""}`}
                     >
-                        {CONTEXTUAL_PAGES[contextual].label}
+                        {t(`nav.${contextual}`)}
                     </LinkButton>
                 )}
             </nav>
@@ -128,9 +130,10 @@ const Header = () => {
                     ? <div className="user-connected" onClick={() => go("profil")}>
                         {user.first_name}
                       </div>
-                    : <LinkButton to={pathFor("login", lang)} className={isPage(page, "login")}>Connexion</LinkButton>
+                    : <LinkButton to={pathFor("login", lang)} className={isPage(page, "login")}>{t('compte.connexion')}</LinkButton>
                 }
                 <ProfileButton
+                    ariaLabel={t('a11y.menuProfil')}
                     className={isProfileMenuOpen || page in ["profil", "login", "signin"] ? 'active' : ''}
                     onClick={() => setisProfileMenuOpen(!isProfileMenuOpen)}
                 />
@@ -139,10 +142,10 @@ const Header = () => {
             {isProfileMenuOpen && user && (
                 <div className="dropdown profile-dropdown">
                     <button className="dropdown-item" onClick={() => go("profil")}>
-                        <FaUser /> Mon Profil
+                        <FaUser /> {t('compte.monProfil')}
                     </button>
                     <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setisProfileMenuOpen(false); }}>
-                        <LuLogOut /> Se déconnecter
+                        <LuLogOut /> {t('compte.seDeconnecter')}
                     </button>
                 </div>
             )}
@@ -150,17 +153,17 @@ const Header = () => {
             {isProfileMenuOpen && !user && (
                 <div className="dropdown profile-dropdown">
                     <button className="dropdown-item" onClick={() => go("login")}>
-                        <LuLogIn /> Se connecter
+                        <LuLogIn /> {t('compte.seConnecter')}
                     </button>
                     <button className="dropdown-item" onClick={() => go("signin")}>
-                        <FaPersonCirclePlus /> Créer un compte
+                        <FaPersonCirclePlus /> {t('compte.creerCompte')}
                     </button>
                 </div>
             )}
 
             <IconButton
                 className="mobile-menu-button media-small"
-                aria-label={isMobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+                aria-label={t(isMobileMenuOpen ? 'a11y.fermerMenu' : 'a11y.ouvrirMenu')}
                 aria-expanded={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
@@ -174,16 +177,16 @@ const Header = () => {
                     </div>
                     <hr className="dropdown-divider" />
                     <button className="dropdown-item" onClick={() => go("home")}>
-                        <FaHome /> Accueil
+                        <FaHome /> {t('nav.home')}
                     </button>
                     <button className="dropdown-item" onClick={() => go("itineraire")}>
-                        <PiPathBold /> Itinéraires
+                        <PiPathBold /> {t('nav.itineraires')}
                     </button>
                     {CONTEXTUAL_PAGES[page] && CONTEXTUAL_PAGES[page].mobile !== false && (() => {
-                        const { label, Icon } = CONTEXTUAL_PAGES[page];
+                        const { Icon } = CONTEXTUAL_PAGES[page];
                         return (
                             <button className="dropdown-item" onClick={() => go(page)}>
-                                <Icon /> {label}
+                                <Icon /> {t(`nav.${page}`)}
                             </button>
                         );
                     })()}
@@ -191,19 +194,19 @@ const Header = () => {
                     {user ? (
                         <>
                             <button className="dropdown-item" onClick={() => go("profil")}>
-                                <FaUser /> Mon Profil
+                                <FaUser /> {t('compte.monProfil')}
                             </button>
                             <button className="dropdown-item logout-btn" onClick={() => { logoutAuth(); setIsMobileMenuOpen(false); }}>
-                                <LuLogOut /> Se déconnecter
+                                <LuLogOut /> {t('compte.seDeconnecter')}
                             </button>
                         </>
                     ) : (
                         <>
                             <button className="dropdown-item" onClick={() => go("login")}>
-                                <LuLogIn /> Se connecter
+                                <LuLogIn /> {t('compte.seConnecter')}
                             </button>
                             <button className="dropdown-item" onClick={() => go("signin")}>
-                                <FaPersonCirclePlus /> Créer un compte
+                                <FaPersonCirclePlus /> {t('compte.creerCompte')}
                             </button>
                         </>
                     )}
