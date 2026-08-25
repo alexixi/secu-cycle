@@ -27,6 +27,7 @@ from datetime import datetime, timezone
 import httpx
 
 from bikeshare import config, providers
+from i18n import DEFAULT_LOCALE
 from graph.extent import contains_any, data_zones, overlaps_any
 
 logger = logging.getLogger(__name__)
@@ -90,9 +91,17 @@ def snapshot() -> dict:
     return _state.as_dict()
 
 
-def etag() -> str | None:
-    """Empreinte du dernier instantané, calculée une fois par collecte."""
-    return _state.etag
+def etag(locale: str = DEFAULT_LOCALE) -> str | None:
+    """Empreinte du dernier instantané, calculée une fois par collecte.
+
+    La locale entre dans l'empreinte : sans elle, un client qui change de langue
+    renvoie son If-None-Match précédent et reçoit un 304, donc l'ancienne langue.
+    """
+    if _state.etag is None:
+        return None
+    # _state.etag a la forme W/"<digest>" (voir refresh) : la locale entre dans
+    # l'empreinte, elle ne se colle pas après le guillemet fermant.
+    return f'{_state.etag[:-1]}-{locale}"'
 
 
 def systems_for(zones) -> list[str]:

@@ -428,6 +428,56 @@ L'inventaire complet des sources, avec usage, licence et producteur, fait l'obje
 CC BY 4.0, Copernicus et WAQI sont des **obligations de licence** : toute source ajoutée doit y être
 répercutée, ainsi que dans les mentions légales.
 
+### Internationalisation (français, anglais)
+
+Chantier en cours. Le français reste la langue par défaut ; l'anglais s'ajoute à côté, sans
+qu'aucune URL française existante ne change — les 56 pages `/carte/<ville>/<thème>` sont
+indexées, et le préfixe `/fr` aurait cassé cette indexation.
+
+**Côté API.** La langue de la réponse est négociée par requête, dans cet ordre : le paramètre
+`?lang=` (il fait varier l'URL, donc il est sûr côté cache), puis l'en-tête `Accept-Language`
+(CORS-safelisted, donc sans requête préliminaire OPTIONS), puis le français. Le module
+`backend/i18n/` porte la négociation, le catalogue et la plomberie HTTP.
+
+```bash
+curl -H 'Accept-Language: en-GB' https://api.secu-cycle.fr/weather/?lat=44.84\&lon=-0.58
+curl 'https://api.secu-cycle.fr/weather/?lat=44.84&lon=-0.58&lang=en'
+```
+
+Trois règles à ne pas contourner :
+
+- **La couche de calcul émet des clés, la couche de sérialisation émet des mots.** Rien qui
+  tourne dans une boucle de fond ni qui finit dans un cache ne doit porter un libellé déjà
+  rendu — il n'y a pas de locale à cet endroit-là.
+- **La locale entre dans l'empreinte des ETags** (`i18n.etag_for`). Sans cela, un client qui
+  change de langue renvoie son `If-None-Match` précédent, reçoit un `304 Not Modified` et
+  garde l'ancienne langue. C'est le chemin nominal, pas un cas limite.
+- **Les attributions de sources ne se traduisent jamais.** « Licence Ouverte 2.0 »,
+  « BAAC / ONISR », « Bordeaux Métropole » sont des noms légaux, identiques en anglais. Les
+  laisser tranquilles garde `/pois/` et `/streetlights/` neutres en langue, donc insensibles
+  au piège du cache partagé — ce sont les deux seules réponses servies en
+  `public, max-age=3600`.
+
+Le middleware `LocaleMiddleware` ajoute `Vary: Accept-Language` et `Content-Language` à toute
+réponse. Il *ajoute* à `Vary`, il ne l'assigne pas : `GZipMiddleware` y a déjà mis
+`Accept-Encoding` et `CORSMiddleware` `Origin`.
+
+**Détection de session morte.** Les deux fronts décidaient de déconnecter l'utilisateur en
+comparant le *message* du 401 (`SESSION_INVALID_DETAILS`). Traduire ces messages aurait cassé
+la déconnexion silencieusement. L'API pose désormais un en-tête `X-Auth-Error:
+session_invalid`, que les clients lisent en priorité ; il doit rester listé dans
+`expose_headers` du `CORSMiddleware`, sans quoi le navigateur le masque.
+
+**Vérifications.**
+
+```bash
+make check-i18n   # parité des catalogues fr/en (clés et paramètres) — sans pytest
+make test         # suite de tests du backend (fonctions pures : ni base, ni graphe)
+```
+
+`make check-i18n` est le filet minimal : l'internationalisation échoue *silencieusement*, une
+clé absente est servie telle quelle sans exception ni code d'erreur.
+
 ### Sécurité : limitation du débit (rate-limiting)
 L'API limite déjà le débit des tentatives de connexion (`5/minute` par IP via `slowapi`).
 En production, l'API tourne derrière Nginx avec plusieurs workers : le stockage en mémoire de

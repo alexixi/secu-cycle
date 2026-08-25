@@ -53,6 +53,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from limiter import limiter
+from i18n import LocaleMiddleware
 import os
 
 
@@ -407,6 +408,8 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+app.add_middleware(LocaleMiddleware)
+
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
@@ -452,4 +455,5 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Auth-Error", "Content-Language"],
 )

@@ -1,5 +1,4 @@
 import asyncio
-import hashlib
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response
@@ -7,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
+from i18n import etag_for, get_locale
 from dependencies import require_admin
 from lighting import runner
 from models.street_lamp import StreetLamp, SOURCE_ATTRIBUTIONS
@@ -44,6 +44,7 @@ def get_streetlights(
     request: Request,
     bbox: str | None = Query(None, description="lon_min,lat_min,lon_max,lat_max"),
     db: Session = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     """Points lumineux d'éclairage public, en GeoJSON FeatureCollection. Public.
 
@@ -65,10 +66,7 @@ def get_streetlights(
         db.query(func.count(StreetLamp.id), func.max(StreetLamp.updated_at))
     ).one()
 
-    etag = 'W/"' + hashlib.md5(
-        f"{count}-{last_sync}-{bbox}".encode(),
-        usedforsecurity=False,
-    ).hexdigest() + '"'
+    etag = etag_for(f"{count}-{last_sync}-{bbox}", locale)
     headers = {"ETag": etag, "Cache-Control": CACHE_CONTROL}
 
     if request.headers.get("if-none-match") == etag:
@@ -117,7 +115,7 @@ def get_streetlight_sources(db: Session = Depends(get_db)):
 
 
 @router.get("/lit-roads")
-def get_lit_roads(request: Request):
+def get_lit_roads(request: Request, locale: str = Depends(get_locale)):
     """Voies éclairées du graphe actif, en GeoJSON (LineString). Public.
 
     Un segment est éclairé s'il porte `lit=yes` (OSM) ou s'il est inféré éclairé
@@ -132,10 +130,7 @@ def get_lit_roads(request: Request):
     collection = lit_roads_geojson(G)
     profile = getattr(request.app.state, "graph_profile", None)
 
-    etag = 'W/"' + hashlib.md5(
-        f"lit-{profile}-{len(collection['features'])}".encode(),
-        usedforsecurity=False,
-    ).hexdigest() + '"'
+    etag = etag_for(f"lit-{profile}-{len(collection['features'])}", locale)
     headers = {"ETag": etag, "Cache-Control": CACHE_CONTROL}
 
     if request.headers.get("if-none-match") == etag:
