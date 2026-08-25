@@ -1,236 +1,140 @@
+import { Fragment } from "react";
 import { Link } from "react-router";
+import { Trans, useTranslation } from "react-i18next";
 import Meta from "../components/Meta";
+import ExternalLink from "../components/ui/ExternalLink";
 import "./legal.css";
 import { useLocalizedPath } from '../i18n/useLang';
 
 export default function ConfidentialitePage() {
+    const { t } = useTranslation('legal');
     const path = useLocalizedPath();
+
+    const composants = {
+        b: <strong />,
+        mail: <a href="mailto:contact@secu-cycle.fr" />,
+        umami: <ExternalLink href="https://umami.is/" />,
+        aptabase: <ExternalLink href="https://aptabase.com/" />,
+        cnil: <ExternalLink href="https://www.cnil.fr" />,
+        mentions: <Link to={path("mentionsLegales")} />,
+        suppression: <Link to={path("suppressionCompte")} />,
+    };
+    const T = ({ k }) => <Trans t={t} i18nKey={k} components={composants} />;
+
+    // Chaque ligne du tableau des permissions : intitulé puis finalité.
+    const PERMISSIONS = ["premierPlan", "arrierePlan", "notifications", "micro", "vibration", "internet"];
+
     return (
         <>
-            <Meta
-                title="Sécu'Cycle | Politique de confidentialité"
-                description="Politique de confidentialité de Sécu'Cycle : données collectées, finalités, durée de conservation et vos droits (RGPD) sur le site et l'app mobile."
-            />
+            <Meta title={t('confidentialite.titrePage')} description={t('confidentialite.metaDescription')} />
             <div className="legal-page">
                 <article className="legal-content">
-                    <h1>Politique de confidentialité</h1>
-                    <p className="legal-updated">Dernière mise à jour : 24 août 2026</p>
+                    <h1>{t('confidentialite.h1')}</h1>
+                    <p className="legal-updated">{t('confidentialite.maj')}</p>
 
-                    <p>
-                        La présente politique explique quelles données personnelles sont traitées lorsque vous
-                        utilisez le site <strong>secu-cycle.fr</strong> et l'application mobile
-                        <strong> Sécu'Cycle</strong>, dans quel but, sur quelle base légale, pendant combien de
-                        temps et quels sont vos droits. Elle est rédigée conformément au Règlement général sur la
-                        protection des données (RGPD, articles 12 à 14) et à la loi Informatique et Libertés.
-                    </p>
+                    <p><T k="confidentialite.chapo" /></p>
 
-                    <h2>1. Responsables du traitement</h2>
-                    <p>
-                        Le traitement de vos données est placé sous la responsabilité conjointe de{" "}
-                        <strong>Alexis Gaudray Bouju</strong> et <strong>Matheline Chevalier</strong>, éditeurs
-                        du projet étudiant Sécu'Cycle (ENSEIRB-MATMECA). Aucun délégué à la protection des
-                        données (DPO) n'a été désigné, le projet n'y étant pas soumis.
-                    </p>
-                    <p>
-                        Pour toute question ou pour exercer vos droits :{" "}
-                        <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>. Les informations
-                        d'identification complètes figurent dans les{" "}
-                        <Link to={path("mentionsLegales")}>mentions légales</Link>.
-                    </p>
+                    <h2>{t('confidentialite.responsables.h2')}</h2>
+                    <p><T k="confidentialite.responsables.conjointe" /></p>
+                    <p><T k="confidentialite.responsables.exercer" /></p>
 
-                    <h2>2. Données que nous traitons</h2>
+                    <h2>{t('confidentialite.donnees.h2')}</h2>
 
-                    <h3>2.1. Données de compte</h3>
-                    <p>
-                        Lors de la création d'un compte et de l'utilisation du service, nous traitons&nbsp;:
-                    </p>
+                    <h3>{t('confidentialite.donnees.compte.h3')}</h3>
+                    <p><T k="confidentialite.donnees.compte.intro" /></p>
                     <ul>
-                        <li>Adresse e-mail et mot de passe (le mot de passe est stocké de façon sécurisée sous forme de <strong>hachage Argon2</strong>, jamais en clair)&nbsp;;</li>
-                        <li>Prénom, nom et date de naissance&nbsp;;</li>
-                        <li>Niveau sportif déclaré&nbsp;;</li>
-                        <li>Adresses de domicile et de travail (si vous les renseignez)&nbsp;;</li>
-                        <li>Vos vélos (nom, type, assistance électrique).</li>
+                        {["email", "identite", "sport", "adresses", "velos"].map(cle => (
+                            <li key={cle}><T k={`confidentialite.donnees.compte.${cle}`} /></li>
+                        ))}
                     </ul>
 
-                    <h3>2.2. Données de localisation et d'itinéraire</h3>
+                    <h3>{t('confidentialite.donnees.localisation.h3')}</h3>
                     <ul>
-                        <li>Points de départ et d'arrivée lors du calcul d'un itinéraire&nbsp;;</li>
-                        <li>Le tracé (géométrie) des itinéraires calculés et leur historique&nbsp;;</li>
-                        <li>La position précise (coordonnées GPS) associée aux signalements de dangers que vous créez&nbsp;;</li>
-                        <li>Pendant la navigation guidée, votre position est transmise en temps réel au serveur pour recaler le guidage.</li>
+                        {["points", "trace", "signalements", "navigation"].map(cle => (
+                            <li key={cle}><T k={`confidentialite.donnees.localisation.${cle}`} /></li>
+                        ))}
                     </ul>
                     <div className="legal-callout">
-                        <p>
-                            <strong>Important :</strong> votre position transmise en direct pendant la navigation
-                            n'est <strong>pas conservée</strong>. Elle est traitée à la volée en mémoire pour vous
-                            guider, puis n'est pas enregistrée dans notre base de données. Seuls le tracé des
-                            itinéraires calculés et les points de signalement sont conservés.
-                        </p>
+                        <p><T k="confidentialite.donnees.localisation.encart" /></p>
                     </div>
 
-                    <h3>2.3. Données d'usage (statistiques de fréquentation)</h3>
-                    <p>
-                        Nous mesurons l'audience à l'aide d'outils respectueux de la vie privée&nbsp;:
-                    </p>
+                    <h3>{t('confidentialite.donnees.usage.h3')}</h3>
+                    <p><T k="confidentialite.donnees.usage.intro" /></p>
                     <ul>
-                        <li><strong>Site web :</strong> <a href="https://umami.is/" target="_blank" rel="noopener noreferrer">Umami</a>, auto-hébergé sur nos serveurs, <strong>sans cookie ni traceur</strong> et sans collecte de données permettant de vous identifier. Aucun bandeau de consentement n'est donc requis.</li>
-                        <li><strong>Application mobile :</strong> <a href="https://aptabase.com/" target="_blank" rel="noopener noreferrer">Aptabase</a> (région d'hébergement Union européenne), qui enregistre des événements d'usage anonymes (ouverture d'écran, démarrage d'une navigation, etc.) <strong>sans e-mail, sans nom et sans coordonnées GPS</strong>.</li>
+                        <li><T k="confidentialite.donnees.usage.umami" /></li>
+                        <li><T k="confidentialite.donnees.usage.aptabase" /></li>
                     </ul>
-                    <p>
-                        Le site utilise uniquement le stockage local du navigateur à des fins techniques
-                        (mémorisation du thème clair/sombre et de votre session), et non à des fins de suivi
-                        publicitaire.
-                    </p>
+                    <p><T k="confidentialite.donnees.usage.stockageLocal" /></p>
 
-                    <h2>3. Permissions demandées par l'application mobile</h2>
-                    <p>
-                        L'application ne demande que les permissions strictement nécessaires à son
-                        fonctionnement. Chacune vous est demandée par votre téléphone et peut être refusée ou
-                        révoquée à tout moment dans les réglages du système.
-                    </p>
+                    <h2>{t('confidentialite.permissions.h2')}</h2>
+                    <p><T k="confidentialite.permissions.intro" /></p>
                     <div className="legal-table-wrapper">
                         <table className="legal-table">
                             <thead>
                                 <tr>
-                                    <th>Permission</th>
-                                    <th>Finalité</th>
+                                    <th>{t('confidentialite.permissions.colPermission')}</th>
+                                    <th>{t('confidentialite.permissions.colFinalite')}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td><strong>Localisation — premier plan</strong> (précise)</td>
-                                    <td>Vous géolocaliser et assurer le guidage vélo en temps réel lorsque l'application est ouverte.</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Localisation — arrière-plan</strong> (précise)</td>
-                                    <td>Poursuivre le guidage lorsque l'écran est éteint ou que le téléphone est dans votre poche. Utilisée uniquement pour la navigation, jamais à des fins publicitaires ou statistiques.</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Notifications</strong></td>
-                                    <td>Afficher la notification persistante « Guidage en cours » signalant que la navigation reste active en arrière-plan.</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Microphone</strong> (iOS)</td>
-                                    <td>Nécessaire à la <strong>synthèse vocale</strong> des instructions de navigation. <strong>Aucun son n'est enregistré ni transmis.</strong></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Vibration / retour haptique</strong></td>
-                                    <td>Retours tactiles de l'interface (confirmation d'actions).</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Accès à Internet</strong></td>
-                                    <td>Communication avec notre serveur, chargement des cartes et envoi des statistiques anonymes.</td>
-                                </tr>
+                                {PERMISSIONS.map(cle => (
+                                    <tr key={cle}>
+                                        <td><T k={`confidentialite.permissions.${cle}`} /></td>
+                                        <td><T k={`confidentialite.permissions.${cle}Fin`} /></td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
                     <div className="legal-callout">
-                        <p>
-                            La <strong>localisation en arrière-plan</strong> est au cœur de la fonction de
-                            navigation de Sécu'Cycle. Elle est activée uniquement pendant un guidage, avec votre
-                            consentement explicite, et n'est jamais utilisée pour de la publicité ou du suivi.
-                        </p>
+                        <p><T k="confidentialite.permissions.encart" /></p>
                     </div>
 
-                    <h2>4. Finalités et bases légales</h2>
+                    <h2>{t('confidentialite.finalites.h2')}</h2>
                     <dl>
-                        <dt>Gestion de votre compte et fourniture du service</dt>
-                        <dd>Base légale : exécution du contrat (nos conditions d'utilisation).</dd>
-                        <dt>Calcul d'itinéraires et navigation géolocalisée</dt>
-                        <dd>Base légale : exécution du contrat et votre consentement, matérialisé par l'autorisation de localisation accordée au système d'exploitation.</dd>
-                        <dt>Signalements de dangers</dt>
-                        <dd>Base légale : intérêt légitime (améliorer la sécurité des cyclistes).</dd>
-                        <dt>Mesure d'audience anonyme</dt>
-                        <dd>Base légale : intérêt légitime (outils sans cookie ni traceur, sans données identifiantes).</dd>
-                        <dt>Sécurité du service et journaux techniques</dt>
-                        <dd>Base légale : intérêt légitime et respect de nos obligations légales.</dd>
+                        {["compte", "navigation", "signalements", "audience", "securite"].map(cle => (
+                            <Fragment key={cle}>
+                                <dt><T k={`confidentialite.finalites.${cle}Dt`} /></dt>
+                                <dd><T k={`confidentialite.finalites.${cle}Dd`} /></dd>
+                            </Fragment>
+                        ))}
                     </dl>
 
-                    <h2>5. Destinataires et sous-traitants</h2>
-                    <p>
-                        Vos données ne sont ni vendues, ni louées, ni utilisées à des fins publicitaires. Aucun
-                        identifiant publicitaire n'est collecté. Nous faisons appel aux prestataires suivants,
-                        strictement pour faire fonctionner le service&nbsp;:
-                    </p>
+                    <h2>{t('confidentialite.destinataires.h2')}</h2>
+                    <p><T k="confidentialite.destinataires.intro" /></p>
                     <ul>
-                        <li><strong>IONOS</strong> (Union européenne) — hébergement du site et de l'API&nbsp;;</li>
-                        <li><strong>MapTiler</strong> — fourniture des fonds de carte (les coordonnées d'affichage de la carte transitent par ce service)&nbsp;;</li>
-                        <li><strong>Base Adresse Nationale</strong> (adresse.data.gouv.fr, service public de l'État français) — autocomplétion des adresses que vous saisissez&nbsp;;</li>
-                        <li><strong>Aptabase</strong> (région Union européenne) — statistiques anonymes de l'application&nbsp;;</li>
-                        <li><strong>Umami</strong> — statistiques anonymes du site, auto-hébergé par nos soins.</li>
+                        {["ionos", "maptiler", "ban", "aptabase", "umami"].map(cle => (
+                            <li key={cle}><T k={`confidentialite.destinataires.${cle}`} /></li>
+                        ))}
                     </ul>
 
-                    <h2>6. Transferts hors Union européenne</h2>
-                    <p>
-                        L'hébergement et les statistiques sont réalisés au sein de l'Union européenne. Le service
-                        cartographique <strong>MapTiler</strong> est établi en <strong>Suisse</strong>, pays
-                        reconnu comme offrant un niveau de protection adéquat par décision de la Commission
-                        européenne. Aucun autre transfert de données hors de l'Espace économique européen n'est
-                        réalisé.
-                    </p>
+                    <h2>{t('confidentialite.transferts.h2')}</h2>
+                    <p><T k="confidentialite.transferts.texte" /></p>
 
-                    <h2>7. Durées de conservation</h2>
+                    <h2>{t('confidentialite.conservation.h2')}</h2>
                     <ul>
-                        <li><strong>Compte et données associées</strong> : conservés tant que votre compte est actif, puis supprimés à la suppression de votre compte&nbsp;;</li>
-                        <li><strong>Historique et itinéraires</strong> : conservés jusqu'à leur suppression par vos soins ou jusqu'à la suppression de votre compte&nbsp;;</li>
-                        <li><strong>Signalements de dangers</strong> : conservés pour la sécurité des cyclistes, dissociés de votre compte en cas de suppression de celui-ci&nbsp;;</li>
-                        <li><strong>Journaux techniques</strong> : 12 mois maximum&nbsp;;</li>
-                        <li><strong>Statistiques d'audience</strong> : agrégées et anonymes.</li>
+                        {["compte", "historique", "signalements", "journaux", "statistiques"].map(cle => (
+                            <li key={cle}><T k={`confidentialite.conservation.${cle}`} /></li>
+                        ))}
                     </ul>
 
-                    <h2>8. Vos droits</h2>
-                    <p>
-                        Conformément au RGPD, vous disposez des droits d'<strong>accès</strong>, de{" "}
-                        <strong>rectification</strong>, d'<strong>effacement</strong>, de{" "}
-                        <strong>limitation</strong>, d'<strong>opposition</strong>, de{" "}
-                        <strong>portabilité</strong> de vos données, ainsi que du droit de{" "}
-                        <strong>retirer votre consentement</strong> à tout moment (notamment en révoquant
-                        l'autorisation de localisation dans les réglages de votre téléphone).
-                    </p>
-                    <p>
-                        Vous pouvez <strong>supprimer votre compte vous-même</strong>, sans nous
-                        contacter, depuis l'application mobile comme depuis ce site&nbsp;: la marche à
-                        suivre et le détail de ce qui est effacé figurent sur la page{" "}
-                        <Link to={path("suppressionCompte")}>Supprimer mon compte</Link>. Votre historique de
-                        trajets peut également être supprimé seul, depuis votre profil.
-                    </p>
-                    <p>
-                        Pour les autres droits, ou si vous n'avez plus accès à votre compte, écrivez-nous
-                        à <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>.
-                    </p>
-                    <p>
-                        Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés, vous
-                        pouvez introduire une réclamation auprès de la CNIL&nbsp;: Commission Nationale de
-                        l'Informatique et des Libertés, 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07 —{" "}
-                        <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">www.cnil.fr</a>.
-                    </p>
+                    <h2>{t('confidentialite.droits.h2')}</h2>
+                    <p><T k="confidentialite.droits.liste" /></p>
+                    <p><T k="confidentialite.droits.suppression" /></p>
+                    <p><T k="confidentialite.droits.autres" /></p>
+                    <p><T k="confidentialite.droits.cnil" /></p>
 
-                    <h2>9. Mineurs</h2>
-                    <p>
-                        Le service est réservé aux personnes âgées d'au moins <strong>15 ans</strong>, âge du
-                        consentement numérique en France. Les personnes plus jeunes doivent obtenir l'accord de
-                        leurs représentants légaux avant toute utilisation.
-                    </p>
+                    <h2>{t('confidentialite.mineurs.h2')}</h2>
+                    <p><T k="confidentialite.mineurs.texte" /></p>
 
-                    <h2>10. Décision automatisée</h2>
-                    <p>
-                        Le calcul d'itinéraires repose sur des algorithmes, mais ne constitue pas une décision
-                        automatisée produisant des effets juridiques ou vous affectant de manière significative
-                        au sens de l'article 22 du RGPD. Aucun profilage à finalité publicitaire n'est réalisé.
-                    </p>
+                    <h2>{t('confidentialite.automatisee.h2')}</h2>
+                    <p><T k="confidentialite.automatisee.texte" /></p>
 
-                    <h2>11. Sécurité</h2>
-                    <p>
-                        Les mots de passe sont hachés (Argon2), les échanges avec le serveur sont chiffrés (HTTPS)
-                        et les jetons d'authentification sont stockés dans le coffre sécurisé du système
-                        d'exploitation de votre téléphone.
-                    </p>
+                    <h2>{t('confidentialite.securite.h2')}</h2>
+                    <p><T k="confidentialite.securite.texte" /></p>
 
-                    <h2>12. Modification de la présente politique</h2>
-                    <p>
-                        Cette politique peut être mise à jour pour refléter les évolutions du service ou de la
-                        réglementation. La date de dernière mise à jour figure en haut de page.
-                    </p>
+                    <h2>{t('confidentialite.modification.h2')}</h2>
+                    <p><T k="confidentialite.modification.texte" /></p>
                 </article>
             </div>
         </>
