@@ -1,4 +1,5 @@
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
+import { langFromPathname, pathFor } from '../i18n/routes';
 import { Helmet } from 'react-helmet-async';
 import Meta from '../components/Meta';
 import ThemeIcon from '../components/carte/ThemeIcon';
@@ -13,26 +14,29 @@ const VILLES = CITIES.map(city => city.name)
     ), '');
 
 export default function CarteHubPage() {
+    const lang = langFromPathname(useLocation().pathname);
+    const abs = (chemin) => `${SITE_URL}${chemin.endsWith('/') ? chemin : `${chemin}/`}`;
+
     const jsonLd = {
         '@context': 'https://schema.org',
         '@graph': [
             {
                 '@type': 'BreadcrumbList',
                 itemListElement: [
-                    { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE_URL}/` },
-                    { '@type': 'ListItem', position: 2, name: 'Cartes', item: `${SITE_URL}/carte/` },
+                    { '@type': 'ListItem', position: 1, name: 'Accueil', item: abs(pathFor('home', lang)) },
+                    { '@type': 'ListItem', position: 2, name: 'Cartes', item: abs(pathFor('carteHub', lang)) },
                 ],
             },
             {
                 '@type': 'CollectionPage',
-                '@id': `${SITE_URL}/carte/`,
+                '@id': abs(pathFor('carteHub', lang)),
                 name: 'Cartes cyclables par ville',
                 inLanguage: 'fr',
-                isPartOf: { '@type': 'WebSite', url: `${SITE_URL}/`, name: 'Sécu’Cycle' },
+                isPartOf: { '@type': 'WebSite', url: abs(pathFor('home', lang)), name: 'Sécu’Cycle' },
                 hasPart: PAGES.map(page => ({
                     '@type': 'WebPage',
                     name: page.content.h1,
-                    url: `${SITE_URL}${page.path}/`,
+                    url: abs(page.path),
                 })),
             },
         ],
@@ -52,7 +56,7 @@ export default function CarteHubPage() {
 
             <article className="carte-page">
                 <nav className="carte-fil" aria-label="Fil d’Ariane">
-                    <Link to="/">Accueil</Link>
+                    <Link to={pathFor("home", lang)}>Accueil</Link>
                     <span aria-hidden="true">›</span>
                     <span aria-current="page">Cartes</span>
                 </nav>
@@ -79,7 +83,7 @@ export default function CarteHubPage() {
                     return (
                         <section key={city.slug} className="carte-maillage">
                             <h2>
-                                <Link to={`/carte/${city.slug}`}>{city.label}</Link>
+                                <Link to={pathFor("carteVille", lang, { citySlug: city.slug })}>{city.label}</Link>
                             </h2>
                             <p className="carte-note">
                                 {city.intro}
@@ -108,7 +112,7 @@ export default function CarteHubPage() {
                         assez complètes pour être utiles — un recensement trop clairsemé donnerait une
                         image fausse. La couverture s’étend au fil des territoires intégrés au
                         calculateur : vous pouvez nous suggérer une ville via la{' '}
-                        <Link to="/contact">page de contact</Link>.
+                        <Link to={pathFor("contact", lang)}>page de contact</Link>.
                     </p>
                 </section>
             </article>

@@ -10,6 +10,7 @@ import { useAuth } from "../context/AuthContext";
 import { confirmEmailChange, requestEmailChange } from "../services/apiBack";
 import "../components/ui/Input.css";
 import "../components/ui/Form.css";
+import { useLocalizedPath } from '../i18n/useLang';
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -31,6 +32,7 @@ function mapConfirmError(error) {
 }
 
 export default function ChangeEmailPage() {
+    const path = useLocalizedPath();
     const navigate = useNavigate();
     const { user, token, updateUser, loginAuth } = useAuth();
 
@@ -119,7 +121,7 @@ export default function ChangeEmailPage() {
                 updateUser({ ...user, ...result.user });
             }
 
-            navigate("/profil", {
+            navigate(path("profil"), {
                 state: { message: "Votre adresse mail a bien été modifiée." },
             });
         } catch (err) {
@@ -229,7 +231,7 @@ export default function ChangeEmailPage() {
                                 {isLoading ? "Envoi…" : <>Envoyer le code <LuMail /></>}
                             </Button>
 
-                            <Link to="/profil" className="forgot-password-link" style={{ textAlign: "center" }}>
+                            <Link to={path("profil")} className="forgot-password-link" style={{ textAlign: "center" }}>
                                 Retour au profil
                             </Link>
                         </form>

@@ -1,4 +1,5 @@
-import { Link, useParams } from 'react-router';
+import { Link, useLocation } from 'react-router';
+import { langFromPathname, matchPath, pathFor } from '../i18n/routes';
 import { Helmet } from 'react-helmet-async';
 import Meta from '../components/Meta';
 import ErrorPage from './ErrorPage';
@@ -10,13 +11,17 @@ import {
 import './CartePages.css';
 
 export default function CarteVillePage() {
-    const { citySlug } = useParams();
+    const { pathname } = useLocation();
+    const lang = langFromPathname(pathname);
+
+    const citySlug = matchPath(pathname)?.params?.citySlug;
     const city = CITY_BY_SLUG[citySlug];
     const pages = city ? pagesForCity(city.slug) : [];
 
     if (!city || pages.length === 0) return <ErrorPage />;
 
-    const canonical = `${SITE_URL}/carte/${city.slug}/`;
+    const abs = (chemin) => `${SITE_URL}${chemin.endsWith('/') ? chemin : `${chemin}/`}`;
+    const canonical = abs(pathFor('carteVille', lang, { citySlug: city.slug }));
 
     const jsonLd = {
         '@context': 'https://schema.org',
@@ -24,8 +29,8 @@ export default function CarteVillePage() {
             {
                 '@type': 'BreadcrumbList',
                 itemListElement: [
-                    { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE_URL}/` },
-                    { '@type': 'ListItem', position: 2, name: 'Cartes', item: `${SITE_URL}/carte/` },
+                    { '@type': 'ListItem', position: 1, name: 'Accueil', item: abs(pathFor('home', lang)) },
+                    { '@type': 'ListItem', position: 2, name: 'Cartes', item: abs(pathFor('carteHub', lang)) },
                     { '@type': 'ListItem', position: 3, name: city.name, item: canonical },
                 ],
             },
@@ -35,11 +40,11 @@ export default function CarteVillePage() {
                 name: `Cartes cyclables ${city.prep}`,
                 inLanguage: 'fr',
                 about: { '@type': 'Place', name: city.name },
-                isPartOf: { '@type': 'WebSite', url: `${SITE_URL}/`, name: 'Sécu’Cycle' },
+                isPartOf: { '@type': 'WebSite', url: abs(pathFor('home', lang)), name: 'Sécu’Cycle' },
                 hasPart: pages.map(page => ({
                     '@type': 'WebPage',
                     name: page.content.h1,
-                    url: `${SITE_URL}${page.path}/`,
+                    url: abs(page.path),
                 })),
             },
         ],
@@ -60,9 +65,9 @@ export default function CarteVillePage() {
 
             <article className="carte-page">
                 <nav className="carte-fil" aria-label="Fil d’Ariane">
-                    <Link to="/">Accueil</Link>
+                    <Link to={pathFor("home", lang)}>Accueil</Link>
                     <span aria-hidden="true">›</span>
-                    <Link to="/carte">Cartes</Link>
+                    <Link to={pathFor("carteHub", lang)}>Cartes</Link>
                     <span aria-hidden="true">›</span>
                     <span aria-current="page">{city.name}</span>
                 </nav>
@@ -95,7 +100,7 @@ export default function CarteVillePage() {
                         </div>
                         <Link
                             className="button carte-cta-bouton"
-                            to="/carte"
+                            to={pathFor("carteHub", lang)}
                             onClick={() => trackEvent('carte_cta_villes_couvertes', {
                                 ville: city.slug,
                                 theme: 'hub-ville',
@@ -117,7 +122,7 @@ export default function CarteVillePage() {
                         </div>
                         <Link
                             className="button carte-cta-bouton"
-                            to="/itineraire"
+                            to={pathFor("itineraire", lang)}
                             onClick={() => trackEvent('carte_cta_itineraire', {
                                 ville: city.slug,
                                 theme: 'hub-ville',
@@ -140,7 +145,7 @@ export default function CarteVillePage() {
                             : <>Le calculateur d’itinéraires couvre {city.communes}. Les cartes
                                 ci-dessus portent sur cette même emprise.</>}
                         {' '}Le détail des jeux de données et de leurs licences figure sur la
-                        page <Link to="/donnees">Données et sources</Link>.
+                        page <Link to={pathFor("donnees", lang)}>Données et sources</Link>.
                     </p>
                 </section>
             </article>

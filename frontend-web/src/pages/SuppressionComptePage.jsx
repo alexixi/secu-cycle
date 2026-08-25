@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import Meta from "../components/Meta";
 import "./legal.css";
+import { useLocalizedPath } from '../i18n/useLang';
 
 const SUPPRIME = [
     ["Compte et identifiants", "Adresse e-mail, mot de passe, sessions de connexion ouvertes sur tous vos appareils"],
@@ -27,6 +28,7 @@ const CONSERVE = [
 ];
 
 export default function SuppressionComptePage() {
+    const path = useLocalizedPath();
     return (
         <>
             <Meta
@@ -63,7 +65,7 @@ export default function SuppressionComptePage() {
 
                     <h2>2. Depuis ce site</h2>
                     <ol>
-                        <li>Connectez-vous, puis ouvrez votre <Link to="/profil">page de profil</Link>&nbsp;;</li>
+                        <li>Connectez-vous, puis ouvrez votre <Link to={path("profil")}>page de profil</Link>&nbsp;;</li>
                         <li>Tout en bas, dans <strong>Supprimer mon compte</strong>, cliquez sur <strong>Supprimer</strong>&nbsp;;</li>
                         <li>Confirmez avec votre mot de passe et cochez la case d'avertissement.</li>
                     </ol>
@@ -134,8 +136,8 @@ export default function SuppressionComptePage() {
                         La suppression du compte n'est qu'un des droits que vous tenez du RGPD. L'accès, la
                         rectification, la limitation, l'opposition et la portabilité de vos données sont
                         détaillés dans notre{" "}
-                        <Link to="/confidentialite">politique de confidentialité</Link>. Pour toute autre
-                        demande, la <Link to="/contact">page de contact</Link> est à votre disposition.
+                        <Link to={path("confidentialite")}>politique de confidentialité</Link>. Pour toute autre
+                        demande, la <Link to={path("contact")}>page de contact</Link> est à votre disposition.
                     </p>
                 </article>
             </div>

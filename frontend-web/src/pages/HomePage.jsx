@@ -9,6 +9,7 @@ import apercuApplication from "../assets/screenshots/mobile/apercu_itineraire-le
 import { IoIosArrowDropdown } from "react-icons/io";
 import { FaLinkedin } from "react-icons/fa";
 import { getHomeCases } from "../services/apiBack";
+import { useLocalizedPath } from '../i18n/useLang';
 
 const DEFAULT_CASES = [
     {
@@ -30,6 +31,7 @@ const DEFAULT_CASES = [
 ];
 
 export default function HomePage() {
+    const path = useLocalizedPath();
     const faqRef = useRef(null);
     const [cases, setCases] = useState(DEFAULT_CASES);
 
@@ -106,14 +108,14 @@ export default function HomePage() {
                 <section className="home-section">
                     <h2>Besoin de plus d'informations ?</h2>
                     <p>
-                        Vous pouvez consulter les <Link to="/mentions-legales">Mentions légales</Link>,
-                        les <Link to="/donnees">sources des données</Link> utilisées,
-                        nos <Link to="/carte">cartes par ville</Link>,
-                        la <Link to="/confidentialite">Politique de confidentialité</Link> ou bien
-                        les <Link to="/conditions-utilisation">conditions d'utilisation</Link>.
+                        Vous pouvez consulter les <Link to={path("mentionsLegales")}>Mentions légales</Link>,
+                        les <Link to={path("donnees")}>sources des données</Link> utilisées,
+                        nos <Link to={path("carteHub")}>cartes par ville</Link>,
+                        la <Link to={path("confidentialite")}>Politique de confidentialité</Link> ou bien
+                        les <Link to={path("conditions")}>conditions d'utilisation</Link>.
                         <br />
                         Vous avez des questions ? <br />
-                        N'hésitez pas à nous contacter via notre <Link to="/contact">formulaire de contact</Link>
+                        N'hésitez pas à nous contacter via notre <Link to={path("contact")}>formulaire de contact</Link>
                         ou à nous envoyer un email à l'adresse
                         <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>.
 

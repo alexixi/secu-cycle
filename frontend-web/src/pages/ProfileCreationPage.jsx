@@ -29,11 +29,13 @@ import { trackEvent } from "../services/analytics";
 import "../components/ui/Input.css";
 import "../components/ui/Form.css";
 import "../components/onboarding/Onboarding.css";
+import { useLocalizedPath } from '../i18n/useLang';
 
 const TOTAL_STEPS = 7;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function ProfileCreationPage() {
+    const path = useLocalizedPath();
     const navigate = useNavigate();
     const location = useLocation();
     const { loginAuth, updateUser, updateBikes, updateHistoric } = useAuth();
@@ -110,7 +112,7 @@ export default function ProfileCreationPage() {
         updateBikes(bikesRes);
         updateHistoric(historicRes);
 
-        navigate("/profil");
+        navigate(path("profil"));
     };
 
     const handleRegister = async () => {
@@ -184,7 +186,7 @@ export default function ProfileCreationPage() {
 
             setStep(2);
         } catch {
-            navigate("/login");
+            navigate(path("login"));
         } finally {
             setIsLoading(false);
         }
@@ -280,7 +282,7 @@ export default function ProfileCreationPage() {
 
     const handleFinish = () => {
         triggerConfetti();
-        navigate("/profil");
+        navigate(path("profil"));
     };
 
     const renderStep = () => {

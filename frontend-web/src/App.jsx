@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router';
+import { ENABLED_LANGS, ROUTE_PATHS, patternFor, routeKeys } from './i18n/routes';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -25,6 +26,39 @@ const CarteHubPage = lazy(() => import('./pages/CarteHubPage'));
 const CarteVillePage = lazy(() => import('./pages/CarteVillePage'));
 const CarteThematiquePage = lazy(() => import('./pages/CarteThematiquePage'));
 
+const PAGE_ELEMENTS = {
+  home: <HomePage />,
+  itineraire: <ItinerairePage />,
+  profil: (
+    <ProtectedRoute>
+      <ProfilePage />
+    </ProtectedRoute>
+  ),
+  profilEmail: (
+    <ProtectedRoute>
+      <ChangeEmailPage />
+    </ProtectedRoute>
+  ),
+  login: <LoginPage />,
+  forgotPassword: <ForgotPasswordPage />,
+  signin: <ProfileCreationPage />,
+  admin: (
+    <ProtectedRoute requireAdmin>
+      <AdminPage />
+    </ProtectedRoute>
+  ),
+  mentionsLegales: <MentionsLegalesPage />,
+  confidentialite: <ConfidentialitePage />,
+  conditions: <ConditionsUtilisationPage />,
+  suppressionCompte: <SuppressionComptePage />,
+  contact: <ContactPage />,
+  faq: <FaqPage />,
+  donnees: <DonneesPage />,
+  carteHub: <CarteHubPage />,
+  carteVille: <CarteVillePage />,
+  carteTheme: <CarteThematiquePage />,
+};
+
 const LoadingFallback = () => (
   <div className="loader-container">
     <div className="spinner"></div>
@@ -49,53 +83,13 @@ function App() {
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
 
-            <Route path="/" element={<HomePage />} />
-
-            <Route path="/itineraire" element={<ItinerairePage />} />
-
-            <Route path="/profil" element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/profil/email" element={
-              <ProtectedRoute>
-                <ChangeEmailPage />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/login" element={<LoginPage />} />
-
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-
-            <Route path="/signin" element={<ProfileCreationPage />} />
-
-            <Route path="/admin" element={
-              <ProtectedRoute requireAdmin>
-                <AdminPage />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
-
-            <Route path="/confidentialite" element={<ConfidentialitePage />} />
-
-            <Route path="/conditions-utilisation" element={<ConditionsUtilisationPage />} />
-
-            <Route path="/suppression-compte" element={<SuppressionComptePage />} />
-
-            <Route path="/contact" element={<ContactPage />} />
-
-            <Route path="/faq" element={<FaqPage />} />
-
-            <Route path="/donnees" element={<DonneesPage />} />
-
-            <Route path="/carte" element={<CarteHubPage />} />
-
-            <Route path="/carte/:citySlug" element={<CarteVillePage />} />
-
-            <Route path="/carte/:citySlug/:themeSlug" element={<CarteThematiquePage />} />
+            {ENABLED_LANGS.flatMap((lang) =>
+              routeKeys()
+                .filter((cle) => ROUTE_PATHS[cle][lang])
+                .map((cle) => (
+                  <Route key={`${lang}:${cle}`} path={patternFor(cle, lang)} element={PAGE_ELEMENTS[cle]} />
+                ))
+            )}
 
             <Route path="*" element={<ErrorPage />} />
 

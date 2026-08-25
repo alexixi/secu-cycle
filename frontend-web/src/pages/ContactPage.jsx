@@ -8,6 +8,7 @@ import { LuSend, LuChevronDown, LuCheck } from "react-icons/lu";
 import "../components/ui/Input.css";
 import "../components/ui/Form.css";
 import "./legal.css";
+import { useLocalizedPath } from '../i18n/useLang';
 
 const EMPTY_FORM = { firstName: "", lastName: "", email: "", subject: "", message: "" };
 
@@ -128,6 +129,7 @@ function SubjectSelect({ value, onChange }) {
 }
 
 export default function ContactPage() {
+    const path = useLocalizedPath();
     const [form, setForm] = useState(EMPTY_FORM);
     const [errors, setErrors] = useState({});
     const [status, setStatus] = useState(null); // "sending" | "sent" | "error"
@@ -303,8 +305,8 @@ export default function ContactPage() {
                             <strong>Données personnelles (RGPD)</strong> — pour exercer vos droits d'accès, de
                             rectification, d'effacement, de limitation, d'opposition ou de portabilité. Les
                             modalités sont détaillées dans notre{" "}
-                            <Link to="/confidentialite">politique de confidentialité</Link>. Pour{" "}
-                            <Link to="/suppression-compte">supprimer votre compte</Link>, nul besoin de nous
+                            <Link to={path("confidentialite")}>politique de confidentialité</Link>. Pour{" "}
+                            <Link to={path("suppressionCompte")}>supprimer votre compte</Link>, nul besoin de nous
                             écrire&nbsp;: vous pouvez le faire vous-même, en quelques secondes.
                         </li>
                         <li>
@@ -323,9 +325,9 @@ export default function ContactPage() {
                     <h2>Informations légales</h2>
                     <p>
                         Pour en savoir plus, consultez nos{" "}
-                        <Link to="/mentions-legales">mentions légales</Link>, notre{" "}
-                        <Link to="/confidentialite">politique de confidentialité</Link> et nos{" "}
-                        <Link to="/conditions-utilisation">conditions générales d'utilisation</Link>.
+                        <Link to={path("mentionsLegales")}>mentions légales</Link>, notre{" "}
+                        <Link to={path("confidentialite")}>politique de confidentialité</Link> et nos{" "}
+                        <Link to={path("conditions")}>conditions générales d'utilisation</Link>.
                     </p>
                 </article>
             </div>

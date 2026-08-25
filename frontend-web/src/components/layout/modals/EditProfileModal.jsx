@@ -7,12 +7,14 @@ import EditPasswordModal from "./EditPasswordModal"
 import DeleteAccountModal from "./DeleteAccountModal";
 import BlockedAuthorsModal from "./BlockedAuthorsModal";
 import { changePassword, deleteAccount } from "../../../services/apiBack";
+import { useLocalizedPath } from '../../../i18n/useLang';
 
 import "../../ui/Input.css"
 import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 
 export default function EditProfileModal({ isOpen, hasError, onClose, userData, onConfirm }) {
+    const path = useLocalizedPath();
     const { token, logoutAuth } = useAuth();
     const navigate = useNavigate();
     const [passwordError, setPasswordError] = useState(false);
@@ -104,7 +106,7 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
             setIsModalOpenDelete(false);
             onClose();
             logoutAuth();
-            navigate("/", { replace: true });
+            navigate(path("home"), { replace: true });
         } catch (error) {
             if (error?.status === 401) {
                 setDeletePasswordError(true);
@@ -183,7 +185,7 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                         <button
                             type="button"
                             className="secondary-action-card"
-                            onClick={() => { onClose(); navigate("/profil/email"); }}
+                            onClick={() => { onClose(); navigate(path("profilEmail")); }}
                         >
                             <FaEnvelope className="secondary-action-icon" size={18} />
                             <span className="secondary-action-text">

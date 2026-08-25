@@ -8,9 +8,13 @@
 // Contraintes :
 //  - JavaScript pur : ce module est importé aussi bien par le bundle Vite que par des
 //    scripts Node de build. Pas d'import.meta.env, pas d'import.meta.glob, pas de JSX.
+//    Le seul import autorisé est src/i18n/routes.js, qui respecte les mêmes contraintes
+//    et détient la table des chemins : aucun préfixe d'URL ne doit être écrit ici.
 //  - Le contenu éditorial (intro, sections, faq) est rédigé à la main pour chaque couple
 //    ville × thème. Aucun texte généré par gabarit : une page qui n'a rien d'unique à dire
 //    ne doit pas être publiée.
+
+import { DEFAULT_LANG, pathFor } from '../i18n/routes.js';
 
 export const SITE_URL = 'https://secu-cycle.fr';
 
@@ -4665,7 +4669,7 @@ export const PAGES = CITIES.flatMap(city => city.themes
     .filter(slug => THEMES[slug] && PAGE_CONTENT[`${city.slug}/${slug}`])
     .map(slug => ({
         key: `${city.slug}/${slug}`,
-        path: `/carte/${city.slug}/${slug}`,
+        path: pathFor('carteTheme', DEFAULT_LANG, { citySlug: city.slug, themeSlug: slug }),
         city,
         themeSlug: slug,
         theme: THEMES[slug],
@@ -4699,8 +4703,8 @@ export const pagesForTheme = (themeSlug) => PAGES.filter(p => p.themeSlug === th
 
 // Toutes les routes publiques du module, dans l'ordre où on veut les voir crawlées.
 export const ROUTES = [
-    '/carte',
-    ...CITIES.map(c => `/carte/${c.slug}`),
+    pathFor('carteHub', DEFAULT_LANG),
+    ...CITIES.map(c => pathFor('carteVille', DEFAULT_LANG, { citySlug: c.slug })),
     ...PAGES.map(p => p.path),
 ];
 
