@@ -30,9 +30,18 @@ async function refreshAccessToken() {
     }
 }
 
-// Messages renvoyés par get_current_user quand c'est la SESSION qui est morte.
+// Signal machine posé par get_current_user quand c'est la SESSION qui est morte.
 // Les autres 401 sont métier (mot de passe erroné dans le corps de la requête)
 // et ne doivent surtout pas déclencher de déconnexion.
+//
+// Il doit être listé dans expose_headers du CORSMiddleware côté API, sinon le
+// navigateur le masque et seul le repli ci-dessous fonctionne.
+const SESSION_INVALID_HEADER = "X-Auth-Error";
+const SESSION_INVALID_CODE = "session_invalid";
+
+// Repli sur les messages, pour les API pas encore passées à l'en-tête. Cette
+// liste ne survivra pas à la traduction du backend — c'est exactement pourquoi
+// l'en-tête existe — et elle disparaîtra une fois l'API déployée partout.
 const SESSION_INVALID_DETAILS = [
     "Invalid token",
     "Invalid token payload",
@@ -40,7 +49,11 @@ const SESSION_INVALID_DETAILS = [
     "Compte suspendu.",
 ];
 
-function isSessionInvalid(errorData) {
+function isSessionInvalid(response, errorData) {
+    if (response.headers.get(SESSION_INVALID_HEADER) === SESSION_INVALID_CODE) {
+        return true;
+    }
+
     let detail = errorData;
     try {
         const parsed = JSON.parse(errorData)?.detail;
@@ -72,7 +85,7 @@ export async function apiFetch(url, options = {}, token = null, _retried = false
     if (!response.ok) {
         const errorData = await response.text();
         const isAuthEndpoint = url.toString().includes("/login") || url.toString().includes("/refresh");
-        if (response.status === 401 && !isAuthEndpoint && isSessionInvalid(errorData)) {
+        if (response.status === 401 && !isAuthEndpoint && isSessionInvalid(response, errorData)) {
             if (!_retried) {
                 const newToken = await refreshAccessToken();
                 if (newToken) {

@@ -677,7 +677,12 @@ export const THEMES = {
             { label: 'Blessé léger', color: '#f97316' },
         ],
         stats: (features) => {
-            const sev = countBy(features, 'severity_label');
+            // On compte sur `severity` (l'entier renvoyé par l'API) et non sur
+            // `severity_label` : ce dernier est un libellé destiné à l'affichage,
+            // donc traduisible, et l'utiliser comme clé mettrait silencieusement
+            // ces deux compteurs à zéro dès que l'API répond en anglais.
+            // Barème : 1 = blessé léger, 3 = blessé hospitalisé, 10 = tué.
+            const sev = countBy(features, 'severity');
             const years = features
                 .map(f => f?.properties?.date)
                 .filter(Boolean)
@@ -685,8 +690,8 @@ export const THEMES = {
                 .filter(Number.isFinite);
             const stats = [
                 { label: 'accidents cartographiés', value: features.length },
-                { label: 'blessés hospitalisés', value: sev['blessé hospitalisé'] || 0 },
-                { label: 'accidents mortels', value: sev['tué'] || 0 },
+                { label: 'blessés hospitalisés', value: sev[3] || 0 },
+                { label: 'accidents mortels', value: sev[10] || 0 },
             ];
             if (years.length) {
                 stats.push({ label: 'période couverte', text: `${Math.min(...years)}–${Math.max(...years)}` });
