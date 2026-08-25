@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { langFromPathname, pathFor } from '../i18n/routes';
+import { themeLabel } from '../i18n/carteLabels';
 import { Helmet } from 'react-helmet-async';
 import Meta from '../components/Meta';
 import ThemeIcon from '../components/carte/ThemeIcon';
@@ -95,7 +96,7 @@ export default function CarteHubPage() {
                                     <li key={page.key}>
                                         <Link to={page.path}>
                                             <ThemeIcon slug={page.themeSlug} className="carte-carte-icone" />
-                                            <span className="carte-carte-titre">{page.theme.label}</span>
+                                            <span className="carte-carte-titre">{themeLabel(page.theme)}</span>
                                             <span className="carte-carte-ville">{city.name}</span>
                                         </Link>
                                     </li>

@@ -1,12 +1,13 @@
 import { Link, useLocation } from 'react-router';
 import { langFromPathname, matchPath, pathFor } from '../i18n/routes';
+import { themeLabel } from '../i18n/carteLabels';
 import { Helmet } from 'react-helmet-async';
 import Meta from '../components/Meta';
 import ErrorPage from './ErrorPage';
 import ThemeIcon from '../components/carte/ThemeIcon';
 import { trackEvent } from '../services/analytics';
 import {
-    SITE_URL, CITY_BY_SLUG, pagesForCity, routableCitiesLabel,
+    SITE_URL, CITY_BY_SLUG, cityHubTitle, pagesForCity, routableCitiesLabel,
 } from '../data/thematicMaps';
 import './CartePages.css';
 
@@ -37,7 +38,7 @@ export default function CarteVillePage() {
             {
                 '@type': 'CollectionPage',
                 '@id': canonical,
-                name: `Cartes cyclables ${city.prep}`,
+                name: cityHubTitle(city),
                 inLanguage: 'fr',
                 about: { '@type': 'Place', name: city.name },
                 isPartOf: { '@type': 'WebSite', url: abs(pathFor('home', lang)), name: 'Sécu’Cycle' },
@@ -53,7 +54,7 @@ export default function CarteVillePage() {
     return (
         <>
             <Meta
-                title={`Cartes cyclables ${city.prep} | Sécu’Cycle`}
+                title={`${cityHubTitle(city)} | Sécu’Cycle`}
                 description={city.metaDescription}
                 preconnect={['https://api.secu-cycle.fr']}
             />
@@ -73,7 +74,7 @@ export default function CarteVillePage() {
                 </nav>
 
                 <div className="carte-entete">
-                    <h1>Cartes cyclables {city.prep}</h1>
+                    <h1>{cityHubTitle(city)}</h1>
                     <p className="carte-intro">{city.intro}</p>
                 </div>
 
@@ -82,7 +83,7 @@ export default function CarteVillePage() {
                         <li key={page.key}>
                             <Link to={page.path}>
                                 <ThemeIcon slug={page.themeSlug} className="carte-carte-icone" />
-                                <span className="carte-carte-titre">{page.theme.label}</span>
+                                <span className="carte-carte-titre">{themeLabel(page.theme)}</span>
                                 <span className="carte-carte-ville">{page.content.intro.split('.')[0]}.</span>
                             </Link>
                         </li>

@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { langFromPathname, matchPath, pathFor } from '../i18n/routes';
+import { sourceDetail, statLabel, themeLabel } from '../i18n/carteLabels';
 import { Helmet } from 'react-helmet-async';
 import { MdOutlineOpenInFull, MdOutlineCloseFullscreen } from 'react-icons/md';
 import Meta from '../components/Meta';
@@ -104,7 +105,7 @@ export default function CarteThematiquePage() {
                     { '@type': 'ListItem', position: 1, name: 'Accueil', item: abs(pathFor('home', lang)) },
                     { '@type': 'ListItem', position: 2, name: 'Cartes', item: abs(pathFor('carteHub', lang)) },
                     { '@type': 'ListItem', position: 3, name: city.name, item: abs(pathFor('carteVille', lang, { citySlug: city.slug })) },
-                    { '@type': 'ListItem', position: 4, name: theme.label, item: canonical },
+                    { '@type': 'ListItem', position: 4, name: themeLabel(theme), item: canonical },
                 ],
             },
             {
@@ -157,7 +158,7 @@ export default function CarteThematiquePage() {
                     <span aria-hidden="true">›</span>
                     <Link to={pathFor("carteVille", lang, { citySlug: city.slug })}>{city.name}</Link>
                     <span aria-hidden="true">›</span>
-                    <span aria-current="page">{theme.label}</span>
+                    <span aria-current="page">{themeLabel(theme)}</span>
                 </nav>
 
                 <div className="carte-entete">
@@ -168,9 +169,9 @@ export default function CarteThematiquePage() {
                 {stats.length > 0 && (
                     <ul className="carte-stats" aria-label="Chiffres clés">
                         {stats.map(stat => (
-                            <li key={stat.label}>
-                                <strong>{stat.text ?? stat.value.toLocaleString('fr-FR')}</strong>
-                                <span>{stat.label}</span>
+                            <li key={stat.key}>
+                                <strong>{stat.text ?? stat.value.toLocaleString(lang)}</strong>
+                                <span>{statLabel(page.themeSlug, stat.key)}</span>
                             </li>
                         ))}
                     </ul>
@@ -234,7 +235,7 @@ export default function CarteThematiquePage() {
                             {page.sources.map(source => (
                                 <li key={source.name}>
                                     <strong>{source.name}</strong>
-                                    {source.detail && <> — {source.detail}</>}
+                                    {sourceDetail(source) && <> — {sourceDetail(source)}</>}
                                     {source.producer && (
                                         <>
                                             {' · '}
@@ -271,7 +272,7 @@ export default function CarteThematiquePage() {
                                 <li key={autre.key}>
                                     <Link to={autre.path}>
                                         <ThemeIcon slug={autre.themeSlug} className="carte-lien-icone" />
-                                        {autre.theme.label}
+                                        {themeLabel(autre.theme)}
                                     </Link>
                                 </li>
                             ))}
@@ -281,13 +282,13 @@ export default function CarteThematiquePage() {
 
                 {memeThemeAilleurs.length > 0 && (
                     <section className="carte-maillage">
-                        <h2>{theme.label} dans d’autres villes</h2>
+                        <h2>{themeLabel(theme)} dans d’autres villes</h2>
                         <ul className="carte-liens">
                             {memeThemeAilleurs.map(autre => (
                                 <li key={autre.key}>
                                     <Link to={autre.path}>
                                         <ThemeIcon slug={autre.themeSlug} className="carte-lien-icone" />
-                                        {autre.theme.label} {autre.city.prep}
+                                        {themeLabel(autre.theme)} {autre.city.prep}
                                     </Link>
                                 </li>
                             ))}
