@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useLocation } from 'react-router';
+import { langFromPathname, matchPath, pathFor } from '../i18n/routes';
 import { Helmet } from 'react-helmet-async';
 import { MdOutlineOpenInFull, MdOutlineCloseFullscreen } from 'react-icons/md';
 import Meta from '../components/Meta';
@@ -12,7 +13,7 @@ import {
 } from '../data/thematicMaps';
 import './CartePages.css';
 
-function CtaItineraire({ page, position }) {
+function CtaItineraire({ page, position, lang }) {
     const { city } = page;
 
     if (city.routing === false) {
@@ -27,7 +28,7 @@ function CtaItineraire({ page, position }) {
                 </div>
                 <Link
                     className="button carte-cta-bouton"
-                    to="/carte"
+                    to={pathFor("carteHub", lang)}
                     onClick={() => trackEvent('carte_cta_villes_couvertes', {
                         ville: city.slug,
                         theme: page.themeSlug,
@@ -40,7 +41,7 @@ function CtaItineraire({ page, position }) {
         );
     }
 
-    const cible = `/itineraire?couche=${page.theme.itineraireLayer}`;
+    const cible = `${pathFor('itineraire', lang)}?couche=${page.theme.itineraireLayer}`;
     return (
         <aside className="carte-cta">
             <div>
@@ -67,7 +68,10 @@ function CtaItineraire({ page, position }) {
 }
 
 export default function CarteThematiquePage() {
-    const { citySlug, themeSlug } = useParams();
+    const { pathname } = useLocation();
+    const lang = langFromPathname(pathname);
+
+    const { citySlug, themeSlug } = matchPath(pathname)?.params ?? {};
     const page = findPage(citySlug, themeSlug);
 
     const [features, setFeatures] = useState(null);
@@ -86,7 +90,8 @@ export default function CarteThematiquePage() {
     if (!page) return <ErrorPage />;
 
     const { city, theme, content } = page;
-    const canonical = `${SITE_URL}${page.path}/`;
+    const abs = (chemin) => `${SITE_URL}${chemin.endsWith('/') ? chemin : `${chemin}/`}`;
+    const canonical = abs(pathFor('carteTheme', lang, { citySlug: city.slug, themeSlug: page.themeSlug }));
     const autresCartesVille = pagesForCity(city.slug).filter(p => p.themeSlug !== page.themeSlug);
     const memeThemeAilleurs = pagesForTheme(page.themeSlug).filter(p => p.city.slug !== city.slug);
 
@@ -96,9 +101,9 @@ export default function CarteThematiquePage() {
             {
                 '@type': 'BreadcrumbList',
                 itemListElement: [
-                    { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE_URL}/` },
-                    { '@type': 'ListItem', position: 2, name: 'Cartes', item: `${SITE_URL}/carte/` },
-                    { '@type': 'ListItem', position: 3, name: city.name, item: `${SITE_URL}/carte/${city.slug}/` },
+                    { '@type': 'ListItem', position: 1, name: 'Accueil', item: abs(pathFor('home', lang)) },
+                    { '@type': 'ListItem', position: 2, name: 'Cartes', item: abs(pathFor('carteHub', lang)) },
+                    { '@type': 'ListItem', position: 3, name: city.name, item: abs(pathFor('carteVille', lang, { citySlug: city.slug })) },
                     { '@type': 'ListItem', position: 4, name: theme.label, item: canonical },
                 ],
             },
@@ -116,7 +121,7 @@ export default function CarteThematiquePage() {
                 name: content.h1,
                 description: content.description,
                 inLanguage: 'fr',
-                isPartOf: { '@type': 'WebSite', url: `${SITE_URL}/`, name: 'Sécu’Cycle' },
+                isPartOf: { '@type': 'WebSite', url: abs(pathFor('home', lang)), name: 'Sécu’Cycle' },
                 about: { '@type': 'Place', name: city.name },
                 mentions: page.sources.map(source => ({
                     '@type': 'Dataset',
@@ -146,11 +151,11 @@ export default function CarteThematiquePage() {
 
             <article className="carte-page">
                 <nav className="carte-fil" aria-label="Fil d’Ariane">
-                    <Link to="/">Accueil</Link>
+                    <Link to={pathFor("home", lang)}>Accueil</Link>
                     <span aria-hidden="true">›</span>
-                    <Link to="/carte">Cartes</Link>
+                    <Link to={pathFor("carteHub", lang)}>Cartes</Link>
                     <span aria-hidden="true">›</span>
-                    <Link to={`/carte/${city.slug}`}>{city.name}</Link>
+                    <Link to={pathFor("carteVille", lang, { citySlug: city.slug })}>{city.name}</Link>
                     <span aria-hidden="true">›</span>
                     <span aria-current="page">{theme.label}</span>
                 </nav>
@@ -198,7 +203,7 @@ export default function CarteThematiquePage() {
                     </p>
                 )}
 
-                <CtaItineraire page={page} position="sous-carte" />
+                <CtaItineraire page={page} lang={lang} position="sous-carte" />
 
                 <div className="carte-corps">
                     {content.sections.map(section => (
@@ -251,12 +256,12 @@ export default function CarteThematiquePage() {
                         </ul>
                         <p className="carte-note">
                             L’inventaire complet des sources utilisées par Sécu’Cycle est détaillé sur
-                            la page <Link to="/donnees">Données et sources</Link>.
+                            la page <Link to={pathFor("donnees", lang)}>Données et sources</Link>.
                         </p>
                     </section>
                 </div>
 
-                <CtaItineraire page={page} position="fin-article" />
+                <CtaItineraire page={page} lang={lang} position="fin-article" />
 
                 {autresCartesVille.length > 0 && (
                     <section className="carte-maillage">
