@@ -4,6 +4,9 @@ import { Routes, Route, useLocation } from 'react-router';
 import { ENABLED_LANGS, ROUTE_PATHS, patternFor, routeKeys } from './i18n/routes';
 import i18n from './i18n';
 import { ensureNamespaces } from './i18n/catalogues';
+import { REGISTRY_LOADERS } from './data/registryLoaders';
+import { buildRegistry } from './data/buildRegistry';
+import * as core from './data/thematicMapsCore';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -35,9 +38,23 @@ const SuppressionComptePage = lazyPage(() => import('./pages/SuppressionComptePa
 const ContactPage = lazyPage(() => import('./pages/ContactPage'), 'legal');
 const FaqPage = lazyPage(() => import('./pages/FaqPage'), 'faq');
 const DonneesPage = lazyPage(() => import('./pages/DonneesPage'), 'donnees');
-const CarteHubPage = lazyPage(() => import('./pages/CarteHubPage'), 'carte');
-const CarteVillePage = lazyPage(() => import('./pages/CarteVillePage'), 'carte');
-const CarteThematiquePage = lazyPage(() => import('./pages/CarteThematiquePage'), 'carte');
+// Les trois pages carte reçoivent leur registre éditorial en PROP, résolu dans la
+// même promesse que le composant. C'est ce qui permet à `findPage` de rester
+// synchrone au rendu — un await à l'intérieur du composant casserait le prérendu —
+// tout en donnant à chaque langue son propre chunk éditorial.
+const carteLazy = (charger) => lazy(async () => {
+  const [module, registre] = await Promise.all([
+    charger(),
+    REGISTRY_LOADERS[i18n.language](),
+    ensureNamespaces(i18n.language, ['carte']),
+  ]);
+  const Page = module.default;
+  return { default: (props) => <Page registre={buildRegistry(core, registre)} {...props} /> };
+});
+
+const CarteHubPage = carteLazy(() => import('./pages/CarteHubPage'));
+const CarteVillePage = carteLazy(() => import('./pages/CarteVillePage'));
+const CarteThematiquePage = carteLazy(() => import('./pages/CarteThematiquePage'));
 
 const PAGE_ELEMENTS = {
   home: <HomePage />,

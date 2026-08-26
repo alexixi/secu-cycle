@@ -65,6 +65,9 @@ export function buildRegistry(core, editorial) {
         ROUTABLE_CITIES,
         PAGE_CONTENT: editorial.PAGE_CONTENT,
 
+        // Exposé tel quel : les pages en ont besoin pour énumérer autre chose que
+        // les villes routables — le hub liste toutes les villes couvertes.
+        listFormat: editorial.listFormat,
         routableCitiesLabel: () => editorial.listFormat(ROUTABLE_CITIES.map(c => c.name)),
         cityHubTitle: editorial.cityHubTitle,
 
