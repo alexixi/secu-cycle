@@ -6,11 +6,21 @@ import { PARAM_SLUGS } from './slugs.js';
 export const LANGS = ['fr', 'en'];
 export const DEFAULT_LANG = 'fr';
 
-// Langues effectivement routées, prérendues et présentes dans le sitemap.
-// L'anglais est déclaré partout ci-dessous bien avant d'être publié : cette
-// constante est l'unique interrupteur, pour que l'ajout des routes /en/ soit un
-// changement d'une ligne, isolé et réversible.
-export const ENABLED_LANGS = ['fr'];
+// Deux notions distinctes, et c'est délibéré.
+//
+// ENABLED_LANGS : les langues RÉELLEMENT ROUTÉES. Une langue listée ici a ses
+// <Route> déclarés, donc ses URL répondent et ses pages s'affichent.
+//
+// PUBLISHED_LANGS : les langues INDEXABLES. Une langue routée mais non publiée
+// sort du sitemap, n'est pas prérendue, ne reçoit aucune balise alternate et
+// porte un noindex. C'est ce qui permet de faire vivre l'anglais en conditions
+// réelles pendant sa rédaction, sans qu'un moteur n'indexe des pages à moitié
+// traduites — et de le publier ensuite, quand le contenu est relu.
+export const ENABLED_LANGS = ['fr', 'en'];
+export const PUBLISHED_LANGS = ['fr'];
+
+/** Une langue routée mais pas encore publiée ne doit pas être indexée. */
+export const isPublished = (lang) => PUBLISHED_LANGS.includes(lang);
 
 const PREFIX = { fr: '', en: '/en' };
 
@@ -107,7 +117,9 @@ export function alternatesFor(pathname) {
     if (!trouve) return Object.fromEntries(LANGS.map(l => [l, null]));
 
     return Object.fromEntries(LANGS.map(lang => {
-        if (!ENABLED_LANGS.includes(lang)) return [lang, null];
+        // Annoncer en hreflang une page non publiée reviendrait à la faire
+        // indexer par la bande, ce que le noindex est censé empêcher.
+        if (!isPublished(lang)) return [lang, null];
         return [lang, pathFor(trouve.routeKey, lang, trouve.params)];
     }));
 }
