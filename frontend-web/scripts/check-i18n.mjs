@@ -200,6 +200,66 @@ for (const lang of LANGS) {
     }
 }
 
+// --- parité des catalogues ------------------------------------------------
+//
+// Le reste de ce script ne contrôle que le domaine « carte », parce que ses clés
+// sont émises par le registre. Les sept autres domaines n'avaient aucun garde-fou :
+// une clé présente en français et absente en anglais ne casse rien au build et,
+// avec fallbackLng désactivé, s'affiche telle quelle sur la page servie.
+//
+// On compare donc les catalogues deux à deux avec le français : mêmes chemins de
+// clés, mêmes balises de lien, mêmes variables d'interpolation. Une balise sans
+// jumelle est le cas piégeux — <donnees>…</donnees> oubliée dans la version
+// anglaise fait disparaître le lien, sans rien signaler.
+const NAMESPACES = [...new Set([
+    ...readFileSync(join(ici, '..', 'src', 'i18n', 'catalogues.js'), 'utf-8')
+        .matchAll(/^\s+(\w+):\s+\(\) => import\(/gm)].map(m => m[1]))];
+
+const aplatir = (objet, prefixe = '') => Object.entries(objet).flatMap(([cle, valeur]) =>
+    (valeur && typeof valeur === 'object')
+        ? aplatir(valeur, `${prefixe}${cle}.`)
+        : [[`${prefixe}${cle}`, String(valeur)]]);
+
+const GRAMMAIRE = { prep: 'lieu', ville: 'lieu' };
+
+const motifs = (texte, expression) => [...texte.matchAll(expression)]
+    .map(m => GRAMMAIRE[m[1]] ?? m[1]).sort().join(',');
+
+function verifierParite(lang) {
+    const anomalies = [];
+    for (const ns of NAMESPACES) {
+        const lire = (l) => JSON.parse(readFileSync(join(ici, '..', 'src', 'i18n', 'locales', l, `${ns}.json`), 'utf-8'));
+        const fr = new Map(aplatir(lire('fr')));
+        const autre = new Map(aplatir(lire(lang)));
+
+        for (const cle of fr.keys()) {
+            if (!autre.has(cle)) { anomalies.push(`${lang}/${ns}.json — clé absente : ${cle}`); continue; }
+            for (const [quoi, expression] of [['balise', /<(\w+)>/g], ['variable', /\{\{\s*(\w+)/g]]) {
+                const a = motifs(fr.get(cle), expression);
+                const b = motifs(autre.get(cle), expression);
+                if (a !== b) anomalies.push(`${lang}/${ns}.json — ${quoi}s différentes sur ${cle} : fr=[${a}] ${lang}=[${b}]`);
+            }
+        }
+        for (const cle of autre.keys()) {
+            if (!fr.has(cle)) anomalies.push(`${lang}/${ns}.json — clé en trop, absente du français : ${cle}`);
+        }
+    }
+    return anomalies;
+}
+
+for (const lang of LANGS.filter(l => l !== 'fr')) {
+    const ecarts = verifierParite(lang);
+    if (!PUBLISHED_LANGS.includes(lang)) {
+        console.log(`${lang} : parité des catalogues — ${ecarts.length} écart(s) (langue non encore servie, non bloquant).`);
+        continue;
+    }
+    for (const ligne of ecarts) {
+        console.error(`PARITÉ     ${ligne}`);
+        anomalies += 1;
+    }
+    if (!ecarts.length) console.log(`${lang} : ${NAMESPACES.length} domaines à parité avec le français.`);
+}
+
 for (const ligne of await verifierRegistres()) {
     console.error(`REGISTRE   ${ligne}`);
     anomalies += 1;
