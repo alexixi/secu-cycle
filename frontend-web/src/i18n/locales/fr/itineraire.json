@@ -1,1 +1,6 @@
-{}
+{
+    "titrePage": "Sécu'Cycle | Itinéraires",
+    "metaDescription": "Calculez un itinéraire à vélo sécurisé à Bordeaux et à Tournai avec Sécu'Cycle : trajet adapté à votre profil, votre vélo et au type de route.",
+    "h1": "Calculateur d'itinéraire à vélo sécurisé à Bordeaux et à Tournai",
+    "erreurGenerique": "Une erreur est survenue lors de la recherche de l'itinéraire."
+}
