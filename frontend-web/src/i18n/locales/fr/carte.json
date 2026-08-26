@@ -127,5 +127,41 @@
         "baac": {
             "detail": "dérivé des BAAC de l’ONISR, publié par Koumoul"
         }
+    },
+    "ui": {
+        "filAriane": "Fil d’Ariane",
+        "accueil": "Accueil",
+        "cartes": "Cartes",
+        "chiffresCles": "Chiffres clés",
+        "hub": {
+            "titrePage": "Cartes cyclables par ville | Sécu’Cycle",
+            "metaDescription": "Toutes les cartes Sécu’Cycle : stationnements vélo, toilettes, points d’eau, éclairage, trafic et accidents à {{villes}}.",
+            "h1": "Cartes cyclables par ville",
+            "villeManquante": "Une ville manquante ?",
+            "villeManquanteTexte": "Nous ne publions une carte que lorsque les données ouvertes du territoire sont assez complètes pour être utiles — un recensement trop clairsemé donnerait une image fausse. La couverture s’étend au fil des territoires intégrés au calculateur : vous pouvez nous suggérer une ville via la <contact>page de contact</contact>."
+        },
+        "ville": {
+            "zoneCouverte": "Zone couverte",
+            "sansRoutage": "Les cartes ci-dessus couvrent {{communes}}. Le calcul d’itinéraire, lui, n’y est pas encore proposé : il s’appuie sur un réseau routier chargé en mémoire par notre serveur, dont l’emprise est plus étroite que celle des données.",
+            "avecRoutage": "Le calculateur d’itinéraires couvre {{communes}}. Les cartes ci-dessus portent sur cette même emprise.",
+            "detailDonnees": "Le détail des jeux de données et de leurs licences figure sur la page <donnees>Données et sources</donnees>."
+        },
+        "cta": {
+            "pasEncore": "Itinéraires : pas encore {{prep}}",
+            "villesCouvertes": "Voir les villes couvertes",
+            "trajet": "Un trajet à vélo {{prep}} ?",
+            "trajetTexte": "Sécu’Cycle calcule un itinéraire cyclable sécurisé qui tient compte des aménagements, de l’éclairage, du trafic et des accidents recensés — avec cette couche affichée sur la carte.",
+            "calculer": "Calculer mon itinéraire",
+            "itinerairesCalculesA": "Les itinéraires sont pour l’instant calculés à {{villes}}."
+        },
+        "theme": {
+            "reduireCarte": "Réduire la carte",
+            "agrandirCarte": "Agrandir la carte",
+            "questionsFrequentes": "Questions fréquentes",
+            "sourcesLicences": "Sources et licences",
+            "detailDonnees": "Le détail des jeux de données et de leurs licences figure sur la page <donnees>Données et sources</donnees>.",
+            "autresCartes": "Autres cartes {{prep}}",
+            "memeThemeAilleurs": "{{theme}} dans d’autres villes"
+        }
     }
 }
