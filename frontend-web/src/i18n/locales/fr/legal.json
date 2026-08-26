@@ -266,5 +266,59 @@
             "h2": "6. Vos autres droits",
             "texte": "La suppression du compte n'est qu'un des droits que vous tenez du RGPD. L'accès, la rectification, la limitation, l'opposition et la portabilité de vos données sont détaillés dans notre <confidentialite>politique de confidentialité</confidentialite>. Pour toute autre demande, la <contact>page de contact</contact> est à votre disposition."
         }
+    },
+    "contact": {
+        "titrePage": "Sécu'Cycle | Contact",
+        "metaDescription": "Contacter l'équipe Sécu'Cycle : support, questions et exercice de vos droits sur vos données personnelles.",
+        "h1": "Contact",
+        "chapo": "Une question, un retour, un bug à signaler ou une demande concernant vos données&nbsp;? Nous lisons tous les messages et vous répondons avec plaisir.",
+        "formulaire": {
+            "h2": "Nous écrire",
+            "intro": "Remplissez le formulaire ci-dessous&nbsp;: votre message nous parvient directement et nous vous répondons à l'adresse que vous indiquez.",
+            "prenom": "Prénom",
+            "nom": "Nom",
+            "email": "Adresse mail",
+            "emailPlaceholder": "Pour que nous puissions vous répondre",
+            "sujet": "Sujet",
+            "sujetPlaceholder": "Choisissez l'objet de votre demande…",
+            "message": "Votre message",
+            "messagePlaceholder": "Décrivez votre demande…",
+            "envoyer": "Envoyer",
+            "envoiEnCours": "Envoi en cours…",
+            "succes": "Merci&nbsp;! Votre message a bien été envoyé, nous vous répondrons par e-mail.",
+            "erreurLimite": "Vous avez envoyé trop de messages. Réessayez dans une heure ou écrivez-nous directement.",
+            "erreurEnvoi": "L'envoi a échoué. Réessayez plus tard ou écrivez-nous directement à contact@secu-cycle.fr."
+        },
+        "validation": {
+            "prenom": "Indiquez votre prénom.",
+            "nom": "Indiquez votre nom.",
+            "email": "Indiquez une adresse e-mail valide.",
+            "sujet": "Choisissez l'objet de votre demande.",
+            "message": "Le message doit faire au moins 10 caractères."
+        },
+        "sujets": {
+            "support": "Support et bugs",
+            "suggestions": "Suggestions",
+            "rgpd": "Données personnelles (RGPD)",
+            "signalement": "Signalement",
+            "autre": "Autre"
+        },
+        "mailDirect": "Vous préférez votre propre messagerie&nbsp;? Écrivez-nous à&nbsp;: <mail>contact@secu-cycle.fr</mail>",
+        "objets": {
+            "h2": "Objet de votre demande",
+            "intro": "Le menu déroulant «&nbsp;Sujet&nbsp;» nous permet d'orienter votre message vers la bonne personne. Voici à quoi correspond chaque objet&nbsp;:",
+            "support": "<b>Support et bugs</b> — un problème technique, une erreur, un comportement inattendu du site ou de l'application.",
+            "suggestions": "<b>Suggestions</b> — une idée, un retour d'expérience ou une amélioration à proposer.",
+            "rgpd": "<b>Données personnelles (RGPD)</b> — pour exercer vos droits d'accès, de rectification, d'effacement, de limitation, d'opposition ou de portabilité. Les modalités sont détaillées dans notre <confidentialite>politique de confidentialité</confidentialite>. Pour <suppression>supprimer votre compte</suppression>, nul besoin de nous écrire&nbsp;: vous pouvez le faire vous-même, en quelques secondes.",
+            "signalement": "<b>Signalement</b> — pour nous signaler un contenu ou un usage problématique."
+        },
+        "delai": {
+            "h2": "Délai de réponse",
+            "texte": "Sécu'Cycle étant un projet étudiant mené bénévolement, nous ne pouvons pas garantir de délai de réponse. Nous faisons néanmoins de notre mieux pour répondre dans les meilleurs délais."
+        },
+        "infosLegales": {
+            "h2": "Informations légales",
+            "texte": "Pour en savoir plus, consultez nos <mentions>mentions légales</mentions>, notre <confidentialite>politique de confidentialité</confidentialite> et nos <conditions>conditions générales d'utilisation</conditions>."
+        }
     }
 }
