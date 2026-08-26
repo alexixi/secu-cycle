@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { MdNavigation, MdInfoOutline } from "react-icons/md";
 import { WEATHER_ALERT_COLORS, weatherIcon, freshSteps } from "./weather";
@@ -5,6 +6,7 @@ import WeatherDetail from "./WeatherDetail";
 import "./WeatherBar.css";
 
 export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, onOpenInfo }) {
+    const { t } = useTranslation('carte');
     const [open, setOpen] = useState(false);
     const rootRef = useRef(null);
 
@@ -101,13 +103,13 @@ export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, 
                 <div>
                     <div className="weather-bar-detail" inert={!open}>
                         <div className="weather-bar-detail-head">
-                            <span>Météo</span>
+                            <span>{t('ui.meteo.titre')}</span>
                             <button
                                 type="button"
                                 className="weather-bar-info-btn"
                                 onClick={onOpenInfo}
-                                title="D'où viennent ces données et comment les lire"
-                                aria-label="Sources et méthode"
+                                title={t('ui.meteo.sourcesTitre')}
+                                aria-label={t('ui.meteo.sourcesAria')}
                             >
                                 <MdInfoOutline />
                             </button>

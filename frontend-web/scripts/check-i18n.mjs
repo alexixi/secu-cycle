@@ -49,6 +49,50 @@ const ECHANTILLON = Array.from({ length: 40 }, (_, i) => ({
 
 const valeur = (objet, chemin) => chemin.split('.').reduce((n, p) => n?.[p], objet);
 
+// --- tables du module carte ------------------------------------------------
+//
+// mapConstants.js n'est pas chargeable par Node (il importe un JSON et un
+// import.meta.glob), donc on lit ses identifiants dans le source. C'est un
+// garde-fou, pas une preuve : il attrape la clé oubliée, pas une table renommée.
+const TABLES_CARTE = [
+    ['MAP_STYLES', 'fond', 'id'],
+    ['PARKING_TYPES', 'parking', 'id'],
+    ['TOILET_TYPES', 'toilettes', 'id'],
+    ['REPAIR_TYPES', 'reparation', 'id'],
+    ['POI_CATEGORIES', 'poi', 'id'],
+    ['POI_DETAIL_FIELDS', 'champPoi', 'key'],
+    ['ACCIDENT_DETAIL_FIELDS', 'champAccident', 'key'],
+    ['ACCIDENT_LEGEND', 'graviteAccident', 'key'],
+    ['BIKESHARE_COUNT_FIELDS', 'vls', 'key'],
+    ['BIKESHARE_TOTAL_FIELD', 'vls', 'key'],
+    ['BIKESHARE_DETAIL_FIELDS', 'vls', 'key'],
+];
+
+function verifierTablesCarte(catalogue, lang, bloquante) {
+    const source = readFileSync(join(ici, '..', 'src', 'modules', 'map', 'shared', 'mapConstants.js'), 'utf-8');
+    let manquantes = 0;
+    let controlees = 0;
+
+    for (const [table, prefixe, champ] of TABLES_CARTE) {
+        const debut = source.indexOf(`export const ${table} = `);
+        if (debut === -1) continue;
+        const fin = source.indexOf(table.includes('TOTAL') ? '\n};' : '\n];', debut);
+        const motif = new RegExp(`${champ}\\s*:\\s*['"]([\\w-]+)['"]`, 'g');
+
+        for (const [, id] of source.slice(debut, fin).matchAll(motif)) {
+            controlees += 1;
+            if (catalogue.carte?.[prefixe]?.[id]) continue;
+            // Comptée dans tous les cas : c'est ce chiffre qui donne l'avancement
+            // d'une langue non encore servie. Seul l'affichage dépend de `bloquante`.
+            manquantes += 1;
+            if (bloquante) console.error(`MANQUANT   ${lang} — carte.${prefixe}.${id} (${table})`);
+        }
+    }
+    return { manquantes, controlees };
+}
+
+
+
 let anomalies = 0;
 let restantes = 0;
 
@@ -100,6 +144,11 @@ for (const lang of LANGS) {
             }
         }
     }
+
+    const tables = verifierTablesCarte(catalogue, lang, bloquante);
+    controlees += tables.controlees;
+    if (bloquante) anomalies += tables.manquantes;
+    else restantes += tables.manquantes;
 
     if (!bloquante) {
         console.log(`${lang} : ${controlees - restantes}/${controlees} clés traduites `

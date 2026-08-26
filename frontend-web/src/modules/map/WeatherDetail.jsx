@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { MdNavigation } from "react-icons/md";
 import {
     WEATHER_ALERT_COLORS, weatherIcon, formatHM, formatHMShifted,
@@ -5,6 +6,7 @@ import {
 } from "./weather";
 
 export default function WeatherDetail({ summary, hourly = [], minutely = [], outdated = false, rain }) {
+    const { t } = useTranslation('carte');
     const wind = summary.wind;
     const alerts = summary.alerts || [];
     const equipment = summary.equipment || [];
@@ -33,7 +35,7 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
             </section>
 
             <section className="weather-detail-block">
-                <h4>Précipitations</h4>
+                <h4>{t('ui.meteo.precipitations')}</h4>
                 {rain && <p className="weather-detail-lead">{rain.text}</p>}
 
                 {hasNowcast ? (
@@ -92,7 +94,7 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
 
             {wind?.speed != null && (
                 <section className="weather-detail-block">
-                    <h4>Vent</h4>
+                    <h4>{t('ui.meteo.vent')}</h4>
                     <p className="weather-detail-wind">
                         {wind.direction != null && (
                             <MdNavigation
@@ -115,9 +117,9 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
             )}
 
             <section className="weather-detail-block">
-                <h4>Vigilance</h4>
+                <h4>{t('ui.meteo.vigilance')}</h4>
                 {alerts.length === 0 ? (
-                    <p className="weather-detail-muted">Rien à signaler.</p>
+                    <p className="weather-detail-muted">{t('ui.meteo.rienASignaler')}</p>
                 ) : (
                     <ul className="weather-detail-alerts">
                         {alerts.map((alert) => (
@@ -141,7 +143,7 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
 
             {equipment.length > 0 && (
                 <section className="weather-detail-block">
-                    <h4>À prévoir</h4>
+                    <h4>{t('ui.meteo.aPrevoir')}</h4>
                     <div className="weather-detail-chips">
                         {equipment.map((item) => (
                             <span key={item.key} className="weather-detail-chip" title={item.reason}>
@@ -154,7 +156,7 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
 
             {nextHours.length > 0 && (
                 <section className="weather-detail-block">
-                    <h4>Prochaines heures</h4>
+                    <h4>{t('ui.meteo.prochainesHeures')}</h4>
                     <div className="weather-detail-hours">
                         {nextHours.map((h) => {
                             const Icon = weatherIcon(h.condition, h.is_day !== false);
