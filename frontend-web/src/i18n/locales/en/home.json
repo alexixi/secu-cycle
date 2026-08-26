@@ -1,1 +1,22 @@
-{}
+{
+    "titrePage": "Sécu'Cycle | Home",
+    "metaDescription": "Discover Sécu'Cycle, the app and website for finding safer bike routes matched to your profile.",
+    "sousTitre": "Discover the project",
+    "decouvrirProjet": "Discover the project",
+    "plusInfos": {
+        "h2": "Need more information?",
+        "liens": "You can read our <mentions>Legal notice</mentions>, the <donnees>data sources</donnees> we use, our <carte>maps by city</carte>, our <confidentialite>Privacy policy</confidentialite> or our <conditions>Terms of use</conditions>.",
+        "questions": "Still have questions?",
+        "contact": "Get in touch through our <contact>contact form</contact>, or email us at <mail>contact@secu-cycle.fr</mail>."
+    },
+    "application": {
+        "apercuAlt": "Preview of the mobile app",
+        "h2": "Try our mobile app",
+        "texte": "Download the mobile app for an experience built around real-time navigation.",
+        "appStoreAlt": "Download on the App Store",
+        "googlePlayAlt": "Get it on Google Play"
+    },
+    "equipe": {
+        "h2": "The Sécu'Cycle team"
+    }
+}
