@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import confetti from "canvas-confetti";
@@ -35,6 +36,7 @@ const TOTAL_STEPS = 7;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function ProfileCreationPage() {
+    const { t } = useTranslation('auth');
     const path = useLocalizedPath();
     const navigate = useNavigate();
     const location = useLocation();
@@ -152,11 +154,11 @@ export default function ProfileCreationPage() {
                         handleResend();
                         return;
                     }
-                    setGeneralError("Cette adresse e-mail est déjà utilisée et le mot de passe ne correspond pas.");
+                    setGeneralError(t('creationCompte.emailDejaUtilise'));
                     return;
                 }
             }
-            setGeneralError("Une erreur est survenue lors de la création du compte. Veuillez réessayer.");
+            setGeneralError(t('creationCompte.erreurCreation'));
         } finally {
             setIsLoading(false);
         }
@@ -170,7 +172,7 @@ export default function ProfileCreationPage() {
         try {
             await verifyEmail(email, code);
         } catch {
-            setVerifyError("Code invalide ou expiré.");
+            setVerifyError(t('creationCompte.codeInvalide'));
             setIsLoading(false);
             return;
         }
@@ -210,14 +212,14 @@ export default function ProfileCreationPage() {
         setIsResending(true);
         try {
             await resendVerification(email);
-            setResendMessage("Si un compte non vérifié existe, un nouveau code a été envoyé.");
+            setResendMessage(t('creationCompte.codeRenvoye'));
             startResendCooldown();
         } catch (error) {
             if (error?.status === 429) {
-                setResendMessage("Trop de tentatives. Veuillez réessayer plus tard.");
+                setResendMessage(t('creationCompte.tropDeTentatives'));
                 startResendCooldown();
             } else {
-                setResendMessage("Impossible d'envoyer le code pour le moment.");
+                setResendMessage(t('creationCompte.envoiImpossible'));
             }
         } finally {
             setIsResending(false);
@@ -381,7 +383,7 @@ export default function ProfileCreationPage() {
 
     return (
         <>
-            <Meta title="Créer un compte | Sécu'Cycle" description="Rejoignez la communauté Sécu'Cycle et roulez en toute sécurité." noindex />
+            <Meta title={t('creationCompte.titrePage')} description={t('creationCompte.metaDescription')} noindex />
             <div className="page-form-container">
                 <div className="form-container">
                     <div className="onboarding-header">
