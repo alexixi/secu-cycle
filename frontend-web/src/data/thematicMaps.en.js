@@ -59,6 +59,18 @@ export const CITIES_CONTENT = {
                 + 'units — too partial a survey to be published as a map.',
         },
     },
+    nantes: {
+        label: 'Nantes and its metropolitan area',
+        communes: 'the 24 municipalities of Nantes Métropole',
+        metaDescription: 'Every cycling map for Nantes Métropole: bike parking, toilets, drinking '
+            + 'water, street lighting, Naolib stations, live traffic and accidents.',
+        intro: 'Sécu’Cycle covers Nantes Métropole, from both banks of the Loire to the Erdre and the '
+            + 'Sèvre. It is the best served by open data of any area on the service: Nantes Métropole '
+            + 'publishes a full inventory of its street lighting, which allows a map of rare precision.',
+        routingNote: 'Route planning does not cover Nantes Métropole for the time being: the road '
+            + 'network is held in memory for Bordeaux and the Tournai area only. The Nantes data shown '
+            + 'here does remain synchronised.',
+    },
 };
 
 /* ------------------------------------------------------------------ editorial content */
@@ -985,6 +997,502 @@ export const PAGE_CONTENT = {
                 q: 'Is the data up to date?',
                 a: 'BAAC records are published several years in arrears. The data currently available '
                     + 'covers the period 2015 to 2023.',
+            },
+        ],
+    },
+
+    'nantes/stationnements-velo': {
+        title: 'Bike parking in Nantes — map of stands and shelters',
+        description: 'Interactive map of the 5,000 bike parking spots across Nantes Métropole: stands, '
+            + 'racks, shelters and secure lockers.',
+        h1: 'Bike parking in Nantes',
+        intro: 'Where can you lock your bike in Nantes? This map lists the stands, racks, shelters and '
+            + 'lockers across the 24 municipalities of the metropolitan area, from both banks of the '
+            + 'Loire to the Erdre and Sèvre valleys.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is a parking spot surveyed by OpenStreetMap contributors. With more than '
+                    + '5,000 spots recorded, Nantes Métropole is the best-served area on the service.',
+                    'Stands dominate: they are the only equipment that lets you lock the frame and a wheel '
+                    + 'with a U-lock. Racks and wheel benders hold only the front wheel, which offers poor '
+                    + 'protection against theft.',
+                ],
+            },
+            {
+                h2: 'A network that follows the Loire',
+                p: [
+                    'The distribution tells the geography of Nantes: high density in the centre, on the '
+                    + 'île de Nantes and around the university districts, thinning out as soon as you '
+                    + 'leave the tram corridors.',
+                    'The Loire crossings concentrate cycling flows and, with them, parking demand on '
+                    + 'either side of the bridges. That is also where enclosed shelters make the difference.',
+                ],
+            },
+            {
+                h2: 'A live map, and therefore sometimes behind',
+                p: [
+                    'The survey comes from OpenStreetMap and resynchronises automatically. It therefore '
+                    + 'lives at the pace of contributions: a stand installed last month may be missing, '
+                    + 'and one removed may linger.',
+                    'The capacity shown carries the same limitation: it is only filled in for some spots. '
+                    + 'Its absence does not mean a single space, only that nobody has recorded the number.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many bike parking spots are there in Nantes?',
+                a: 'More than 5,000 spots are recorded across the 24 municipalities of Nantes Métropole, '
+                    + 'the vast majority of them stands, with several hundred shelters and lockers on top.',
+            },
+            {
+                q: 'What is the difference between a stand and a rack?',
+                a: 'A stand is an inverted U-shaped bar that lets you lock the frame and a wheel: it is '
+                    + 'the recommended design. A rack, or wheel bender, holds only the front wheel.',
+            },
+            {
+                q: 'Where can I find secure bike parking in Nantes?',
+                a: 'Enclosed shelters and individual lockers cluster around Nantes station, the transport '
+                    + 'hubs and the park-and-ride sites. They appear under the “Shelters and lockers” '
+                    + 'category.',
+            },
+            {
+                q: 'A parking spot is missing from the map — how do I report it?',
+                a: 'The data comes from OpenStreetMap: you can add the location directly on '
+                    + 'openstreetmap.org and it will be picked up at the next sync.',
+            },
+            {
+                q: 'Can Sécu’Cycle plan a route to these parking spots?',
+                a: 'Not for the time being: route planning relies on a road network held in memory, '
+                    + 'currently limited to Bordeaux and the Tournai area.',
+            },
+        ],
+    },
+
+    'nantes/toilettes-publiques': {
+        title: 'Public toilets in Nantes — interactive map',
+        description: 'Map of public toilets in Nantes and its metropolitan area: free, paid and '
+            + 'wheelchair-accessible facilities.',
+        h1: 'Public toilets in Nantes',
+        intro: 'Close to 350 public toilet locations are recorded across Nantes Métropole: the densest '
+            + 'survey on the whole of Sécu’Cycle. This map places them and shows, where the information '
+            + 'exists, the fee and the accessibility.',
+        sections: [
+            {
+                h2: 'Three colours, one of which says nothing',
+                p: [
+                    'The marker is coloured by fee: free, paid, or purple. That purple is the one to '
+                    + 'understand — it does not mean “paid”, it means nobody has recorded the fee.',
+                    'The same holds for wheelchair accessibility: it is flagged where it has been '
+                    + 'surveyed, and that field is filled in far less often than the position. An absence '
+                    + 'is not a “no”.',
+                ],
+            },
+            {
+                h2: 'Opening hours follow the parks',
+                p: [
+                    'A good share of the Nantes facilities sit in green spaces: the Jardin des plantes, '
+                    + 'parc de Procé, île de Versailles, the Erdre banks. Their hours are those of the '
+                    + 'grounds, which vary sharply with the season.',
+                    'Each location shows the hours where known. Where nothing is given, assume a park '
+                    + 'facility closes when the park does.',
+                ],
+            },
+            {
+                h2: 'On a route, not only on a map',
+                p: [
+                    'This map comes from the Sécu’Cycle cycling route planner. On the Loire à Vélo or '
+                    + 'along the Erdre, spotting the next facility before setting off saves a detour.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'What does a purple marker mean?',
+                a: 'That the fee is not recorded in the open data, and nothing more. It is not a paid '
+                    + 'facility: it is one whose fee nobody has documented.',
+            },
+            {
+                q: 'Are public toilets free in Nantes?',
+                a: 'The vast majority are. Street units and those in municipal parks are free; the few '
+                    + 'paid ones are concentrated in stations and large venues.',
+            },
+            {
+                q: 'Can the opening hours be trusted?',
+                a: 'As an indication only. They come from OpenStreetMap and cover just some locations; '
+                    + 'those in parks vary greatly with the season.',
+            },
+            {
+                q: 'Do these toilets appear while planning a route?',
+                a: 'Not in Nantes for the time being: route planning covers only Bordeaux and the Tournai '
+                    + 'area, for want of a road network loaded beyond that.',
+            },
+        ],
+    },
+
+    'nantes/points-eau': {
+        title: 'Drinking water in Nantes — map of fountains',
+        description: 'Map of drinking fountains and water points across Nantes Métropole, useful for '
+            + 'cyclists, runners and walkers refilling a bottle.',
+        h1: 'Drinking water in Nantes',
+        intro: 'More than 300 drinking water points are recorded across Nantes Métropole. This map places '
+            + 'them so that refilling a bottle does not become a detour — on a bike, on a run, or simply '
+            + 'in the heat.',
+        sections: [
+            {
+                h2: 'What counts as a water point',
+                p: [
+                    'The map keeps only water declared drinkable: street standpipes, taps in parks, '
+                    + 'playgrounds, cemeteries and sports facilities. Ornamental fountains are excluded.',
+                    'Some points are accessible but conditionally — private grounds, reserved for users of '
+                    + 'a facility, open on request. They carry a distinct mark, to save you the detour.',
+                ],
+            },
+            {
+                h2: 'The density stops at the metropolitan boundary',
+                p: [
+                    'Nantes offers one of the tightest networks on the whole service: the Erdre banks, the '
+                    + 'île de Nantes, the large parks and the tree-lined squares of the centre hold most '
+                    + 'of it.',
+                    'That abundance evaporates as soon as you leave. Setting off towards the Loire à Vélo, '
+                    + 'pick out your next two refills before leaving the metropolitan area: the density '
+                    + 'drops sharply.',
+                ],
+            },
+            {
+                h2: 'The network shrinks in winter',
+                p: [
+                    'Some fountains are drained in the colder months to prevent freezing, and others are '
+                    + 'seasonal by design. The map says so where the information exists, but the field is '
+                    + 'not always filled in.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Where can I refill a bottle in Nantes?',
+                a: 'More than 300 drinking water points are mapped across the metropolitan area, the vast '
+                    + 'majority freely accessible. The Erdre banks, the île de Nantes and the large parks '
+                    + 'hold most of them.',
+            },
+            {
+                q: 'Is the water from these fountains really drinkable?',
+                a: 'Only points explicitly declared drinkable in the open data are shown; decorative '
+                    + 'fountains are excluded.',
+            },
+            {
+                q: 'Do Nantes fountains run in winter?',
+                a: 'Not all of them. Part of the network is shut off to prevent freezing and some points '
+                    + 'only run in summer. The record says so where that is known.',
+            },
+            {
+                q: 'Can I rely on these water points beyond the metropolitan area?',
+                a: 'No. The survey stops at the 24 municipalities of Nantes Métropole, and the real '
+                    + 'density of water points drops markedly outside it in any case.',
+            },
+            {
+                q: 'Can I route my ride past these water points?',
+                a: 'Not in Nantes for the time being. Route planning covers only Bordeaux and the Tournai '
+                    + 'area; this map remains the right tool for planning ahead.',
+            },
+        ],
+    },
+
+    'nantes/reparation-velo': {
+        title: 'Bike repair in Nantes — stations and workshops',
+        description: 'Map of self-service repair stations and bike workshops across Nantes Métropole: '
+            + 'pumps, tools, repairs and servicing.',
+        h1: 'Bike repair in Nantes',
+        intro: 'A puncture on the way back from the Loire à Vélo, brakes rubbing at rush hour: this map '
+            + 'shows where to repair your bike, or have it repaired, across the 24 municipalities of the '
+            + 'metropolitan area.',
+        sections: [
+            {
+                h2: 'Three options, three uses',
+                p: [
+                    'The street post gets you going again. A floor-mounted pump, spanners and screwdrivers '
+                    + 'on a cable, free and available at any hour: it settles a tyre pressure, a slipping '
+                    + 'saddle, a rubbing brake.',
+                    'The bike shop takes the work on and charges for the time spent. The self-repair '
+                    + 'workshop lends you the bench, the tools and the advice in exchange for a '
+                    + 'membership: the slow route, and the one that teaches you something.',
+                ],
+            },
+            {
+                h2: 'What gets you to the next stop',
+                p: [
+                    'A spare inner tube, two tyre levers and a pocket pump handle the most common failure '
+                    + 'and fit under a saddle. A multi-tool settles the rest of everyday trouble.',
+                    'A buckled wheel, a knocking headset or a hydraulic brake needing a bleed call for '
+                    + 'dedicated tools and method. Pressing on with what you have usually costs more than '
+                    + 'the repair itself.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Do the Nantes repair posts charge?',
+                a: 'No. Installed in public space, they can be used without formality, day or night. '
+                    + 'Nothing guarantees the tools are intact, however.',
+            },
+            {
+                q: 'How do I pump up a tyre in Nantes without a pump?',
+                a: 'By heading to the nearest post: almost all carry a floor pump. They stand out in light '
+                    + 'orange on the map.',
+            },
+            {
+                q: 'Community workshop or bike shop?',
+                a: 'The community workshop if you have time and want to learn: you do the repair yourself, '
+                    + 'and the membership opens access to the tools. The bike shop when the repair has to '
+                    + 'be done, well and quickly.',
+            },
+            {
+                q: 'Why do some bike shops not appear?',
+                a: 'The survey only keeps a shop if it explicitly declares a repair service in '
+                    + 'OpenStreetMap. A shop that repairs bikes without saying so stays invisible.',
+            },
+            {
+                q: 'Can I be guided to the nearest workshop?',
+                a: 'Not from Sécu’Cycle in Nantes for the time being: route planning covers only Bordeaux '
+                    + 'and the Tournai area. The map does give the addresses.',
+            },
+        ],
+    },
+
+    'nantes/eclairage-public': {
+        title: 'Street lighting in Nantes — map of street lights',
+        description: 'Map of street lighting across Nantes Métropole: close to 100,000 recorded units '
+            + 'and lit streets, to help you plan night rides.',
+        h1: 'Street lighting in Nantes',
+        intro: 'Which streets are lit at night in Nantes? This map draws on the complete inventory of '
+            + 'street lights opened up by Nantes Métropole — close to 100,000 points — to show where the '
+            + 'light actually falls.',
+        sections: [
+            {
+                h2: 'The most complete inventory on the service',
+                p: [
+                    'Nantes Métropole publishes its entire street lighting estate as open data: 97,473 '
+                    + 'units at the last count, two and a half times what we have from OpenStreetMap alone.',
+                    'These official units are complemented by the points recorded in OpenStreetMap. '
+                    + 'Duplicates between the two sources are discarded automatically when two points sit '
+                    + 'within a few metres of each other.',
+                ],
+            },
+            {
+                h2: 'Where the light stops',
+                p: [
+                    'At this resolution, it is the breaks that become readable. The Loire, the Erdre and '
+                    + 'the green corridors trace sharp discontinuities in the sheet of light: riverbanks '
+                    + 'and park paths are pleasant by day and dark by night.',
+                    'Street lighting is no substitute for bike lights, which remain compulsory. And '
+                    + 'several municipalities switch their lighting off in the middle of the night: a '
+                    + 'street marked as lit may be dark at two in the morning.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many street lights does Nantes Métropole have?',
+                a: 'The official inventory records 97,473 units, published as open data by Nantes '
+                    + 'Métropole, complemented by those recorded in OpenStreetMap.',
+            },
+            {
+                q: 'Why is the Nantes map more precise than elsewhere?',
+                a: 'Because Nantes Métropole is one of the few authorities to publish its complete '
+                    + 'lighting inventory. Elsewhere we rely mainly on OpenStreetMap, which is patchier.',
+            },
+            {
+                q: 'Does a lit street stay lit all night?',
+                a: 'Not everywhere. Several municipalities switch off some or all of their lighting in the '
+                    + 'middle of the night. The map shows where the lights are, not when they are on.',
+            },
+            {
+                q: 'Is lighting taken into account when planning a route?',
+                a: 'Where Sécu’Cycle plans routes, yes — lighting feeds into each segment\'s safety score. '
+                    + 'Route planning is not available in Nantes for the time being.',
+            },
+        ],
+    },
+
+    'nantes/velos-libre-service': {
+        title: 'Bike share in Nantes — live Naolib stations',
+        description: 'Live map of the bike-share stations across Nantes Métropole: bikes available and '
+            + 'free docks, station by station.',
+        h1: 'Bike share in Nantes',
+        intro: 'How many bikes are left at the nearest station? This map shows the stations of the Nantes '
+            + 'Métropole bike-share service in real time, with the bikes available and the free docks.',
+        sections: [
+            {
+                h2: 'An entirely muscle-powered fleet',
+                p: [
+                    'The official feed declares no electrically assisted bikes at all: in Nantes, bike '
+                    + 'share is pedalled. You feel that in your legs more than on the map — worth knowing '
+                    + 'before planning a hilly ride on it.',
+                    'Each station therefore shows the two numbers that matter: bikes ready to go and docks '
+                    + 'still free. The dot sums them up — available, almost empty, empty, full, or out of '
+                    + 'service.',
+                ],
+            },
+            {
+                h2: 'Check the arrival, not just the departure',
+                p: [
+                    'The classic mistake is to look only at the departure station. A full city-centre '
+                    + 'station at the end of the day is an ordinary occurrence, and means riding on to the '
+                    + 'next one.',
+                    'The 120 or so stations concentrate on Nantes and its neighbouring municipalities, '
+                    + 'supporting the tram lines. The service shines on the one-way trip — tram out, bike '
+                    + 'back.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Are there electric bikes in the Nantes bike-share fleet?',
+                a: 'No. The official feed declares mechanical bikes only, so the map shows no split '
+                    + 'between mechanical and electric.',
+            },
+            {
+                q: 'How many stations are mapped?',
+                a: 'Around 120, spread across Nantes and the neighbouring municipalities. Every station '
+                    + 'published in the official feed appears on this map.',
+            },
+            {
+                q: 'How often is availability updated?',
+                a: 'Continuously, from the operator\'s GBFS feed. The time of the last reading is shown, '
+                    + 'and a warning appears if it starts to age.',
+            },
+            {
+                q: 'Can I plan a route from a station?',
+                a: 'Not for the time being: availability is shown live, but route planning covers only '
+                    + 'Bordeaux and the Tournai area.',
+            },
+        ],
+    },
+
+    'nantes/trafic-routier': {
+        title: 'Live traffic in Nantes — congestion map',
+        description: 'Live road traffic map for Nantes Métropole: ring road, Loire bridges and urban '
+            + 'roads, free-flowing, heavy or congested.',
+        h1: 'Live road traffic in Nantes',
+        intro: 'Traffic in Nantes turns on a small number of crossing points. This map shows their state, '
+            + 'refreshed continuously from Nantes Métropole open data.',
+        sections: [
+            {
+                h2: 'An area held by its crossings',
+                p: [
+                    'Green marks a free-flowing road, orange heavy traffic, red congestion, grey an '
+                    + 'unusable reading. Around 860 main sections are instrumented.',
+                    'The Loire governs the rest. The crossings are few relative to the flows they absorb: '
+                    + 'when they turn red, it is not one congestion among others — it is the whole area '
+                    + 'that seizes up.',
+                ],
+            },
+            {
+                h2: 'The cyclist\'s problem: you cannot go around a bridge',
+                p: [
+                    'On a saturated urban road, a cyclist almost always has an alternative — a parallel '
+                    + 'street, a quieter route. On a crossing, no: the structure is the only way through.',
+                    'Hence the value of checking the map before setting off rather than once committed. '
+                    + 'Shifting your departure by twenty minutes, or aiming for another crossing, costs '
+                    + 'less than a bridge at a standstill.',
+                ],
+            },
+            {
+                h2: 'What the planner does with it',
+                p: [
+                    'Where Sécu’Cycle plans routes, this layer feeds directly into the safety score: for a '
+                    + 'comparable journey, it steers away from red roads when a credible alternative exists.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Where does the Nantes traffic data come from?',
+                a: 'From the “Fluidité des axes routiers” dataset published by Nantes Métropole on its '
+                    + 'open data portal, under the ODbL licence, and refreshed continuously.',
+            },
+            {
+                q: 'Why does my street not appear on the map?',
+                a: 'Because only main roads are instrumented, around 860 sections. Residential streets are '
+                    + 'not measured.',
+            },
+            {
+                q: 'Can a red bridge be avoided by bike?',
+                a: 'Rarely without lengthening the journey noticeably. That is why checking before you '
+                    + 'leave beats adapting en route.',
+            },
+            {
+                q: 'Does traffic change the route suggested in Nantes?',
+                a: 'Not for now, as route planning covers only Bordeaux and the Tournai area. Where it '
+                    + 'works, congestion feeds into the calculation.',
+            },
+        ],
+    },
+
+    'nantes/accidents-velo': {
+        title: 'Cycling accidents in Nantes — accident map',
+        description: 'Map of injury accidents involving a cyclist across Nantes Métropole, from 2015 to '
+            + '2023, from the BAAC records.',
+        h1: 'Cycling accidents in Nantes',
+        intro: 'This map places the injury accidents involving a cyclist recorded across Nantes Métropole '
+            + 'between 2015 and 2023. It is instructive provided you know what it leaves out.',
+        sections: [
+            {
+                h2: 'The Nantes blind spot: tram rails',
+                p: [
+                    'The BAAC register only records an accident that led to police involvement. An '
+                    + 'isolated fall, with no third-party vehicle, falls outside it. Yet in Nantes, a wheel '
+                    + 'caught in a tram rail is one of the classic ways to come off a bike.',
+                    'Along the tram lines, the map is therefore systematically optimistic. Cross rails at '
+                    + 'right angles, widening your line if you must, particularly on wet ground.',
+                ],
+            },
+            {
+                h2: 'Hot spots that are first of all forced passages',
+                p: [
+                    'Zoomed out, the map aggregates accidents into a density; zooming in, each point '
+                    + 'separates and takes the colour of its severity — slight injury, hospitalised '
+                    + 'injury, fatal accident.',
+                    'The sharpest clusters read where geography forces the passage. The Loire bridges and '
+                    + 'the Erdre crossings channel every cycling flow, and accumulate accidents in '
+                    + 'proportion.',
+                ],
+            },
+            {
+                h2: 'From a red dot to route planning',
+                p: [
+                    'Where Sécu’Cycle plans routes, each accident is attached to the road graph segments '
+                    + 'within a 25-metre radius, where it applies a penalty to the safety score. That '
+                    + 'penalty is capped, precisely because the data carries no exposure denominator.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Why so few accidents along the tram lines?',
+                a: 'Because a fall on a rail most often happens without a third-party vehicle, and '
+                    + 'therefore generates no injury accident report.',
+            },
+            {
+                q: 'How many cycling accidents does the map really record?',
+                a: 'Only those that led to police involvement. Falls on their own, minor collisions '
+                    + 'settled amicably and near misses are all absent.',
+            },
+            {
+                q: 'Does a red area mean the place is dangerous?',
+                a: 'Not necessarily. It marks a cluster of accidents, which also depends on how many '
+                    + 'cyclists pass through. A busy bridge accumulates them mechanically.',
+            },
+            {
+                q: 'How recent is the data?',
+                a: 'It runs to 2023. ONISR publishes the injury accident reports several years in arrears.',
+            },
+            {
+                q: 'Do these accidents change the routes suggested in Nantes?',
+                a: 'Not for the time being, as route planning covers only Bordeaux and the Tournai area. '
+                    + 'Where it works, they lower the safety score of the segments concerned.',
             },
         ],
     },
