@@ -93,6 +93,47 @@ function verifierTablesCarte(catalogue, lang, bloquante) {
 
 
 
+
+// --- registres éditoriaux --------------------------------------------------
+//
+// Vérifie que chaque registre de langue est cohérent avec le socle : pas de page
+// rangée par erreur dans CITIES_CONTENT, pas de page orpheline d'une ville, et
+// des clés PAGE_CONTENT qui existent bien dans le registre de référence.
+async function verifierRegistres() {
+    const anomalies = [];
+    const { CITIES, THEMES } = await import('../src/data/thematicMapsCore.js');
+    const villesConnues = new Set(CITIES.map(c => c.slug));
+    const themesConnus = new Set(Object.keys(THEMES));
+
+    for (const lang of LANGS) {
+        let registre;
+        try {
+            registre = await import(`../src/data/thematicMaps.${lang}.js`);
+        } catch {
+            continue;   // une langue sans registre n'a simplement pas de cartes
+        }
+
+        for (const cle of Object.keys(registre.CITIES_CONTENT ?? {})) {
+            if (!villesConnues.has(cle)) {
+                anomalies.push(`${lang} — CITIES_CONTENT contient « ${cle} », qui n'est pas une ville du socle`);
+            }
+        }
+
+        for (const cle of Object.keys(registre.PAGE_CONTENT ?? {})) {
+            const [ville, theme] = cle.split('/');
+            if (!villesConnues.has(ville)) {
+                anomalies.push(`${lang} — PAGE_CONTENT « ${cle} » : ville inconnue`);
+            } else if (!registre.CITIES_CONTENT?.[ville]) {
+                anomalies.push(`${lang} — PAGE_CONTENT « ${cle} » : la ville n'a pas d'entrée éditoriale`);
+            }
+            if (!themesConnus.has(theme)) {
+                anomalies.push(`${lang} — PAGE_CONTENT « ${cle} » : thème inconnu`);
+            }
+        }
+    }
+    return anomalies;
+}
+
 let anomalies = 0;
 let restantes = 0;
 
@@ -157,6 +198,11 @@ for (const lang of LANGS) {
     } else if (!anomalies) {
         console.log(`${lang} : ${controlees} clés de libellé résolues.`);
     }
+}
+
+for (const ligne of await verifierRegistres()) {
+    console.error(`REGISTRE   ${ligne}`);
+    anomalies += 1;
 }
 
 if (anomalies > 0) {
