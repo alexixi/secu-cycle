@@ -20,7 +20,7 @@ function CtaItineraire({ page, position, lang, t, routableCitiesLabel }) {
         return (
             <aside className="carte-cta">
                 <div>
-                    <p className="carte-cta-titre">{t('ui.cta.pasEncore', { prep: city.prep })}</p>
+                    <p className="carte-cta-titre">{t('ui.cta.pasEncore', { prep: city.prep, ville: city.name })}</p>
                     <p className="carte-cta-texte">{t('ui.cta.trajetTexte')}</p>
                 </div>
                 <Link
@@ -42,7 +42,7 @@ function CtaItineraire({ page, position, lang, t, routableCitiesLabel }) {
     return (
         <aside className="carte-cta">
             <div>
-                <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep })}</p>
+                <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep, ville: city.name })}</p>
                 <p className="carte-cta-texte">
                     Sécu’Cycle calcule un itinéraire cyclable sécurisé qui tient compte des
                     aménagements, de l’éclairage, du trafic et des accidents recensés — avec cette
@@ -265,7 +265,7 @@ export default function CarteThematiquePage({ registre }) {
 
                 {autresCartesVille.length > 0 && (
                     <section className="carte-maillage">
-                        <h2>{t('ui.theme.autresCartes', { prep: city.prep })}</h2>
+                        <h2>{t('ui.theme.autresCartes', { prep: city.prep, ville: city.name })}</h2>
                         <ul className="carte-liens">
                             {autresCartesVille.map(autre => (
                                 <li key={autre.key}>
@@ -287,7 +287,7 @@ export default function CarteThematiquePage({ registre }) {
                                 <li key={autre.key}>
                                     <Link to={autre.path}>
                                         <ThemeIcon slug={autre.themeSlug} className="carte-lien-icone" />
-                                        {themeLabel(autre.theme)} {autre.city.prep}
+                                        {t('ui.theme.themeDansVille', { theme: themeLabel(autre.theme), prep: autre.city.prep, ville: autre.city.name })}
                                     </Link>
                                 </li>
                             ))}

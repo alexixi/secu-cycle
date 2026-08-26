@@ -101,7 +101,7 @@ export default function CarteVillePage({ registre }) {
                 {city.routing === false ? (
                     <aside className="carte-cta">
                         <div>
-                            <p className="carte-cta-titre">{t('ui.cta.pasEncore', { prep: city.prep })}</p>
+                            <p className="carte-cta-titre">{t('ui.cta.pasEncore', { prep: city.prep, ville: city.name })}</p>
                             <p className="carte-cta-texte">
                             {city.routingNote}{' '}
                             {t('ui.cta.itinerairesCalculesA', { villes: routableCitiesLabel() })}
@@ -122,7 +122,7 @@ export default function CarteVillePage({ registre }) {
                 ) : (
                     <aside className="carte-cta">
                         <div>
-                            <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep })}</p>
+                            <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep, ville: city.name })}</p>
                             <p className="carte-cta-texte">
                                 Toutes ces couches alimentent le calculateur d’itinéraires : il en
                                 tient compte pour proposer un trajet cyclable réellement praticable,

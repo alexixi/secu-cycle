@@ -162,7 +162,8 @@
             "sourcesLicences": "Sources et licences",
             "detailDonnees": "Le détail des jeux de données et de leurs licences figure sur la page <donnees>Données et sources</donnees>.",
             "autresCartes": "Autres cartes {{prep}}",
-            "memeThemeAilleurs": "{{theme}} dans d’autres villes"
+            "memeThemeAilleurs": "{{theme}} dans d’autres villes",
+            "themeDansVille": "{{theme}} {{prep}}"
         },
         "fermer": "Fermer",
         "carte": {
