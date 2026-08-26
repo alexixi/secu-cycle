@@ -1,31 +1,29 @@
+import { useTranslation } from "react-i18next";
 import StepFooter from "./StepFooter";
 import "../ui/Form.css";
 import "./Onboarding.css";
 
-const LEVELS = [
-    { value: "debutant", label: "Débutant", description: "Je roule occasionnellement." },
-    { value: "intermediaire", label: "Intermédiaire", description: "Je roule régulièrement." },
-    { value: "experimente", label: "Expérimenté", description: "Je roule beaucoup et longtemps." },
-];
+const LEVELS = ["debutant", "intermediaire", "experimente"];
 
 export default function StepSportLevel({ level, setLevel, onNext, onSkip, isLoading }) {
+    const { t } = useTranslation('auth');
     return (
         <div className="form onboarding-form">
-            <h2>Votre niveau sportif</h2>
-            <p className="onboarding-subtitle">Cette information est facultative.</p>
+            <h2>{t('onboarding.niveau.h2')}</h2>
+            <p className="onboarding-subtitle">{t('onboarding.facultatif')}</p>
 
             <div className="onboarding-options">
-                {LEVELS.map((lvl) => {
-                    const selected = level === lvl.value;
+                {LEVELS.map((valeur) => {
+                    const selected = level === valeur;
                     return (
                         <button
-                            key={lvl.value}
+                            key={valeur}
                             type="button"
                             className={`onboarding-option ${selected ? "selected" : ""}`}
-                            onClick={() => setLevel(lvl.value)}
+                            onClick={() => setLevel(valeur)}
                         >
-                            <span className="onboarding-option-label">{lvl.label}</span>
-                            <span className="onboarding-option-description">{lvl.description}</span>
+                            <span className="onboarding-option-label">{t(`onboarding.niveau.${valeur}`)}</span>
+                            <span className="onboarding-option-description">{t(`onboarding.niveau.${valeur}Description`)}</span>
                         </button>
                     );
                 })}

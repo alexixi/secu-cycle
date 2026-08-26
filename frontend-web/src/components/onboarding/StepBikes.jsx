@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import Button from "../ui/Button";
 import { AiFillPlusCircle } from "react-icons/ai";
@@ -6,9 +7,10 @@ import "../ui/Input.css";
 import "../ui/Form.css";
 import "./Onboarding.css";
 
-const BIKE_TYPES = { ville: "Ville", route: "Route", vtt: "VTT" };
+const BIKE_TYPES = ["ville", "route", "vtt"];
 
 export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing }) {
+    const { t } = useTranslation('auth');
     const [name, setName] = useState("");
     const [type, setType] = useState("ville");
     const [isElectric, setIsElectric] = useState(false);
@@ -21,7 +23,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
         let finalName = name.trim();
         if (finalName === "") {
             const sameTypeCount = addedBikes.filter((b) => b.type === type).length;
-            finalName = BIKE_TYPES[type] + (sameTypeCount === 0 ? "" : ` ${sameTypeCount + 1}`);
+            finalName = t(`onboarding.velos.${type}`) + (sameTypeCount === 0 ? "" : ` ${sameTypeCount + 1}`);
         } else if (finalName.length < 3 || finalName.length > 30) {
             setNameError(true);
             return;
@@ -44,7 +46,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
 
     return (
         <div className="form onboarding-form">
-            <h2>Vos vélos</h2>
+            <h2>{t('onboarding.velos.h2')}</h2>
             <p className="onboarding-subtitle">
                 Ajoutez vos vélos pour des itinéraires adaptés. Facultatif&nbsp;— vous pourrez en ajouter plus tard depuis votre profil.
             </p>
@@ -56,7 +58,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                             <div className="onboarding-bike-info">
                                 <span className="onboarding-bike-name">{bike.name}</span>
                                 <span className="onboarding-bike-type">
-                                    {BIKE_TYPES[bike.type] || bike.type}
+                                    {BIKE_TYPES.includes(bike.type) ? t(`onboarding.velos.${bike.type}`) : bike.type}
                                     {bike.is_electric ? " • électrique" : ""}
                                 </span>
                             </div>
@@ -68,12 +70,12 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
 
             <form onSubmit={handleAdd}>
                 <div className={`input-group ${nameError ? "input-error" : ""}`}>
-                    <label htmlFor="bikeName">Nom du vélo</label>
+                    <label htmlFor="bikeName">{t('onboarding.velos.nom')}</label>
                     <input
                         className="input"
                         type="text"
                         id="bikeName"
-                        placeholder="Ex: Nakamura Summit 700"
+                        placeholder={t('onboarding.velos.nomPlaceholder')}
                         value={name}
                         onChange={(e) => {
                             setName(e.target.value);
@@ -81,16 +83,16 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                         }}
                     />
                     {nameError && (
-                        <div className="error-text">Le nom doit faire entre 3 et 30 caractères.</div>
+                        <div className="error-text">{t('onboarding.velos.nomInvalide')}</div>
                     )}
                 </div>
 
                 <div className="input-group">
-                    <label htmlFor="bikeType">Type</label>
+                    <label htmlFor="bikeType">{t('onboarding.velos.type')}</label>
                     <select className="input" id="bikeType" value={type} onChange={(e) => setType(e.target.value)}>
-                        <option value="ville">Ville</option>
-                        <option value="route">Route</option>
-                        <option value="vtt">VTT</option>
+                        {BIKE_TYPES.map((valeur) => (
+                            <option key={valeur} value={valeur}>{t(`onboarding.velos.${valeur}`)}</option>
+                        ))}
                     </select>
                 </div>
 
@@ -108,10 +110,10 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                     </div>
                 </div>
 
-                {addError && <p className="error-text">Impossible d&apos;ajouter le vélo. Veuillez réessayer.</p>}
+                {addError && <p className="error-text">{t('onboarding.velos.erreurAjout')}</p>}
 
                 <Button type="submit" disabled={isAdding}>
-                    <AiFillPlusCircle size={13} /> {isAdding ? "Ajout…" : "Ajouter ce vélo"}
+                    <AiFillPlusCircle size={13} /> {isAdding ? t('onboarding.velos.ajout') : "Ajouter ce vélo"}
                 </Button>
             </form>
 

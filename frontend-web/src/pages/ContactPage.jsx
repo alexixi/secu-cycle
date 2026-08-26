@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
+import { Trans, useTranslation } from "react-i18next";
 import Meta from "../components/Meta";
 import Button from "../components/ui/Button";
 import { sendContactMessage } from "../services/apiBack";
@@ -12,28 +13,22 @@ import { useLocalizedPath } from '../i18n/useLang';
 
 const EMPTY_FORM = { firstName: "", lastName: "", email: "", subject: "", message: "" };
 
-const SUBJECTS = [
-    "Support et bugs",
-    "Suggestions",
-    "Données personnelles (RGPD)",
-    "Signalement",
-    "Autre",
-];
+const SUBJECT_KEYS = ["support", "suggestions", "rgpd", "signalement", "autre"];
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function validate(form) {
+function validate(form, t, sujetsValides) {
     const errors = {};
-    if (!form.firstName.trim()) errors.firstName = "Indiquez votre prénom.";
-    if (!form.lastName.trim()) errors.lastName = "Indiquez votre nom.";
-    if (!EMAIL_REGEX.test(form.email.trim())) errors.email = "Indiquez une adresse e-mail valide.";
-    if (!SUBJECTS.includes(form.subject)) errors.subject = "Choisissez l'objet de votre demande.";
-    if (form.message.trim().length < 10) errors.message = "Le message doit faire au moins 10 caractères.";
+    if (!form.firstName.trim()) errors.firstName = t("contact.validation.prenom");
+    if (!form.lastName.trim()) errors.lastName = t("contact.validation.nom");
+    if (!EMAIL_REGEX.test(form.email.trim())) errors.email = t("contact.validation.email");
+    if (!sujetsValides.includes(form.subject)) errors.subject = t("contact.validation.sujet");
+    if (form.message.trim().length < 10) errors.message = t("contact.validation.message");
     return errors;
 }
 
 /** Menu déroulant maison : les <option> natives sont rendues par l'OS et ne se stylent pas. */
-function SubjectSelect({ value, onChange }) {
+function SubjectSelect({ value, onChange, sujets, placeholder }) {
     const [open, setOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const wrapperRef = useRef(null);
@@ -60,7 +55,7 @@ function SubjectSelect({ value, onChange }) {
             case "Enter":
             case " ":
                 e.preventDefault();
-                if (open) select(SUBJECTS[activeIndex]);
+                if (open) select(sujets[activeIndex]);
                 else setOpen(true);
                 break;
             case "ArrowDown":
@@ -71,7 +66,7 @@ function SubjectSelect({ value, onChange }) {
                     setOpen(true);
                     break;
                 }
-                setActiveIndex((i) => (i + step + SUBJECTS.length) % SUBJECTS.length);
+                setActiveIndex((i) => (i + step + sujets.length) % sujets.length);
                 break;
             }
             default:
@@ -80,7 +75,7 @@ function SubjectSelect({ value, onChange }) {
     };
 
     const openMenu = () => {
-        const selectedIndex = SUBJECTS.indexOf(value);
+        const selectedIndex = sujets.indexOf(value);
         setActiveIndex(selectedIndex === -1 ? 0 : selectedIndex);
         setOpen((wasOpen) => !wasOpen);
     };
@@ -96,7 +91,7 @@ function SubjectSelect({ value, onChange }) {
                 onClick={openMenu}
                 onKeyDown={handleKeyDown}
             >
-                <span>{value || "Choisissez l'objet de votre demande…"}</span>
+                <span>{value || placeholder}</span>
                 <LuChevronDown
                     className={"contact-select-chevron" + (open ? " contact-select-chevron-open" : "")}
                     size={18}
@@ -105,7 +100,7 @@ function SubjectSelect({ value, onChange }) {
 
             {open && (
                 <ul className="contact-options" role="listbox" aria-labelledby="contact-subject">
-                    {SUBJECTS.map((subject, index) => (
+                    {sujets.map((subject, index) => (
                         <li
                             key={subject}
                             role="option"
@@ -129,7 +124,20 @@ function SubjectSelect({ value, onChange }) {
 }
 
 export default function ContactPage() {
+    const { t } = useTranslation('legal');
     const path = useLocalizedPath();
+
+    const sujets = SUBJECT_KEYS.map((cle) => t(`contact.sujets.${cle}`));
+
+    const composants = {
+        b: <strong />,
+        mail: <a href="mailto:contact@secu-cycle.fr" />,
+        confidentialite: <Link to={path("confidentialite")} />,
+        suppression: <Link to={path("suppressionCompte")} />,
+        mentions: <Link to={path("mentionsLegales")} />,
+        conditions: <Link to={path("conditions")} />,
+    };
+    const T = ({ k }) => <Trans t={t} i18nKey={k} components={composants} />;
     const [form, setForm] = useState(EMPTY_FORM);
     const [errors, setErrors] = useState({});
     const [status, setStatus] = useState(null); // "sending" | "sent" | "error"
@@ -143,7 +151,7 @@ export default function ContactPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const validationErrors = validate(form);
+        const validationErrors = validate(form, t, sujets);
         setErrors(validationErrors);
         if (Object.keys(validationErrors).length > 0) return;
 
@@ -163,8 +171,8 @@ export default function ContactPage() {
             console.error("Contact error:", error);
             setErrorMessage(
                 error?.status === 429
-                    ? "Vous avez envoyé trop de messages. Réessayez dans une heure ou écrivez-nous directement."
-                    : "L'envoi a échoué. Réessayez plus tard ou écrivez-nous directement à contact@secu-cycle.fr.",
+                    ? t('contact.formulaire.erreurLimite')
+                    : t('contact.formulaire.erreurEnvoi'),
             );
             setStatus("error");
         }
@@ -173,29 +181,22 @@ export default function ContactPage() {
     return (
         <>
             <Meta
-                title="Sécu'Cycle | Contact"
-                description="Contacter l'équipe Sécu'Cycle : support, questions et exercice de vos droits sur vos données personnelles."
+                title={t('contact.titrePage')}
+                description={t('contact.metaDescription')}
             />
             <div className="legal-page">
                 <article className="legal-content">
-                    <h1>Contact</h1>
+                    <h1>{t('contact.h1')}</h1>
 
-                    <p>
-                        Une question, un retour, un bug à signaler ou une demande
-                        concernant vos données&nbsp;? Nous lisons tous les messages et vous répondons avec
-                        plaisir.
-                    </p>
+                    <p><T k="contact.chapo" /></p>
 
-                    <h2>Nous écrire</h2>
-                    <p>
-                        Remplissez le formulaire ci-dessous&nbsp;: votre message nous parvient directement et
-                        nous vous répondons à l'adresse que vous indiquez.
-                    </p>
+                    <h2>{t('contact.formulaire.h2')}</h2>
+                    <p><T k="contact.formulaire.intro" /></p>
 
                     <form className="contact-form" onSubmit={handleSubmit} noValidate>
                         <div className="contact-form-row">
                             <div className={"input-group" + (errors.firstName ? " input-error" : "")}>
-                                <label htmlFor="contact-first-name">Prénom</label>
+                                <label htmlFor="contact-first-name">{t('contact.formulaire.prenom')}</label>
                                 <input
                                     className="input"
                                     type="text"
@@ -208,7 +209,7 @@ export default function ContactPage() {
                             </div>
 
                             <div className={"input-group" + (errors.lastName ? " input-error" : "")}>
-                                <label htmlFor="contact-last-name">Nom</label>
+                                <label htmlFor="contact-last-name">{t('contact.formulaire.nom')}</label>
                                 <input
                                     className="input"
                                     type="text"
@@ -222,13 +223,13 @@ export default function ContactPage() {
                         </div>
 
                         <div className={"input-group" + (errors.email ? " input-error" : "")}>
-                            <label htmlFor="contact-email">Adresse mail</label>
+                            <label htmlFor="contact-email">{t('contact.formulaire.email')}</label>
                             <input
                                 className="input"
                                 type="email"
                                 id="contact-email"
                                 autoComplete="email"
-                                placeholder="Pour que nous puissions vous répondre"
+                                placeholder={t('contact.formulaire.emailPlaceholder')}
                                 value={form.email}
                                 onChange={updateField("email")}
                             />
@@ -236,8 +237,10 @@ export default function ContactPage() {
                         </div>
 
                         <div className={"input-group" + (errors.subject ? " input-error" : "")}>
-                            <label htmlFor="contact-subject">Sujet</label>
+                            <label htmlFor="contact-subject">{t('contact.formulaire.sujet')}</label>
                             <SubjectSelect
+                                sujets={sujets}
+                                placeholder={t('contact.formulaire.sujetPlaceholder')}
                                 value={form.subject}
                                 onChange={(subject) => {
                                     setForm((prev) => ({ ...prev, subject }));
@@ -249,13 +252,13 @@ export default function ContactPage() {
                         </div>
 
                         <div className={"input-group" + (errors.message ? " input-error" : "")}>
-                            <label htmlFor="contact-message">Votre message</label>
+                            <label htmlFor="contact-message">{t('contact.formulaire.message')}</label>
                             <textarea
                                 className="input contact-textarea"
                                 id="contact-message"
                                 rows={8}
                                 maxLength={5000}
-                                placeholder="Décrivez votre demande…"
+                                placeholder={t('contact.formulaire.messagePlaceholder')}
                                 value={form.message}
                                 onChange={updateField("message")}
                             />
@@ -264,13 +267,13 @@ export default function ContactPage() {
 
                         <div className="contact-form-actions">
                             <Button type="submit" className="contact-submit" disabled={status === "sending"}>
-                                {status === "sending" ? "Envoi en cours…" : <>Envoyer <LuSend size={15} /></>}
+                                {status === "sending" ? t('contact.formulaire.envoiEnCours') : <>{t('contact.formulaire.envoyer')} <LuSend size={15} /></>}
                             </Button>
                         </div>
 
                         {status === "sent" && (
                             <p className="contact-feedback contact-feedback-success" role="status">
-                                Merci&nbsp;! Votre message a bien été envoyé, nous vous répondrons par e-mail.
+                                <T k="contact.formulaire.succes" />
                             </p>
                         )}
                         {status === "error" && (
@@ -281,54 +284,23 @@ export default function ContactPage() {
                     </form>
 
                     <div className="legal-callout">
-                        <p>
-                            Vous préférez votre propre messagerie&nbsp;? Écrivez-nous à&nbsp;:{" "}
-                            <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>
-                        </p>
+                        <p><T k="contact.mailDirect" /></p>
                     </div>
 
-                    <h2>Objet de votre demande</h2>
-                    <p>
-                        Le menu déroulant «&nbsp;Sujet&nbsp;» nous permet d'orienter votre message vers la
-                        bonne personne. Voici à quoi correspond chaque objet&nbsp;:
-                    </p>
+                    <h2>{t('contact.objets.h2')}</h2>
+                    <p><T k="contact.objets.intro" /></p>
                     <ul>
-                        <li>
-                            <strong>Support et bugs</strong> — un problème technique, une erreur, un
-                            comportement inattendu du site ou de l'application.
-                        </li>
-                        <li>
-                            <strong>Suggestions</strong> — une idée, un retour d'expérience ou une amélioration
-                            à proposer.
-                        </li>
-                        <li>
-                            <strong>Données personnelles (RGPD)</strong> — pour exercer vos droits d'accès, de
-                            rectification, d'effacement, de limitation, d'opposition ou de portabilité. Les
-                            modalités sont détaillées dans notre{" "}
-                            <Link to={path("confidentialite")}>politique de confidentialité</Link>. Pour{" "}
-                            <Link to={path("suppressionCompte")}>supprimer votre compte</Link>, nul besoin de nous
-                            écrire&nbsp;: vous pouvez le faire vous-même, en quelques secondes.
-                        </li>
-                        <li>
-                            <strong>Signalement</strong> — pour nous signaler un contenu ou un usage
-                            problématique.
-                        </li>
+                        <li><T k="contact.objets.support" /></li>
+                        <li><T k="contact.objets.suggestions" /></li>
+                        <li><T k="contact.objets.rgpd" /></li>
+                        <li><T k="contact.objets.signalement" /></li>
                     </ul>
 
-                    <h2>Délai de réponse</h2>
-                    <p>
-                        Sécu'Cycle étant un projet étudiant mené bénévolement, nous ne pouvons pas garantir de
-                        délai de réponse. Nous faisons néanmoins de notre mieux pour répondre dans les meilleurs
-                        délais.
-                    </p>
+                    <h2>{t('contact.delai.h2')}</h2>
+                    <p><T k="contact.delai.texte" /></p>
 
-                    <h2>Informations légales</h2>
-                    <p>
-                        Pour en savoir plus, consultez nos{" "}
-                        <Link to={path("mentionsLegales")}>mentions légales</Link>, notre{" "}
-                        <Link to={path("confidentialite")}>politique de confidentialité</Link> et nos{" "}
-                        <Link to={path("conditions")}>conditions générales d'utilisation</Link>.
-                    </p>
+                    <h2>{t('contact.infosLegales.h2')}</h2>
+                    <p><T k="contact.infosLegales.texte" /></p>
                 </article>
             </div>
         </>
