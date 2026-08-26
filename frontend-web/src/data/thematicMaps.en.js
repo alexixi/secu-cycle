@@ -106,6 +106,79 @@ export const CITIES_CONTENT = {
                 + 'planner, which does not yet cover the Lyon metropolitan area.',
         },
     },
+    lille: {
+        label: 'Lille and its metropolitan area',
+        communes: 'the 95 municipalities of the Métropole Européenne de Lille',
+        metaDescription: 'Every cycling map for the Métropole Européenne de Lille: bike parking, '
+            + 'toilets, drinking water, V’Lille stations, accidents and workshops.',
+        intro: 'Sécu’Cycle covers the Métropole Européenne de Lille, from Lille to Roubaix and from '
+            + 'Tourcoing to Villeneuve-d’Ascq. A flat, polycentric area where cobbles are part of daily '
+            + 'life: the maps below draw on open data, resynchronised automatically.',
+        routingNote: 'Route planning does not yet cover the Métropole Européenne de Lille: the Lille '
+            + 'data shown here is synchronised, but the road network needed to plan a journey is not '
+            + 'loaded for this area.',
+        excludedThemes: {
+            'eclairage-public': 'The Lille metropolitan area does not publish a street light inventory '
+                + 'usable here: only the units recorded in OpenStreetMap would be, far short of the real '
+                + 'estate.',
+            'trafic-routier': 'The traffic layer is computed on the road network loaded by the route '
+                + 'planner, which does not yet cover the Lille metropolitan area.',
+        },
+    },
+    strasbourg: {
+        label: 'Strasbourg and the Eurométropole',
+        communes: 'the 33 municipalities of the Eurométropole de Strasbourg',
+        metaDescription: 'Every cycling map for the Eurométropole de Strasbourg: bike parking, toilets, '
+            + 'drinking water, Vélhop stations, accidents and workshops.',
+        intro: 'Sécu’Cycle covers the Eurométropole de Strasbourg, from the Grande Île to the outer '
+            + 'municipalities. It is the French city with the highest share of journeys made by bike: '
+            + 'the maps below draw on open data, resynchronised automatically.',
+        routingNote: 'Route planning does not yet cover the Eurométropole de Strasbourg: the Strasbourg '
+            + 'data shown here is synchronised, but the road network needed to plan a journey is not '
+            + 'loaded for this area.',
+        excludedThemes: {
+            'eclairage-public': 'The Eurométropole does not publish a street light inventory usable '
+                + 'here: only the units recorded in OpenStreetMap would be, far short of the real estate.',
+            'trafic-routier': 'The traffic layer is computed on the road network loaded by the route '
+                + 'planner, which does not yet cover the Eurométropole.',
+        },
+    },
+    tournai: {
+        label: 'Tournai, Mouscron and the Tournaisis',
+        communes: 'Tournai, Antoing, Leuze-en-Hainaut, Estaimpuis, Mont-de-l’Enclus and Mouscron',
+        metaDescription: 'Cycling maps for the Tournaisis and the Mouscron area: bike parking, cycling '
+            + 'accidents, toilets and drinking water, from Belgian open data.',
+        intro: 'On the Belgian side, Sécu’Cycle covers the Tournaisis and the Mouscron area, up to the '
+            + 'French border. Open data coverage there is patchier than in Bordeaux: we only publish the '
+            + 'maps for which the survey is substantial enough.',
+        excludedThemes: {
+            'eclairage-public': 'Patchy survey: around 640 street lights for six municipalities, against '
+                + 'some 38,000 for Bordeaux Métropole. The map would give a false picture of an area that '
+                + 'is in fact lit.',
+            'velos-libre-service': 'The stations picked up within this area belong to V’Lille, on the '
+                + 'French side, not to a Tournai service. Publishing a “Tournai” page built on Lille '
+                + 'stations would mislead the visitor.',
+        },
+    },
+    bruxelles: {
+        label: 'Brussels and its 19 municipalities',
+        communes: 'the 19 municipalities of the Brussels-Capital Region',
+        metaDescription: 'Every cycling map for Brussels-Capital: bike parking, toilets, drinking water, '
+            + 'Villo! and Blue-bike stations, accidents and workshops.',
+        intro: 'Sécu’Cycle covers the 19 municipalities of the Brussels-Capital Region, from the Pentagon '
+            + 'to Uccle and from Molenbeek to Woluwe-Saint-Pierre. A city of hills and cobbles, where a '
+            + '30 km/h limit has applied city-wide since 2021: the maps below draw on open data, '
+            + 'resynchronised automatically.',
+        routingNote: 'Route planning does not yet cover the Brussels-Capital Region: the Brussels data '
+            + 'shown here is synchronised, but the road network needed to plan a journey is not loaded '
+            + 'for this area.',
+        excludedThemes: {
+            'eclairage-public': 'The Region does not publish a street light inventory usable here: only '
+                + 'the units recorded in OpenStreetMap would be, far short of the real estate.',
+            'trafic-routier': 'The traffic layer is computed on the road network loaded by the route '
+                + 'planner, which does not yet cover Brussels.',
+        },
+    },
 };
 
 /* ------------------------------------------------------------------ editorial content */
@@ -2257,6 +2330,1246 @@ export const PAGE_CONTENT = {
                 q: 'Can I be guided to the nearest workshop?',
                 a: 'Not through Sécu’Cycle in Lyon: route planning is not available there yet. The map '
                     + 'does give the locations.',
+            },
+        ],
+    },
+
+    'lille/stationnements-velo': {
+        title: 'Bike parking in Lille — map of stands and shelters',
+        description: 'Interactive map of bike parking across the Métropole Européenne de Lille: stands, '
+            + 'shelters and secure lockers.',
+        h1: 'Bike parking in Lille',
+        intro: 'Where can you lock your bike in Lille? This map lists the stands, racks, shelters and '
+            + 'lockers across the 95 municipalities of the Métropole Européenne de Lille, from Lille to '
+            + 'Roubaix and from Tourcoing to Villeneuve-d’Ascq.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is a spot surveyed on the ground by OpenStreetMap contributors. Stands '
+                    + 'dominate: they are the only equipment that lets you lock the frame and a wheel with '
+                    + 'a U-lock.',
+                    'Shelters and enclosed lockers appear separately. In a polycentric area, they cluster '
+                    + 'around the stations of Lille, Roubaix and Tourcoing rather than in a single centre.',
+                ],
+            },
+            {
+                h2: 'Parking on cobbles',
+                p: [
+                    'Cobbles are part of daily cycling here, and they shake a bike more than smooth '
+                    + 'tarmac does. A bike left resting rather than properly secured tips over more '
+                    + 'easily on uneven ground.',
+                    'Otherwise the usual rules apply: a certified U-lock, the frame attached to a fixed '
+                    + 'point, and a busy, lit spot rather than a quiet side street.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The survey comes from OpenStreetMap and is resynchronised automatically. A recently '
+                    + 'installed stand may be missing, and one that has been removed may linger.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many bike parking spots are there in Lille?',
+                a: 'The counter at the top of the map shows the total recorded across the 95 '
+                    + 'municipalities of the metropolitan area at the moment you consult it.',
+            },
+            {
+                q: 'Where can I leave my bike near a station in the Lille area?',
+                a: 'Enclosed shelters and lockers appear under the “Shelters and lockers” category, '
+                    + 'mainly around the stations of Lille, Roubaix and Tourcoing.',
+            },
+            {
+                q: 'What is the difference between a stand and a rack?',
+                a: 'A stand is an inverted U-shaped bar that lets you lock the frame and a wheel: it is '
+                    + 'the recommended design. A rack holds only the front wheel.',
+            },
+            {
+                q: 'Can Sécu’Cycle plan a route to these stands?',
+                a: 'Not in the Lille metropolitan area yet. The map is fed by open data, but route '
+                    + 'planning requires a road network held in memory for that area.',
+            },
+        ],
+    },
+
+    'lille/toilettes-publiques': {
+        title: 'Public toilets in Lille — interactive map',
+        description: 'Map of public toilets in Lille and its metropolitan area: free, paid and '
+            + 'wheelchair-accessible facilities.',
+        h1: 'Public toilets in Lille',
+        intro: 'This map locates the public toilets recorded across the Métropole Européenne de Lille, '
+            + 'telling free facilities apart from paid ones and flagging those that are wheelchair '
+            + 'accessible.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Street facilities sit alongside those in parks, stations and transport hubs. In a '
+                    + 'polycentric area, provision follows the town centres rather than a single core.',
+                    'Opening hours are not always recorded: facilities in parks close with them, often at '
+                    + 'nightfall and earlier in winter.',
+                ],
+            },
+            {
+                h2: 'Accessibility',
+                p: [
+                    'Toilets flagged as accessible have a turning space and grab rails. The information '
+                    + 'comes from OpenStreetMap surveys and is not filled in everywhere: an absence is not '
+                    + 'a “no”.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A facility '
+                    + 'closed for works may stay on the map for a while.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Are public toilets free in Lille?',
+                a: 'Most of the street facilities recorded are free. Some venues, particularly in '
+                    + 'stations, still charge: the record says so where the information exists.',
+            },
+            {
+                q: 'How do I find the nearest toilets while cycling?',
+                a: 'Zoom in on your position: the map shows the facilities recorded around you. Stations, '
+                    + 'parks and town centres are the best provided for.',
+            },
+            {
+                q: 'A facility is missing from the map — how do I report it?',
+                a: 'The data comes from OpenStreetMap: add it on openstreetmap.org and it will be picked '
+                    + 'up at the next sync.',
+            },
+            {
+                q: 'Are these toilets visible while planning a route?',
+                a: 'Not in Lille: Sécu’Cycle navigation does not yet cover the Métropole Européenne de '
+                    + 'Lille. The map stands on its own.',
+            },
+        ],
+    },
+
+    'lille/points-eau': {
+        title: 'Drinking water in Lille — map of fountains',
+        description: 'Map of drinking fountains and water points in Lille and its metropolitan area, for '
+            + 'refilling a bottle.',
+        h1: 'Drinking water in Lille',
+        intro: 'Where can you refill a bottle in the Lille area? This map lists the freely accessible '
+            + 'drinking fountains and water points, from the parks to the banks of the Deûle.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Only water declared drinkable is kept: park taps, street standpipes, points in '
+                    + 'playgrounds and sports facilities. Ornamental fountains are excluded.',
+                    'Part of the network is shut off in the cold months to prevent freezing: the map shows '
+                    + 'the installation all year round, without indicating when it is closed.',
+                ],
+            },
+            {
+                h2: 'Staying hydrated on a bike',
+                p: [
+                    'The Lille area is flat, which makes distances deceptive: a ride from Lille to Roubaix '
+                    + 'takes longer than the terrain suggests. Pick out a refill point before setting off '
+                    + 'rather than counting on finding one.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A fountain out '
+                    + 'of service or shut for the season stays on the map: the survey records the '
+                    + 'installation, not its current state.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Is the water from these fountains drinkable?',
+                a: 'Yes. Only points delivering drinking water are shown; those recorded as non-potable in '
+                    + 'the data are excluded.',
+            },
+            {
+                q: 'Do the fountains run all year round?',
+                a: 'Part of the network is closed during the cold months to prevent the pipes freezing.',
+            },
+            {
+                q: 'Are there water points along the Deûle?',
+                a: 'The parks and rest areas along the banks have several. Zoom in on the banks to spot '
+                    + 'them before setting off.',
+            },
+            {
+                q: 'Can I route a ride past these water points?',
+                a: 'Not in the Lille metropolitan area yet, where route planning is unavailable: it '
+                    + 'relies on a road network loaded for a narrower area.',
+            },
+        ],
+    },
+
+    'lille/velos-libre-service': {
+        title: 'V’Lille stations — live availability',
+        description: 'Live map of V’Lille stations: bikes available and free docks, station by station.',
+        h1: 'Bike share in Lille',
+        intro: 'How many bikes are left at the nearest station? This map shows the V’Lille stations with, '
+            + 'for each one, the number of bikes available and free docks.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each station shows the bikes available and the free docks at the moment you consult '
+                    + 'it. The network covers Lille and the main town centres of the metropolitan area.',
+                    'The dot sums up each station\'s state at a glance: bikes available, almost empty, '
+                    + 'empty, full, or out of service.',
+                ],
+            },
+            {
+                h2: 'A few useful habits',
+                p: [
+                    'At rush hour, station stocks empty in the morning and fill in the evening: plan ahead '
+                    + 'by picking out two arrival stations close to each other.',
+                    'Check the state of the bike before setting off — brakes, tyres, saddle — and report '
+                    + 'any fault from the app.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'Availability comes from the service\'s public GBFS feed, queried at the pace it '
+                    + 'publishes. Sécu’Cycle is not affiliated with the operator.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many V’Lille stations are there?',
+                a: 'The network has more than two hundred stations across the metropolitan area. The map '
+                    + 'shows those active at the moment you consult it.',
+            },
+            {
+                q: 'Are there electrically assisted V’Lille bikes?',
+                a: 'No: the bike-share fleet is mechanical. The service also offers long-term hire, which '
+                    + 'is a separate scheme and does not appear on this map.',
+            },
+            {
+                q: 'Is the availability shown live?',
+                a: 'It comes from the service\'s official feed, refreshed continuously. A lag of a few '
+                    + 'moments remains possible.',
+            },
+            {
+                q: 'Can I plan a route from a V’Lille station?',
+                a: 'Not yet: availability is shown live, but the Lille metropolitan area is not covered by '
+                    + 'the route planner.',
+            },
+        ],
+    },
+
+    'lille/accidents-velo': {
+        title: 'Cycling accidents in Lille — risk area map',
+        description: 'Map of injury accidents involving a cyclist across the Métropole Européenne de '
+            + 'Lille, from official data.',
+        h1: 'Cycling accidents in Lille',
+        intro: 'This map locates the injury accidents involving a cyclist recorded across the Métropole '
+            + 'Européenne de Lille. It is there to spot the junctions and roads where vigilance matters '
+            + 'most.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is an injury accident — one with at least one casualty — recorded by the '
+                    + 'police in the BAAC file. Accidents are coloured by severity.',
+                    'Clusters appear on the main roads and at the junctions linking the town centres, '
+                    + 'where cycling and motor flows converge.',
+                ],
+            },
+            {
+                h2: 'The most common configurations',
+                p: [
+                    'A vehicle turning right across the path of a cyclist going straight on remains the '
+                    + 'great classic, particularly dangerous with a heavy vehicle. Dooring comes next.',
+                    'Locally, cobbles and level crossings add their own risk: a wheel deflected on an '
+                    + 'uneven surface, or caught in a rail, is a fall without any third party — and '
+                    + 'therefore absent from this map.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The data comes from the BAAC file published each year by ONISR on data.gouv.fr. It is '
+                    + 'official but retrospective.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Does this map record every cycling accident?',
+                a: 'No. Only injury accidents that led to a police report enter the BAAC file. Falls on '
+                    + 'their own — including those on cobbles or rails — are absent.',
+            },
+            {
+                q: 'Is the data up to date?',
+                a: 'It follows the ONISR publication schedule: the latest year available covers a '
+                    + 'completed calendar year.',
+            },
+            {
+                q: 'How do I cross cobbles or rails safely?',
+                a: 'On cobbles, take weight off your hands, keep your arms loose and brake earlier, '
+                    + 'especially in the wet. On rails, cross at right angles, widening your line if you '
+                    + 'must.',
+            },
+            {
+                q: 'Do these accidents weigh on the routes suggested in Lille?',
+                a: 'Not for now: route planning does not yet cover the Lille metropolitan area. Where it '
+                    + 'works, they lower the safety score of the segments concerned.',
+            },
+        ],
+    },
+
+    'lille/reparation-velo': {
+        title: 'Bike repair in Lille — workshops and pumps',
+        description: 'Map of repair workshops, bike shops and public pumping stations across the '
+            + 'Métropole Européenne de Lille.',
+        h1: 'Bike repair in Lille',
+        intro: 'An inner tube to change, a buckled wheel, a tyre to reinflate: this map lists the '
+            + 'workshops, bike shops and freely accessible pumping stations across the metropolitan area.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Three kinds of point sit side by side: bike shops and professional workshops, '
+                    + 'community self-repair workshops, and the pumping stations installed in public space.',
+                    'Opening hours are not always recorded, and a community workshop often opens only a '
+                    + 'few afternoons a week: best to check before making the trip.',
+                ],
+            },
+            {
+                h2: 'Wheels, the local weak point',
+                p: [
+                    'Cobbles are hard on wheels. Spokes loosen, rims go out of true, and tyres at low '
+                    + 'pressure pinch-flat more readily than on smooth tarmac.',
+                    'A puncture or a chain to lubricate remain within everyone\'s reach. A buckled wheel, '
+                    + 'on the other hand, calls for a truing stand and a practised hand.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A recent '
+                    + 'workshop may be missing, and a closed shop may linger for a while.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Where can I pump up my tyres for free in Lille?',
+                a: 'The freely accessible pumping stations installed in public space appear on this map. '
+                    + 'Many bike shops also let you use a pump.',
+            },
+            {
+                q: 'What is a self-repair workshop?',
+                a: 'A place, usually run by a non-profit, that provides tools, second-hand parts and '
+                    + 'advice so that you can repair your own bike.',
+            },
+            {
+                q: 'How often should a bike be serviced when ridden on cobbles?',
+                a: 'More often than elsewhere. A monthly check of the spokes, wheel trueness and tyre '
+                    + 'pressure prevents most of the damage cobbles cause.',
+            },
+            {
+                q: 'Can Sécu’Cycle take me to a workshop?',
+                a: 'Not in Lille: route planning does not yet cover the metropolitan area. The map gives '
+                    + 'the addresses.',
+            },
+        ],
+    },
+
+    'strasbourg/stationnements-velo': {
+        title: 'Bike parking in Strasbourg — map of stands',
+        description: 'Interactive map of bike parking across the Eurométropole de Strasbourg: stands, '
+            + 'shelters and secure lockers.',
+        h1: 'Bike parking in Strasbourg',
+        intro: 'Where can you lock your bike in Strasbourg? This map lists the stands, racks, shelters '
+            + 'and lockers across the 33 municipalities of the Eurométropole, from the Grande Île to the '
+            + 'outer towns.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is a spot surveyed on the ground by OpenStreetMap contributors. Stands '
+                    + 'dominate: they are the only equipment that lets you lock the frame and a wheel with '
+                    + 'a U-lock.',
+                    'Shelters and enclosed lockers appear separately, mainly around the station and the '
+                    + 'tram terminuses, where they cover a full day of parking.',
+                ],
+            },
+            {
+                h2: 'Parking in a city that cycles',
+                p: [
+                    'Strasbourg has the highest share of journeys made by bike of any French city, and '
+                    + 'parking demand follows: in the centre at peak times, stands fill up, and the '
+                    + 'nearest free spot is not always the most obvious one.',
+                    'Locking to street furniture is tolerated as long as it does not block the way, but a '
+                    + 'smooth post can be lifted off. Prefer a proper stand, even one street further on.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The survey comes from OpenStreetMap and is resynchronised automatically. A recently '
+                    + 'installed stand may be missing, and one that has been removed may linger.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many bike parking spots are there in Strasbourg?',
+                a: 'The counter at the top of the map shows the total recorded across the 33 '
+                    + 'municipalities of the Eurométropole at the moment you consult it.',
+            },
+            {
+                q: 'Where can I find secure bike parking in Strasbourg?',
+                a: 'Enclosed shelters and lockers appear under the “Shelters and lockers” category, '
+                    + 'mainly around the station and the transport hubs.',
+            },
+            {
+                q: 'Can I lock my bike anywhere in the centre?',
+                a: 'Locking to street furniture is tolerated as long as it does not block the way, but it '
+                    + 'is not advisable: a smooth post offers no real security.',
+            },
+            {
+                q: 'Can I ask for a route to these parking spots?',
+                a: 'Not in the Eurométropole yet. Route planning relies on a road network held in memory '
+                    + 'by our server, which does not cover this area.',
+            },
+        ],
+    },
+
+    'strasbourg/toilettes-publiques': {
+        title: 'Public toilets in Strasbourg — interactive map',
+        description: 'Map of public toilets in Strasbourg and the Eurométropole: free, paid and '
+            + 'wheelchair-accessible facilities.',
+        h1: 'Public toilets in Strasbourg',
+        intro: 'This map locates the public toilets recorded across the Eurométropole de Strasbourg, '
+            + 'telling free facilities apart from paid ones and flagging those that are wheelchair '
+            + 'accessible.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Street facilities sit alongside those in parks, the station and the transport hubs. '
+                    + 'The Grande Île and the banks of the Ill are the best provided for.',
+                    'Opening hours are not always recorded: facilities in parks close with them, often at '
+                    + 'nightfall and earlier in winter.',
+                ],
+            },
+            {
+                h2: 'Accessibility',
+                p: [
+                    'Toilets flagged as accessible have a turning space and grab rails. The information '
+                    + 'comes from OpenStreetMap surveys and is not filled in everywhere: an absence is not '
+                    + 'a “no”.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A facility '
+                    + 'closed for works may stay on the map for a while.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Are public toilets free in Strasbourg?',
+                a: 'Most of the street facilities recorded are free. Some venues, particularly at the '
+                    + 'station, still charge: the record says so where the information exists.',
+            },
+            {
+                q: 'Are there toilets in Strasbourg parks?',
+                a: 'Yes, the large parks have them. They do follow the opening hours of the grounds, '
+                    + 'which are more restrictive than street facilities.',
+            },
+            {
+                q: 'How do I find the nearest toilets while cycling?',
+                a: 'Zoom in on your position: the map shows the facilities recorded around you. The Grande '
+                    + 'Île and the banks of the Ill are well provided for.',
+            },
+            {
+                q: 'Do these facilities appear while planning a route?',
+                a: 'Not in Strasbourg: navigation does not yet cover the Eurométropole. The map stands on '
+                    + 'its own.',
+            },
+        ],
+    },
+
+    'strasbourg/points-eau': {
+        title: 'Drinking water in Strasbourg — map of fountains',
+        description: 'Map of drinking fountains and water points across the Eurométropole de Strasbourg, '
+            + 'for refilling a bottle.',
+        h1: 'Drinking water in Strasbourg',
+        intro: 'Where can you refill a bottle in Strasbourg? This map lists the freely accessible '
+            + 'drinking fountains and water points across the Eurométropole, from the Grande Île to the '
+            + 'parks and the banks of the Ill.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Only water declared drinkable is kept: park taps, street standpipes, points in '
+                    + 'playgrounds and sports facilities. Ornamental fountains are excluded.',
+                    'Part of the network is shut off in the cold months to prevent freezing — a real '
+                    + 'consideration in Alsace, where winters bite harder than on the Atlantic coast.',
+                ],
+            },
+            {
+                h2: 'Staying hydrated on a bike',
+                p: [
+                    'Strasbourg is flat and its cycle network is dense, which encourages longer rides than '
+                    + 'planned. On a summer ride along the Ill or towards the outer towns, pick out a '
+                    + 'refill point in advance.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A fountain out '
+                    + 'of service or shut for the season stays on the map: the survey records the '
+                    + 'installation, not its current state.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Is the water from these fountains drinkable?',
+                a: 'Yes. Only points delivering drinking water are shown; those recorded as non-potable in '
+                    + 'the data are excluded.',
+            },
+            {
+                q: 'Do the fountains run all year round?',
+                a: 'Part of the network is closed during the cold months to prevent the pipes freezing, '
+                    + 'which matters in Alsace.',
+            },
+            {
+                q: 'A water point is missing from the map — how do I report it?',
+                a: 'The data comes from OpenStreetMap: add it on openstreetmap.org and it will be picked '
+                    + 'up at the next sync.',
+            },
+            {
+                q: 'Can I route a ride past these water points?',
+                a: 'Not in the Eurométropole yet, where route planning is unavailable: it relies on a road '
+                    + 'network loaded for a narrower area.',
+            },
+        ],
+    },
+
+    'strasbourg/velos-libre-service': {
+        title: 'Vélhop stations in Strasbourg — live availability',
+        description: 'Live map of Vélhop bike-share stations across the Eurométropole de Strasbourg: '
+            + 'bikes available and free docks.',
+        h1: 'Bike share in Strasbourg',
+        intro: 'How many bikes are left at the nearest station? This map shows the Vélhop stations with, '
+            + 'for each one, the number of bikes available and free docks.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each station shows the bikes available and the free docks at the moment you consult '
+                    + 'it. The dot sums up its state at a glance: available, almost empty, empty, full, or '
+                    + 'out of service.',
+                    'Vélhop complements an already dense cycle network. In a city where so many people '
+                    + 'already own a bike, bike share serves the occasional trip and the visitor rather '
+                    + 'than the daily commute.',
+                ],
+            },
+            {
+                h2: 'A few useful habits',
+                p: [
+                    'Check the state of the arrival station before setting off: a full station in the '
+                    + 'centre at the end of the day means riding on to the next one.',
+                    'Check the bike before leaving — brakes, tyres, saddle — and report any fault.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'Availability comes from the service\'s public GBFS feed, queried at the pace it '
+                    + 'publishes. Sécu’Cycle is not affiliated with the operator.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many Vélhop stations are mapped?',
+                a: 'The map shows every station published in the official feed at the moment you consult '
+                    + 'it, across the Eurométropole.',
+            },
+            {
+                q: 'Is the availability shown live?',
+                a: 'It comes from the service\'s official feed, refreshed continuously. A lag of a few '
+                    + 'moments remains possible.',
+            },
+            {
+                q: 'Can I return a bike to any station?',
+                a: 'Yes, subject to free docks. If the station you are aiming for is full, the map lets '
+                    + 'you spot another nearby.',
+            },
+            {
+                q: 'Can I plan a route from a Vélhop station?',
+                a: 'Not yet: availability is shown live, but route planning does not cover the '
+                    + 'Eurométropole.',
+            },
+        ],
+    },
+
+    'strasbourg/accidents-velo': {
+        title: 'Cycling accidents in Strasbourg — risk area map',
+        description: 'Map of injury accidents involving a cyclist across the Eurométropole de '
+            + 'Strasbourg, from official data.',
+        h1: 'Cycling accidents in Strasbourg',
+        intro: 'This map locates the injury accidents involving a cyclist recorded across the '
+            + 'Eurométropole de Strasbourg. It is there to spot the junctions and roads where vigilance '
+            + 'matters most.',
+        sections: [
+            {
+                h2: 'Reading the map in a cycling city',
+                p: [
+                    'Strasbourg has the highest share of cycling in France, which shapes the map: '
+                    + 'accidents accumulate where cyclists are, and cyclists are everywhere.',
+                    'Without exposure data, a cluster cannot be told apart from an inherently dangerous '
+                    + 'place. Read the map as a picture of where cycling happens as much as of where it '
+                    + 'goes wrong.',
+                ],
+            },
+            {
+                h2: 'The most common configurations',
+                p: [
+                    'A vehicle turning right across the path of a cyclist going straight on remains the '
+                    + 'great classic. Dooring comes next, particularly along streets with parking on both '
+                    + 'sides.',
+                    'Tram rails add a local risk: a wheel caught in a rail is a fall without a third '
+                    + 'party, and therefore absent from this map. Cross them at right angles.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The data comes from the BAAC file published each year by ONISR on data.gouv.fr. It is '
+                    + 'official but retrospective.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Does this map record every cycling accident?',
+                a: 'No. Only injury accidents that led to a police report enter the BAAC file. Falls on '
+                    + 'their own, including on tram rails, are absent.',
+            },
+            {
+                q: 'Is the data up to date?',
+                a: 'It follows the ONISR publication schedule: the latest year available covers a '
+                    + 'completed calendar year.',
+            },
+            {
+                q: 'Is cycling in Strasbourg dangerous?',
+                a: 'The number of accidents rises with the number of cyclists, and Strasbourg has many. '
+                    + 'Individual risk per kilometre falls as cycling becomes more widespread.',
+            },
+            {
+                q: 'Do these accidents change the routes suggested in Strasbourg?',
+                a: 'Not for now: route planning does not yet cover the Eurométropole. Where it works, they '
+                    + 'lower the safety score of the segments concerned.',
+            },
+        ],
+    },
+
+    'strasbourg/reparation-velo': {
+        title: 'Bike repair in Strasbourg — workshops and pumps',
+        description: 'Map of repair workshops, bike shops and public pumping stations across the '
+            + 'Eurométropole de Strasbourg.',
+        h1: 'Bike repair in Strasbourg',
+        intro: 'An inner tube to change, brakes to adjust, a tyre to reinflate: this map lists the '
+            + 'workshops, bike shops and freely accessible pumping stations across the Eurométropole.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Three kinds of point sit side by side: bike shops and professional workshops, '
+                    + 'community self-repair workshops, and the pumping stations installed in public space.',
+                    'In a city where cycling is the norm, the network of shops is unusually dense — but '
+                    + 'opening hours are not always recorded, and a community workshop often opens only a '
+                    + 'few afternoons a week.',
+                ],
+            },
+            {
+                h2: 'What you can repair yourself',
+                p: [
+                    'A puncture, a brake to adjust, a chain to tension or lubricate are within everyone\'s '
+                    + 'reach. Carrying a spare inner tube and two tyre levers turns a ruined journey into a '
+                    + 'short stop.',
+                    'Leave to a professional anything touching structural safety — fork, frame, buckled '
+                    + 'wheel, headset — and the electrical system of an assisted bike.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A recent '
+                    + 'workshop may be missing, and a closed shop may linger for a while.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Where can I pump up my tyres for free in Strasbourg?',
+                a: 'The freely accessible pumping stations installed in public space appear on this map. '
+                    + 'Many bike shops also let you use a pump.',
+            },
+            {
+                q: 'What is a self-repair workshop?',
+                a: 'A place, usually run by a non-profit, that provides tools, second-hand parts and '
+                    + 'advice so that you can repair your own bike.',
+            },
+            {
+                q: 'How often should a bike be serviced?',
+                a: 'A quick check of the brakes, tyres and chain every month is enough for daily use, and '
+                    + 'daily use is the norm here.',
+            },
+            {
+                q: 'Can Sécu’Cycle take me to a workshop?',
+                a: 'Not in Strasbourg: route planning does not yet cover the Eurométropole. The map gives '
+                    + 'the addresses.',
+            },
+        ],
+    },
+
+    'tournai/stationnements-velo': {
+        title: 'Bike parking in Tournai — map of stands and shelters',
+        description: 'Map of bike parking in Tournai, Mouscron and the Tournaisis: stands, racks and '
+            + 'shelters recorded in open data.',
+        h1: 'Bike parking in Tournai',
+        intro: 'Where can you lock your bike in Tournai, Mouscron or Antoing? This map lists the bike '
+            + 'parking spots across the Tournaisis, with the type of equipment and, where known, the '
+            + 'number of spaces.',
+        sections: [
+            {
+                h2: 'A network still being built',
+                p: [
+                    'The Tournaisis has around 130 recorded spots, a density well below that of a large '
+                    + 'urban area. They cluster, logically, around the station, the town centre and the '
+                    + 'main public buildings.',
+                    'As everywhere, the stand remains the reference: it lets you lock the frame and a '
+                    + 'wheel. Racks, which hold only the front wheel, offer far less protection against '
+                    + 'theft.',
+                ],
+            },
+            {
+                h2: 'A cross-border area',
+                p: [
+                    'The Tournaisis is directly connected to the Lille metropolitan area, and many daily '
+                    + 'journeys cross the border. The RAVeL, the Walloon network of greenways, carries '
+                    + 'much of the leisure cycling.',
+                    'Route planning does work here, unlike most of the other cities on this site: '
+                    + 'Sécu’Cycle can plan a safer route across the Tournaisis and towards the border.',
+                ],
+            },
+            {
+                h2: 'Data and limitations',
+                p: [
+                    'The survey comes from OpenStreetMap. Coverage is patchier than in France: an '
+                    + 'existing parking spot may simply never have been recorded. The absence of a marker '
+                    + 'does not prove the absence of a stand.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many bike parking spots are recorded in Tournai?',
+                a: 'Around 130 spots are mapped across Tournai, Mouscron, Antoing, Estaimpuis, '
+                    + 'Leuze-en-Hainaut and Mont-de-l’Enclus.',
+            },
+            {
+                q: 'Is there secure bike parking at Tournai station?',
+                a: 'Sheltered spots are recorded around the station. Their exact nature — simple shelter '
+                    + 'or enclosed locker — is not always specified in the open data.',
+            },
+            {
+                q: 'Why are there fewer points than in Bordeaux?',
+                a: 'Both because the area is far less populated and because OpenStreetMap coverage there '
+                    + 'is less advanced. The map measures the data available, not what is on the ground.',
+            },
+            {
+                q: 'Can Sécu’Cycle plan a route to these parking spots?',
+                a: 'Yes. The Tournaisis is one of the two areas where route planning works, alongside '
+                    + 'Bordeaux.',
+            },
+        ],
+    },
+
+    'tournai/accidents-velo': {
+        title: 'Cycling accidents in Tournai — accident map',
+        description: 'Map of accidents involving a cyclist in Tournai, Mouscron and the Tournaisis, from '
+            + 'Belgian open data.',
+        h1: 'Cycling accidents in Tournai',
+        intro: 'This map records the road accidents involving a cyclist in the Tournaisis and the '
+            + 'Mouscron area, from the geolocation data published by Statbel.',
+        sections: [
+            {
+                h2: 'Precision to the month, not the day',
+                p: [
+                    'Unlike the French data, the Belgian dataset does not publish the exact date of an '
+                    + 'accident, only the month. Records therefore show a month and a year.',
+                    'Severity, on the other hand, is recorded: slight injury, hospitalised injury or '
+                    + 'death. Across the Tournaisis, the vast majority of mapped accidents are slight '
+                    + 'injuries.',
+                ],
+            },
+            {
+                h2: 'Reading the map with care',
+                p: [
+                    'As with any accident map, a cluster of points reflects how much cycling happens there '
+                    + 'as much as how dangerous a place is. Town-centre roads accumulate both.',
+                    'Only accidents that gave rise to an official report appear in the data. Falls without '
+                    + 'a third party and minor collisions without injury are absent.',
+                ],
+            },
+            {
+                h2: 'Effect on routes',
+                p: [
+                    'These accidents are attached to nearby segments and apply a penalty — capped, and '
+                    + 'decaying over time — to the safety score used by the route planner. The Tournaisis '
+                    + 'is one of the two areas where that planner works.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many cycling accidents are recorded in the Tournaisis?',
+                a: 'Around 150 accidents involving a cyclist are mapped across the area covered, about ten '
+                    + 'of which led to hospitalisation.',
+            },
+            {
+                q: 'Why are the dates not precise?',
+                a: 'The Statbel open dataset publishes only the month and year of an accident, to limit '
+                    + 'the risk of identifying the people involved.',
+            },
+            {
+                q: 'What period is covered?',
+                a: 'The Belgian data used covers the most recent years published by Statbel.',
+            },
+            {
+                q: 'Do these accidents affect the routes suggested?',
+                a: 'Yes. Route planning works across the Tournaisis, and these accidents lower the safety '
+                    + 'score of the segments concerned.',
+            },
+        ],
+    },
+
+    'tournai/toilettes-et-points-eau': {
+        title: 'Public toilets and drinking water in Tournai',
+        description: 'Map of public toilets and drinking water points in Tournai, Mouscron and the '
+            + 'Tournaisis, useful for cyclists and walkers.',
+        h1: 'Toilets and drinking water in Tournai',
+        intro: 'Where can you find a public toilet or somewhere to refill a bottle in the Tournaisis? As '
+            + 'the survey is still modest in the region, this map brings both together.',
+        sections: [
+            {
+                h2: 'Two kinds of stop on one map',
+                p: [
+                    'Purple markers are public toilets, blue markers drinking water points. In an area '
+                    + 'where each category has fewer than twenty recorded locations, a single map is more '
+                    + 'useful than two sparse ones.',
+                    'The locations cluster in the centre of Tournai, around the Grand-Place and the banks '
+                    + 'of the Scheldt, as well as in the public parks of the surrounding municipalities.',
+                ],
+            },
+            {
+                h2: 'A survey that is still partial',
+                p: [
+                    'OpenStreetMap coverage in the Tournaisis is less complete than in a dense French '
+                    + 'urban area. The absence of a point does not mean the absence of a facility — only '
+                    + 'that nobody has recorded it yet.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Why are toilets and water points on the same map?',
+                a: 'Because each category has fewer than twenty recorded locations in the Tournaisis. '
+                    + 'Bringing them together produces a map that is actually useful.',
+            },
+            {
+                q: 'Is the water from these fountains drinkable?',
+                a: 'Only points declared drinkable in the open data are shown. If in doubt, trust the '
+                    + 'signage on site.',
+            },
+            {
+                q: 'How do I add a missing location?',
+                a: 'The data comes from OpenStreetMap: add the point on openstreetmap.org and it will be '
+                    + 'picked up at the next sync.',
+            },
+        ],
+    },
+
+    'bruxelles/stationnements-velo': {
+        title: 'Bike parking in Brussels — map of stands and shelters',
+        description: 'Interactive map of bike parking across the 19 municipalities of Brussels-Capital: '
+            + 'stands, shelters and bike boxes.',
+        h1: 'Bike parking in Brussels',
+        intro: 'Where can you lock your bike in Brussels? This map lists the stands, racks, shelters and '
+            + 'boxes across the 19 municipalities of the Brussels-Capital Region, from the Pentagon to '
+            + 'the outer districts.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is a spot surveyed on the ground by OpenStreetMap contributors. Stands '
+                    + 'dominate: they are the only equipment that lets you lock the frame and a wheel with '
+                    + 'a U-lock.',
+                    'Shelters and enclosed boxes appear separately. In Brussels these often take the form '
+                    + 'of street bike boxes installed in residential districts, shared between residents '
+                    + 'who register with the municipality or the Region.',
+                ],
+            },
+            {
+                h2: 'Parking in Brussels',
+                p: [
+                    'Bike theft is common in the capital, particularly around stations and nightlife '
+                    + 'districts. A certified U-lock, the frame attached to a fixed point, and a busy, lit '
+                    + 'spot are worth the extra minute.',
+                    'The terrain deserves attention. Between the lower city and the heights of Ixelles or '
+                    + 'Saint-Gilles, sloping streets are everywhere: a bike merely resting against a stand '
+                    + 'tips over more easily than on the flat.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The survey comes from OpenStreetMap and is resynchronised automatically. The Belgian '
+                    + 'contributor community is very active, and coverage is good.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many bike parking spots are there in Brussels?',
+                a: 'The counter at the top of the map shows the total recorded across the 19 '
+                    + 'municipalities at the moment you consult the page.',
+            },
+            {
+                q: 'What is a Brussels bike box?',
+                a: 'An enclosed shelter installed on the street, shared between residents who register '
+                    + 'with the municipality or the Region. It offers day-to-day protection well above '
+                    + 'that of an open stand.',
+            },
+            {
+                q: 'What is the difference between a stand and a rack?',
+                a: 'A stand is an inverted U-shaped bar that lets you lock the frame and a wheel: it is '
+                    + 'the recommended design. A rack holds only the front wheel.',
+            },
+            {
+                q: 'Can Sécu’Cycle plan a route to these parking spots?',
+                a: 'Not in the Brussels Region yet. Route planning requires a road network held in memory '
+                    + 'by the server for that area.',
+            },
+        ],
+    },
+
+    'bruxelles/toilettes-publiques': {
+        title: 'Public toilets in Brussels — interactive map',
+        description: 'Map of public toilets across the 19 municipalities of Brussels-Capital: free, paid '
+            + 'and wheelchair-accessible facilities.',
+        h1: 'Public toilets in Brussels',
+        intro: 'This map locates the public toilets recorded across the 19 municipalities of the '
+            + 'Brussels-Capital Region, telling free facilities apart from paid ones and flagging those '
+            + 'that are wheelchair accessible.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'What Brussels offers mixes street facilities, park toilets — Bois de la Cambre, parc '
+                    + 'du Cinquantenaire, parc Josaphat — and facilities in stations and transport hubs.',
+                    'Many park facilities close with the grounds, earlier in winter. Opening hours appear '
+                    + 'on the record where they have been surveyed.',
+                ],
+            },
+            {
+                h2: 'Accessibility',
+                p: [
+                    'Toilets flagged as accessible have a turning space and grab rails. The information '
+                    + 'comes from OpenStreetMap surveys and is not filled in everywhere: an absence is not '
+                    + 'a “no”.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A facility '
+                    + 'closed for works may stay on the map for a while.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Do public toilets charge in Brussels?',
+                a: 'Some do, particularly in the centre and in stations — the practice is common in '
+                    + 'Belgium. The map tells free facilities apart from paid ones where the data says so.',
+            },
+            {
+                q: 'Are there toilets in Brussels parks?',
+                a: 'The large parks have them, with opening hours aligned on those of the grounds, which '
+                    + 'are more restrictive in winter.',
+            },
+            {
+                q: 'How do I find the nearest toilets while cycling?',
+                a: 'Zoom in on your position: the map shows the facilities recorded around you. Parks and '
+                    + 'transport hubs are the best provided for.',
+            },
+            {
+                q: 'Do these toilets appear while planning a route?',
+                a: 'Not in Brussels: navigation does not yet cover the Brussels-Capital Region. The map '
+                    + 'stands on its own.',
+            },
+        ],
+    },
+
+    'bruxelles/points-eau': {
+        title: 'Drinking water in Brussels — map of fountains',
+        description: 'Map of drinking fountains and water points across the 19 municipalities of '
+            + 'Brussels-Capital, for refilling a bottle.',
+        h1: 'Drinking water in Brussels',
+        intro: 'Where can you refill a bottle in Brussels? This map lists the freely accessible drinking '
+            + 'fountains and water points across the 19 municipalities of the Region.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Brussels fountains cluster in the parks and on the squares. In recent years the '
+                    + 'Region has installed drinking fountains designed for refilling a bottle rather '
+                    + 'than merely drinking from.',
+                    'Part of the network is shut off in winter to prevent freezing: the map shows the '
+                    + 'installation all year round, without indicating when it is closed.',
+                ],
+            },
+            {
+                h2: 'Staying hydrated on a bike',
+                p: [
+                    'Brussels terrain makes itself felt as soon as you leave the Senne valley: climbing '
+                    + 'towards Ixelles, Uccle or Woluwe takes real effort, even over a short distance. '
+                    + 'Refill before the climb rather than after it.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A fountain out '
+                    + 'of service or shut for the season stays on the map: the survey records the '
+                    + 'installation, not its current state.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Is the water from these fountains drinkable?',
+                a: 'Yes. Only points delivering drinking water are shown; those recorded as non-potable in '
+                    + 'the data are excluded.',
+            },
+            {
+                q: 'Do the fountains run all year round?',
+                a: 'Part of the network is closed during the cold months to prevent the pipes freezing.',
+            },
+            {
+                q: 'A water point is missing from the map — how do I report it?',
+                a: 'The data comes from OpenStreetMap: add it on openstreetmap.org and it will be picked '
+                    + 'up at the next sync.',
+            },
+            {
+                q: 'Can I route my ride past these water points?',
+                a: 'Not in Brussels yet, where route planning is unavailable: it relies on a road network '
+                    + 'loaded for a narrower area.',
+            },
+        ],
+    },
+
+    'bruxelles/velos-libre-service': {
+        title: 'Villo! stations in Brussels — live availability',
+        description: 'Live map of Villo! and Blue-bike stations: bikes available and free docks, station '
+            + 'by station.',
+        h1: 'Bike share in Brussels',
+        intro: 'How many bikes are left at the nearest station? This map shows the Villo! stations and '
+            + 'the Blue-bike points across the Brussels Region.',
+        sections: [
+            {
+                h2: 'Two services, two uses',
+                p: [
+                    'Villo! is the Region\'s bike-share system: stations spread across the 19 '
+                    + 'municipalities, for one-off trips of a few minutes to a few hours.',
+                    'Blue-bike answers a different need: its points are at railway stations and serve the '
+                    + 'last kilometre after a train journey, on reservation and generally for the day.',
+                ],
+            },
+            {
+                h2: 'A few useful habits',
+                p: [
+                    'The terrain weighs on availability: stations in the lower city fill up, those on the '
+                    + 'heights empty out. Electric assistance softens the climb but does not change the '
+                    + 'direction of the flow.',
+                    'A station shown with zero bikes or zero free docks really is empty or full: aim for a '
+                    + 'neighbouring one rather than making the trip for nothing.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'Availability comes from the public GBFS feeds of both services, queried at the pace '
+                    + 'they announce. For some Blue-bike points, the feed publishes a total rather than a '
+                    + 'live count.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'What is the difference between Villo! and Blue-bike?',
+                a: 'Villo! is a station-based bike-share service for short trips within the Region. '
+                    + 'Blue-bike is a railway-station hire scheme, on reservation, for the last kilometre.',
+            },
+            {
+                q: 'Are Villo! bikes electric?',
+                a: 'The fleet is now very largely electrified. Each station record breaks down the split '
+                    + 'where the feed publishes it.',
+            },
+            {
+                q: 'Is the availability shown live?',
+                a: 'It comes from the services\' official feeds, refreshed continuously. A lag of a few '
+                    + 'moments remains possible.',
+            },
+            {
+                q: 'Can I plan a route from a Villo! station?',
+                a: 'Not yet: Villo! and Blue-bike availability is shown live, but the Brussels Region is '
+                    + 'not covered by the route planner.',
+            },
+        ],
+    },
+
+    'bruxelles/accidents-velo': {
+        title: 'Cycling accidents in Brussels — risk area map',
+        description: 'Map of injury accidents involving a cyclist across the 19 municipalities of '
+            + 'Brussels-Capital, from Statbel data.',
+        h1: 'Cycling accidents in Brussels',
+        intro: 'This map locates the injury accidents involving a cyclist recorded across the '
+            + 'Brussels-Capital Region. It is there to spot the junctions and roads where vigilance '
+            + 'matters most.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is an injury accident recorded by the police and published by Statbel, the '
+                    + 'Belgian statistical office. As with the French data, severity is shown by colour.',
+                    'Clusters appear on the main approach roads, around the inner ring and at busy '
+                    + 'junctions. A concentration reflects cycling volumes as much as danger.',
+                ],
+            },
+            {
+                h2: 'The most common configurations',
+                p: [
+                    'A vehicle turning right across the path of a cyclist going straight on remains the '
+                    + 'most frequent configuration, and the most serious with a heavy vehicle.',
+                    'Three local factors deserve attention. Tram rails, always to be crossed at right '
+                    + 'angles. Cobbles, slippery and destabilising in the wet. And the gradient, which '
+                    + 'raises speeds on the descents towards the lower city.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The data comes from the road accident statistics published by Statbel. It is official '
+                    + 'but retrospective, and the Belgian dataset gives the month rather than the exact '
+                    + 'day.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Does this map record every cycling accident?',
+                a: 'No. Only injury accidents that gave rise to a police report enter the Statbel '
+                    + 'statistics. Falls on their own — including on rails or cobbles — are absent.',
+            },
+            {
+                q: 'Is the data up to date?',
+                a: 'It follows the Statbel publication schedule: the latest year available covers a '
+                    + 'completed calendar year.',
+            },
+            {
+                q: 'Has the 30 km/h limit changed anything?',
+                a: 'The city-wide 30 km/h limit, in force since 2021, acts on the severity of impacts more '
+                    + 'than on their number: a lower speed markedly reduces the consequences of a '
+                    + 'collision.',
+            },
+            {
+                q: 'Do these accidents change the routes suggested in Brussels?',
+                a: 'Not yet, as route planning does not cover the Brussels Region. Where it works, the '
+                    + 'layer weighs on the safety score.',
+            },
+        ],
+    },
+
+    'bruxelles/reparation-velo': {
+        title: 'Bike repair in Brussels — workshops and pumps',
+        description: 'Map of repair workshops, bike shops and public pumping stations across the 19 '
+            + 'municipalities of Brussels-Capital.',
+        h1: 'Bike repair in Brussels',
+        intro: 'An inner tube to change, brakes to adjust, a tyre to reinflate: this map lists the '
+            + 'workshops, bike shops and freely accessible pumping stations across the 19 municipalities '
+            + 'of the Region.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Three kinds of point sit side by side: bike shops and professional workshops, '
+                    + 'community self-repair workshops, and the pumping stations installed in public space.',
+                    'Opening hours are not always recorded, and a community workshop often opens only a '
+                    + 'few afternoons a week: best to check before making the trip.',
+                ],
+            },
+            {
+                h2: 'Cobbles and gradients, hard on a bike',
+                p: [
+                    'Cobbles loosen spokes and take wheels out of true; the gradients wear brake pads '
+                    + 'faster than on the flat. Both deserve a closer eye here than elsewhere.',
+                    'A puncture, a chain to lubricate or a brake to adjust remain within everyone\'s '
+                    + 'reach. Leave to a professional anything touching structural safety, and the '
+                    + 'electrical system of an assisted bike.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A recent '
+                    + 'workshop may be missing, and a closed shop may linger for a while.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Where can I pump up my tyres for free in Brussels?',
+                a: 'The freely accessible pumping stations installed in public space appear on this map. '
+                    + 'Many bike shops also let you use a pump.',
+            },
+            {
+                q: 'What is a self-repair workshop?',
+                a: 'A place, usually run by a non-profit, that provides tools, second-hand parts and '
+                    + 'advice so that you can repair your own bike.',
+            },
+            {
+                q: 'How often should a bike be serviced in Brussels?',
+                a: 'More often than on flat, smooth ground. Check the brakes and the wheel trueness '
+                    + 'monthly: cobbles and gradients wear both faster.',
+            },
+            {
+                q: 'Can Sécu’Cycle take me to a workshop?',
+                a: 'Not in Brussels: route planning does not yet cover the Region. The map gives the '
+                    + 'addresses.',
             },
         ],
     },
