@@ -1,5 +1,5 @@
 import { Trans, useTranslation } from "react-i18next";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Link } from "react-router";
 import Meta from "../components/Meta";
 import './HomePage.css';
@@ -9,33 +9,9 @@ import Logo from "../assets/logo.svg?react";
 import apercuApplication from "../assets/screenshots/mobile/apercu_itineraire-left.webp";
 import { IoIosArrowDropdown } from "react-icons/io";
 import { FaLinkedin } from "react-icons/fa";
-import { getHomeCases } from "../services/apiBack";
 import { useLocalizedPath } from '../i18n/useLang';
 
-// Repli affiché tant que l'API n'a pas répondu, et surtout contenu que
-// backend/sync_public_content.py rapproche des lignes en base EN UTILISANT LE
-// TITRE FRANÇAIS COMME CLÉ. Ces textes restent donc des littéraux français :
-// les déplacer dans un catalogue détacherait silencieusement les lignes déjà
-// enregistrées, et la page prérendue divergerait de celle servie par l'API.
-// La version anglaise viendra dans un tableau parallèle, indexé par position.
-const DEFAULT_CASES = [
-    {
-        title: "Qu'est-ce que Sécu'Cycle ?",
-        text: "Sécu'Cycle est un projet développé par 6 étudiants de l'ENSEIRB-MATMECA dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous avons d'abord affiné les résultats sur la zone de Bordeaux et de notre campus universitaire grâce à nos connaissances locales du terrain, puis étendu le calcul d'itinéraire à Tournai et ses environs. Les cartes thématiques en données ouvertes couvrent un territoire plus large, de Rennes et Nantes à Paris, Lyon, Lille, Strasbourg et Bruxelles.",
-    },
-    {
-        title: "Problématiques",
-        text: "Dans les nombreux freins à l'utilisation du vélo, la sécurité est un facteur déterminant. Les cyclistes sont souvent confrontés à des routes dangereuses ou à un manque d'infrastructures adaptées. Sécu'Cycle répond à ces problématiques en proposant des itinéraires optimisés pour la sécurité, en tenant compte des préférences et du profil de chaque utilisateur.",
-    },
-    {
-        title: "Pourquoi Sécu'Cycle ?",
-        text: "Sécu'Cycle a pour but de palier ces problèmes. Il s'inscrit dans une démarche de promotion des mobilités douces et de la sécurité des cyclistes. En fournissant des itinéraires adaptés, Sécu'Cycle vise à encourager davantage de personnes à adopter le vélo comme moyen de transport quotidien à la place de la voiture ou des transports en commun.",
-    },
-    {
-        title: "Sources des données",
-        text: "Sécu'Cycle croise une quinzaine de jeux de données, très majoritairement ouverts : OpenStreetMap pour le réseau routier, les aménagements cyclables, le revêtement et l'éclairage, l'IGN pour le dénivelé, les registres officiels d'accidentologie français et belge, le trafic en temps réel publié par quatre métropoles, la disponibilité des vélos en libre-service au format GBFS, l'indice européen de qualité de l'air du service Copernicus, et la Base Adresse Nationale pour les adresses. Les fonds de carte sont fournis par MapTiler, eux aussi construits sur les données d'OpenStreetMap. Le détail de chaque source, son usage, sa licence et son producteur sont listés sur notre page Sources des données.",
-    },
-];
+const CAS = ['projet', 'problematiques', 'pourquoi', 'sources'];
 
 export default function HomePage() {
     const { t } = useTranslation('home');
@@ -45,6 +21,9 @@ export default function HomePage() {
         mentions: <Link to={path("mentionsLegales")} />,
         donnees: <Link to={path("donnees")} />,
         carte: <Link to={path("carteHub")} />,
+        itineraire: <Link to={path("itineraire")} />,
+        bordeaux: <Link to={path("carteVille", { citySlug: "bordeaux" })} />,
+        tournai: <Link to={path("carteVille", { citySlug: "tournai" })} />,
         confidentialite: <Link to={path("confidentialite")} />,
         conditions: <Link to={path("conditions")} />,
         contact: <Link to={path("contact")} />,
@@ -52,22 +31,6 @@ export default function HomePage() {
     };
     const T = ({ k }) => <Trans t={t} i18nKey={k} components={composants} />;
     const faqRef = useRef(null);
-    const [cases, setCases] = useState(DEFAULT_CASES);
-
-    useEffect(() => {
-        let active = true;
-        getHomeCases()
-            .then((data) => {
-                if (active && Array.isArray(data) && data.length > 0) {
-                    setCases(data);
-                }
-            })
-            .catch(() => {
-            });
-        return () => {
-            active = false;
-        };
-    }, []);
 
     const teamMembers = [
         {
@@ -118,10 +81,10 @@ export default function HomePage() {
             </div>
             <div id="home-faq-section" ref={faqRef}>
                 <FaqRoute sectionRef={faqRef} />
-                {cases.map((c) => (
-                    <section className="home-section" key={c.id ?? c.title}>
-                        <h2>{c.title}</h2>
-                        <p>{c.text}</p>
+                {CAS.map((cle) => (
+                    <section className="home-section" key={cle}>
+                        <h2>{t(`cas.${cle}.h2`)}</h2>
+                        <p><T k={`cas.${cle}.texte`} /></p>
                     </section>
                 ))}
                 <section className="home-section">

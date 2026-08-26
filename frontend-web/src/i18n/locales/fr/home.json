@@ -3,6 +3,24 @@
     "metaDescription": "Découvrez Sécu'Cycle, l'application et le site pour trouver des itinéraires à vélo sécurisés et adaptés à votre profil.",
     "sousTitre": "Découvrez le projet",
     "decouvrirProjet": "Découvrir le projet",
+    "cas": {
+        "projet": {
+            "h2": "Qu'est-ce que Sécu'Cycle ?",
+            "texte": "Sécu'Cycle est un projet développé par 6 étudiants de l'ENSEIRB-MATMECA dans le cadre d'un PFA. L'objectif de ce projet est de créer un site web et une application mobile qui aide les cyclistes à trouver des itinéraires sécurisés en fonction de leurs préférences, de leur profil et de leur équipement. Nous avons d'abord affiné les résultats sur la zone de <bordeaux>Bordeaux</bordeaux> et de notre campus universitaire grâce à nos connaissances locales du terrain, puis étendu le calcul d'itinéraire à <tournai>Tournai</tournai> et ses environs. Les <carte>cartes thématiques</carte> en données ouvertes couvrent un territoire plus large, de Rennes et Nantes à Paris, Lyon, Lille, Strasbourg et Bruxelles."
+        },
+        "problematiques": {
+            "h2": "Problématiques",
+            "texte": "Dans les nombreux freins à l'utilisation du vélo, la sécurité est un facteur déterminant. Les cyclistes sont souvent confrontés à des routes dangereuses ou à un manque d'infrastructures adaptées. Sécu'Cycle répond à ces problématiques en proposant des itinéraires optimisés pour la sécurité, en tenant compte des préférences et du profil de chaque utilisateur."
+        },
+        "pourquoi": {
+            "h2": "Pourquoi Sécu'Cycle ?",
+            "texte": "Sécu'Cycle a pour but de palier ces problèmes. Il s'inscrit dans une démarche de promotion des mobilités douces et de la sécurité des cyclistes. En fournissant des <itineraire>itinéraires adaptés</itineraire>, Sécu'Cycle vise à encourager davantage de personnes à adopter le vélo comme moyen de transport quotidien à la place de la voiture ou des transports en commun."
+        },
+        "sources": {
+            "h2": "Sources des données",
+            "texte": "Sécu'Cycle croise une quinzaine de jeux de données, très majoritairement ouverts : OpenStreetMap pour le réseau routier, les aménagements cyclables, le revêtement et l'éclairage, l'IGN pour le dénivelé, les registres officiels d'accidentologie français et belge, le trafic en temps réel publié par quatre métropoles, la disponibilité des vélos en libre-service au format GBFS, l'indice européen de qualité de l'air du service Copernicus, et la Base Adresse Nationale pour les adresses. Les fonds de carte sont fournis par MapTiler, eux aussi construits sur les données d'OpenStreetMap. Le détail de chaque source, son usage, sa licence et son producteur sont listés sur <donnees>notre page Sources des données</donnees>."
+        }
+    },
     "plusInfos": {
         "h2": "Besoin de plus d'informations ?",
         "liens": "Vous pouvez consulter les <mentions>Mentions légales</mentions>, les <donnees>sources des données</donnees> utilisées, nos <carte>cartes par ville</carte>, la <confidentialite>Politique de confidentialité</confidentialite> ou bien les <conditions>conditions d'utilisation</conditions>.",

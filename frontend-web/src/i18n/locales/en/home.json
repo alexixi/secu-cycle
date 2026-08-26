@@ -3,6 +3,24 @@
     "metaDescription": "Discover Sécu'Cycle, the app and website for finding safer bike routes matched to your profile.",
     "sousTitre": "Discover the project",
     "decouvrirProjet": "Discover the project",
+    "cas": {
+        "projet": {
+            "h2": "What is Sécu'Cycle?",
+            "texte": "Sécu'Cycle is a project built by six engineering students at ENSEIRB-MATMECA as their final-year project. The goal is a website and a mobile app that help cyclists find safer routes, matched to their preferences, their profile and the bike they ride. We first tuned the results around <bordeaux>Bordeaux</bordeaux> and our own university campus, where we know the ground well, then extended route planning to <tournai>Tournai</tournai> and its surroundings. The open-data <carte>thematic maps</carte> cover a wider area, from Rennes and Nantes to Paris, Lyon, Lille, Strasbourg and Brussels."
+        },
+        "problematiques": {
+            "h2": "The problem",
+            "texte": "Among the many things that put people off cycling, safety is decisive. Riders regularly face dangerous roads, or simply the absence of any suitable infrastructure. Sécu'Cycle answers that by planning routes optimised for safety, taking each rider's preferences and profile into account."
+        },
+        "pourquoi": {
+            "h2": "Why Sécu'Cycle?",
+            "texte": "Sécu'Cycle exists to address those problems. It is part of a wider effort to promote active travel and cyclist safety. By providing <itineraire>routes that fit the rider</itineraire>, Sécu'Cycle aims to encourage more people to take up cycling for everyday journeys, in place of the car or public transport."
+        },
+        "sources": {
+            "h2": "Data sources",
+            "texte": "Sécu'Cycle combines around fifteen datasets, almost all of them open: OpenStreetMap for the road network, cycling infrastructure, surface and lighting; IGN for elevation; the official French and Belgian road crash registers; real-time traffic published by four metropolitan authorities; bike-share availability in GBFS format; the European air quality index from the Copernicus service; and the Base Adresse Nationale for addresses. Base maps are provided by MapTiler, themselves built on OpenStreetMap data. Every source, what we use it for, its licence and its producer are listed on <donnees>our data sources page</donnees>."
+        }
+    },
     "plusInfos": {
         "h2": "Need more information?",
         "liens": "You can read our <mentions>Legal notice</mentions>, the <donnees>data sources</donnees> we use, our <carte>maps by city</carte>, our <confidentialite>Privacy policy</confidentialite> or our <conditions>Terms of use</conditions>.",

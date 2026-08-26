@@ -629,15 +629,6 @@ export async function getBikeshareStations() {
     }
 }
 
-export async function getHomeCases() {
-    try {
-        const data = await apiFetch("/home-cases/", { method: "GET" });
-        return data;
-    } catch (error) {
-        throw error;
-    }
-}
-
 export async function getFaqs() {
     try {
         const data = await apiFetch("/faqs/", { method: "GET" });
