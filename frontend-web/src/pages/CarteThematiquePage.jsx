@@ -10,12 +10,10 @@ import ThematicMap from '../modules/map/ThematicMap';
 import ErrorPage from './ErrorPage';
 import ThemeIcon from '../components/carte/ThemeIcon';
 import { trackEvent } from '../services/analytics';
-import {
-    SITE_URL, findPage, pagesForCity, pagesForTheme, routableCitiesLabel,
-} from '../data/thematicMaps';
+import { SITE_URL } from '../data/thematicMapsCore';
 import './CartePages.css';
 
-function CtaItineraire({ page, position, lang, t }) {
+function CtaItineraire({ page, position, lang, t, routableCitiesLabel }) {
     const { city } = page;
 
     if (city.routing === false) {
@@ -66,7 +64,9 @@ function CtaItineraire({ page, position, lang, t }) {
     );
 }
 
-export default function CarteThematiquePage() {
+export default function CarteThematiquePage({ registre }) {
+    // Le registre vient en prop : il porte l'éditorial de la langue de la page.
+    const { findPage, pagesForCity, pagesForTheme, routableCitiesLabel } = registre;
     const { pathname } = useLocation();
     const { t } = useTranslation('carte');
     const lang = langFromPathname(pathname);
@@ -206,7 +206,7 @@ export default function CarteThematiquePage() {
                     </p>
                 )}
 
-                <CtaItineraire page={page} lang={lang} t={t} position="sous-carte" />
+                <CtaItineraire page={page} lang={lang} t={t} routableCitiesLabel={routableCitiesLabel} position="sous-carte" />
 
                 <div className="carte-corps">
                     {content.sections.map(section => (
@@ -261,7 +261,7 @@ export default function CarteThematiquePage() {
                     </section>
                 </div>
 
-                <CtaItineraire page={page} lang={lang} t={t} position="fin-article" />
+                <CtaItineraire page={page} lang={lang} t={t} routableCitiesLabel={routableCitiesLabel} position="fin-article" />
 
                 {autresCartesVille.length > 0 && (
                     <section className="carte-maillage">

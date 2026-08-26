@@ -5,17 +5,14 @@ import { themeLabel } from '../i18n/carteLabels';
 import { Helmet } from 'react-helmet-async';
 import Meta from '../components/Meta';
 import ThemeIcon from '../components/carte/ThemeIcon';
-import {
-    SITE_URL, CITIES, PAGES, pagesForCity, routableCitiesLabel,
-} from '../data/thematicMaps';
+import { SITE_URL } from '../data/thematicMapsCore';
 import './CartePages.css';
 
-const VILLES = CITIES.map(city => city.name)
-    .reduce((texte, nom, index, tous) => (
-        index === 0 ? nom : `${texte}${index === tous.length - 1 ? ' et ' : ', '}${nom}`
-    ), '');
+export default function CarteHubPage({ registre }) {
+    // Le registre vient en prop : il porte l'éditorial de la langue de la page.
+    const { CITIES, PAGES, pagesForCity, routableCitiesLabel } = registre;
+    const VILLES = registre.listFormat(CITIES.map(city => city.name));
 
-export default function CarteHubPage() {
     const { t } = useTranslation('carte');
     const lang = langFromPathname(useLocation().pathname);
 
