@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { THEMES } from '../src/data/thematicMapsCore.js';
-import { ENABLED_LANGS, LANGS } from '../src/i18n/routes.js';
+import { LANGS, PUBLISHED_LANGS } from '../src/i18n/routes.js';
 
 const ici = dirname(fileURLToPath(import.meta.url));
 
@@ -97,11 +97,11 @@ let anomalies = 0;
 let restantes = 0;
 
 for (const lang of LANGS) {
-    // Seules les langues servies doivent être complètes. Une langue déclarée mais pas
-    // encore activée est en cours de traduction : exiger sa complétude bloquerait le
+    // Seules les langues PUBLIÉES doivent être complètes. Une langue routée mais pas
+    // encore publiée est en cours de traduction : exiger sa complétude bloquerait le
     // build pendant tout le temps où on la rédige, ce qui pousserait à contourner le
-    // garde-fou plutôt qu'à s'en servir.
-    const bloquante = ENABLED_LANGS.includes(lang);
+    // garde-fou plutôt qu'à s'en servir. Elle le redeviendra à sa publication.
+    const bloquante = PUBLISHED_LANGS.includes(lang);
 
     let catalogue;
     try {
