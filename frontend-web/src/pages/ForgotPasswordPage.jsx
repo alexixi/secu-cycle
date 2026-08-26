@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router";
 import { LuKeyRound } from "react-icons/lu";
 
+import { useTranslation } from "react-i18next";
 import Meta from "../components/Meta";
 import Button from "../components/ui/Button";
 import CodeInput, { CODE_LENGTH } from "../components/ui/CodeInput";
@@ -14,6 +15,7 @@ const MIN_PASSWORD_LENGTH = 10;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 export default function ForgotPasswordPage() {
+    const { t } = useTranslation('auth');
     const path = useLocalizedPath();
     const navigate = useNavigate();
     const location = useLocation();
@@ -66,14 +68,14 @@ export default function ForgotPasswordPage() {
         setIsResending(true);
         try {
             await forgotPassword(email);
-            setResendMessage("Si un compte existe, un nouveau code a été envoyé.");
+            setResendMessage(t('motDePasseOublie.codeRenvoye'));
             startResendCooldown();
         } catch (error) {
             if (error?.status === 429) {
-                setResendMessage("Trop de tentatives. Veuillez réessayer plus tard.");
+                setResendMessage(t('motDePasseOublie.tropDeTentatives'));
                 startResendCooldown();
             } else {
-                setResendMessage("Impossible d'envoyer le code pour le moment.");
+                setResendMessage(t('motDePasseOublie.envoiImpossible'));
             }
         } finally {
             setIsResending(false);
@@ -85,20 +87,20 @@ export default function ForgotPasswordPage() {
         setResetError("");
         setResendMessage("");
         if (password !== password2) {
-            setResetError("Les mots de passe ne correspondent pas.");
+            setResetError(t('motDePasseOublie.motsDePasseDifferents'));
             return;
         }
         setIsLoading(true);
         try {
             await resetPassword(email, code, password);
             navigate(path("login"), {
-                state: { message: "Mot de passe réinitialisé. Vous pouvez vous connecter." },
+                state: { message: t('motDePasseOublie.succes') },
             });
         } catch (error) {
             if (error?.status === 429) {
-                setResetError("Trop de tentatives. Veuillez réessayer plus tard.");
+                setResetError(t('motDePasseOublie.tropDeTentatives'));
             } else {
-                setResetError("Code invalide ou expiré.");
+                setResetError(t('motDePasseOublie.codeInvalide'));
             }
         } finally {
             setIsLoading(false);
@@ -107,27 +109,26 @@ export default function ForgotPasswordPage() {
 
     const resendDisabled = isResending || resendCooldown > 0;
     const resendLabel = isResending
-        ? "Envoi…"
+        ? t('motDePasseOublie.envoi')
         : resendCooldown > 0
-            ? `Renvoyer le code (${resendCooldown}s)`
-            : "Renvoyer le code";
+            ? t('motDePasseOublie.renvoyerCodeDelai', { secondes: resendCooldown })
+            : t('motDePasseOublie.renvoyerCode');
 
     return (
         <>
-            <Meta title="Mot de passe oublié | Sécu'Cycle" description="Réinitialisez le mot de passe de votre compte Sécu'Cycle." noindex />
+            <Meta title={t('motDePasseOublie.titrePage')} description={t('motDePasseOublie.metaDescription')} noindex />
             <div className="page-form-container">
                 <div className="form-container">
                     {step === 0 ? (
                         <form className="form" onSubmit={handleRequest}>
-                            <h2>Mot de passe oublié</h2>
+                            <h2>{t('motDePasseOublie.h2')}</h2>
                             <p className="separator" style={{ margin: "0 0 1.5rem" }}>
-                                Saisissez votre adresse mail : nous vous enverrons un code
-                                pour réinitialiser votre mot de passe.
+                                {t('motDePasseOublie.intro')}
                             </p>
 
                             <div className="input-container">
                                 <div className={"input-group" + (emailError ? " input-error" : "")}>
-                                    <label htmlFor="email">Adresse mail</label>
+                                    <label htmlFor="email">{t('champs.email')}</label>
                                     <input
                                         className="input"
                                         type="email"
@@ -146,18 +147,18 @@ export default function ForgotPasswordPage() {
                                                 setEmailError(false);
                                             }
                                         }}
-                                        placeholder="exemple@gmail.com"
+                                        placeholder={t('champs.emailPlaceholder')}
                                         autoComplete="username"
                                         required
                                     />
                                     {emailError && (
-                                        <div className="error-text">Adresse mail invalide.</div>
+                                        <div className="error-text">{t('erreurs.emailInvalide')}</div>
                                     )}
                                 </div>
                             </div>
 
                             <Button type="submit" disabled={!email || emailError || isLoading}>
-                                {isLoading ? "Envoi…" : <>Envoyer le code <LuKeyRound /></>}
+                                {isLoading ? t('motDePasseOublie.envoi') : <>{t('motDePasseOublie.envoyerCode')} <LuKeyRound /></>}
                             </Button>
 
                             <Link to={path("login")} className="forgot-password-link" style={{ textAlign: "center" }}>
@@ -166,9 +167,9 @@ export default function ForgotPasswordPage() {
                         </form>
                     ) : (
                         <form className="form" onSubmit={handleReset}>
-                            <h2>Réinitialisation</h2>
+                            <h2>{t('motDePasseOublie.h2Reset')}</h2>
                             <p className="separator" style={{ margin: "0 0 1.5rem" }}>
-                                Nous avons envoyé un code à {CODE_LENGTH} chiffres à<br />
+                                {t('motDePasseOublie.codeEnvoye', { longueur: CODE_LENGTH })}<br />
                                 <strong>{email}</strong>.
                             </p>
 
@@ -185,7 +186,7 @@ export default function ForgotPasswordPage() {
 
                             <div className="input-container">
                                 <div className={"input-group" + (resetError ? " input-error" : "")}>
-                                    <label htmlFor="code">Code de réinitialisation</label>
+                                    <label htmlFor="code">{t('motDePasseOublie.labelCode')}</label>
                                     <CodeInput
                                         value={code}
                                         onChange={(v) => { setCode(v); setResetError(""); }}
@@ -193,7 +194,7 @@ export default function ForgotPasswordPage() {
                                 </div>
 
                                 <div className={"input-group" + (resetError ? " input-error" : "")}>
-                                    <label htmlFor="password">Nouveau mot de passe</label>
+                                    <label htmlFor="password">{t('motDePasseOublie.nouveauMotDePasse')}</label>
                                     <PasswordInput
                                         name="password"
                                         autoComplete="new-password"
@@ -209,7 +210,7 @@ export default function ForgotPasswordPage() {
                                 </div>
 
                                 <div className={"input-group" + (resetError ? " input-error" : "")}>
-                                    <label htmlFor="password2">Confirmer le mot de passe</label>
+                                    <label htmlFor="password2">{t('motDePasseOublie.confirmerMotDePasse')}</label>
                                     <PasswordInput
                                         name="password2"
                                         autoComplete="new-password"
@@ -228,7 +229,7 @@ export default function ForgotPasswordPage() {
                                 type="submit"
                                 disabled={code.length < CODE_LENGTH || password.length < MIN_PASSWORD_LENGTH || password !== password2 || isLoading}
                             >
-                                {isLoading ? "Réinitialisation…" : <>Réinitialiser <LuKeyRound /></>}
+                                {isLoading ? t('motDePasseOublie.reinitialisation') : <>{t('motDePasseOublie.reinitialiser')} <LuKeyRound /></>}
                             </Button>
 
                             <button
