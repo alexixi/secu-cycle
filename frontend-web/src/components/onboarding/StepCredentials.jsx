@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Button from "../ui/Button";
 import LinkButton from "../ui/LinkButton";
 import PasswordInput from "../ui/PasswordInput";
@@ -26,6 +27,7 @@ export default function StepCredentials({
     onSubmit,
     isLoading,
 }) {
+    const { t } = useTranslation('auth');
     const path = useLocalizedPath();
     const passwordTooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
 
@@ -37,11 +39,11 @@ export default function StepCredentials({
     return (
         <div className="onboarding-form">
         <form className="onboarding-form" onSubmit={handleSubmit}>
-            <h2>Créer un compte</h2>
-            <p className="onboarding-subtitle">Commençons par votre adresse e-mail et un mot de passe.</p>
+            <h2>{t('onboarding.identifiants.h2')}</h2>
+            <p className="onboarding-subtitle">{t('onboarding.identifiants.intro')}</p>
 
             <div className={`input-group ${emailSyntaxError ? "input-error" : ""}`}>
-                <label htmlFor="email">Adresse mail *</label>
+                <label htmlFor="email">{t('onboarding.identifiants.email')}</label>
                 <input
                     className="input"
                     type="email"
@@ -64,11 +66,11 @@ export default function StepCredentials({
                     required
                     autoFocus
                 />
-                {emailSyntaxError && <div className="error-text">Adresse mail invalide.</div>}
+                {emailSyntaxError && <div className="error-text">{t('erreurs.emailInvalide')}</div>}
             </div>
 
             <div className={`input-group ${passwordMismatch || passwordTooShort ? "input-error" : ""}`}>
-                <label htmlFor="password">Mot de passe *</label>
+                <label htmlFor="password">{t('onboarding.identifiants.motDePasse')}</label>
                 <PasswordInput
                     value={password}
                     name="password"
@@ -77,14 +79,14 @@ export default function StepCredentials({
                         setPasswordMismatch(false);
                     }}
                 />
-                <div className="rule">Au moins {MIN_PASSWORD_LENGTH} caractères.</div>
+                <div className="rule">{t('onboarding.identifiants.regleLongueur', { count: MIN_PASSWORD_LENGTH })}</div>
                 {passwordTooShort && (
-                    <div className="error-text">Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères.</div>
+                    <div className="error-text">{t('onboarding.identifiants.tropCourt', { count: MIN_PASSWORD_LENGTH })}</div>
                 )}
             </div>
 
             <div className={`input-group ${passwordMismatch ? "input-error" : ""}`}>
-                <label htmlFor="password2">Confirmation du mot de passe *</label>
+                <label htmlFor="password2">{t('onboarding.identifiants.confirmation')}</label>
                 <PasswordInput
                     value={password2}
                     name="password2"
@@ -95,14 +97,14 @@ export default function StepCredentials({
                 />
             </div>
 
-            {passwordMismatch && <p className="error-text">Les mots de passe ne correspondent pas.</p>}
+            {passwordMismatch && <p className="error-text">{t('onboarding.identifiants.motsDePasseDifferents')}</p>}
 
             <Button
                 type="submit"
                 className="active"
                 disabled={isLoading || !email || !password || !password2 || password.length < MIN_PASSWORD_LENGTH}
             >
-                <FaPersonCirclePlus /> {isLoading ? "Création…" : "Continuer"}
+                <FaPersonCirclePlus /> {isLoading ? t('onboarding.identifiants.creation') : t('onboarding.continuer')}
             </Button>
 
             {generalError && (
@@ -112,7 +114,7 @@ export default function StepCredentials({
 
         <div className="separator">ou</div>
 
-        <LinkButton to={path("login")}>J&apos;ai déjà un compte <LuLogIn /></LinkButton>
+        <LinkButton to={path("login")}>{t('onboarding.identifiants.dejaUnCompte')} <LuLogIn /></LinkButton>
         </div>
     );
 }
