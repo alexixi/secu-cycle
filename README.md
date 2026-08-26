@@ -98,9 +98,10 @@ ressource), utile par exemple pour reconstruire le frontend sans nouveau commit.
 - **Migrations Alembic** : elles s'appliquent **au démarrage du conteneur API** (le conteneur exécute `alembic
   upgrade head` avant de servir). Un nouveau déploiement suffit donc à migrer le schéma ; aucune commande manuelle.
 - **Prérendu SEO (react-snap)** et **contenus bakés** : le HTML statique du frontend (ex. contenu par défaut
-  `DEFAULT_*` et balisage JSON-LD) est régénéré **au build de l'image**. Les contenus éditables depuis le dashboard
-  admin et stockés en base (cases de la page d'accueil, **FAQ**) sont servis en direct pour les visiteurs, mais ne
-  deviennent visibles pour les crawlers qu'au **prochain build/redéploiement Coolify**.
+  `DEFAULT_*` et balisage JSON-LD) est régénéré **au build de l'image**. La **FAQ**, éditable depuis le dashboard
+  admin et stockée en base, est servie en direct aux visiteurs mais ne devient visible pour les crawlers qu'au
+  **prochain build/redéploiement Coolify**. Les cases de la page d'accueil ne passent plus par la base : leur
+  texte vit dans le catalogue du site, précisément pour supprimer cet écart entre visiteurs et crawlers.
 - **API à 1 worker** : en production l'API tourne avec un seul worker uvicorn, car chaque worker charge sa propre
   copie du graphe. Le coût mémoire suit la taille du `.graphml`, à raison d'environ **1,5 Gio par 100 Mo de
   fichier** : Bordeaux seul (105 Mo) tient dans ~1,8 Gio, Bordeaux + Tournai (126 Mo) dans ~2,1 Gio. Le VPS

@@ -3,7 +3,7 @@ import { LuTrash2 } from "react-icons/lu";
 import Button from "../ui/Button";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, adminLabel, readableTextColor } from "./planningConstants";
 import "../ui/PopUp.css";
-import "./CaseDetailModal.css";
+import "./DetailModal.css";
 import "./TaskDetailModal.css";
 
 export default function TaskDetailModal({ item, admins, tags = [], onClose, onSave, onDelete }) {
