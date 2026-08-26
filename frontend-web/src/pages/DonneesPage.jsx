@@ -1,4 +1,6 @@
+import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router";
+import ExternalLink from "../components/ui/ExternalLink";
 import { Helmet } from "react-helmet-async";
 import Meta from "../components/Meta";
 import "./legal.css";
@@ -12,22 +14,19 @@ const CCBY = { label: "CC BY 4.0", href: "https://creativecommons.org/licenses/b
 const SOURCES = [
     {
         name: "OpenStreetMap",
-        detail: "via Overpass",
-        usage: "Graphe routier, aménagements cyclables, itinéraires cyclables balisés (véloroutes, RAVeL, réseaux express vélo), revêtement, éclairage, sens de circulation et points d'intérêt",
+        cle: "openstreetmap",
         licence: ODBL,
         producer: { label: "openstreetmap.org", href: "https://www.openstreetmap.org/copyright" },
     },
     {
         name: "IGN — RGE ALTI",
-        detail: "Géoplateforme",
-        usage: "Altitude de chaque nœud du graphe, dont se déduit la pente des tronçons",
+        cle: "ign_rge_alti",
         licence: LO,
         producer: { label: "geoservices.ign.fr", href: "https://geoservices.ign.fr/rgealti" },
     },
     {
         name: "Points lumineux",
-        detail: "Bordeaux Métropole",
-        usage: "Densification de l'éclairage public là où OpenStreetMap est lacunaire",
+        cle: "points_lumineux",
         licence: LO,
         producer: {
             label: "opendata.bordeaux-metropole.fr",
@@ -36,8 +35,7 @@ const SOURCES = [
     },
     {
         name: "Luminaires d'éclairage public",
-        detail: "Nantes Métropole",
-        usage: "Densification de l'éclairage public",
+        cle: "luminaires_declairage_public",
         licence: LO,
         producer: {
             label: "data.nantesmetropole.fr",
@@ -46,8 +44,7 @@ const SOURCES = [
     },
     {
         name: "« Accidents de vélo »",
-        detail: "dérivé des BAAC de l'ONISR, publié par Koumoul",
-        usage: "Malus d'accidentologie sur les tronçons, France",
+        cle: "accidents_de_velo",
         licence: LO2,
         producer: {
             label: "data.gouv.fr",
@@ -56,8 +53,7 @@ const SOURCES = [
     },
     {
         name: "Géolocalisation des accidents de la circulation 2017-2024",
-        detail: "Statbel",
-        usage: "Malus d'accidentologie sur les tronçons, Belgique",
+        cle: "geolocalisation_des_accidents_de",
         licence: CCBY,
         producer: {
             label: "statbel.fgov.be",
@@ -66,14 +62,13 @@ const SOURCES = [
     },
     {
         name: "Base Adresse Nationale",
-        usage: "Autocomplétion et géocodage des adresses françaises",
+        cle: "base_adresse_nationale",
         licence: LO,
         producer: { label: "adresse.data.gouv.fr", href: "https://adresse.data.gouv.fr/" },
     },
     {
         name: "Trafic temps réel",
-        detail: "Bordeaux Métropole",
-        usage: "État de circulation des axes routiers",
+        cle: "trafic_temps_reel",
         licence: LO,
         producer: {
             label: "opendata.bordeaux-metropole.fr",
@@ -82,8 +77,7 @@ const SOURCES = [
     },
     {
         name: "Trafic temps réel (SIRAC)",
-        detail: "Eurométropole de Strasbourg",
-        usage: "État de circulation des axes routiers",
+        cle: "trafic_temps_reel_sirac",
         licence: LO,
         producer: {
             label: "eurometrostrasbourg.opendatasoft.com",
@@ -92,8 +86,7 @@ const SOURCES = [
     },
     {
         name: "État du trafic en temps réel",
-        detail: "Rennes Métropole",
-        usage: "État de circulation des axes routiers",
+        cle: "etat_du_trafic_en_temps_reel",
         licence: ODBL,
         producer: {
             label: "data.rennesmetropole.fr",
@@ -102,8 +95,7 @@ const SOURCES = [
     },
     {
         name: "Fluidité des axes routiers",
-        detail: "Nantes Métropole",
-        usage: "État de circulation des axes routiers",
+        cle: "fluidite_des_axes_routiers",
         licence: ODBL,
         producer: {
             label: "data.nantesmetropole.fr",
@@ -112,48 +104,43 @@ const SOURCES = [
     },
     {
         name: "GBFS",
-        detail: "neuf systèmes de vélos en libre-service",
-        usage: "Disponibilité des stations et des vélos en temps réel",
+        cle: "gbfs",
         licence: { label: "Flux ouverts, attribution par système" },
         producer: { label: "gbfs.org", href: "https://gbfs.org/" },
     },
     {
         name: "CAMS",
-        detail: "Copernicus, redistribué par Open-Meteo",
-        usage: "Indice européen de qualité de l'air le long du trajet",
+        cle: "cams",
         licence: { label: "Copernicus — attribution requise", href: "https://atmosphere.copernicus.eu/data-access" },
         producer: { label: "atmosphere.copernicus.eu", href: "https://atmosphere.copernicus.eu/" },
     },
     {
         name: "World Air Quality Index",
-        usage: "Mesures des stations de surveillance au sol, en complément du CAMS",
+        cle: "world_air_quality_index",
         licence: { label: "Attribution requise" },
         producer: { label: "waqi.info", href: "https://waqi.info/" },
     },
     {
         name: "Open-Meteo",
-        detail: "modèles ICON-D2 (DWD) et AROME (Météo-France)",
-        usage: "Conditions météo, prévision de pluie au pas de 15 minutes, vent, et alertes dérivées de seuils (orage, grêle, verglas, rafales)",
+        cle: "open_meteo",
         licence: { label: "CC BY 4.0", href: "https://creativecommons.org/licenses/by/4.0/deed.fr" },
         producer: { label: "open-meteo.com", href: "https://open-meteo.com/" },
     },
     {
         name: "Vigilance Météo-France",
-        detail: "via le miroir Opendatasoft",
-        usage: "Vigilance météorologique officielle par département (orages, vent, neige-verglas, canicule…) en France",
+        cle: "vigilance_meteo_france",
         licence: LO2,
         producer: { label: "meteofrance.com", href: "https://vigilance.meteofrance.fr/" },
     },
     {
         name: "MeteoAlarm",
-        detail: "EUMETNET, relayant l'IRM",
-        usage: "Avertissements météorologiques officiels par province en Belgique",
+        cle: "meteoalarm",
         licence: { label: "Attribution EUMETNET et IRM requise", href: "https://meteoalarm.org/en/live/page/disclaimer" },
         producer: { label: "meteoalarm.org", href: "https://meteoalarm.org/" },
     },
     {
         name: "MapTiler",
-        usage: "Fonds de carte et géocodage hors de France",
+        cle: "maptiler",
         licence: { label: "Service commercial — hors open data" },
         producer: { label: "maptiler.com", href: "https://www.maptiler.com/" },
     },
@@ -171,66 +158,91 @@ const BIKESHARE_SYSTEMS = [
     ["Blue-bike", "Blue-mobility"],
 ];
 
-const jsonLd = {
+const construireJsonLd = (t, detail) => ({
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Sources des données — Sécu'Cycle",
+    name: t("jsonLd.nom"),
     url: "https://secu-cycle.fr/donnees/",
-    description:
-        "Inventaire des jeux de données ouvertes réutilisés par Sécu'Cycle pour calculer des itinéraires vélo sécurisés : usage, licence et producteur de chacun.",
+    description: t("jsonLd.description"),
     isPartOf: { "@type": "WebSite", name: "Sécu'Cycle", url: "https://secu-cycle.fr/" },
     mentions: SOURCES.map((s) => ({
         "@type": "Dataset",
-        name: s.detail ? `${s.name} (${s.detail})` : s.name,
-        description: s.usage,
+        name: detail(s) ? `${s.name} (${detail(s)})` : s.name,
+        description: t(`sources.${s.cle}.usage`),
         ...(s.licence.href ? { license: s.licence.href } : {}),
         ...(s.producer.href ? { url: s.producer.href } : {}),
     })),
-};
+});
 
 export default function DonneesPage() {
+    const { t, i18n } = useTranslation('donnees');
     const path = useLocalizedPath();
+
+    // Toutes les sources n'ont pas de complément de nom. On teste l'existence de la
+    // clé plutôt que de compter sur `defaultValue` : avec fallbackLng désactivé,
+    // parseMissingKeyHandler l'emporte et renverrait la clé, qui s'afficherait telle
+    // quelle dans le tableau et dans le JSON-LD.
+    const detail = (s) => (i18n.exists(`donnees:sources.${s.cle}.detail`) ? t(`sources.${s.cle}.detail`) : "");
+    const jsonLd = construireJsonLd(t, detail);
+
+    const composants = {
+        b: <strong />,
+        mail: <a href="mailto:contact@secu-cycle.fr" />,
+        osm: <ExternalLink href="https://www.openstreetmap.org/" />,
+        odbl: <ExternalLink href="https://opendatacommons.org/licenses/odbl/" />,
+        bordeaux: <ExternalLink href="https://opendata.bordeaux-metropole.fr/explore/dataset/bor_ptlum/" />,
+        nantes: <ExternalLink href="https://data.nantesmetropole.fr/explore/dataset/244400404_luminaires-eclairage-public-nantes-metropole/" />,
+        ign: <ExternalLink href="https://geoservices.ign.fr/rgealti" />,
+        baac: <ExternalLink href="https://www.data.gouv.fr/datasets/accidents-de-velo" />,
+        statbel: <ExternalLink href="https://statbel.fgov.be/fr/open-data/geolocalisation-des-accidents-de-la-circulation-2017-2024" />,
+        gbfs: <ExternalLink href="https://gbfs.org/" />,
+        cams: <ExternalLink href="https://atmosphere.copernicus.eu/" />,
+        waqi: <ExternalLink href="https://waqi.info/" />,
+        ban: <ExternalLink href="https://adresse.data.gouv.fr/" />,
+        maptiler: <ExternalLink href="https://www.maptiler.com/" />,
+        lo: <ExternalLink href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" />,
+        ccby: <ExternalLink href="https://creativecommons.org/licenses/by/4.0/deed.fr" />,
+        mentions: <Link to={path("mentionsLegales")} />,
+        faq: <Link to={path("faq")} />,
+    };
+    const T = ({ k }) => <Trans t={t} i18nKey={k} components={composants} />;
+
+
     return (
         <>
             <Meta
-                title="Sécu'Cycle | Sources des données"
-                description="Les données ouvertes qui font tourner Sécu'Cycle : OpenStreetMap, IGN, accidentologie BAAC et Statbel, trafic temps réel, GBFS, qualité de l'air."
+                title={t('titrePage')}
+                description={t('metaDescription')}
             />
             <Helmet>
                 <script type="application/ld+json">{JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>
             </Helmet>
             <div className="legal-page">
                 <article className="legal-content">
-                    <h1>Sources des données</h1>
-                    <p className="legal-updated">Dernière mise à jour : 28 juillet 2026</p>
+                    <h1>{t('h1')}</h1>
+                    <p className="legal-updated">{t('maj')}</p>
 
-                    <p>
-                        Sécu'Cycle calcule des itinéraires vélo optimisés pour la sécurité plutôt que pour la
-                        seule distance. Le service construit un graphe routier à partir d'OpenStreetMap, puis
-                        attribue à chaque tronçon un score de sécurité sur 10 qui croise plusieurs jeux de
-                        données ouverts. Cette page recense l'intégralité de ces sources, leur usage exact,
-                        leur licence et leur producteur.
-                    </p>
+                    <p><T k="chapo" /></p>
 
-                    <h2>Tableau récapitulatif</h2>
+                    <h2>{t('tableau.h2')}</h2>
                     <div className="legal-table-wrapper">
                         <table className="legal-table">
                             <thead>
                                 <tr>
-                                    <th>Source</th>
-                                    <th>Usage dans Sécu'Cycle</th>
-                                    <th>Licence</th>
-                                    <th>Producteur</th>
+                                    <th>{t('tableau.colSource')}</th>
+                                    <th>{t('tableau.colUsage')}</th>
+                                    <th>{t('tableau.colLicence')}</th>
+                                    <th>{t('tableau.colProducteur')}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {SOURCES.map((s) => (
-                                    <tr key={`${s.name}-${s.detail ?? ""}`}>
+                                    <tr key={s.cle}>
                                         <td>
                                             <strong>{s.name}</strong>
-                                            {s.detail && <><br />{s.detail}</>}
+                                            {detail(s) && <><br />{detail(s)}</>}
                                         </td>
-                                        <td>{s.usage}</td>
+                                        <td>{t(`sources.${s.cle}.usage`)}</td>
                                         <td>
                                             {s.licence.href
                                                 ? <a href={s.licence.href} target="_blank" rel="noopener noreferrer">{s.licence.label}</a>
@@ -247,162 +259,56 @@ export default function DonneesPage() {
                         </table>
                     </div>
 
-                    <h2>Réseau routier et aménagements cyclables</h2>
-                    <p>
-                        Le type d'aménagement cyclable, la hiérarchie de la voie, le revêtement, l'éclairage
-                        public et le sens de circulation sont extraits d'
-                        <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>{" "}
-                        au moyen de l'API Overpass. Ce sont ces attributs qui forment la note d'infrastructure
-                        d'un tronçon, avant application des malus.
-                    </p>
-                    <p>
-                        La même source alimente les points d'intérêt affichés sur la carte&nbsp;: points d'eau
-                        et fontaines, toilettes publiques, stationnements vélo, ateliers de réparation et
-                        stations de gonflage.
-                    </p>
+                    <h2>{t('reseau.h2')}</h2>
+                    <p><T k="reseau.texte" /></p>
+                    <p><T k="reseau.poi" /></p>
 
-                    <h2>Éclairage public</h2>
-                    <p>
-                        Les lampadaires cartographiés dans OpenStreetMap couvrent l'ensemble de la zone
-                        desservie, mais de façon inégale. Sur deux métropoles, ils sont densifiés par le jeu
-                        open data du gestionnaire&nbsp;: les{" "}
-                        <a href="https://opendata.bordeaux-metropole.fr/explore/dataset/bor_ptlum/" target="_blank" rel="noopener noreferrer">points lumineux de Bordeaux Métropole</a>{" "}
-                        et les{" "}
-                        <a href="https://data.nantesmetropole.fr/explore/dataset/244400404_luminaires-eclairage-public-nantes-metropole/" target="_blank" rel="noopener noreferrer">luminaires d'éclairage public de Nantes Métropole</a>.
-                    </p>
+                    <h2>{t('eclairage.h2')}</h2>
+                    <p><T k="eclairage.texte" /></p>
 
-                    <h2>Dénivelé</h2>
-                    <p>
-                        Les altitudes sont interrogées sur chaque nœud du graphe auprès du service de calcul
-                        altimétrique de la{" "}
-                        <a href="https://geoservices.ign.fr/rgealti" target="_blank" rel="noopener noreferrer">Géoplateforme de l'IGN</a>{" "}
-                        (ressource RGE ALTI). La pente d'un tronçon est calculée par différence entre ses
-                        extrémités, puis pondérée selon le profil du cycliste et l'assistance électrique
-                        éventuelle de son vélo.
-                    </p>
+                    <h2>{t('denivele.h2')}</h2>
+                    <p><T k="denivele.texte" /></p>
 
-                    <h2>Accidentologie</h2>
-                    <p>
-                        Deux registres nationaux sont mobilisés de part et d'autre de la frontière. En France,
-                        le jeu{" "}
-                        <a href="https://www.data.gouv.fr/datasets/accidents-de-velo" target="_blank" rel="noopener noreferrer">« Accidents de vélo »</a>,
-                        dérivé des fichiers BAAC de l'ONISR. En Belgique, les{" "}
-                        <a href="https://statbel.fgov.be/fr/open-data/geolocalisation-des-accidents-de-la-circulation-2017-2024" target="_blank" rel="noopener noreferrer">accidents de la circulation géolocalisés 2017-2024</a>{" "}
-                        publiés par Statbel, dont les coordonnées en Lambert 72 sont reprojetées en WGS84 à
-                        l'ingestion.
-                    </p>
-                    <p>
-                        Chaque accident est rattaché aux tronçons du graphe situés dans un rayon de
-                        25&nbsp;mètres, puis pondéré par une décroissance exponentielle de demi-vie
-                        5&nbsp;ans. Le malus obtenu est normalisé par la longueur du tronçon, compressé
-                        logarithmiquement et plafonné à 1,5&nbsp;point sur 10.
-                    </p>
-                    <p>
-                        Ce plafond est délibéré&nbsp;: ces bases ne comportent aucun dénominateur
-                        d'exposition, si bien qu'un axe cyclable très fréquenté cumule mécaniquement des
-                        accidents sans être plus dangereux au kilomètre parcouru. Le malus est en outre
-                        strictement soustractif — un tronçon sans accident recensé conserve sa note
-                        d'infrastructure, pour ne pas avantager les zones que les données couvrent mal.
-                    </p>
+                    <h2>{t('accidents.h2')}</h2>
+                    <p><T k="accidents.registres" /></p>
+                    <p><T k="accidents.calcul" /></p>
+                    <p><T k="accidents.plafond" /></p>
                     <div className="legal-callout">
-                        <p>
-                            <strong>Limite assumée.</strong> Ces deux registres ne recensent que les accidents
-                            corporels déclarés aux forces de l'ordre. Les chutes sans tiers y sont très
-                            largement sous-représentées, et le géocodage est plus lacunaire hors
-                            agglomération. Le signal est donc structurellement plus fiable en ville, et un
-                            tronçon sans accident recensé n'est pas un tronçon sûr.
-                        </p>
+                        <p><T k="accidents.limite" /></p>
                     </div>
 
-                    <h2>Trafic en temps réel</h2>
-                    <p>
-                        L'état de circulation des axes est collecté toutes les cinq minutes auprès des portails
-                        open data de quatre métropoles&nbsp;: Bordeaux Métropole, l'Eurométropole de
-                        Strasbourg, Rennes Métropole et Nantes Métropole. Une source n'est interrogée que si
-                        son emprise croise celle des données que nous synchronisons. Là où le calcul
-                        d'itinéraire est disponible, un axe embouteillé y devient plus coûteux, sans jamais
-                        être interdit&nbsp;; ailleurs, la couche reste consultable sur la carte thématique
-                        de la ville.
-                    </p>
+                    <h2>{t('trafic.h2')}</h2>
+                    <p><T k="trafic.texte" /></p>
 
-                    <h2>Vélos en libre-service</h2>
-                    <p>
-                        La disponibilité des stations est collectée au format{" "}
-                        <a href="https://gbfs.org/" target="_blank" rel="noopener noreferrer">GBFS</a>{" "}
-                        auprès de neuf systèmes français et belges, par auto-découverte des flux. Cette couche
-                        est informative&nbsp;: elle ne pèse pas sur le calcul d'itinéraire.
-                    </p>
+                    <h2>{t('bikeshare.h2')}</h2>
+                    <p><T k="bikeshare.texte" /></p>
                     <ul>
                         {BIKESHARE_SYSTEMS.map(([name, operator]) => (
                             <li key={name}><strong>{name}</strong> — {operator}</li>
                         ))}
                     </ul>
 
-                    <h2>Qualité de l'air</h2>
-                    <p>
-                        L'indice européen de qualité de l'air (EAQI) est issu du{" "}
-                        <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noopener noreferrer">CAMS</a>{" "}
-                        (Copernicus Atmosphere Monitoring Service), redistribué par Open-Meteo, et
-                        échantillonné le long du trajet sur une maille d'environ 11&nbsp;kilomètres. Il est
-                        complété par les mesures des stations de surveillance au sol du{" "}
-                        <a href="https://waqi.info/" target="_blank" rel="noopener noreferrer">World Air Quality Index</a>,
-                        publiées sur l'échelle AQI américaine — distincte de l'indice européen, et affichée
-                        comme telle.
-                    </p>
+                    <h2>{t('air.h2')}</h2>
+                    <p><T k="air.texte" /></p>
 
-                    <h2>Adresses, géocodage et fonds de carte</h2>
-                    <p>
-                        L'autocomplétion et le géocodage des adresses françaises reposent sur la{" "}
-                        <a href="https://adresse.data.gouv.fr/" target="_blank" rel="noopener noreferrer">Base Adresse Nationale</a>.
-                        Hors de France, en Belgique notamment, ils sont assurés par{" "}
-                        <a href="https://www.maptiler.com/" target="_blank" rel="noopener noreferrer">MapTiler</a>,
-                        qui fournit également les tuiles cartographiques du fond de carte. MapTiler est un
-                        service commercial&nbsp;: c'est la seule source de cette page qui ne relève pas de
-                        l'open data, même si ses fonds de carte sont eux-mêmes construits sur les données
-                        d'OpenStreetMap.
-                    </p>
+                    <h2>{t('adresses.h2')}</h2>
+                    <p><T k="adresses.texte" /></p>
 
-                    <h2>Attributions</h2>
+                    <h2>{t('attributions.h2')}</h2>
                     <div className="legal-callout">
                         <ul>
-                            <li>
-                                © les contributeurs{" "}
-                                <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>,
-                                sous licence{" "}
-                                <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener noreferrer">ODbL</a>.
-                            </li>
-                            <li>
-                                IGN, ONISR, Base Adresse Nationale, Bordeaux Métropole, Eurométropole de
-                                Strasbourg, Rennes Métropole et Nantes Métropole, sous{" "}
-                                <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" target="_blank" rel="noopener noreferrer">Licence Ouverte</a>.
-                            </li>
-                            <li>
-                                Statbel, sous licence{" "}
-                                <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>.
-                            </li>
-                            <li>
-                                Generated using Copernicus Atmosphere Monitoring Service information 2026.
-                                Les données CAMS sont modifiées par Sécu'Cycle (échantillonnage le long du
-                                trajet) et obtenues par l'intermédiaire d'Open-Meteo. Ni la Commission
-                                européenne ni l'ECMWF ne sont responsables de l'usage qui en est fait.
-                            </li>
-                            <li>World Air Quality Index Project (waqi.info).</li>
-                            <li>Fonds de carte © MapTiler © les contributeurs OpenStreetMap.</li>
+                            <li><T k="attributions.osm" /></li>
+                            <li><T k="attributions.lo" /></li>
+                            <li><T k="attributions.statbel" /></li>
+                            <li><T k="attributions.cams" /></li>
+                            <li>{t('attributions.waqi')}</li>
+                            <li>{t('attributions.maptiler')}</li>
                         </ul>
                     </div>
 
-                    <h2>Réutiliser nos données</h2>
-                    <p>
-                        Sécu'Cycle expose une API publique. Les jeux réutilisés restent la propriété de leurs
-                        producteurs et sont soumis à leurs licences respectives, rappelées ci-dessus&nbsp;:
-                        toute réutilisation en cascade doit les respecter, en particulier la clause de partage
-                        à l'identique de l'ODbL. Pour toute question, écrivez-nous à{" "}
-                        <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>.
-                    </p>
-                    <p>
-                        Voir aussi nos <Link to={path("mentionsLegales")}>mentions légales</Link> et notre{" "}
-                        <Link to={path("faq")}>foire aux questions</Link>.
-                    </p>
+                    <h2>{t('reutiliser.h2')}</h2>
+                    <p><T k="reutiliser.texte" /></p>
+                    <p><T k="reutiliser.voirAussi" /></p>
                 </article>
             </div>
         </>
