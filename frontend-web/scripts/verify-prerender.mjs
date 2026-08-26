@@ -22,8 +22,13 @@ import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { SITE_URL, PAGES, CITIES, cityHubTitle } from '../src/data/thematicMaps.js';
-import { langFromPathname } from '../src/i18n/routes.js';
+import { buildRegistry } from '../src/data/buildRegistry.js';
+import * as core from '../src/data/thematicMapsCore.js';
+import { PUBLISHED_LANGS, langFromPathname, pathFor } from '../src/i18n/routes.js';
+
+const SITE_URL = core.SITE_URL;
+
+const avecSlashFinal = (chemin) => (chemin.endsWith('/') ? chemin : `${chemin}/`);
 
 const ici = dirname(fileURLToPath(import.meta.url));
 const DIST = join(ici, '..', 'dist');
@@ -32,19 +37,42 @@ const SITEMAP = join(DIST, 'sitemap.xml');
 // Chaîne devant apparaître dans le HTML prérendu de chaque route. Pour les pages
 // génériques on vérifie le H1 réel, ce qui prouve que React a bien été exécuté et que le
 // registre a été résolu — un simple <div id="root"></div> ne passerait pas.
-const ATTENDU = {
-    '/': 'Sécu',
-    '/itineraire/': 'itinéraire',
-    '/faq/': 'Foire aux questions',
-    '/donnees/': 'Sources',
-    '/contact/': 'Contact',
-    '/mentions-legales/': 'Mentions',
-    '/confidentialite/': 'confidentialité',
-    '/conditions-utilisation/': 'utilisation',
-    '/carte/': 'Cartes cyclables par ville',
-    ...Object.fromEntries(CITIES.map(c => [`/carte/${c.slug}/`, cityHubTitle(c)])),
-    ...Object.fromEntries(PAGES.map(p => [`${p.path}/`, p.content.h1])),
+//
+// Les extraits sont volontairement des littéraux et non des clés de catalogue : une
+// coquille d'extraction i18n doit faire échouer le build, pas être masquée en comparant
+// une traduction à elle-même.
+const EXTRAITS = {
+    fr: {
+        home: 'Sécu', itineraire: 'itinéraire', faq: 'Foire aux questions',
+        donnees: 'Sources', contact: 'Contact', mentionsLegales: 'Mentions',
+        confidentialite: 'confidentialité', conditions: 'utilisation',
+        suppressionCompte: 'Supprimer', carteHub: 'Cartes cyclables par ville',
+    },
+    en: {
+        home: 'Sécu', itineraire: 'route', faq: 'Frequently asked questions',
+        donnees: 'Data sources', contact: 'Contact', mentionsLegales: 'Legal notice',
+        confidentialite: 'Privacy policy', conditions: 'Terms of use',
+        suppressionCompte: 'Delete my account', carteHub: 'Cycling maps by city',
+    },
 };
+
+const ATTENDU = {};
+for (const lang of PUBLISHED_LANGS) {
+    const editorial = await import(`../src/data/thematicMaps.${lang}.js`);
+    const registre = buildRegistry(core, editorial);
+
+    for (const [cle, extrait] of Object.entries(EXTRAITS[lang] ?? {})) {
+        const chemin = pathFor(cle, lang);
+        if (chemin) ATTENDU[avecSlashFinal(chemin)] = extrait;
+    }
+    for (const city of registre.CITIES) {
+        ATTENDU[avecSlashFinal(pathFor('carteVille', lang, { citySlug: city.slug }))] =
+            registre.cityHubTitle(city);
+    }
+    for (const page of registre.PAGES) {
+        ATTENDU[avecSlashFinal(page.path)] = page.content.h1;
+    }
+}
 
 if (!existsSync(SITEMAP)) {
     console.error(`sitemap.xml introuvable dans ${DIST} — le build a-t-il été lancé ?`);
