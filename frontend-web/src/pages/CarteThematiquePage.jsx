@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router';
+import { Trans, useTranslation } from 'react-i18next';
 import { langFromPathname, matchPath, pathFor } from '../i18n/routes';
 import { sourceDetail, statLabel, themeLabel } from '../i18n/carteLabels';
 import { Helmet } from 'react-helmet-async';
@@ -14,18 +15,15 @@ import {
 } from '../data/thematicMaps';
 import './CartePages.css';
 
-function CtaItineraire({ page, position, lang }) {
+function CtaItineraire({ page, position, lang, t }) {
     const { city } = page;
 
     if (city.routing === false) {
         return (
             <aside className="carte-cta">
                 <div>
-                    <p className="carte-cta-titre">Itinéraires : pas encore {city.prep}</p>
-                    <p className="carte-cta-texte">
-                        {city.routingNote} Les itinéraires sont pour l’instant calculés
-                        à {routableCitiesLabel()}.
-                    </p>
+                    <p className="carte-cta-titre">{t('ui.cta.pasEncore', { prep: city.prep })}</p>
+                    <p className="carte-cta-texte">{t('ui.cta.trajetTexte')}</p>
                 </div>
                 <Link
                     className="button carte-cta-bouton"
@@ -36,7 +34,7 @@ function CtaItineraire({ page, position, lang }) {
                         position,
                     })}
                 >
-                    Voir les villes couvertes
+                    {t('ui.cta.villesCouvertes')}
                 </Link>
             </aside>
         );
@@ -46,7 +44,7 @@ function CtaItineraire({ page, position, lang }) {
     return (
         <aside className="carte-cta">
             <div>
-                <p className="carte-cta-titre">Un trajet à vélo {city.prep} ?</p>
+                <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep })}</p>
                 <p className="carte-cta-texte">
                     Sécu’Cycle calcule un itinéraire cyclable sécurisé qui tient compte des
                     aménagements, de l’éclairage, du trafic et des accidents recensés — avec cette
@@ -62,7 +60,7 @@ function CtaItineraire({ page, position, lang }) {
                     position,
                 })}
             >
-                Calculer mon itinéraire
+                {t('ui.cta.calculer')}
             </Link>
         </aside>
     );
@@ -70,6 +68,7 @@ function CtaItineraire({ page, position, lang }) {
 
 export default function CarteThematiquePage() {
     const { pathname } = useLocation();
+    const { t } = useTranslation('carte');
     const lang = langFromPathname(pathname);
 
     const { citySlug, themeSlug } = matchPath(pathname)?.params ?? {};
@@ -91,6 +90,9 @@ export default function CarteThematiquePage() {
     if (!page) return <ErrorPage />;
 
     const { city, theme, content } = page;
+    const composants = { donnees: <Link to={pathFor("donnees", lang)} /> };
+    const T = ({ k, ...params }) => <Trans t={t} i18nKey={k} components={composants} values={params} />;
+
     const abs = (chemin) => `${SITE_URL}${chemin.endsWith('/') ? chemin : `${chemin}/`}`;
     const canonical = abs(pathFor('carteTheme', lang, { citySlug: city.slug, themeSlug: page.themeSlug }));
     const autresCartesVille = pagesForCity(city.slug).filter(p => p.themeSlug !== page.themeSlug);
@@ -102,8 +104,8 @@ export default function CarteThematiquePage() {
             {
                 '@type': 'BreadcrumbList',
                 itemListElement: [
-                    { '@type': 'ListItem', position: 1, name: 'Accueil', item: abs(pathFor('home', lang)) },
-                    { '@type': 'ListItem', position: 2, name: 'Cartes', item: abs(pathFor('carteHub', lang)) },
+                    { '@type': 'ListItem', position: 1, name: t('ui.accueil'), item: abs(pathFor('home', lang)) },
+                    { '@type': 'ListItem', position: 2, name: t('ui.cartes'), item: abs(pathFor('carteHub', lang)) },
                     { '@type': 'ListItem', position: 3, name: city.name, item: abs(pathFor('carteVille', lang, { citySlug: city.slug })) },
                     { '@type': 'ListItem', position: 4, name: themeLabel(theme), item: canonical },
                 ],
@@ -151,10 +153,10 @@ export default function CarteThematiquePage() {
             </Helmet>
 
             <article className="carte-page">
-                <nav className="carte-fil" aria-label="Fil d’Ariane">
-                    <Link to={pathFor("home", lang)}>Accueil</Link>
+                <nav className="carte-fil" aria-label={t('ui.filAriane')}>
+                    <Link to={pathFor("home", lang)}>{t('ui.accueil')}</Link>
                     <span aria-hidden="true">›</span>
-                    <Link to={pathFor("carteHub", lang)}>Cartes</Link>
+                    <Link to={pathFor("carteHub", lang)}>{t('ui.cartes')}</Link>
                     <span aria-hidden="true">›</span>
                     <Link to={pathFor("carteVille", lang, { citySlug: city.slug })}>{city.name}</Link>
                     <span aria-hidden="true">›</span>
@@ -167,7 +169,7 @@ export default function CarteThematiquePage() {
                 </div>
 
                 {stats.length > 0 && (
-                    <ul className="carte-stats" aria-label="Chiffres clés">
+                    <ul className="carte-stats" aria-label={t('ui.chiffresCles')}>
                         {stats.map(stat => (
                             <li key={stat.key}>
                                 <strong>{stat.text ?? stat.value.toLocaleString(lang)}</strong>
@@ -193,8 +195,8 @@ export default function CarteThematiquePage() {
                         }}
                     >
                         {carteAgrandie
-                            ? <><MdOutlineCloseFullscreen aria-hidden="true" /> Réduire la carte</>
-                            : <><MdOutlineOpenInFull aria-hidden="true" /> Agrandir la carte</>}
+                            ? <><MdOutlineCloseFullscreen aria-hidden="true" /> {t('ui.theme.reduireCarte')}</>
+                            : <><MdOutlineOpenInFull aria-hidden="true" /> {t('ui.theme.agrandirCarte')}</>}
                     </button>
                 </div>
 
@@ -204,7 +206,7 @@ export default function CarteThematiquePage() {
                     </p>
                 )}
 
-                <CtaItineraire page={page} lang={lang} position="sous-carte" />
+                <CtaItineraire page={page} lang={lang} t={t} position="sous-carte" />
 
                 <div className="carte-corps">
                     {content.sections.map(section => (
@@ -218,7 +220,7 @@ export default function CarteThematiquePage() {
                     ))}
 
                     <section>
-                        <h2>Questions fréquentes</h2>
+                        <h2>{t('ui.theme.questionsFrequentes')}</h2>
                         <dl className="carte-faq">
                             {content.faq.map(item => (
                                 <div key={item.q}>
@@ -230,7 +232,7 @@ export default function CarteThematiquePage() {
                     </section>
 
                     <section>
-                        <h2>Sources et licences</h2>
+                        <h2>{t('ui.theme.sourcesLicences')}</h2>
                         <ul className="carte-sources">
                             {page.sources.map(source => (
                                 <li key={source.name}>
@@ -255,18 +257,15 @@ export default function CarteThematiquePage() {
                                 </li>
                             ))}
                         </ul>
-                        <p className="carte-note">
-                            L’inventaire complet des sources utilisées par Sécu’Cycle est détaillé sur
-                            la page <Link to={pathFor("donnees", lang)}>Données et sources</Link>.
-                        </p>
+                        <p className="carte-note"><T k="ui.theme.detailDonnees" /></p>
                     </section>
                 </div>
 
-                <CtaItineraire page={page} lang={lang} position="fin-article" />
+                <CtaItineraire page={page} lang={lang} t={t} position="fin-article" />
 
                 {autresCartesVille.length > 0 && (
                     <section className="carte-maillage">
-                        <h2>Autres cartes {city.prep}</h2>
+                        <h2>{t('ui.theme.autresCartes', { prep: city.prep })}</h2>
                         <ul className="carte-liens">
                             {autresCartesVille.map(autre => (
                                 <li key={autre.key}>
@@ -282,7 +281,7 @@ export default function CarteThematiquePage() {
 
                 {memeThemeAilleurs.length > 0 && (
                     <section className="carte-maillage">
-                        <h2>{themeLabel(theme)} dans d’autres villes</h2>
+                        <h2>{t('ui.theme.memeThemeAilleurs', { theme: themeLabel(theme) })}</h2>
                         <ul className="carte-liens">
                             {memeThemeAilleurs.map(autre => (
                                 <li key={autre.key}>

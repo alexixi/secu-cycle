@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import Meta from "../components/Meta";
@@ -8,12 +9,13 @@ import { calculateItineraries, getReports, createReport, deleteReport, getTraffi
 import { trackEvent } from "../services/analytics";
 import "./ItinerairePage.css";
 
-const GENERIC_ROUTE_ERROR = "Une erreur est survenue lors de la recherche de l'itinéraire.";
+
 
 const bikeLabel = (bikeId) =>
     typeof bikeId === "string" && bikeId.startsWith("default-") ? bikeId.slice("default-".length) : "perso";
 
 export default function ItinerairePage() {
+    const { t } = useTranslation('itineraire');
     const [startPoint, setStartPoint] = useState(null);
     const [endPoint, setEndPoint] = useState(null);
     const [routePaths, setRoutePaths] = useState(null);
@@ -92,15 +94,15 @@ export default function ItinerairePage() {
                 setRouteWeather(weather);
                 trackEvent("route_calculated", { bike: bikeLabel(selectedBike), count: itineraries.length });
             } else {
-                setErrorPath(GENERIC_ROUTE_ERROR);
+                setErrorPath(t('erreurGenerique'));
                 trackEvent("route_calculation_failed", { bike: bikeLabel(selectedBike) });
             }
         } catch (error) {
             if (error.code === "OUT_OF_ZONE") {
-                setErrorPath(error.detailMessage || GENERIC_ROUTE_ERROR);
+                setErrorPath(error.detailMessage || t('erreurGenerique'));
                 trackEvent("address_out_of_zone", { city: startPoint.city || endPoint.city || "inconnue" });
             } else {
-                setErrorPath(GENERIC_ROUTE_ERROR);
+                setErrorPath(t('erreurGenerique'));
                 trackEvent("route_calculation_failed", { bike: bikeLabel(selectedBike) });
             }
             setIsLoading(false);
@@ -227,14 +229,14 @@ export default function ItinerairePage() {
     return (
         <>
             <Meta
-                title="Sécu'Cycle | Itinéraires"
-                description="Calculez un itinéraire à vélo sécurisé à Bordeaux et à Tournai avec Sécu'Cycle : trajet adapté à votre profil, votre vélo et au type de route."
+                title={t('titrePage')}
+                description={t('metaDescription')}
                 preconnect={[
                     "https://api.secu-cycle.fr",
                     { href: "https://api.maptiler.com", crossOrigin: true },
                 ]}
             />
-            <h1 className="sr-only">Calculateur d'itinéraire à vélo sécurisé à Bordeaux et à Tournai</h1>
+            <h1 className="sr-only">{t('h1')}</h1>
             <div className="main-page-itineraire">
                 <SearchAside
                     startAdress={startPoint ? startPoint.name : ""}

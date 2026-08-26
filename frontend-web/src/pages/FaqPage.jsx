@@ -1,9 +1,16 @@
+import { Trans, useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import Meta from "../components/Meta";
 import { getFaqs } from "../services/apiBack";
 import "./faq.css";
 
+// Repli affiché tant que l'API n'a pas répondu, et contenu que
+// backend/sync_public_content.py rapproche des lignes en base EN UTILISANT LA
+// QUESTION FRANÇAISE COMME CLÉ. Ces textes restent donc des littéraux français :
+// les déplacer dans un catalogue détacherait les lignes déjà enregistrées, et la
+// page prérendue divergerait de celle servie par l'API.
+// La version anglaise viendra dans un tableau parallèle, indexé par position.
 const DEFAULT_FAQS = [
     {
         question: "Qu'est-ce que Sécu'Cycle ?",
@@ -53,6 +60,7 @@ const DEFAULT_FAQS = [
 ];
 
 export default function FaqPage() {
+    const { t } = useTranslation('faq');
     const [faqs, setFaqs] = useState(DEFAULT_FAQS);
 
     useEffect(() => {
@@ -86,19 +94,17 @@ export default function FaqPage() {
     return (
         <>
             <Meta
-                title="Sécu'Cycle | FAQ"
-                description="Foire aux questions de Sécu'Cycle : itinéraires vélo sécurisés, fonctionnement, zones couvertes, application mobile, sources de données et compte utilisateur."
+                title={t('titrePage')}
+                description={t('metaDescription')}
             />
             <Helmet>
                 <script type="application/ld+json">{JSON.stringify(faqJsonLd).replace(/</g, "\\u003c")}</script>
             </Helmet>
             <div className="faq-page">
                 <article className="faq-content">
-                    <h1>Foire aux questions</h1>
+                    <h1>{t('h1')}</h1>
                     <p className="faq-intro">
-                        Vous trouverez ici les réponses aux questions les plus fréquentes sur
-                        Sécu'Cycle, le service d'itinéraires à vélo sécurisés. Une autre question&nbsp;?
-                        Écrivez-nous à <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>.
+                        <Trans t={t} i18nKey="intro" components={{ mail: <a href="mailto:contact@secu-cycle.fr" /> }} />
                     </p>
 
                     <div className="faq-list">
