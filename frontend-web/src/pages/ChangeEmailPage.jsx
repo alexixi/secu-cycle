@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { LuMail, LuCheck } from "react-icons/lu";
@@ -14,24 +15,20 @@ import { useLocalizedPath } from '../i18n/useLang';
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
-function mapRequestError(error) {
-    if (error?.status === 401) return "Mot de passe incorrect.";
-    if (error?.status === 409) return "Cette adresse mail est déjà utilisée par un autre compte.";
-    if (error?.status === 429) return "Trop de demandes de changement. Réessayez plus tard.";
-    if (error?.status === 422) return "Adresse mail invalide.";
-    if (!error?.status) return "Connexion impossible. Vérifiez votre connexion internet.";
-    return "Une erreur est survenue lors de l'envoi du code.";
+function mapRequestError(error, t) {
+    const cle = { 401: "motDePasseIncorrect", 409: "emailPris", 429: "tropDeDemandes", 422: "emailInvalide" }[error?.status]
+        ?? (error?.status ? "generique" : "horsLigne");
+    return t(`changementEmail.erreursDemande.${cle}`);
 }
 
-function mapConfirmError(error) {
-    if (error?.status === 400) return "Code invalide ou expiré.";
-    if (error?.status === 409) return "Cette adresse vient d'être utilisée par un autre compte. Essayez-en une autre.";
-    if (error?.status === 429) return "Trop de tentatives. Veuillez réessayer plus tard.";
-    if (!error?.status) return "Connexion impossible. Vérifiez votre connexion internet.";
-    return "Une erreur est survenue lors de la confirmation.";
+function mapConfirmError(error, t) {
+    const cle = { 400: "codeInvalide", 409: "emailPris", 429: "tropDeTentatives" }[error?.status]
+        ?? (error?.status ? "generique" : "horsLigne");
+    return t(`changementEmail.erreursConfirmation.${cle}`);
 }
 
 export default function ChangeEmailPage() {
+    const { t } = useTranslation('auth');
     const path = useLocalizedPath();
     const navigate = useNavigate();
     const { user, token, updateUser, loginAuth } = useAuth();
@@ -92,14 +89,14 @@ export default function ChangeEmailPage() {
         setIsResending(true);
         try {
             await requestEmailChange(token, newEmail.trim(), password);
-            setResendMessage("Un nouveau code a été envoyé.");
+            setResendMessage(t('changementEmail.codeRenvoye'));
             startResendCooldown();
         } catch (err) {
             if (err?.status === 429) {
-                setResendMessage("Trop de demandes. Veuillez réessayer plus tard.");
+                setResendMessage(t('changementEmail.tropDeDemandes'));
                 startResendCooldown();
             } else {
-                setResendMessage("Impossible d'envoyer le code pour le moment.");
+                setResendMessage(t('changementEmail.envoiImpossible'));
             }
         } finally {
             setIsResending(false);
@@ -122,7 +119,7 @@ export default function ChangeEmailPage() {
             }
 
             navigate(path("profil"), {
-                state: { message: "Votre adresse mail a bien été modifiée." },
+                state: { message: t('changementEmail.succes') },
             });
         } catch (err) {
             setError(mapConfirmError(err));
@@ -140,27 +137,26 @@ export default function ChangeEmailPage() {
 
     const resendDisabled = isResending || resendCooldown > 0;
     const resendLabel = isResending
-        ? "Envoi…"
+        ? t('changementEmail.envoi')
         : resendCooldown > 0
-            ? `Renvoyer le code (${resendCooldown}s)`
-            : "Renvoyer le code";
+            ? t('changementEmail.renvoyerCodeDelai', { secondes: resendCooldown })
+            : t('changementEmail.renvoyerCode');
 
     return (
         <>
-            <Meta title="Modifier mon adresse mail | Sécu'Cycle" description="Modifiez l'adresse mail de votre compte Sécu'Cycle." noindex />
+            <Meta title={t('changementEmail.titrePage')} description={t('changementEmail.metaDescription')} noindex />
             <div className="page-form-container">
                 <div className="form-container">
                     {step === 0 ? (
                         <form className="form" onSubmit={handleRequest}>
-                            <h2>Modifier mon adresse mail</h2>
+                            <h2>{t('changementEmail.h2')}</h2>
                             <p className="separator" style={{ margin: "0 0 1.5rem" }}>
-                                Nous enverrons un code à {CODE_LENGTH} chiffres à votre nouvelle
-                                adresse pour vérifier qu&apos;elle vous appartient.
+                                {t('changementEmail.intro', { longueur: CODE_LENGTH })}
                             </p>
 
                             <div className="input-container">
                                 <div className="input-group">
-                                    <label htmlFor="current-email">Adresse actuelle</label>
+                                    <label htmlFor="current-email">{t('changementEmail.adresseActuelle')}</label>
                                     <input
                                         className="input"
                                         type="email"
@@ -173,7 +169,7 @@ export default function ChangeEmailPage() {
                                 </div>
 
                                 <div className={"input-group" + (emailError ? " input-error" : "")}>
-                                    <label htmlFor="new-email">Nouvelle adresse mail</label>
+                                    <label htmlFor="new-email">{t('changementEmail.nouvelleAdresse')}</label>
                                     <input
                                         className="input"
                                         type="email"
@@ -193,7 +189,7 @@ export default function ChangeEmailPage() {
                                                 setEmailError(false);
                                             }
                                         }}
-                                        placeholder="exemple@gmail.com"
+                                        placeholder={t('champs.emailPlaceholder')}
                                         autoComplete="email"
                                         required
                                     />
@@ -228,28 +224,27 @@ export default function ChangeEmailPage() {
                                 type="submit"
                                 disabled={!newEmail || emailError || isSameAsCurrent || !password || isLoading}
                             >
-                                {isLoading ? "Envoi…" : <>Envoyer le code <LuMail /></>}
+                                {isLoading ? t('changementEmail.envoi') : <>{t('changementEmail.envoyerCode')} <LuMail /></>}
                             </Button>
 
                             <Link to={path("profil")} className="forgot-password-link" style={{ textAlign: "center" }}>
-                                Retour au profil
+                                {t('changementEmail.retourProfil')}
                             </Link>
                         </form>
                     ) : (
                         <form className="form" onSubmit={handleConfirm}>
-                            <h2>Confirmation</h2>
+                            <h2>{t('changementEmail.h2Confirmation')}</h2>
                             <p className="separator" style={{ margin: "0 0 1rem" }}>
-                                Nous avons envoyé un code à {CODE_LENGTH} chiffres à<br />
+                                {t('changementEmail.codeEnvoye', { longueur: CODE_LENGTH })}<br />
                                 <strong>{newEmail.trim()}</strong>.
                             </p>
                             <p className="separator" style={{ margin: "0 0 1.5rem" }}>
-                                Une alerte a également été envoyée à votre adresse actuelle. Le
-                                changement ne prendra effet qu&apos;après validation du code.
+                                {t('changementEmail.alerteAncienneAdresse')}
                             </p>
 
                             <div className="input-container">
                                 <div className={"input-group" + (error ? " input-error" : "")}>
-                                    <label htmlFor="code">Code de confirmation</label>
+                                    <label htmlFor="code">{t('changementEmail.labelCode')}</label>
                                     <CodeInput
                                         value={code}
                                         onChange={(v) => { setCode(v); setError(""); }}
@@ -261,7 +256,7 @@ export default function ChangeEmailPage() {
                             </div>
 
                             <Button type="submit" disabled={code.length < CODE_LENGTH || isLoading}>
-                                {isLoading ? "Confirmation…" : <>Confirmer le changement <LuCheck /></>}
+                                {isLoading ? t('changementEmail.confirmation') : <>{t('changementEmail.confirmer')} <LuCheck /></>}
                             </Button>
 
                             <button
@@ -284,7 +279,7 @@ export default function ChangeEmailPage() {
                                 style={{ textAlign: "center", background: "none", border: "none", cursor: "pointer" }}
                                 onClick={backToEmailStep}
                             >
-                                Utiliser une autre adresse
+                                {t('changementEmail.autreAdresse')}
                             </button>
                         </form>
                     )}
