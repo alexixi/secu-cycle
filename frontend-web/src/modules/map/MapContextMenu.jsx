@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { MdOutlineReportProblem, MdContentCopy, MdCenterFocusStrong, MdCheck, MdOutlineTripOrigin } from "react-icons/md";
 import { FaFlagCheckered } from "react-icons/fa";
@@ -9,6 +10,7 @@ export const formatCoords = (lat, lon) => `${lat.toFixed(5)}, ${lon.toFixed(5)}`
 
 export default function MapContextMenu({ x, y, lat, lon, address, isAddressLoading, canReport,
     onClose, onSetStart, onSetEnd, onReport, onCenter }) {
+    const { t } = useTranslation('carte');
 
     const menuRef = useRef(null);
     const [position, setPosition] = useState(null);
@@ -50,17 +52,17 @@ export default function MapContextMenu({ x, y, lat, lon, address, isAddressLoadi
             setIsCopied(true);
             setTimeout(onClose, 700);
         } catch {
-            window.prompt("Copiez les coordonnées :", text);
+            window.prompt(t('ui.menu.copiezCoordonnees'), text);
             onClose();
         }
     };
 
     const items = [
-        { id: "start", icon: <MdOutlineTripOrigin size={16} />, label: "Itinéraire depuis ce point", onClick: onSetStart },
-        { id: "end", icon: <FaFlagCheckered size={16} />, label: "Itinéraire vers ce point", onClick: onSetEnd },
-        canReport && { id: "report", icon: <MdOutlineReportProblem size={18} />, label: "Ajouter un signalement ici", onClick: onReport },
-        { id: "center", icon: <MdCenterFocusStrong size={18} />, label: "Centrer et zoomer ici", onClick: onCenter, separator: true },
-        { id: "copy", icon: isCopied ? <MdCheck size={18} /> : <MdContentCopy size={16} />, label: isCopied ? "Copié !" : "Copier les coordonnées", onClick: handleCopy }
+        { id: "start", icon: <MdOutlineTripOrigin size={16} />, label: t('ui.menu.itineraireDepuis'), onClick: onSetStart },
+        { id: "end", icon: <FaFlagCheckered size={16} />, label: t('ui.menu.itineraireVers'), onClick: onSetEnd },
+        canReport && { id: "report", icon: <MdOutlineReportProblem size={18} />, label: t('ui.menu.ajouterSignalement'), onClick: onReport },
+        { id: "center", icon: <MdCenterFocusStrong size={18} />, label: t('ui.menu.centrerZoomer'), onClick: onCenter, separator: true },
+        { id: "copy", icon: isCopied ? <MdCheck size={18} /> : <MdContentCopy size={16} />, label: isCopied ? t('ui.menu.copie') : t('ui.menu.copierCoordonnees'), onClick: handleCopy }
     ].filter(Boolean);
 
     return (
@@ -76,7 +78,7 @@ export default function MapContextMenu({ x, y, lat, lon, address, isAddressLoadi
         >
             <div className="map-context-header">
                 <span className="map-context-header-title" title={address?.display_name || ""}>
-                    {isAddressLoading ? "Recherche de l'adresse..." : (address?.display_name || "Point sur la carte")}
+                    {isAddressLoading ? t('ui.menu.rechercheAdresse') : (address?.display_name || t('ui.menu.pointSurCarte'))}
                 </span>
                 <span className="map-context-header-coords">{formatCoords(lat, lon)}</span>
             </div>
