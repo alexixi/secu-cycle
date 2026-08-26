@@ -1,1 +1,22 @@
-{}
+{
+    "titrePage": "Sécu'Cycle | Accueil",
+    "metaDescription": "Découvrez Sécu'Cycle, l'application et le site pour trouver des itinéraires à vélo sécurisés et adaptés à votre profil.",
+    "sousTitre": "Découvrez le projet",
+    "decouvrirProjet": "Découvrir le projet",
+    "plusInfos": {
+        "h2": "Besoin de plus d'informations ?",
+        "liens": "Vous pouvez consulter les <mentions>Mentions légales</mentions>, les <donnees>sources des données</donnees> utilisées, nos <carte>cartes par ville</carte>, la <confidentialite>Politique de confidentialité</confidentialite> ou bien les <conditions>conditions d'utilisation</conditions>.",
+        "questions": "Vous avez des questions ?",
+        "contact": "N'hésitez pas à nous contacter via notre <contact>formulaire de contact</contact> ou à nous envoyer un email à l'adresse <mail>contact@secu-cycle.fr</mail>."
+    },
+    "application": {
+        "apercuAlt": "Aperçu de l'application mobile",
+        "h2": "Découvrez notre application mobile",
+        "texte": "Téléchargez l'application mobile pour une expérience utilisateur optimisée pour la navigation en temps réel.",
+        "appStoreAlt": "Télécharger dans l'App Store",
+        "googlePlayAlt": "Disponible sur Google Play"
+    },
+    "equipe": {
+        "h2": "L'équipe Sécu'Cycle"
+    }
+}

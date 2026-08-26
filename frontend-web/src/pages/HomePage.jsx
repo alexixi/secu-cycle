@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import Meta from "../components/Meta";
@@ -11,6 +12,12 @@ import { FaLinkedin } from "react-icons/fa";
 import { getHomeCases } from "../services/apiBack";
 import { useLocalizedPath } from '../i18n/useLang';
 
+// Repli affiché tant que l'API n'a pas répondu, et surtout contenu que
+// backend/sync_public_content.py rapproche des lignes en base EN UTILISANT LE
+// TITRE FRANÇAIS COMME CLÉ. Ces textes restent donc des littéraux français :
+// les déplacer dans un catalogue détacherait silencieusement les lignes déjà
+// enregistrées, et la page prérendue divergerait de celle servie par l'API.
+// La version anglaise viendra dans un tableau parallèle, indexé par position.
 const DEFAULT_CASES = [
     {
         title: "Qu'est-ce que Sécu'Cycle ?",
@@ -31,7 +38,19 @@ const DEFAULT_CASES = [
 ];
 
 export default function HomePage() {
+    const { t } = useTranslation('home');
     const path = useLocalizedPath();
+
+    const composants = {
+        mentions: <Link to={path("mentionsLegales")} />,
+        donnees: <Link to={path("donnees")} />,
+        carte: <Link to={path("carteHub")} />,
+        confidentialite: <Link to={path("confidentialite")} />,
+        conditions: <Link to={path("conditions")} />,
+        contact: <Link to={path("contact")} />,
+        mail: <a href="mailto:contact@secu-cycle.fr" />,
+    };
+    const T = ({ k }) => <Trans t={t} i18nKey={k} components={composants} />;
     const faqRef = useRef(null);
     const [cases, setCases] = useState(DEFAULT_CASES);
 
@@ -80,19 +99,19 @@ export default function HomePage() {
 
     return (
         <>
-            <Meta title="Sécu'Cycle | Accueil" description="Découvrez Sécu'Cycle, l'application et le site pour trouver des itinéraires à vélo sécurisés et adaptés à votre profil." />
+            <Meta title={t('titrePage')} description={t('metaDescription')} />
             <div id="container-top-homepage">
                 <Logo id="logo-homepage" />
                 <div>
                     <h1 id="title-homepage">Sécu'Cycle</h1>
-                    <p>Découvrez le projet</p>
+                    <p>{t('sousTitre')}</p>
                 </div>
                 <IconButton
                     onClick={
                         () => document.getElementById("home-faq-section").scrollIntoView({ behavior: "smooth", block: "start" })
                     }
                     className="scroll-button"
-                    aria-label="Découvrir le projet"
+                    aria-label={t('decouvrirProjet')}
                 >
                     <IoIosArrowDropdown size={40} className="arrow-down" />
                 </IconButton>
@@ -106,42 +125,35 @@ export default function HomePage() {
                     </section>
                 ))}
                 <section className="home-section">
-                    <h2>Besoin de plus d'informations ?</h2>
+                    <h2>{t('plusInfos.h2')}</h2>
                     <p>
-                        Vous pouvez consulter les <Link to={path("mentionsLegales")}>Mentions légales</Link>,
-                        les <Link to={path("donnees")}>sources des données</Link> utilisées,
-                        nos <Link to={path("carteHub")}>cartes par ville</Link>,
-                        la <Link to={path("confidentialite")}>Politique de confidentialité</Link> ou bien
-                        les <Link to={path("conditions")}>conditions d'utilisation</Link>.
+                        <T k="plusInfos.liens" />
                         <br />
-                        Vous avez des questions ? <br />
-                        N'hésitez pas à nous contacter via notre <Link to={path("contact")}>formulaire de contact</Link>
-                        ou à nous envoyer un email à l'adresse
-                        <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>.
-
+                        {t('plusInfos.questions')} <br />
+                        <T k="plusInfos.contact" />
                     </p>
                 </section>
             </div>
             <div id="app-section">
-                <img className="app-visual" src={apercuApplication} alt="Aperçu de l'application mobile" width="800" height="1334" />
+                <img className="app-visual" src={apercuApplication} alt={t('application.apercuAlt')} width="800" height="1334" />
                 <aside>
-                    <h2>Découvrez notre application mobile</h2>
+                    <h2>{t('application.h2')}</h2>
                     <p>
-                        Téléchargez l'application mobile pour une expérience utilisateur optimisée pour la navigation en temps réel.
+                        {t('application.texte')}
                     </p>
                     <div className="store-badges">
                         <a href="#app-section">
-                            <img src="/store/appstore.svg" alt="Télécharger dans l'App Store" className="store-badge" width="127" height="40" />
+                            <img src="/store/appstore.svg" alt={t('application.appStoreAlt')} className="store-badge" width="127" height="40" />
                         </a>
 
                         <a href="#app-section">
-                            <img src="/store/googleplay.svg" alt="Disponible sur Google Play" className="store-badge" width="239" height="71" />
+                            <img src="/store/googleplay.svg" alt={t('application.googlePlayAlt')} className="store-badge" width="239" height="71" />
                         </a>
                     </div>
                 </aside>
             </div>
             <div id="team-section">
-                <h2>L'équipe Sécu'Cycle</h2>
+                <h2>{t('equipe.h2')}</h2>
                 <div className="team-wrapper">
                     {teamMembers.map((member, index) => (
                         <a key={index} href={member.linkedin} target="_blank" rel="noopener noreferrer" className="team-member">
