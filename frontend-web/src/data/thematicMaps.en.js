@@ -71,6 +71,41 @@ export const CITIES_CONTENT = {
             + 'network is held in memory for Bordeaux and the Tournai area only. The Nantes data shown '
             + 'here does remain synchronised.',
     },
+    paris: {
+        label: 'Paris and Greater Paris',
+        communes: 'the 130 municipalities of the Métropole du Grand Paris',
+        metaDescription: 'Every cycling map for Greater Paris: bike parking, toilets, drinking water, '
+            + 'Vélib’ stations, accidents and repair workshops.',
+        intro: 'Sécu’Cycle covers the Métropole du Grand Paris, from central Paris to the inner suburbs, '
+            + 'from Saint-Denis to Montrouge and from Boulogne to Montreuil. The maps below draw on open '
+            + 'data, resynchronised automatically.',
+        routingNote: 'Route planning does not yet cover Greater Paris: the Île-de-France data shown here '
+            + 'is synchronised, but the road network needed to plan a journey is not loaded for this area.',
+        excludedThemes: {
+            'eclairage-public': 'No official street light inventory is available for Greater Paris: only '
+                + 'the units recorded in OpenStreetMap would be, far short of the real estate. The map '
+                + 'would give a false picture, so it is not published.',
+            'trafic-routier': 'The traffic layer is computed on the road network loaded by the route '
+                + 'planner, which does not yet cover Île-de-France.',
+        },
+    },
+    lyon: {
+        label: 'Lyon and its metropolitan area',
+        communes: 'the 58 municipalities of the Métropole de Lyon',
+        metaDescription: 'Every cycling map for the Métropole de Lyon: bike parking, toilets, drinking '
+            + 'water, Vélo’v stations, accidents and repair workshops.',
+        intro: 'Sécu’Cycle covers the Métropole de Lyon, from the Presqu’île to Villeurbanne and from '
+            + 'Vaulx-en-Velin to Sainte-Foy-lès-Lyon. An urban area where the terrain matters as much as '
+            + 'the infrastructure: the maps below draw on open data, resynchronised automatically.',
+        routingNote: 'Route planning does not yet cover the Métropole de Lyon: the Lyon data shown here '
+            + 'is synchronised, but the road network needed to plan a journey is not loaded for this area.',
+        excludedThemes: {
+            'eclairage-public': 'The Métropole de Lyon does not publish a street light inventory usable '
+                + 'here: only the units recorded in OpenStreetMap would be, far short of the real estate.',
+            'trafic-routier': 'The traffic layer is computed on the road network loaded by the route '
+                + 'planner, which does not yet cover the Lyon metropolitan area.',
+        },
+    },
 };
 
 /* ------------------------------------------------------------------ editorial content */
@@ -1493,6 +1528,735 @@ export const PAGE_CONTENT = {
                 q: 'Do these accidents change the routes suggested in Nantes?',
                 a: 'Not for the time being, as route planning covers only Bordeaux and the Tournai area. '
                     + 'Where it works, they lower the safety score of the segments concerned.',
+            },
+        ],
+    },
+
+    'paris/stationnements-velo': {
+        title: 'Bike parking in Paris — map of stands and shelters',
+        description: 'Interactive map of bike parking across the Métropole du Grand Paris: stands, '
+            + 'shelters and Véligo lockers, with their capacity.',
+        h1: 'Bike parking in Paris',
+        intro: 'Where can you lock your bike in Paris? This map lists the stands, racks, shelters and '
+            + 'lockers across the capital and the 130 municipalities of Greater Paris, with the type of '
+            + 'equipment and, where known, the number of spaces.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is a spot surveyed on the ground by OpenStreetMap contributors. Paris has '
+                    + 'converted car parking spaces into bike stands on a large scale, and the density in '
+                    + 'the central arrondissements reflects that.',
+                    'Shelters and enclosed lockers appear separately. In Île-de-France these are mainly '
+                    + 'the Véligo lockers installed around railway and metro stations, designed for '
+                    + 'long-stay parking.',
+                ],
+            },
+            {
+                h2: 'Parking in Paris without losing your bike',
+                p: [
+                    'Paris accounts for most of the bike thefts reported in Île-de-France. The rule '
+                    + 'matters more than anywhere: lock the frame to a fixed point, never the wheel alone, '
+                    + 'and use a certified U-lock.',
+                    'Choose busy, lit spots over dead ends and quiet underground car parks. For anything '
+                    + 'longer than a few hours, an enclosed locker is worth the detour.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The survey comes from OpenStreetMap and is resynchronised automatically. It is live '
+                    + 'but imperfect: a recently installed stand may be missing, and one that has been '
+                    + 'removed may linger.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many bike parking spots are there in Paris?',
+                a: 'The counter at the top of the map gives the total recorded at the moment you consult '
+                    + 'it, together with the number of declared spaces.',
+            },
+            {
+                q: 'Where can I find a secure bike locker in Île-de-France?',
+                a: 'Enclosed shelters and lockers, mainly Véligo units installed near railway stations and '
+                    + 'transport hubs, appear on the map under the “Shelters and lockers” category.',
+            },
+            {
+                q: 'Can I lock my bike to a post or a railing?',
+                a: 'Nothing forbids it as long as the bike does not block the way, but a smooth post can '
+                    + 'be lifted off and a railing sawn through: these are makeshift points, not parking.',
+            },
+            {
+                q: 'A parking spot is missing from the map — how do I report it?',
+                a: 'The data comes from OpenStreetMap: you can add the location directly on '
+                    + 'openstreetmap.org and it will be picked up at the next sync.',
+            },
+            {
+                q: 'Can Sécu’Cycle plan a route to these parking spots?',
+                a: 'Not in Greater Paris yet. Route planning relies on a road network held in memory by '
+                    + 'our server, which does not cover Île-de-France.',
+            },
+        ],
+    },
+
+    'paris/toilettes-publiques': {
+        title: 'Public toilets in Paris — interactive map',
+        description: 'Map of public toilets in Paris and Greater Paris: free sanisettes, paid facilities '
+            + 'and wheelchair-accessible units.',
+        h1: 'Public toilets in Paris',
+        intro: 'This map locates the public toilets recorded in Paris and the municipalities of the '
+            + 'metropolitan area, telling free facilities apart from paid ones and flagging those that '
+            + 'are wheelchair accessible.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Paris is one of the few cities where street toilets are free: the automatic '
+                    + 'sanisettes, spread across every arrondissement, have been free of charge since 2006.',
+                    'Opening hours are not always recorded in the data: many facilities in squares and '
+                    + 'parks close with them, often at nightfall.',
+                ],
+            },
+            {
+                h2: 'Accessibility',
+                p: [
+                    'Toilets flagged as accessible have a turning space and grab rails. Parisian '
+                    + 'sanisettes are designed for wheelchair access, but the field is not always filled '
+                    + 'in for other facilities.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A facility '
+                    + 'closed for works or permanently removed may linger for a while.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Are public toilets free in Paris?',
+                a: 'The City of Paris automatic sanisettes have been free since 2006. Other facilities, '
+                    + 'particularly in stations and some large venues, may charge.',
+            },
+            {
+                q: 'Are Parisian sanisettes open at night?',
+                a: 'Most run continuously, unlike the facilities installed in parks and squares, which '
+                    + 'close with them.',
+            },
+            {
+                q: 'How do I find the nearest toilets while cycling?',
+                a: 'Zoom in on your position: the map shows the facilities recorded around you, with '
+                    + 'whether they are free and accessible.',
+            },
+            {
+                q: 'Do these toilets appear while planning a route?',
+                a: 'Not in Île-de-France. Sécu’Cycle navigation relies on a road network held in memory, '
+                    + 'which does not yet cover the region.',
+            },
+        ],
+    },
+
+    'paris/points-eau': {
+        title: 'Drinking water in Paris — map of fountains',
+        description: 'Map of drinking fountains and water points in Paris and Greater Paris: Wallace '
+            + 'fountains, sparkling water fountains and street standpipes.',
+        h1: 'Drinking water in Paris',
+        intro: 'Where can you refill a bottle while cycling in Greater Paris? This map lists the freely '
+            + 'accessible drinking fountains and water points, from the Wallace fountains of the centre '
+            + 'to the standpipes of the inner suburbs.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Paris has one of the densest networks of public fountains in the world, descended '
+                    + 'from the Wallace fountains given to the city in 1872 and still in service.',
+                    'A large part of that network is seasonal: the Wallace fountains, vulnerable to '
+                    + 'frost, are traditionally shut from mid-November to mid-March. Newer standpipes '
+                    + 'often run all year.',
+                ],
+            },
+            {
+                h2: 'Staying hydrated on a bike',
+                p: [
+                    'In the city, dehydration sets in without being felt, especially in warm weather and '
+                    + 'on journeys broken up by traffic lights. Pick out one or two water points along '
+                    + 'your route before setting off.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A fountain out '
+                    + 'of service or shut for the cold season stays on the map: the survey records the '
+                    + 'installation, not its current state.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Is the water from Parisian fountains drinkable?',
+                a: 'Yes. The public fountains recorded here deliver controlled drinking water. Points '
+                    + 'flagged as non-potable in the data are excluded.',
+            },
+            {
+                q: 'Do Wallace fountains run in winter?',
+                a: 'No: they are generally shut from mid-November to mid-March to prevent the pipes '
+                    + 'freezing. Newer standpipes often stay in service.',
+            },
+            {
+                q: 'Are there sparkling water fountains in Paris?',
+                a: 'Yes, several fountains dispense carbonated water free of charge. Where they are '
+                    + 'recorded as such in the data, they appear on this map.',
+            },
+            {
+                q: 'Can I route my ride past these water points?',
+                a: 'Not in Paris yet: the route planner does not cover Île-de-France, for want of a road '
+                    + 'network loaded for that area.',
+            },
+        ],
+    },
+
+    'paris/velos-libre-service': {
+        title: 'Vélib’ stations in Paris — live availability',
+        description: 'Live map of Vélib’ Métropole stations: mechanical and electric bikes available, '
+            + 'free docks, station by station.',
+        h1: 'Bike share in Paris',
+        intro: 'How many bikes are left at the nearest station? This map shows the Vélib’ Métropole '
+            + 'stations with, for each one, the number of bikes available and free docks.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each station shows the bikes available and the free docks at the moment you consult '
+                    + 'it. Vélib’ Métropole runs a mixed fleet: mechanical bikes alongside electrically '
+                    + 'assisted ones.',
+                    'The service extends well beyond central Paris: the network covers much of the '
+                    + 'metropolitan area, which makes suburb-to-suburb journeys possible without passing '
+                    + 'through the centre.',
+                ],
+            },
+            {
+                h2: 'A few useful habits',
+                p: [
+                    'At rush hour, station stocks empty in the morning and fill in the evening: plan '
+                    + 'ahead by picking out two arrival stations close to each other.',
+                    'Check the state of the bike before setting off — brakes, tyres, saddle — and report '
+                    + 'any fault from the app: a reported bike is taken out of service.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'Availability comes from the public Vélib’ Métropole GBFS feed, queried at the pace '
+                    + 'it publishes. The map therefore reflects the last known state of the service.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many Vélib’ stations are there?',
+                a: 'The network has around 1,400 stations across Paris and a hundred or so municipalities '
+                    + 'of the metropolitan area. The map shows those published in the official feed.',
+            },
+            {
+                q: 'Is the availability shown live?',
+                a: 'It comes from the service\'s official feed, refreshed continuously. A lag of a few '
+                    + 'moments between the display and the ground is possible.',
+            },
+            {
+                q: 'How do I tell mechanical bikes from electric ones?',
+                a: 'Each station record breaks the two categories down where the feed publishes them.',
+            },
+            {
+                q: 'Can I return a bike to any station?',
+                a: 'Yes, subject to free docks. If the station you are aiming for is full, the map lets '
+                    + 'you spot another nearby.',
+            },
+            {
+                q: 'Does Sécu’Cycle plan routes from a Vélib’ station?',
+                a: 'Not yet. The station map is up to date across the whole Vélib’ area, but route '
+                    + 'planning does not cover Île-de-France.',
+            },
+        ],
+    },
+
+    'paris/accidents-velo': {
+        title: 'Cycling accidents in Paris — risk area map',
+        description: 'Map of injury accidents involving a cyclist in Paris and Greater Paris, from '
+            + 'official data.',
+        h1: 'Cycling accidents in Paris',
+        intro: 'This map locates the injury accidents involving a cyclist recorded in Paris and the '
+            + 'municipalities of the metropolitan area. It is there to spot the junctions and roads where '
+            + 'vigilance matters most.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is an injury accident — one with at least one casualty — recorded by the '
+                    + 'police in the BAAC file. The colour shows the severity.',
+                    'In Paris, clusters appear unsurprisingly on the main roads and the gyratory squares, '
+                    + 'where flows cross in numbers.',
+                ],
+            },
+            {
+                h2: 'The most common configurations',
+                p: [
+                    'Two situations dominate in the city. A vehicle turning right across the path of a '
+                    + 'cyclist going straight on, particularly dangerous with a lorry. And dooring — a '
+                    + 'door opened without looking.',
+                    'At junctions, bike boxes let you position yourself ahead of the traffic and be seen. '
+                    + 'Turning right on red, where a sign allows it, gets you clear of the pack.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The data comes from the BAAC file published each year by ONISR on data.gouv.fr. It '
+                    + 'is therefore official but retrospective: the most recent year available lags '
+                    + 'behind the present.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Does this map record every cycling accident?',
+                a: 'No. Only injury accidents that led to a police report enter the BAAC file. Falls on '
+                    + 'their own and near misses are absent.',
+            },
+            {
+                q: 'Is the data up to date?',
+                a: 'It follows the ONISR publication schedule: the latest year available covers a '
+                    + 'completed calendar year.',
+            },
+            {
+                q: 'Is cycling in Paris dangerous?',
+                a: 'The number of accidents rises mechanically with the number of cyclists, but studies '
+                    + 'converge on the safety-in-numbers effect: the more people cycle, the lower the risk '
+                    + 'per kilometre ridden.',
+            },
+            {
+                q: 'Do these accidents influence the routes suggested in Paris?',
+                a: 'Elsewhere, yes: the layer weighs on the safety score. In Paris the question does not '
+                    + 'arise yet, as route planning is not available there.',
+            },
+        ],
+    },
+
+    'paris/reparation-velo': {
+        title: 'Bike repair in Paris — workshops and pumps',
+        description: 'Map of repair workshops, bike shops and public pumping stations in Paris and '
+            + 'Greater Paris.',
+        h1: 'Bike repair in Paris',
+        intro: 'An inner tube to change, a derailleur skipping, a tyre to reinflate: this map lists the '
+            + 'workshops, bike shops and freely accessible pumping stations of Paris and the metropolitan '
+            + 'area.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Three kinds of point sit side by side. Bike shops and professional workshops, which '
+                    + 'repair, service and sell. Community self-repair workshops. And the pumping and '
+                    + 'repair stations installed in public space.',
+                    'Opening hours are not always recorded: a community workshop often opens only a few '
+                    + 'afternoons a week. Check before making the trip.',
+                ],
+            },
+            {
+                h2: 'What you can repair yourself',
+                p: [
+                    'A puncture, a brake to adjust, a chain to tension or lubricate are within everyone\'s '
+                    + 'reach with a little method. Carrying a spare inner tube and two tyre levers turns a '
+                    + 'ruined journey into a short stop.',
+                    'Leave to a professional anything touching structural safety — fork, frame, buckled '
+                    + 'wheel, headset — and the electrical system of an assisted bike.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A recent '
+                    + 'workshop may be missing, and a closed shop may linger for a while.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Where can I pump up my tyres for free in Paris?',
+                a: 'The freely accessible pumping stations installed in public space appear on this map. '
+                    + 'Many bike shops also let you use a pump.',
+            },
+            {
+                q: 'What is a self-repair workshop?',
+                a: 'A place, usually run by a non-profit, that provides tools, second-hand parts and '
+                    + 'advice so that you can repair your own bike.',
+            },
+            {
+                q: 'Is there financial help for repairs?',
+                a: 'National and local schemes supporting bike repair and purchase exist, with conditions '
+                    + 'that change over time.',
+            },
+            {
+                q: 'Can I be guided to the nearest workshop?',
+                a: 'Not from Sécu’Cycle in Greater Paris: route planning is not available there yet, for '
+                    + 'want of a road network loaded for the area.',
+            },
+        ],
+    },
+
+    'lyon/stationnements-velo': {
+        title: 'Bike parking in Lyon — map of stands and shelters',
+        description: 'Interactive map of bike parking across the Métropole de Lyon: stands, shelters and '
+            + 'secure lockers.',
+        h1: 'Bike parking in Lyon',
+        intro: 'Where can you lock your bike in Lyon? This map lists the stands, racks, shelters and '
+            + 'lockers across the 58 municipalities of the metropolitan area, from the Presqu’île to '
+            + 'Villeurbanne and from Vaulx-en-Velin to Sainte-Foy-lès-Lyon.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is a spot surveyed on the ground by OpenStreetMap contributors. Stands '
+                    + 'dominate by a wide margin: they are the only equipment that lets you lock the frame '
+                    + 'and a wheel with a U-lock.',
+                    'Shelters and enclosed lockers appear separately. They are found mainly around the '
+                    + 'stations — Part-Dieu, Perrache, Vaise — and the major transport hubs.',
+                ],
+            },
+            {
+                h2: 'Parking in a hilly city',
+                p: [
+                    'Lyon\'s topography has a direct consequence for parking: on the climbs of the '
+                    + 'Croix-Rousse or Fourvière, a poorly secured bike tips over and drags its neighbours '
+                    + 'with it. Check that the frame is properly held, not just resting.',
+                    'Otherwise the usual rules apply: a certified U-lock, the frame attached to a fixed '
+                    + 'point, and a busy spot rather than a quiet side street.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The survey comes from OpenStreetMap and is resynchronised automatically. A recently '
+                    + 'installed stand may be missing, and one that has been removed may linger.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many bike parking spots are there in Lyon?',
+                a: 'The counter at the top of the map shows the total recorded across the 58 '
+                    + 'municipalities of the metropolitan area at the moment you consult it.',
+            },
+            {
+                q: 'Where can I find secure bike parking in Lyon?',
+                a: 'Enclosed shelters and lockers appear under the “Shelters and lockers” category, mainly '
+                    + 'around the stations and transport hubs.',
+            },
+            {
+                q: 'What is the difference between a stand and a rack?',
+                a: 'A stand is an inverted U-shaped bar that lets you lock the frame and a wheel: it is '
+                    + 'the recommended design. A rack holds only the front wheel.',
+            },
+            {
+                q: 'Can a route be planned to these parking spots?',
+                a: 'Not in the Lyon metropolitan area yet. Route planning requires a road network held in '
+                    + 'memory by our server, whose extent is narrower than that of the data.',
+            },
+        ],
+    },
+
+    'lyon/toilettes-publiques': {
+        title: 'Public toilets in Lyon — interactive map',
+        description: 'Map of public toilets in Lyon and its metropolitan area: free, paid and '
+            + 'wheelchair-accessible facilities.',
+        h1: 'Public toilets in Lyon',
+        intro: 'This map locates the public toilets recorded across the Métropole de Lyon, telling free '
+            + 'facilities apart from paid ones and flagging those that are wheelchair accessible.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Street facilities sit alongside those in parks and gardens — the parc de la Tête d’Or '
+                    + 'above all — on the redeveloped banks of the Rhône and the Saône, and in transport hubs.',
+                    'Many of these close with the park that houses them, often at nightfall and earlier in '
+                    + 'winter. Opening hours appear on the record where they have been surveyed.',
+                ],
+            },
+            {
+                h2: 'Accessibility',
+                p: [
+                    'Toilets flagged as accessible have a turning space and grab rails. The information '
+                    + 'comes from OpenStreetMap surveys and is not filled in everywhere: an absence is not '
+                    + 'a “no”.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A facility '
+                    + 'closed for works may stay on the map for a while.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Are public toilets free in Lyon?',
+                a: 'Most of the street facilities recorded are free. Some venues, particularly in '
+                    + 'stations, still charge: the record says so where the information exists.',
+            },
+            {
+                q: 'Are there toilets along the banks of the Rhône?',
+                a: 'Yes, several facilities line the redeveloped banks and the parc de la Tête d’Or. They '
+                    + 'do follow the opening hours of the grounds.',
+            },
+            {
+                q: 'How do I find the nearest toilets while cycling?',
+                a: 'Zoom in on your position: the map shows the facilities recorded around you. The banks '
+                    + 'of the Rhône and the Saône are well provided for.',
+            },
+            {
+                q: 'Do these facilities appear on a planned route?',
+                a: 'Not in Lyon: Sécu’Cycle navigation does not yet cover the metropolitan area. The map '
+                    + 'stands on its own, which is enough to plan ahead.',
+            },
+        ],
+    },
+
+    'lyon/points-eau': {
+        title: 'Drinking water in Lyon — map of fountains',
+        description: 'Map of drinking fountains and water points in Lyon and its metropolitan area, for '
+            + 'refilling a bottle.',
+        h1: 'Drinking water in Lyon',
+        intro: 'Where can you refill a bottle in Lyon? This map lists the freely accessible drinking '
+            + 'fountains and water points across the metropolitan area, from the squares of the '
+            + 'Presqu’île to the parks.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Lyon\'s fountains cluster in the parks, on the squares and along the redeveloped '
+                    + 'banks of the Rhône. The parc de la Tête d’Or holds several on its own.',
+                    'Part of the network is shut off in winter to prevent freezing: the map shows the '
+                    + 'installation all year round, without indicating when it is closed.',
+                ],
+            },
+            {
+                h2: 'Staying hydrated on a bike',
+                p: [
+                    'Lyon\'s terrain raises the effort faster than you would think: a climb up the '
+                    + 'Croix-Rousse or Fourvière is a sustained effort, even over a short distance. Plan '
+                    + 'your refills before the climb rather than after it.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A fountain out '
+                    + 'of service or shut for the season stays on the map: the survey records the '
+                    + 'installation, not its current state.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Is the water from Lyon fountains drinkable?',
+                a: 'Yes. Only points delivering drinking water are shown; those recorded as non-potable in '
+                    + 'the data are excluded.',
+            },
+            {
+                q: 'Do the fountains run all year round?',
+                a: 'Part of the network is closed during the cold months to prevent the pipes freezing. '
+                    + 'Fountains inside buildings or heated facilities are less affected.',
+            },
+            {
+                q: 'A water point is missing from the map — how do I report it?',
+                a: 'The data comes from OpenStreetMap: add it on openstreetmap.org and it will be picked '
+                    + 'up at the next sync.',
+            },
+            {
+                q: 'Can the route planner take me past these fountains?',
+                a: 'Not in Lyon yet. Route planning relies on a road network loaded for a narrower area '
+                    + 'than that of the data.',
+            },
+        ],
+    },
+
+    'lyon/velos-libre-service': {
+        title: 'Vélo’v stations in Lyon — live availability',
+        description: 'Live map of Vélo’v stations: mechanical and electric bikes available, free docks.',
+        h1: 'Bike share in Lyon',
+        intro: 'How many bikes are left at the nearest station? This map shows the Vélo’v stations with, '
+            + 'for each one, the number of bikes available and free docks.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Launched in 2005, Vélo’v was the first large French bike-share system and served as '
+                    + 'the model for most of those that followed. The network covers Lyon, Villeurbanne '
+                    + 'and the neighbouring municipalities.',
+                    'Each station shows the bikes available and the free docks. The fleet is mixed: a '
+                    + 'station record breaks down mechanical bikes and electrically assisted ones.',
+                ],
+            },
+            {
+                h2: 'The terrain changes everything',
+                p: [
+                    'In Lyon more than anywhere, the direction of travel matters. Stations on the heights '
+                    + '— Croix-Rousse, Fourvière, Saint-Just — empty downhill over the course of the day, '
+                    + 'and refill by lorry rather than by pedal.',
+                    'Check the state of the bike before setting off — the brakes above all, essential on '
+                    + 'the descents — and report any fault from the app: a reported bike is taken out of '
+                    + 'service.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'Availability comes from the service\'s public GBFS feed, queried at the pace it '
+                    + 'publishes. Sécu’Cycle is not affiliated with the operator.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many Vélo’v stations are there?',
+                a: 'The network has on the order of 430 stations across Lyon, Villeurbanne and the '
+                    + 'neighbouring municipalities. The map shows those published in the official feed.',
+            },
+            {
+                q: 'Is the availability shown live?',
+                a: 'It comes from the service\'s official feed, refreshed continuously. A lag of a few '
+                    + 'moments remains possible, particularly at rush hour.',
+            },
+            {
+                q: 'Are there electrically assisted Vélo’v bikes?',
+                a: 'Yes, part of the fleet is electric. Each station record breaks down the split between '
+                    + 'mechanical and electric bikes where the feed publishes it.',
+            },
+            {
+                q: 'Can Sécu’Cycle guide me from a Vélo’v station?',
+                a: 'Not yet: availability is shown live, but route planning does not cover the Lyon '
+                    + 'metropolitan area.',
+            },
+        ],
+    },
+
+    'lyon/accidents-velo': {
+        title: 'Cycling accidents in Lyon — risk area map',
+        description: 'Map of injury accidents involving a cyclist across the Métropole de Lyon, from '
+            + 'official data.',
+        h1: 'Cycling accidents in Lyon',
+        intro: 'This map locates the injury accidents involving a cyclist recorded across the Métropole '
+            + 'de Lyon. It is there to spot the junctions and roads where vigilance matters most.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is an injury accident — one with at least one casualty — recorded by the '
+                    + 'police in the BAAC file. Accidents are coloured by severity.',
+                    'Clusters appear on the main roads and at major junctions, as well as at the crossing '
+                    + 'points of the Rhône and the Saône, where flows converge.',
+                ],
+            },
+            {
+                h2: 'The most common configurations',
+                p: [
+                    'A vehicle turning right across the path of a cyclist going straight on remains the '
+                    + 'great classic, particularly dangerous with a heavy vehicle.',
+                    'The terrain adds a local factor: on a descent, a cyclist\'s speed is often '
+                    + 'underestimated by drivers pulling out. Anticipate that, and make yourself visible '
+                    + 'well ahead.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The data comes from the BAAC file published each year by ONISR on data.gouv.fr. It is '
+                    + 'official but retrospective, and the locations carry the precision of the original '
+                    + 'report.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Does this map record every cycling accident?',
+                a: 'No. Only injury accidents that led to a police report enter the BAAC file. Falls on '
+                    + 'their own and near misses are absent.',
+            },
+            {
+                q: 'Is the data up to date?',
+                a: 'It follows the ONISR publication schedule: the latest year available covers a '
+                    + 'completed calendar year.',
+            },
+            {
+                q: 'Is cycling in Lyon dangerous?',
+                a: 'The number of accidents rises with the number of cyclists, but individual risk falls '
+                    + 'as cycling becomes more widespread.',
+            },
+            {
+                q: 'Do these accidents change the route suggested in Lyon?',
+                a: 'Where navigation works, yes: the layer weighs on the safety score. The Lyon '
+                    + 'metropolitan area is not covered yet.',
+            },
+        ],
+    },
+
+    'lyon/reparation-velo': {
+        title: 'Bike repair in Lyon — workshops and pumps',
+        description: 'Map of repair workshops, bike shops and public pumping stations across the '
+            + 'Métropole de Lyon.',
+        h1: 'Bike repair in Lyon',
+        intro: 'An inner tube to change, brakes to adjust, a tyre to reinflate: this map lists the '
+            + 'workshops, bike shops and freely accessible pumping stations across the metropolitan area.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Three kinds of point sit side by side: bike shops and professional workshops, '
+                    + 'community self-repair workshops where you do the work yourself with the tools and '
+                    + 'advice of volunteers, and the pumping stations installed in public space.',
+                    'Opening hours are not always recorded, and a community workshop often opens only a '
+                    + 'few afternoons a week: best to check before making the trip.',
+                ],
+            },
+            {
+                h2: 'Brakes, a Lyon priority',
+                p: [
+                    'In a hilly city, brake pads wear out far faster than elsewhere. Check them regularly: '
+                    + 'a pad worn to the metal loses most of its stopping power on a descent.',
+                    'A puncture, a chain to tension or a derailleur to adjust remain within everyone\'s '
+                    + 'reach. Leave to a professional anything touching structural safety.',
+                ],
+            },
+            {
+                h2: 'Where the data comes from',
+                p: [
+                    'The locations come from OpenStreetMap, resynchronised automatically. A recent '
+                    + 'workshop may be missing, and a closed shop may linger for a while.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Where can I pump up my tyres for free in Lyon?',
+                a: 'The freely accessible pumping stations installed in public space appear on this map. '
+                    + 'Many bike shops also let you use a pump.',
+            },
+            {
+                q: 'What is a self-repair workshop?',
+                a: 'A place, usually run by a non-profit, that provides tools, second-hand parts and '
+                    + 'advice so that you can repair your own bike.',
+            },
+            {
+                q: 'How often should a bike be serviced?',
+                a: 'A quick check of the brakes, tyres and chain every month is enough for daily use. In a '
+                    + 'hilly city, watch the brakes more closely.',
+            },
+            {
+                q: 'Can I be guided to the nearest workshop?',
+                a: 'Not through Sécu’Cycle in Lyon: route planning is not available there yet. The map '
+                    + 'does give the locations.',
             },
         ],
     },
