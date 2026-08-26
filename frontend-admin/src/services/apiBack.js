@@ -125,36 +125,7 @@ export async function setReportVerified(token, reportId, isVerified) {
     }, token);
 }
 
-// --- Cases de la page d'accueil ---
-
-export async function getHomeCases(token) {
-    return apiFetch("/home-cases/", { method: "GET" }, token);
-}
-
-export async function createHomeCase(token, body) {
-    return apiFetch("/home-cases/", {
-        method: "POST",
-        body: JSON.stringify(body),
-    }, token);
-}
-
-export async function updateHomeCase(token, caseId, updates) {
-    return apiFetch(`/home-cases/${caseId}`, {
-        method: "PATCH",
-        body: JSON.stringify(updates),
-    }, token);
-}
-
-export async function deleteHomeCase(token, caseId) {
-    return apiFetch(`/home-cases/${caseId}`, { method: "DELETE" }, token);
-}
-
-export async function reorderHomeCases(token, ids) {
-    return apiFetch("/home-cases/reorder", {
-        method: "PUT",
-        body: JSON.stringify({ ids }),
-    }, token);
-}
+// --- FAQ ---
 
 export async function getFaqs(token) {
     return apiFetch("/faqs/admin", { method: "GET" }, token);
