@@ -42,123 +42,22 @@ export const CITIES_CONTENT = {
             + 'Blanquefort to La Brède by way of Mérignac, Pessac, Talence and Bègles. Every map '
             + 'below draws on the same data as the route planner.',
     },
-    'bordeaux/eclairage-public': {
-        title: 'Street lighting in Bordeaux — map of street lights',
-        description: 'Map of street lighting across Bordeaux Métropole: street light density and lit '
-            + 'streets, to help you plan night rides.',
-        h1: 'Street lighting in Bordeaux',
-        intro: 'Which streets are lit at night in Bordeaux? This map combines close to 38,000 recorded '
-            + 'street lights with the streets identified as lit, so you can see at a glance which routes '
-            + 'are workable after dark.',
-        sections: [
-            {
-                h2: 'Two complementary layers',
-                p: [
-                    'The first layer is a density map: the brighter and more yellow an area, the more '
-                    + 'street lights it has. It gives an overall reading of the network — a dense city '
-                    + 'centre, thinning out towards the edges of the urban area.',
-                    'The second layer draws the streets themselves. A solid line marks a street whose '
-                    + 'lighting is explicitly recorded; a paler line marks lighting inferred from nearby '
-                    + 'street lights or from an adjacent lit street.',
-                ],
-            },
-            {
-                h2: 'Riding safely at night',
-                p: [
-                    'Street lighting is no substitute for bike lights, which remain compulsory: a white '
-                    + 'light at the front, a red one at the rear, reflectors, and a reflective vest '
-                    + 'outside built-up areas at night.',
-                    'In Bordeaux as elsewhere, several municipalities switch their lighting off in the '
-                    + 'middle of the night, to save energy and protect wildlife. A street marked as lit '
-                    + 'may therefore be dark at two in the morning.',
-                ],
-            },
-            {
-                h2: 'Where the data comes from',
-                p: [
-                    'Street lights come from OpenStreetMap, densified by the “Points lumineux” dataset '
-                    + 'published by Bordeaux Métropole. Duplicates between the two sources are discarded '
-                    + 'automatically.',
-                ],
-            },
-        ],
-        faq: [
-            {
-                q: 'How many street lights does Bordeaux Métropole have?',
-                a: 'Close to 38,000 street lights are mapped across the area covered, combining '
-                    + 'OpenStreetMap with Bordeaux Métropole open data.',
-            },
-            {
-                q: 'What does a pale yellow street mean?',
-                a: 'That its lighting is inferred rather than recorded: there are street lights nearby, '
-                    + 'but the street itself is not explicitly described as lit in the data.',
-            },
-            {
-                q: 'Is lighting taken into account when planning a route?',
-                a: 'Yes. Sécu’Cycle factors lighting into each segment\'s safety score, which shapes the '
-                    + 'routes it suggests, particularly for night-time journeys.',
-            },
-            {
-                q: 'Do street lights stay on all night?',
-                a: 'Not everywhere. Several municipalities switch off some or all of their lighting in the '
-                    + 'middle of the night. The map shows where street lights are, not when they are on.',
-            },
-        ],
-    },
 
-    'bordeaux/velos-libre-service': {
-        title: 'Bike share in Bordeaux — live Le Vélo stations',
-        description: 'Live map of the bike-share stations across Bordeaux Métropole (Le Vélo, formerly '
-            + 'V³ / TBM): mechanical bikes, electric bikes and free docks.',
-        h1: 'Bike share in Bordeaux',
-        intro: 'How many bikes are left at the nearest station? This map shows the stations of the Bordeaux '
-            + 'Métropole Le Vélo service — formerly V³ — in real time, with the number of mechanical and '
-            + 'electric bikes available and the free docks.',
-        sections: [
-            {
-                h2: 'A continuously refreshed map',
-                p: [
-                    'Availability comes from the GBFS feed published by the operator and is refreshed '
-                    + 'automatically. Each station\'s dot shows its state at a glance: bikes available, '
-                    + 'station almost empty, empty, full, or out of service.',
-                    'The number on the dot is the count of bikes available. Opening a station shows the '
-                    + 'split between mechanical and electrically assisted bikes, along with the network '
-                    + 'name and the time of the last reading.',
-                ],
-            },
-            {
-                h2: 'Bike share or your own bike?',
-                p: [
-                    'Bike share works best for short trips and one-way journeys — tram out, bike back. '
-                    + 'For a daily commute, a well-parked personal bike is usually simpler and cheaper.',
-                    'One useful habit: check the state of the destination station before setting off. A '
-                    + 'full station in the city centre at rush hour is common, and means riding on to the '
-                    + 'next one.',
-                ],
-            },
-        ],
-        faq: [
-            {
-                q: 'How many Le Vélo stations does Bordeaux have?',
-                a: 'The service operated for Bordeaux Métropole has around 230 stations across the urban '
-                    + 'area, all of them shown on this map.',
-            },
-            {
-                q: 'Is the data live?',
-                a: 'Yes, it comes from the official GBFS feed and is refreshed continuously. The time of '
-                    + 'the last reading is shown on the map; if a reading is stale, a warning says so.',
-            },
-            {
-                q: 'Are V³ and Le Vélo the same service?',
-                a: 'Yes. The Bordeaux Métropole bike-share service, long known as V³, is now marketed '
-                    + 'under the Le Vélo brand as part of the TBM offer.',
-            },
-            {
-                q: 'Can I see the stations while planning a route?',
-                a: 'Yes, the “Bike share” layer is available on the route map. The button at the top of '
-                    + 'this page switches it on directly.',
-            },
-        ],
+    rennes: {
+        label: 'Rennes and its metropolitan area',
+        communes: 'the 43 municipalities of Rennes Métropole',
+        metaDescription: 'Every cycling map for Rennes Métropole: bike parking, toilets, drinking '
+            + 'water, LE vélo STAR stations, live traffic and cycling accidents.',
+        intro: 'Sécu’Cycle covers Rennes Métropole, from Betton to Bruz and from Mordelles to '
+            + 'Cesson-Sévigné. Rennes is one of the densest urban areas in France, and one of the best '
+            + 'served by open data.',
+        routingNote: 'Route planning does not cover Rennes Métropole for the time being: the road '
+            + 'network is held in memory for Bordeaux and the Tournai area only.',
+        excludedThemes: {
+            'eclairage-public': 'Rennes Métropole does not publish an inventory of street lights: only '
+                + 'the 9,800 or so recorded in OpenStreetMap are available, against 97,473 official '
+                + 'units — too partial a survey to be published as a map.',
+        },
     },
 };
 
@@ -639,6 +538,453 @@ export const PAGE_CONTENT = {
                 a: 'At a community workshop you do the repair yourself, with the tools and advice of '
                     + 'volunteers, in exchange for a membership. At a bike shop, the repair is done for '
                     + 'you and invoiced.',
+            },
+        ],
+    },
+
+    'rennes/stationnements-velo': {
+        title: 'Bike parking in Rennes — map of stands and shelters',
+        description: 'Interactive map of bike parking across Rennes Métropole: stands, racks, shelters '
+            + 'and secure lockers, with their capacity where it is known.',
+        h1: 'Bike parking in Rennes',
+        intro: 'Where can you lock your bike in Rennes? This map lists the stands, racks, shelters and '
+            + 'lockers across the 43 municipalities of the metropolitan area, from the inner ring road to '
+            + 'the outlying towns, with the type of equipment and the number of spaces where recorded.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Each point is a parking spot surveyed by OpenStreetMap contributors. Stands dominate '
+                    + 'by a wide margin: they are the only equipment that lets you lock both the frame and '
+                    + 'a wheel with a U-lock.',
+                    'Racks and wheel benders, which hold only the front wheel, leave a bike exposed to '
+                    + 'theft and can buckle the rim. Shelters and enclosed lockers appear as a separate '
+                    + 'category; they cluster around the station, the metro stops and the park-and-ride sites.',
+                ],
+            },
+            {
+                h2: 'A dense area, unevenly served',
+                p: [
+                    'Close to 2,900 spots are recorded across Rennes Métropole, but their distribution '
+                    + 'follows that of the activity hubs: the city centre, the Beaulieu and Villejean '
+                    + 'campuses, and the areas around metro stations. In the outlying towns, provision '
+                    + 'thins out quickly.',
+                    'Cycling to a metro station or a railway station is the use that weighs most on '
+                    + 'parking demand: that is where enclosed shelters make the difference, covering a '
+                    + 'full day of parking without leaving a bike in the open.',
+                ],
+            },
+            {
+                h2: 'Parking without getting your bike stolen',
+                p: [
+                    'Lock the frame to a fixed point, never the wheel alone, and use a certified U-lock. '
+                    + 'Bicycle marking (Bicycode), mandatory on new bikes sold in France since 2021, '
+                    + 'markedly improves the odds of recovering a stolen bike.',
+                    'The data comes from OpenStreetMap and is resynchronised automatically: a recently '
+                    + 'installed stand may be missing, and one that has been removed may linger for a few '
+                    + 'weeks. Any correction made on OpenStreetMap shows up here after the next sync.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many bike parking spots are there in Rennes?',
+                a: 'Close to 2,900 spots are recorded across the 43 municipalities of Rennes Métropole, '
+                    + 'the vast majority of them stands. Several hundred shelters and enclosed lockers are '
+                    + 'added to that, mainly around the station and the metro stops.',
+            },
+            {
+                q: 'What is the difference between a stand and a rack?',
+                a: 'A stand is an inverted U-shaped bar that lets you lock the frame and a wheel: it is '
+                    + 'the recommended design. A rack, or wheel bender, holds only the front wheel, which '
+                    + 'offers poor protection against theft.',
+            },
+            {
+                q: 'Where can I find secure bike parking in Rennes?',
+                a: 'Enclosed shelters and individual lockers cluster around Rennes station, the metro '
+                    + 'stops and the park-and-ride sites. They appear on the map under the “Shelters and '
+                    + 'lockers” category.',
+            },
+            {
+                q: 'A parking spot is missing from the map — how do I report it?',
+                a: 'The data comes from OpenStreetMap: you can add the location directly on '
+                    + 'openstreetmap.org and it will be picked up at the next sync. You can also write to '
+                    + 'us through the Contact page.',
+            },
+            {
+                q: 'Can Sécu’Cycle plan a route to these parking spots?',
+                a: 'Not for the time being: route planning relies on a road network held in memory by our '
+                    + 'server, currently limited to Bordeaux and the Tournai area. The Rennes data shown '
+                    + 'here remains fully browsable on the map.',
+            },
+        ],
+    },
+
+    'rennes/toilettes-publiques': {
+        title: 'Public toilets in Rennes — interactive map',
+        description: 'Map of public toilets in Rennes and its metropolitan area: free, paid and '
+            + 'wheelchair-accessible facilities, located and kept up to date.',
+        h1: 'Public toilets in Rennes',
+        intro: 'This map locates the public toilets recorded across Rennes Métropole — street units, '
+            + 'blocks in parks and gardens, facilities at stations and markets — telling free toilets '
+            + 'apart from paid ones and flagging those that are wheelchair accessible.',
+        sections: [
+            {
+                h2: 'What the map shows',
+                p: [
+                    'Around 260 locations are mapped across the metropolitan area. The colour of the '
+                    + 'marker shows the fee: free, paid, or unspecified where the open data is silent. '
+                    + 'Purple therefore means “unknown”, not “paid”.',
+                    'Some locations carry opening hours. Park blocks — Thabor, Gayeulles, prairies '
+                    + 'Saint-Martin — follow the hours of the grounds themselves, which vary sharply '
+                    + 'between winter and summer: check before relying on them.',
+                ],
+            },
+            {
+                h2: 'Free and accessible',
+                p: [
+                    'The vast majority of the facilities recorded in Rennes are free. The few paid ones '
+                    + 'are mainly at the station and in a handful of shopping hubs. Wheelchair '
+                    + 'accessibility is shown where it has been surveyed.',
+                ],
+            },
+            {
+                h2: 'Useful on a bike as well as on foot',
+                p: [
+                    'This map is a by-product of Sécu’Cycle, a safer cycling route planner. On a ride '
+                    + 'along the Vilaine or the Ille-et-Rance canal, knowing where the next open facility '
+                    + 'is saves a risky detour.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many public toilets are recorded in Rennes?',
+                a: 'Around 260 locations are mapped across the 43 municipalities of Rennes Métropole, '
+                    + 'from city-centre street units to park blocks and sports facilities in the outer ring.',
+            },
+            {
+                q: 'Are public toilets free in Rennes?',
+                a: 'The vast majority are. Street units and those in municipal parks are free; only a few '
+                    + 'venues, mainly at the station, charge for access.',
+            },
+            {
+                q: 'Are the opening hours reliable?',
+                a: 'They come from OpenStreetMap and are only filled in for some locations. Park blocks '
+                    + 'follow the hours of the grounds, which vary with the season. Treat them as '
+                    + 'indicative.',
+            },
+            {
+                q: 'Do these toilets appear while planning a route?',
+                a: 'Not in Rennes for the time being: route planning relies on a road network held in '
+                    + 'memory, now limited to Bordeaux and the Tournai area. The layer exists on those '
+                    + 'areas.',
+            },
+        ],
+    },
+
+    'rennes/points-eau': {
+        title: 'Drinking water in Rennes — map of fountains',
+        description: 'Map of drinking fountains and water points across Rennes Métropole, useful for '
+            + 'cyclists, runners and walkers refilling a bottle.',
+        h1: 'Drinking water in Rennes',
+        intro: 'Where can you refill a bottle in Rennes? This map lists the freely accessible drinking '
+            + 'fountains and water points across the metropolitan area — a useful habit on a bike, on a '
+            + 'run, or during a heatwave.',
+        sections: [
+            {
+                h2: 'A survey to be read for what it is',
+                p: [
+                    'Close to 90 water points are mapped across the metropolitan area. That figure is '
+                    + 'modest, and should be read as a lower bound: it describes the state of '
+                    + 'contributions to OpenStreetMap, not what the municipalities actually provide.',
+                    'In other words, the absence of a marker in a neighbourhood proves nothing. The '
+                    + 'presence of one, on the other hand, is reliable: only points explicitly declared '
+                    + 'drinkable are kept, and ornamental fountains are excluded.',
+                ],
+            },
+            {
+                h2: 'Parks and waterways',
+                p: [
+                    'What has been recorded clusters where you would expect it: the Thabor, the Gayeulles, '
+                    + 'the prairies Saint-Martin, and the banks of the Ille-et-Rance canal. These are also '
+                    + 'the routes cyclists naturally take.',
+                    'A point sometimes carries an access restriction — private grounds, or reserved for '
+                    + 'users of a facility. That is flagged, to save you a detour that ends at a locked gate.',
+                ],
+            },
+            {
+                h2: 'Drink before you are thirsty',
+                p: [
+                    'Dehydration dulls your alertness well before it makes you thirsty, and alertness is '
+                    + 'exactly what riding in traffic demands. On a summer ride, drink ahead of need '
+                    + 'rather than on demand.',
+                    'On a long ride, do not plan your refills from this map alone: some fountains are '
+                    + 'drained in winter against frost, others are seasonal, and not all are documented. '
+                    + 'A full bottle at the start remains the safest bet.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many drinking water points are there in Rennes?',
+                a: 'Close to 90 are recorded across Rennes Métropole, almost all freely accessible. That '
+                    + 'total reflects how far the collaborative survey has got, and grows with each '
+                    + 'contribution.',
+            },
+            {
+                q: 'Why so few compared with other cities?',
+                a: 'Because the Rennes survey in OpenStreetMap is less advanced, not because the city is '
+                    + 'less well equipped. The map measures the data available here, not what is on the '
+                    + 'ground.',
+            },
+            {
+                q: 'Do Rennes fountains run in winter?',
+                a: 'Not all of them: part of the network is shut off to prevent freezing, and some points '
+                    + 'only run in the warmer months. The record says so where that is known.',
+            },
+            {
+                q: 'Can I route my ride past these fountains?',
+                a: 'Not in Rennes for the time being. Route planning now covers only Bordeaux and the '
+                    + 'Tournai area. Pick out your refill points on this map before setting off.',
+            },
+        ],
+    },
+
+    'rennes/reparation-velo': {
+        title: 'Bike repair in Rennes — stations and workshops',
+        description: 'Map of self-service repair stations and bike workshops across Rennes Métropole: '
+            + 'pumps, tools, repairs and servicing.',
+        h1: 'Bike repair in Rennes',
+        intro: 'A flat tyre outside the university, a derailleur skipping on the climb up rue de '
+            + 'Fougères: this map lists the bike repair points across Rennes Métropole, from street posts '
+            + 'to community workshops.',
+        sections: [
+            {
+                h2: 'A self-repair culture',
+                p: [
+                    'Rennes is a young city, and its network shows it: self-repair workshops, where you '
+                    + 'fix your own bike with the tools and advice of volunteers, hold an unusually large '
+                    + 'place for an urban area of this size.',
+                    'Alongside them, bike shops take the work on at an hourly rate, and the posts '
+                    + 'installed in the street handle immediate fixes: a floor pump, spanners and '
+                    + 'screwdrivers on a cable, free and available at any hour.',
+                ],
+            },
+            {
+                h2: 'Anticipate rather than react',
+                p: [
+                    'Punctures account for most everyday failures, and can be dealt with at the roadside '
+                    + 'with a spare inner tube, two tyre levers and a pocket pump. A multi-tool covers '
+                    + 'almost everything else: a rubbing brake pad, a loose saddle, a stem to realign.',
+                    'A buckled wheel, a worn headset or a hydraulic brake needing a bleed call for '
+                    + 'specific tools. That is precisely where a community workshop earns its place: the '
+                    + 'tools are there, and the repair stays within your reach.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Where can I pump up my tyres for free in Rennes?',
+                a: 'At the repair posts installed in public space: almost all have a floor pump, usable '
+                    + 'without formality or payment. They appear in light orange on the map.',
+            },
+            {
+                q: 'How does a self-repair workshop work?',
+                a: 'You take out a membership, then do the repair yourself at a bench made available to '
+                    + 'you, with the workshop\'s tools and the help of volunteers. The cost is usually '
+                    + 'limited to the membership and the parts.',
+            },
+            {
+                q: 'Are the street posts always in working order?',
+                a: 'No. They are free and permanently available, but their tools are exposed to vandalism '
+                    + 'and theft. Best not to rely on them alone for a journey you cannot afford to miss.',
+            },
+            {
+                q: 'Can Sécu’Cycle guide me to a workshop?',
+                a: 'Not in Rennes for the time being, as route planning is no longer available there. The '
+                    + 'map gives the addresses and, where the information exists, the nature of each '
+                    + 'repair point.',
+            },
+        ],
+    },
+
+    'rennes/velos-libre-service': {
+        title: 'LE vélo STAR in Rennes — live stations',
+        description: 'Live map of the LE vélo STAR bike-share stations across Rennes Métropole: bikes '
+            + 'available and free docks, station by station.',
+        h1: 'Bike share in Rennes',
+        intro: 'How many bikes are left at the nearest station? This map shows the LE vélo STAR stations '
+            + 'in real time — the Rennes Métropole bike-share service operated by STAR — with the number '
+            + 'of bikes available and free docks.',
+        sections: [
+            {
+                h2: 'A continuously refreshed map',
+                p: [
+                    'Availability comes from the GBFS feed published by the operator and is refreshed '
+                    + 'automatically. Each station\'s dot shows its state at a glance: bikes available, '
+                    + 'station almost empty, empty, full, or out of service.',
+                    'The Rennes feed follows an older version of the GBFS standard, which does not '
+                    + 'describe vehicle types. A station record therefore shows the total number of bikes '
+                    + 'available, without splitting mechanical from electric.',
+                ],
+            },
+            {
+                h2: 'An inner-ring service, and unapologetically so',
+                p: [
+                    'The sixty or so stations cluster inside the ring road, close to the centre and the '
+                    + 'campuses. That choice makes the service formidable on its own ground — short trips, '
+                    + 'one-way journeys, tram out and bike back — and largely absent elsewhere.',
+                    'The dividing line is sharp, and worth knowing before building a daily commute on it. '
+                    + 'From the outer ring, a personal bike has no competition; within the ring road, the '
+                    + 'opposite often holds.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Does the service cover the whole of Rennes Métropole?',
+                a: 'No. The sixty or so published stations sit almost entirely within the municipality of '
+                    + 'Rennes, inside the ring road. The outlying towns are not served.',
+            },
+            {
+                q: 'Why is the split between mechanical and electric bikes missing?',
+                a: 'Because the Rennes feed follows a version of the GBFS standard that predates vehicle '
+                    + 'type descriptions. Only the total is published, and we would rather show that than '
+                    + 'invent a breakdown.',
+            },
+            {
+                q: 'How do I know whether I will be able to return my bike?',
+                a: 'A station\'s dot flags the “full” state, meaning no free dock. Check the destination '
+                    + 'station before setting off: in the city centre at rush hour, a full station is common.',
+            },
+            {
+                q: 'Is this availability reliable?',
+                a: 'It comes from the operator\'s official feed, refreshed continuously. The time of the '
+                    + 'last reading is shown, and a warning appears if it starts to age.',
+            },
+            {
+                q: 'Can I plan a route from a LE vélo STAR station?',
+                a: 'Not for now: availability is shown live, but route planning covers only Bordeaux and '
+                    + 'the Tournai area.',
+            },
+        ],
+    },
+
+    'rennes/trafic-routier': {
+        title: 'Live traffic in Rennes — congestion map',
+        description: 'Live road traffic map for Rennes Métropole: ring road, radial and urban roads, '
+            + 'free-flowing, heavy or congested, read through a cyclist\'s eyes.',
+        h1: 'Live road traffic in Rennes',
+        intro: 'Where is Rennes jammed right now? This map shows the state of traffic across the '
+            + 'metropolitan area, updated continuously from Rennes Métropole open data — and what that '
+            + 'means when you are on a bike.',
+        sections: [
+            {
+                h2: 'Reading the map',
+                p: [
+                    'Each section is coloured by its state: green for free-flowing traffic, orange for '
+                    + 'heavy traffic, red for a congested road, grey when the reading is unusable.',
+                    'Peaks concentrate on the ring road, its interchanges and the radial roads feeding '
+                    + 'into it, at the times people enter and leave the urban area. Inside, the roads '
+                    + 'along the Vilaine and the main boulevards take the strain.',
+                ],
+            },
+            {
+                h2: 'A level of detail that helps cyclists',
+                p: [
+                    'With close to 2,900 sections described, against a few hundred elsewhere, the Rennes '
+                    + 'survey is not limited to fast roads: it goes down to the urban streets people '
+                    + 'actually cycle on.',
+                    'In practice you can compare two possible ways across the centre rather than merely '
+                    + 'noting the state of the ring road, and prefer a calmer parallel street of similar '
+                    + 'length — often along the Vilaine or the canal.',
+                ],
+            },
+            {
+                h2: 'Heavy is not dangerous, free-flowing is not safe',
+                p: [
+                    'Congestion multiplies filtering and opening doors, two major causes of urban falls. '
+                    + 'But a free-flowing road where cars move fast often remains the more formidable of '
+                    + 'the two.',
+                    'Where Sécu’Cycle plans routes, its safety score combines traffic state with the '
+                    + 'speed limit and the presence of cycling infrastructure, rather than mechanically '
+                    + 'avoiding every busy road.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Where does the Rennes traffic data come from?',
+                a: 'From the “État du trafic en temps réel” dataset published by Rennes Métropole on its '
+                    + 'open data portal, under the ODbL licence, and refreshed continuously.',
+            },
+            {
+                q: 'Is the Rennes coverage complete?',
+                a: 'It is unusually broad — close to 2,900 sections, from fast roads to urban streets — '
+                    + 'without going down to the residential street, which is not instrumented.',
+            },
+            {
+                q: 'Does traffic influence the routes suggested in Rennes?',
+                a: 'Not for now: route planning covers only Bordeaux and the Tournai area. Where it does '
+                    + 'work, the layer feeds into the calculation and, for a comparable journey, favours '
+                    + 'the quieter roads.',
+            },
+        ],
+    },
+
+    'rennes/accidents-velo': {
+        title: 'Cycling accidents in Rennes — accident map',
+        description: 'Map of injury accidents involving a cyclist across Rennes Métropole, from 2015 to '
+            + '2023, from the BAAC records published by ONISR.',
+        h1: 'Cycling accidents in Rennes',
+        intro: 'Where are cyclists in Rennes involved in accidents? This map plots the injury accidents '
+            + 'involving a bicycle across the metropolitan area between 2015 and 2023, as recorded by the '
+            + 'police.',
+        sections: [
+            {
+                h2: 'The denominator trap',
+                p: [
+                    'Rennes is a student city with a high level of cycling, and that distorts how the map '
+                    + 'reads. The areas around the Beaulieu and Villejean campuses, the Vilaine '
+                    + 'embankments and the city-centre junctions accumulate accidents partly because they '
+                    + 'carry far more cyclists than anywhere else.',
+                    'Without exposure data — how many cyclists pass through — a cluster cannot be told '
+                    + 'apart from an inherently dangerous place. Read the map as a picture of where '
+                    + 'cycling happens as much as of where it goes wrong.',
+                ],
+            },
+            {
+                h2: 'What the data covers',
+                p: [
+                    'Only injury accidents that led to police involvement are recorded. Falls without a '
+                    + 'third party and minor collisions settled amicably are absent, as are near misses.',
+                    'The severity shown is that of the most seriously injured casualty. Each record gives, '
+                    + 'where available, the light conditions, the weather, the type of collision and the '
+                    + 'kind of road.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'How many cycling accidents are recorded in Rennes?',
+                a: 'Several hundred injury accidents involving a cyclist are mapped across the area '
+                    + 'covered between 2015 and 2023, a minority of which led to hospitalisation.',
+            },
+            {
+                q: 'Where does this data come from?',
+                a: 'From the injury accident reports (BAAC) filed by the police and published by ONISR, '
+                    + 'via the derived “Accidents de vélo” dataset.',
+            },
+            {
+                q: 'Does a red area mean the place is dangerous?',
+                a: 'Not mechanically. It marks a cluster of accidents, which also depends on how many '
+                    + 'cyclists pass through — and in Rennes, that number is high.',
+            },
+            {
+                q: 'Is the data up to date?',
+                a: 'BAAC records are published several years in arrears. The data currently available '
+                    + 'covers the period 2015 to 2023.',
             },
         ],
     },
