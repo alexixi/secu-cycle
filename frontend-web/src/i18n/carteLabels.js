@@ -27,6 +27,19 @@ export const legendLabel = (themeSlug, key) =>
 export const statLabel = (themeSlug, key) =>
     carte.theme?.[themeSlug]?.stats?.[key] ?? key;
 
+/**
+ * Libellé d'une entrée de mapConstants, depuis son `id`.
+ *
+ *     carteLabel('poi', 'water')      -> « Points d'eau »
+ *     carteLabel('fond', 'topo')      -> « Relief »
+ *
+ * Ne concerne QUE les tables du module carte. Les libellés venus de l'API
+ * (météo, qualité de l'air, vigilance) sont traduits par le serveur : les
+ * résoudre ici les figerait dans la langue du bundle.
+ */
+export const carteLabel = (prefixe, id) =>
+    (prefixe === 'ui' ? carte.ui?.carte?.[id] : carte.carte?.[prefixe]?.[id]) ?? id;
+
 /** Détail d'une source, quand il est traduisible ; sinon le nom propre tel quel. */
 export const sourceDetail = (source) =>
     (source.detailKey ? chemin(carte, source.detailKey) : source.detail) ?? '';

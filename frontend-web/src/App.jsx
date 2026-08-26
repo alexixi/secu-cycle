@@ -16,11 +16,11 @@ import './App.css';
 // La langue est celle fixée à l'initialisation depuis l'URL. Il n'y a pas de
 // bascule à chaud — changer de langue recharge la page — donc elle est constante
 // pendant toute la vie du document.
-const lazyPage = (charger, namespace) => lazy(() =>
-  Promise.all([charger(), ensureNamespaces(i18n.language, [namespace])]).then(([module]) => module));
+const lazyPage = (charger, ...namespaces) => lazy(() =>
+  Promise.all([charger(), ensureNamespaces(i18n.language, namespaces)]).then(([module]) => module));
 
 const HomePage = lazyPage(() => import('./pages/HomePage'), 'home');
-const ItinerairePage = lazyPage(() => import('./pages/ItinerairePage'), 'itineraire');
+const ItinerairePage = lazyPage(() => import('./pages/ItinerairePage'), 'itineraire', 'carte');
 const ProfilePage = lazyPage(() => import('./pages/ProfilePage'), 'auth');
 const LoginPage = lazyPage(() => import('./pages/LoginPage'), 'auth');
 const ForgotPasswordPage = lazyPage(() => import('./pages/ForgotPasswordPage'), 'auth');
