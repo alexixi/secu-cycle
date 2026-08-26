@@ -215,12 +215,13 @@
             "zoneCouverte": "Area covered",
             "sansRoutage": "The maps above cover {{communes}}. Route planning is not available there yet: it relies on a road network held in memory by our server, whose extent is narrower than that of the data.",
             "avecRoutage": "The route planner covers {{communes}}. The maps above cover that same area.",
-            "detailDonnees": "Each dataset and its licence are listed on the <donnees>Data sources</donnees> page."
+            "detailDonnees": "Each dataset and its licence are listed on the <donnees>Data sources</donnees> page.",
+            "suffixeTitre": " | Sécu'Cycle"
         },
         "cta": {
-            "pasEncore": "Routes: not in {{prep}} yet",
+            "pasEncore": "Routes: not in {{ville}} yet",
             "villesCouvertes": "See the cities covered",
-            "trajet": "Riding in {{prep}}?",
+            "trajet": "Riding in {{ville}}?",
             "trajetTexte": "Sécu'Cycle plans a safer cycling route that accounts for bike infrastructure, street lighting, traffic and recorded accidents — with this layer shown on the map.",
             "calculer": "Plan my route",
             "itinerairesCalculesA": "Routes are currently available in {{villes}}."
@@ -231,8 +232,9 @@
             "questionsFrequentes": "Frequently asked questions",
             "sourcesLicences": "Sources and licences",
             "detailDonnees": "Each dataset and its licence are listed on the <donnees>Data sources</donnees> page.",
-            "autresCartes": "Other maps in {{prep}}",
-            "memeThemeAilleurs": "{{theme}} in other cities"
+            "autresCartes": "Other maps in {{ville}}",
+            "memeThemeAilleurs": "{{theme}} in other cities",
+            "themeDansVille": "{{theme}} in {{ville}}"
         },
         "carte": {
             "changerFond": "Change the base map",

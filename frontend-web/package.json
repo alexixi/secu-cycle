@@ -7,36 +7,10 @@
     "dev": "vite",
     "prebuild": "node scripts/check-i18n.mjs && node scripts/generate-seo.mjs",
     "build": "vite build",
-    "postbuild": "react-snap && node scripts/verify-prerender.mjs",
+    "postbuild": "node scripts/prerender.mjs && node scripts/verify-prerender.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "check-coverage": "node scripts/check-coverage.mjs"
-  },
-  "reactSnap": {
-    "source": "dist",
-    "include": [
-      "/",
-      "/itineraire",
-      "/login",
-      "/signin",
-      "/mentions-legales",
-      "/confidentialite",
-      "/conditions-utilisation",
-      "/suppression-compte",
-      "/contact",
-      "/faq",
-      "/donnees",
-      "/carte"
-    ],
-    "inlineCss": false,
-    "skipThirdPartyRequests": true,
-    "concurrency": 1,
-    "puppeteerArgs": [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu"
-    ]
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",

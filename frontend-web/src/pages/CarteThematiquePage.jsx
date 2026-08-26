@@ -10,19 +10,17 @@ import ThematicMap from '../modules/map/ThematicMap';
 import ErrorPage from './ErrorPage';
 import ThemeIcon from '../components/carte/ThemeIcon';
 import { trackEvent } from '../services/analytics';
-import {
-    SITE_URL, findPage, pagesForCity, pagesForTheme, routableCitiesLabel,
-} from '../data/thematicMaps';
+import { SITE_URL } from '../data/thematicMapsCore';
 import './CartePages.css';
 
-function CtaItineraire({ page, position, lang, t }) {
+function CtaItineraire({ page, position, lang, t, routableCitiesLabel }) {
     const { city } = page;
 
     if (city.routing === false) {
         return (
             <aside className="carte-cta">
                 <div>
-                    <p className="carte-cta-titre">{t('ui.cta.pasEncore', { prep: city.prep })}</p>
+                    <p className="carte-cta-titre">{t('ui.cta.pasEncore', { prep: city.prep, ville: city.name })}</p>
                     <p className="carte-cta-texte">{t('ui.cta.trajetTexte')}</p>
                 </div>
                 <Link
@@ -44,7 +42,7 @@ function CtaItineraire({ page, position, lang, t }) {
     return (
         <aside className="carte-cta">
             <div>
-                <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep })}</p>
+                <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep, ville: city.name })}</p>
                 <p className="carte-cta-texte">
                     Sécu’Cycle calcule un itinéraire cyclable sécurisé qui tient compte des
                     aménagements, de l’éclairage, du trafic et des accidents recensés — avec cette
@@ -66,7 +64,9 @@ function CtaItineraire({ page, position, lang, t }) {
     );
 }
 
-export default function CarteThematiquePage() {
+export default function CarteThematiquePage({ registre }) {
+    // Le registre vient en prop : il porte l'éditorial de la langue de la page.
+    const { findPage, pagesForCity, pagesForTheme, routableCitiesLabel } = registre;
     const { pathname } = useLocation();
     const { t } = useTranslation('carte');
     const lang = langFromPathname(pathname);
@@ -206,7 +206,7 @@ export default function CarteThematiquePage() {
                     </p>
                 )}
 
-                <CtaItineraire page={page} lang={lang} t={t} position="sous-carte" />
+                <CtaItineraire page={page} lang={lang} t={t} routableCitiesLabel={routableCitiesLabel} position="sous-carte" />
 
                 <div className="carte-corps">
                     {content.sections.map(section => (
@@ -261,11 +261,11 @@ export default function CarteThematiquePage() {
                     </section>
                 </div>
 
-                <CtaItineraire page={page} lang={lang} t={t} position="fin-article" />
+                <CtaItineraire page={page} lang={lang} t={t} routableCitiesLabel={routableCitiesLabel} position="fin-article" />
 
                 {autresCartesVille.length > 0 && (
                     <section className="carte-maillage">
-                        <h2>{t('ui.theme.autresCartes', { prep: city.prep })}</h2>
+                        <h2>{t('ui.theme.autresCartes', { prep: city.prep, ville: city.name })}</h2>
                         <ul className="carte-liens">
                             {autresCartesVille.map(autre => (
                                 <li key={autre.key}>
@@ -287,7 +287,7 @@ export default function CarteThematiquePage() {
                                 <li key={autre.key}>
                                     <Link to={autre.path}>
                                         <ThemeIcon slug={autre.themeSlug} className="carte-lien-icone" />
-                                        {themeLabel(autre.theme)} {autre.city.prep}
+                                        {t('ui.theme.themeDansVille', { theme: themeLabel(autre.theme), prep: autre.city.prep, ville: autre.city.name })}
                                     </Link>
                                 </li>
                             ))}

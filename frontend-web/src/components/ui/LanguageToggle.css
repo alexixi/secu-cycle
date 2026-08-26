@@ -1,0 +1,18 @@
+.lang-toggle .theme-toggle-btn {
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.lang-toggle.theme-toggle-compact .theme-toggle-btn {
+    padding: 7px 10px;
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+}
+
+@media (max-width: 700px) {
+    .lang-toggle:not(.theme-toggle-compact) .theme-toggle-btn {
+        flex-direction: row;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+}

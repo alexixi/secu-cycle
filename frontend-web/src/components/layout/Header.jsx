@@ -6,6 +6,7 @@ import './Header.css';
 import LinkButton from '../ui/LinkButton';
 import IconButton from '../ui/IconButton';
 import ThemeToggle from '../ui/ThemeToggle';
+import LanguageToggle from '../ui/LanguageToggle';
 import Logo from "../../assets/logo.svg?react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -125,6 +126,7 @@ const Header = () => {
                 )}
             </nav>
             <div className='header-user-section media-large'>
+                <LanguageToggle compact />
                 <ThemeToggle compact value={mode} onChange={setMode} />
                 {user
                     ? <div className="user-connected" onClick={() => go("profil")}>
@@ -173,6 +175,7 @@ const Header = () => {
             {isMobileMenuOpen && (
                 <div className="dropdown mobile-dropdown media-small">
                     <div className="dropdown-theme-toggle">
+                        <LanguageToggle />
                         <ThemeToggle value={mode} onChange={setMode} />
                     </div>
                     <hr className="dropdown-divider" />

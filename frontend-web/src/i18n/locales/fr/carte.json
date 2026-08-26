@@ -144,7 +144,8 @@
             "zoneCouverte": "Zone couverte",
             "sansRoutage": "Les cartes ci-dessus couvrent {{communes}}. Le calcul d’itinéraire, lui, n’y est pas encore proposé : il s’appuie sur un réseau routier chargé en mémoire par notre serveur, dont l’emprise est plus étroite que celle des données.",
             "avecRoutage": "Le calculateur d’itinéraires couvre {{communes}}. Les cartes ci-dessus portent sur cette même emprise.",
-            "detailDonnees": "Le détail des jeux de données et de leurs licences figure sur la page <donnees>Données et sources</donnees>."
+            "detailDonnees": "Le détail des jeux de données et de leurs licences figure sur la page <donnees>Données et sources</donnees>.",
+            "suffixeTitre": " | Sécu’Cycle"
         },
         "cta": {
             "pasEncore": "Itinéraires : pas encore {{prep}}",
@@ -161,7 +162,8 @@
             "sourcesLicences": "Sources et licences",
             "detailDonnees": "Le détail des jeux de données et de leurs licences figure sur la page <donnees>Données et sources</donnees>.",
             "autresCartes": "Autres cartes {{prep}}",
-            "memeThemeAilleurs": "{{theme}} dans d’autres villes"
+            "memeThemeAilleurs": "{{theme}} dans d’autres villes",
+            "themeDansVille": "{{theme}} {{prep}}"
         },
         "fermer": "Fermer",
         "carte": {

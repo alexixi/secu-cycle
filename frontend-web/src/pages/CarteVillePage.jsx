@@ -7,12 +7,12 @@ import Meta from '../components/Meta';
 import ErrorPage from './ErrorPage';
 import ThemeIcon from '../components/carte/ThemeIcon';
 import { trackEvent } from '../services/analytics';
-import {
-    SITE_URL, CITY_BY_SLUG, cityHubTitle, pagesForCity, routableCitiesLabel,
-} from '../data/thematicMaps';
+import { SITE_URL } from '../data/thematicMapsCore';
 import './CartePages.css';
 
-export default function CarteVillePage() {
+export default function CarteVillePage({ registre }) {
+    // Le registre vient en prop : il porte l'éditorial de la langue de la page.
+    const { CITY_BY_SLUG, cityHubTitle, pagesForCity, routableCitiesLabel } = registre;
     const { pathname } = useLocation();
     const { t } = useTranslation('carte');
     const lang = langFromPathname(pathname);
@@ -62,7 +62,7 @@ export default function CarteVillePage() {
     return (
         <>
             <Meta
-                title={`${cityHubTitle(city)} | Sécu’Cycle`}
+                title={`${cityHubTitle(city)}${t('ui.ville.suffixeTitre')}`}
                 description={city.metaDescription}
                 preconnect={['https://api.secu-cycle.fr']}
             />
@@ -101,7 +101,7 @@ export default function CarteVillePage() {
                 {city.routing === false ? (
                     <aside className="carte-cta">
                         <div>
-                            <p className="carte-cta-titre">{t('ui.cta.pasEncore', { prep: city.prep })}</p>
+                            <p className="carte-cta-titre">{t('ui.cta.pasEncore', { prep: city.prep, ville: city.name })}</p>
                             <p className="carte-cta-texte">
                             {city.routingNote}{' '}
                             {t('ui.cta.itinerairesCalculesA', { villes: routableCitiesLabel() })}
@@ -122,7 +122,7 @@ export default function CarteVillePage() {
                 ) : (
                     <aside className="carte-cta">
                         <div>
-                            <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep })}</p>
+                            <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep, ville: city.name })}</p>
                             <p className="carte-cta-texte">
                                 Toutes ces couches alimentent le calculateur d’itinéraires : il en
                                 tient compte pour proposer un trajet cyclable réellement praticable,

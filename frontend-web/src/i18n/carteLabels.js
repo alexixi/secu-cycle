@@ -2,44 +2,48 @@
 //
 // Le registre langue-neutre (data/thematicMapsCore.js) n'émet que des clés :
 // `labelKey` pour le thème, `key` pour chaque entrée de légende et chaque
-// statistique. C'est ce qui permet d'écrire `stats()` une seule fois pour toutes
-// les langues. Les mots correspondants vivent dans locales/<langue>/carte.json.
+// statistique, `id` pour les tables de mapConstants. C'est ce qui permet
+// d'écrire `stats()` une seule fois pour toutes les langues.
 //
-// Module de transition : à l'introduction d'i18next, ces trois fonctions seront
-// remplacées par des appels à t('carte:…'). Le catalogue JSON, lui, ne bougera
-// pas — c'est lui l'artefact durable, pas ce mode d'accès.
+// Les mots sont résolus par i18next, dans le domaine « carte » et dans la langue
+// active — pas depuis un JSON importé en dur. C'est ce qui distingue une page
+// française d'une page anglaise : le socle est le même, seul le catalogue change.
 //
-// Ne pas importer depuis un script Node : il charge un JSON par la résolution de
-// Vite. Les scripts de build n'ont besoin que de l'éditorial, jamais d'ici.
+// Ces fonctions sont appelées depuis des modules non-React (mapConstants) autant
+// que depuis des composants, d'où l'accès à l'instance globale plutôt qu'au hook.
+// Le domaine « carte » est garanti chargé avant le montage des pages qui s'en
+// servent : c'est le rôle du verrou lazy() dans App.jsx.
 
-import carte from './locales/fr/carte.json';
+import i18n from './index';
 
-const chemin = (objet, cle) => cle.split('.').reduce((n, p) => n?.[p], objet);
+const lire = (cle) => {
+    const valeur = i18n.t(cle, { ns: 'carte' });
+    // Avec fallbackLng désactivé, une clé absente revient telle quelle.
+    return valeur === cle ? null : valeur;
+};
 
 /** Libellé d'un thème, depuis son `labelKey`. */
-export const themeLabel = (theme) => chemin(carte, theme.labelKey) ?? theme.labelKey;
+export const themeLabel = (theme) => lire(theme.labelKey) ?? theme.labelKey;
 
 /** Libellé d'une entrée de légende. */
-export const legendLabel = (themeSlug, key) =>
-    carte.theme?.[themeSlug]?.legend?.[key] ?? key;
+export const legendLabel = (themeSlug, key) => lire(`theme.${themeSlug}.legend.${key}`) ?? key;
 
 /** Libellé d'une statistique. */
-export const statLabel = (themeSlug, key) =>
-    carte.theme?.[themeSlug]?.stats?.[key] ?? key;
+export const statLabel = (themeSlug, key) => lire(`theme.${themeSlug}.stats.${key}`) ?? key;
 
 /**
  * Libellé d'une entrée de mapConstants, depuis son `id`.
  *
- *     carteLabel('poi', 'water')      -> « Points d'eau »
- *     carteLabel('fond', 'topo')      -> « Relief »
+ *     carteLabel('poi', 'water')   -> « Points d'eau » / “Drinking water”
+ *     carteLabel('fond', 'topo')   -> « Relief » / “Terrain”
  *
  * Ne concerne QUE les tables du module carte. Les libellés venus de l'API
  * (météo, qualité de l'air, vigilance) sont traduits par le serveur : les
  * résoudre ici les figerait dans la langue du bundle.
  */
 export const carteLabel = (prefixe, id) =>
-    (prefixe === 'ui' ? carte.ui?.carte?.[id] : carte.carte?.[prefixe]?.[id]) ?? id;
+    lire(prefixe === 'ui' ? `ui.carte.${id}` : `carte.${prefixe}.${id}`) ?? id;
 
 /** Détail d'une source, quand il est traduisible ; sinon le nom propre tel quel. */
 export const sourceDetail = (source) =>
-    (source.detailKey ? chemin(carte, source.detailKey) : source.detail) ?? '';
+    (source.detailKey ? lire(source.detailKey) : source.detail) ?? '';
