@@ -18,6 +18,7 @@ from models import (  # noqa: F401
     history,
     poi,
     poi_sync,
+    recap,
     refresh_session,
     report,
     report_abuse,

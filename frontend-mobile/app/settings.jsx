@@ -9,6 +9,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { LEGAL_LINKS, openLegalPage } from '../constants/legal';
+import { setRecapEmails } from '../services/apiBack';
 import {
     ACCEPTED,
     DECLINED,
@@ -51,18 +52,24 @@ function LinkRow({ icon, label, onPress, colors, isLast, tint }) {
 export default function SettingsPage() {
     const router = useRouter();
     const { colors, themeMode, setThemeMode } = useTheme();
-    const { user } = useAuth();
+    const { user, token, updateUser } = useAuth();
 
     const [notifEnabled, setNotifEnabled] = useState(true);
     const [weatherAlertsEnabled, setWeatherAlerts] = useState(true);
     const [permission, setPermission] = useState('granted');
     const [backgroundLocation, setBackgroundLocation] = useState(false);
+    const [recapEmails, setRecapEmailsState] = useState(true);
+    const [recapPending, setRecapPending] = useState(false);
 
     useEffect(() => {
         areNotificationsEnabled().then(setNotifEnabled);
         areWeatherAlertsEnabled().then(setWeatherAlerts);
         getBackgroundLocationChoice().then((choice) => setBackgroundLocation(choice === ACCEPTED));
     }, []);
+
+    useEffect(() => {
+        if (user) setRecapEmailsState(user.recap_emails !== false);
+    }, [user]);
 
     useFocusEffect(
         useCallback(() => {
@@ -121,6 +128,26 @@ export default function SettingsPage() {
 
         setWeatherAlerts(value);
         await setWeatherAlertsEnabled(value);
+    };
+
+    const handleRecapEmailsToggle = async (value) => {
+        Haptics.selectionAsync().catch(() => { });
+
+        const precedent = recapEmails;
+        setRecapEmailsState(value);
+        setRecapPending(true);
+        try {
+            const misAJour = await setRecapEmails(token, value);
+            updateUser(misAJour);
+        } catch {
+            setRecapEmailsState(precedent);
+            Alert.alert(
+                'Réglage non enregistré',
+                "Nous n'avons pas pu joindre le serveur. Réessayez dans un instant.",
+            );
+        } finally {
+            setRecapPending(false);
+        }
     };
 
     const handleBackgroundLocationToggle = async (value) => {
@@ -264,6 +291,29 @@ export default function SettingsPage() {
                                 accessibilityLabel="Activer les alertes météo"
                             />
                         </View>
+
+                        {user && (
+                            <View style={styles.switchRow}>
+                                <View style={styles.switchLabel}>
+                                    <Text style={[styles.rowTitle, { color: colors.textMain }]}>
+                                        Récapitulatif par e-mail
+                                    </Text>
+                                    <Text style={[styles.hint, { color: colors.textSecondary }]}>
+                                        Un bilan de vos trajets, kilomètres et badges au début de
+                                        chaque mois, et en début d&apos;année.
+                                    </Text>
+                                </View>
+
+                                <Switch
+                                    value={recapEmails}
+                                    onValueChange={handleRecapEmailsToggle}
+                                    disabled={recapPending}
+                                    trackColor={{ false: colors.borderStrong, true: colors.primary }}
+                                    thumbColor={colors.bgMain}
+                                    accessibilityLabel="Recevoir le récapitulatif par e-mail"
+                                />
+                            </View>
+                        )}
 
                         {isBlocked && (
                             <TouchableOpacity

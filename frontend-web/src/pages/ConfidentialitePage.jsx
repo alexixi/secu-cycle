@@ -92,7 +92,7 @@ export default function ConfidentialitePage() {
 
                     <h2>{t('confidentialite.finalites.h2')}</h2>
                     <dl>
-                        {["compte", "navigation", "signalements", "audience", "securite"].map(cle => (
+                        {["compte", "navigation", "signalements", "audience", "recap", "securite"].map(cle => (
                             <Fragment key={cle}>
                                 <dt><T k={`confidentialite.finalites.${cle}Dt`} /></dt>
                                 <dd><T k={`confidentialite.finalites.${cle}Dd`} /></dd>
@@ -103,7 +103,7 @@ export default function ConfidentialitePage() {
                     <h2>{t('confidentialite.destinataires.h2')}</h2>
                     <p><T k="confidentialite.destinataires.intro" /></p>
                     <ul>
-                        {["ionos", "maptiler", "ban", "aptabase", "umami"].map(cle => (
+                        {["ionos", "maptiler", "ban", "aptabase", "umami", "resend"].map(cle => (
                             <li key={cle}><T k={`confidentialite.destinataires.${cle}`} /></li>
                         ))}
                     </ul>
@@ -113,7 +113,7 @@ export default function ConfidentialitePage() {
 
                     <h2>{t('confidentialite.conservation.h2')}</h2>
                     <ul>
-                        {["compte", "historique", "signalements", "journaux", "statistiques"].map(cle => (
+                        {["compte", "historique", "recaps", "signalements", "journaux", "statistiques"].map(cle => (
                             <li key={cle}><T k={`confidentialite.conservation.${cle}`} /></li>
                         ))}
                     </ul>

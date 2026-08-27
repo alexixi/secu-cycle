@@ -48,6 +48,30 @@ def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends
         raise HTTPException(status_code=404, detail="Route introuvable")
     return route
 
+def _height_difference(route_info):
+    """Extrait le couple (dénivelé positif, négatif) d'un résultat de calcul.
+
+    `height_difference` est typé `Any` et vaut normalement un tuple `(gain, perte)`
+    posé par `graph.routing`. On ne fait ici que de la persistance d'agrément :
+    une forme inattendue doit se traduire par deux `NULL`, jamais par un calcul
+    d'itinéraire qui échoue.
+
+    Cas connu : quand départ et arrivée tombent sur la même arête, le trajet ne
+    compte que deux nœuds et le lissage les moyenne, si bien que le dénivelé
+    ressort à zéro quelle que soit la pente. On enregistre cette valeur telle
+    quelle plutôt que `NULL`, parce que c'est déjà exactement ce que
+    l'application affiche pour ces trajets : mieux vaut un récapitulatif fidèle à
+    ce que l'utilisateur a vu qu'un chiffre plus juste mais contradictoire.
+    """
+    valeur = route_info.get("height_difference")
+    if not isinstance(valeur, (list, tuple)) or len(valeur) < 2:
+        return None, None
+    try:
+        return float(valeur[0]), float(valeur[1])
+    except (TypeError, ValueError):
+        return None, None
+
+
 def _apply_weather(G, result, start, bike_type, is_electric, cyclist_level):
     """Pose les conditions au départ et l'effet du vent sur un résultat de calcul.
 
@@ -216,6 +240,7 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
         was_rainy = weather_config.is_wet(result.get("weather"))
 
         for route_info in result.get("routes", []):
+            gain, perte = _height_difference(route_info)
             db_route = Route(
                 user_id=current_user.id,
                 start_address=start_address,
@@ -227,6 +252,8 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
                 bike_type=bike_type,
                 is_electric=str(is_electric),
                 was_rainy=was_rainy,
+                elevation_gain_m=gain,
+                elevation_loss_m=perte,
             )
             db.add(db_route)
             db.flush()

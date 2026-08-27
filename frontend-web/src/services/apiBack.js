@@ -342,6 +342,20 @@ export async function confirmEmailChange(token, code) {
     }
 }
 
+export async function setRecapEmails(token, enabled) {
+    // Charge utile posée telle quelle : un `false` ne doit pas être confondu avec
+    // un champ vide et disparaître du corps de la requête.
+    const data = await apiFetch("/users/me", {
+        method: "PATCH",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ recap_emails: enabled })
+    }, token);
+    return data;
+}
+
 export async function changeAddress(token, homeAddress, workAddress) {
     try {
         const data = await apiFetch("/users/me", {
