@@ -8,7 +8,7 @@
         "editeurs": {
             "h2": "Publishers of the website and app",
             "projet": "Sécu'Cycle is a student project carried out as an end-of-year project (PFA) by engineering students at <b>ENSEIRB-MATMECA</b> (Bordeaux INP), 1 avenue du Docteur Albert Schweitzer, 33400 Talence, France. It is not a commercial company registered with the Trade and Companies Register.",
-            "conjointement": "The website and app are published jointly by&nbsp;:",
+            "conjointement": "The website and app are published jointly by:",
             "contact": "Contact: <mail>contact@secu-cycle.fr</mail>"
         },
         "directeur": {
@@ -17,20 +17,20 @@
         },
         "hebergeur": {
             "h2": "Hosting provider",
-            "intro": "The Sécu'Cycle website and API are hosted by&nbsp;:",
+            "intro": "The Sécu'Cycle website and API are hosted by:",
             "telephone": "Telephone: +33 970 808 911"
         },
         "propriete": {
             "h2": "Intellectual property",
             "marque": "The “Sécu'Cycle” name, the logo, the texts and the interface of the website and app are the property of their publishers. Any reproduction or representation, in whole or in part, without prior authorisation is prohibited.",
-            "sources": "The mapping, accident and mobility data comes from third parties, remains the property of its producers and is used in accordance with their respective licences&nbsp;:",
+            "sources": "The mapping, accident and mobility data comes from third parties, remains the property of its producers and is used in accordance with their respective licences:",
             "osm": "© <osm>OpenStreetMap</osm> contributors, under the <odbl>ODbL</odbl> licence — road network, cycling infrastructure, surface, lighting and points of interest.",
-            "ign": "<ign>IGN</ign> (RGE ALTI), ONISR (BAAC files, via the «&nbsp;Accidents de vélo&nbsp;» dataset), <ban>Base Adresse Nationale</ban>, and the open data portals of Bordeaux Métropole, the Eurométropole de Strasbourg, Rennes Métropole and Nantes Métropole (live traffic and street lighting), under the <lo>Licence Ouverte</lo>.",
+            "ign": "<ign>IGN</ign> (RGE ALTI), ONISR (BAAC files, via the « Accidents de vélo » dataset), <ban>Base Adresse Nationale</ban>, and the open data portals of Bordeaux Métropole, the Eurométropole de Strasbourg, Rennes Métropole and Nantes Métropole (live traffic and street lighting), under the <lo>Licence Ouverte</lo>.",
             "statbel": "<statbel>Statbel</statbel> — geolocated road accidents, under the <ccby>CC BY 4.0</ccby> licence.",
-            "cams": "Generated using Copernicus Atmosphere Monitoring Service information 2026&nbsp;: air quality data from <cams>CAMS</cams> is modified by Sécu'Cycle and obtained through Open-Meteo. Neither the European Commission nor ECMWF is responsible for any use made of it.",
+            "cams": "Generated using Copernicus Atmosphere Monitoring Service information 2026: air quality data from <cams>CAMS</cams> is modified by Sécu'Cycle and obtained through Open-Meteo. Neither the European Commission nor ECMWF is responsible for any use made of it.",
             "waqi": "<waqi>World Air Quality Index Project</waqi> — ground monitoring station readings.",
             "gbfs": "GBFS feeds from the nine integrated bike-share systems, each under its operator's attribution.",
-            "maptiler": "Base maps and geocoding outside France&nbsp;: <maptiler>MapTiler</maptiler>, a commercial service.",
+            "maptiler": "Base maps and geocoding outside France: <maptiler>MapTiler</maptiler>, a commercial service.",
             "detail": "Each source, exactly how it is used and its producer are listed on our <donnees>data sources</donnees> page."
         },
         "donneesEtCgu": {
@@ -53,13 +53,13 @@
         },
         "acces": {
             "h2": "3. Access and accounts",
-            "texte": "Some features require an account. You undertake to provide accurate information and to keep your credentials confidential. The Service is restricted to people aged <b>15 or over</b>&nbsp;; younger users must obtain their legal guardians' consent."
+            "texte": "Some features require an account. You undertake to provide accurate information and to keep your credentials confidential. The Service is restricted to people aged <b>15 or over</b>; younger users must obtain their legal guardians' consent."
         },
         "obligations": {
             "h2": "4. User obligations",
-            "licite": "Use the Service lawfully and for its intended purpose&nbsp;;",
-            "integrite": "Do not attempt to disrupt the operation, security or integrity of the Service&nbsp;;",
-            "signalements": "Submit reports in good faith and truthfully&nbsp;;",
+            "licite": "Use the Service lawfully and for its intended purpose;",
+            "integrite": "Do not attempt to disrupt the operation, security or integrity of the Service;",
+            "signalements": "Submit reports in good faith and truthfully;",
             "tiers": "Respect the rights of third parties and applicable regulations."
         },
         "securite": {
@@ -85,7 +85,7 @@
         },
         "droit": {
             "h2": "10. Governing law and disputes",
-            "texte": "These Terms are governed by <b>French law</b>. In the event of a dispute, we will first seek an amicable solution&nbsp;— contact us at <mail>contact@secu-cycle.fr</mail>. Failing that, consumers may use a consumer ombudsman free of charge, or the European online dispute resolution platform&nbsp;: <odr>ec.europa.eu/consumers/odr</odr>. The French courts have jurisdiction."
+            "texte": "These Terms are governed by <b>French law</b>. In the event of a dispute, we will first seek an amicable solution — contact us at <mail>contact@secu-cycle.fr</mail>. Failing that, consumers may use a consumer ombudsman free of charge, or the European online dispute resolution platform: <odr>ec.europa.eu/consumers/odr</odr>. The French courts have jurisdiction."
         },
         "contact": {
             "h2": "11. Contact",
@@ -107,24 +107,24 @@
             "h2": "2. Data we process",
             "compte": {
                 "h3": "2.1. Account data",
-                "intro": "When you create an account and use the service, we process&nbsp;:",
-                "email": "Email address and password (the password is stored securely as an <b>Argon2 hash</b>, never in clear text)&nbsp;;",
-                "identite": "First name, last name and date of birth&nbsp;;",
-                "sport": "Declared fitness level&nbsp;;",
-                "adresses": "Home and work addresses (if you provide them)&nbsp;;",
+                "intro": "When you create an account and use the service, we process:",
+                "email": "Email address and password (the password is stored securely as an <b>Argon2 hash</b>, never in clear text);",
+                "identite": "First name, last name and date of birth;",
+                "sport": "Declared fitness level;",
+                "adresses": "Home and work addresses (if you provide them);",
                 "velos": "Your bikes (name, type, electric assistance)."
             },
             "localisation": {
                 "h3": "2.2. Location and route data",
-                "points": "Start and end points when a route is planned&nbsp;;",
-                "trace": "The geometry of the routes planned and their history&nbsp;;",
-                "signalements": "The precise position (GPS coordinates) attached to the hazard reports you create&nbsp;;",
+                "points": "Start and end points when a route is planned;",
+                "trace": "The geometry of the routes planned and their history;",
+                "signalements": "The precise position (GPS coordinates) attached to the hazard reports you create;",
                 "navigation": "During guided navigation, your position is sent to the server in real time to keep the guidance on track.",
                 "encart": "<b>Important:</b> the position sent live during navigation is <b>not retained</b>. It is processed on the fly, in memory, to guide you, and is not written to our database. Only the geometry of planned routes and the hazard report positions are retained."
             },
             "usage": {
                 "h3": "2.3. Usage data (audience measurement)",
-                "intro": "We measure our audience using privacy-respecting tools&nbsp;:",
+                "intro": "We measure our audience using privacy-respecting tools:",
                 "umami": "<b>Website:</b> <umami>Umami</umami>, self-hosted on our servers, <b>with no cookies or trackers</b> and collecting no data that could identify you. No consent banner is therefore required.",
                 "aptabase": "<b>Mobile app:</b> <aptabase>Aptabase</aptabase> (European Union hosting region), which records anonymous usage events (screen opened, navigation started, and so on) <b>with no email, no name and no GPS coordinates</b>.",
                 "stockageLocal": "The website only uses browser local storage for technical purposes (remembering the light/dark theme and your session), never for advertising tracking."
@@ -166,11 +166,11 @@
         },
         "destinataires": {
             "h2": "5. Recipients and processors",
-            "intro": "Your data is never sold, rented or used for advertising. No advertising identifier is collected. We use the following providers, strictly to operate the service&nbsp;:",
-            "ionos": "<b>IONOS</b> (European Union) — hosting for the website and API&nbsp;;",
-            "maptiler": "<b>MapTiler</b> — base map tiles (the map display coordinates pass through this service)&nbsp;;",
-            "ban": "<b>Base Adresse Nationale</b> (adresse.data.gouv.fr, a French public service) — autocomplete for the addresses you type&nbsp;;",
-            "aptabase": "<b>Aptabase</b> (European Union region) — anonymous app analytics&nbsp;;",
+            "intro": "Your data is never sold, rented or used for advertising. No advertising identifier is collected. We use the following providers, strictly to operate the service:",
+            "ionos": "<b>IONOS</b> (European Union) — hosting for the website and API;",
+            "maptiler": "<b>MapTiler</b> — base map tiles (the map display coordinates pass through this service);",
+            "ban": "<b>Base Adresse Nationale</b> (adresse.data.gouv.fr, a French public service) — autocomplete for the addresses you type;",
+            "aptabase": "<b>Aptabase</b> (European Union region) — anonymous app analytics;",
             "umami": "<b>Umami</b> — anonymous website analytics, self-hosted by us.",
             "resend": "<b>Resend</b> — delivery of our emails (account verification, password reset, activity summaries); your email address is passed to this provider for that sole purpose."
         },
@@ -180,19 +180,19 @@
         },
         "conservation": {
             "h2": "7. Retention periods",
-            "compte": "<b>Account and associated data</b>: kept for as long as your account is active, then deleted when you delete your account&nbsp;;",
-            "historique": "<b>History and routes</b>: kept until you delete them, or until you delete your account&nbsp;;",
+            "compte": "<b>Account and associated data</b>: kept for as long as your account is active, then deleted when you delete your account;",
+            "historique": "<b>History and routes</b>: kept until you delete them, or until you delete your account;",
             "recaps": "<b>Summary delivery log</b>: the record of the summaries sent to you is kept for as long as your account exists, and deleted along with it.",
-            "signalements": "<b>Hazard reports</b>: kept for cyclist safety, unlinked from your account if you delete it&nbsp;;",
-            "journaux": "<b>Technical logs</b>: 12 months maximum&nbsp;;",
+            "signalements": "<b>Hazard reports</b>: kept for cyclist safety, unlinked from your account if you delete it;",
+            "journaux": "<b>Technical logs</b>: 12 months maximum;",
             "statistiques": "<b>Audience analytics</b>: aggregated and anonymous."
         },
         "droits": {
             "h2": "8. Your rights",
             "liste": "Under the GDPR you have the rights of <b>access</b>, <b>rectification</b>, <b>erasure</b>, <b>restriction</b>, <b>objection</b> and <b>portability</b> of your data, as well as the right to <b>withdraw your consent</b> at any time (in particular by revoking the location permission in your phone settings).",
-            "suppression": "You can <b>delete your account yourself</b>, without contacting us, from the mobile app as well as from this website&nbsp;: the steps and the details of what is erased are on the <suppression>Delete my account</suppression> page. Your ride history can also be deleted on its own, from your profile.",
+            "suppression": "You can <b>delete your account yourself</b>, without contacting us, from the mobile app as well as from this website: the steps and the details of what is erased are on the <suppression>Delete my account</suppression> page. Your ride history can also be deleted on its own, from your profile.",
             "autres": "For other rights, or if you no longer have access to your account, write to us at <mail>contact@secu-cycle.fr</mail>.",
-            "cnil": "If, after contacting us, you believe your rights are not being respected, you may lodge a complaint with the CNIL&nbsp;: Commission Nationale de l'Informatique et des Libertés, 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07 — <cnil>www.cnil.fr</cnil>."
+            "cnil": "If, after contacting us, you believe your rights are not being respected, you may lodge a complaint with the CNIL: Commission Nationale de l'Informatique et des Libertés, 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07 — <cnil>www.cnil.fr</cnil>."
         },
         "mineurs": {
             "h2": "9. Minors",
@@ -220,21 +220,21 @@
         "encart": "<b>Deletion is immediate and permanent.</b> There is no cooling-off period and no backup that would allow a deleted account to be restored. You can, however, create a new account whenever you like.",
         "mobile": {
             "h2": "1. From the mobile app",
-            "e1": "Open the Sécu'Cycle app and log in&nbsp;;",
-            "e2": "Go to the <b>Profile</b> tab, then open <b>Settings</b>&nbsp;;",
-            "e3": "In the <b>Danger zone</b> section, tap <b>Delete my account</b>&nbsp;;",
+            "e1": "Open the Sécu'Cycle app and log in;",
+            "e2": "Go to the <b>Profile</b> tab, then open <b>Settings</b>;",
+            "e3": "In the <b>Danger zone</b> section, tap <b>Delete my account</b>;",
             "e4": "Confirm with your password, then accept the warning."
         },
         "site": {
             "h2": "2. From this website",
-            "e1": "Log in, then open your <profil>profile page</profil>&nbsp;;",
-            "e2": "At the very bottom, under <b>Delete my account</b>, click <b>Delete</b>&nbsp;;",
+            "e1": "Log in, then open your <profil>profile page</profil>;",
+            "e2": "At the very bottom, under <b>Delete my account</b>, click <b>Delete</b>;",
             "e3": "Confirm with your password and tick the warning box.",
-            "motDePasse": "Your password is requested in both cases&nbsp;: an unlocked phone or a forgotten session is not enough to erase an account."
+            "motDePasse": "Your password is requested in both cases: an unlocked phone or a forgotten session is not enough to erase an account."
         },
         "supprimees": {
             "h2": "3. Data deleted",
-            "intro": "The following is erased from our servers, immediately and without retention&nbsp;:",
+            "intro": "The following is erased from our servers, immediately and without retention:",
             "colDonnee": "Data",
             "colDetail": "Details",
             "compteNom": "Account and credentials",
@@ -264,7 +264,7 @@
         },
         "acces": {
             "h2": "5. If you no longer have access to your account",
-            "texte": "Lost your password&nbsp;? Start by resetting it from the login screen, then follow the steps above. If you no longer have access to the email address linked to the account, write to us at <mail>contact@secu-cycle.fr</mail> from any address&nbsp;: we will ask you for enough to verify that the account is yours, then proceed with the deletion. We reply within one month at most, in accordance with the GDPR."
+            "texte": "Lost your password? Start by resetting it from the login screen, then follow the steps above. If you no longer have access to the email address linked to the account, write to us at <mail>contact@secu-cycle.fr</mail> from any address: we will ask you for enough to verify that the account is yours, then proceed with the deletion. We reply within one month at most, in accordance with the GDPR."
         },
         "autresDroits": {
             "h2": "6. Your other rights",
@@ -275,10 +275,10 @@
         "titrePage": "Sécu'Cycle | Contact",
         "metaDescription": "Contact the Sécu'Cycle team: support, questions and exercising your rights over your personal data.",
         "h1": "Contact",
-        "chapo": "A question, some feedback, a bug to report or a request about your data&nbsp;? We read every message and are glad to reply.",
+        "chapo": "A question, some feedback, a bug to report or a request about your data? We read every message and are glad to reply.",
         "formulaire": {
             "h2": "Write to us",
-            "intro": "Fill in the form below&nbsp;: your message reaches us directly and we reply to the address you give.",
+            "intro": "Fill in the form below: your message reaches us directly and we reply to the address you give.",
             "prenom": "First name",
             "nom": "Last name",
             "email": "Email address",
@@ -289,7 +289,7 @@
             "messagePlaceholder": "Describe your request…",
             "envoyer": "Send",
             "envoiEnCours": "Sending…",
-            "succes": "Thank you&nbsp;! Your message has been sent, we will reply by email.",
+            "succes": "Thank you! Your message has been sent, we will reply by email.",
             "erreurLimite": "You have sent too many messages. Try again in an hour, or write to us directly.",
             "erreurEnvoi": "Sending failed. Try again later, or write to us directly at contact@secu-cycle.fr."
         },
@@ -307,13 +307,13 @@
             "signalement": "Report a problem",
             "autre": "Other"
         },
-        "mailDirect": "Prefer your own email client&nbsp;? Write to us at&nbsp;: <mail>contact@secu-cycle.fr</mail>",
+        "mailDirect": "Prefer your own email client? Write to us at: <mail>contact@secu-cycle.fr</mail>",
         "objets": {
             "h2": "What your message is about",
-            "intro": "The «&nbsp;Subject&nbsp;» dropdown helps us route your message to the right person. Here is what each option covers&nbsp;:",
+            "intro": "The « Subject » dropdown helps us route your message to the right person. Here is what each option covers:",
             "support": "<b>Support and bugs</b> — a technical problem, an error, unexpected behaviour of the website or app.",
             "suggestions": "<b>Suggestions</b> — an idea, feedback or an improvement to propose.",
-            "rgpd": "<b>Personal data (GDPR)</b> — to exercise your rights of access, rectification, erasure, restriction, objection or portability. The details are in our <confidentialite>privacy policy</confidentialite>. To <suppression>delete your account</suppression> there is no need to write to us&nbsp;: you can do it yourself, in seconds.",
+            "rgpd": "<b>Personal data (GDPR)</b> — to exercise your rights of access, rectification, erasure, restriction, objection or portability. The details are in our <confidentialite>privacy policy</confidentialite>. To <suppression>delete your account</suppression> there is no need to write to us: you can do it yourself, in seconds.",
             "signalement": "<b>Report a problem</b> — to report content or use that is problematic."
         },
         "delai": {
