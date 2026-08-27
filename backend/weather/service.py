@@ -36,7 +36,7 @@ import hashlib
 import logging
 from datetime import datetime, timedelta, timezone
 
-from i18n import DEFAULT_LOCALE
+from i18n import DEFAULT_LOCALE, t
 from graph.extent import contains, distance_km, graph_zones, sample_points
 from vigilance import service as vigilance_service
 from weather import config, providers
@@ -78,9 +78,9 @@ class _State:
         self.point_count = 0
         self.etag = None
 
-    def as_dict(self):
+    def as_dict(self, locale=DEFAULT_LOCALE):
         expired = _alerts_expired()
-        points = [_public_point(point, expired) for point in self.points]
+        points = [_public_point(point, expired, locale) for point in self.points]
         main = points[0] if points else None
         return {
             "available": self.available,
@@ -105,9 +105,9 @@ class _State:
 _state = _State()
 
 
-def snapshot() -> dict:
-    """Instantané courant. Lecture pure, aucun appel réseau."""
-    return _state.as_dict()
+def snapshot(locale: str = DEFAULT_LOCALE) -> dict:
+    """Instantané courant, rendu dans `locale`. Lecture pure, aucun appel réseau."""
+    return _state.as_dict(locale)
 
 
 def etag(locale: str = DEFAULT_LOCALE) -> str | None:
@@ -166,9 +166,9 @@ def _reading(values: dict, at=None) -> dict:
             out[name] = value
     if "is_day" in out:
         out["is_day"] = bool(out["is_day"])
-    condition, label = config.condition_for(out.get("weather_code"))
-    out["condition"] = condition
-    out["label"] = label
+    # Seule la clé est stockée : `_state` est rafraîchi toutes les 900 s et
+    # servi à tous les visiteurs, il ne peut pas porter de libellé rendu.
+    out["condition"] = config.condition_for(out.get("weather_code"))
     if at is not None:
         out["time"] = at
     return out
@@ -378,7 +378,7 @@ def _point_state(lat: float, lon: float, zone_index: int,
         "current": current,
         "hourly": hourly,
         "minutely_15": minutely,
-        "alerts": alerts,
+        "alerts": [_alerte_rendue(a, locale) for a in alerts],
         "alert_level": config.alert_level_of(alerts),
         "equipment": config.equipment_for(current, hourly),
         # `departure_hint` n'est **pas** stocké ici : il dépend de l'heure qu'il
@@ -440,7 +440,28 @@ def _merge_alerts(derived: list[dict], official: list[dict]) -> list[dict]:
     return merged
 
 
-def _summary(point: dict, expired: bool) -> dict:
+def _cardinal_label(degrees, locale: str) -> str | None:
+    """Abréviation cardinale dans la langue voulue — « SSW » devient « SSO ». """
+    cle = config.cardinal(degrees)
+    return t(f"weather.cardinal.{cle}", locale) if cle else None
+
+
+def _alerte_rendue(alerte: dict, locale: str) -> dict:
+    """Alerte servie : la clé reste, le libellé s'ajoute dans la langue lue."""
+    return {**alerte, "label": t(f"weather.hazard.{alerte['key']}", locale)}
+
+
+def _equipement_rendu(conseil: dict, locale: str) -> dict:
+    """Conseil d'équipement : le libellé et sa raison, rendus à la lecture."""
+    return {
+        "key": conseil["key"],
+        "label": t(f"weather.equipment.{conseil['key']}", locale),
+        "reason": t(f"weather.reason.{conseil['reason_key']}", locale,
+                    **conseil.get("reason_params", {})),
+    }
+
+
+def _summary(point: dict, expired: bool, locale: str = DEFAULT_LOCALE) -> dict:
     """Résumé public d'un point. `expired` efface ce qui a une date de péremption."""
     current = point["current"]
     alerts = [] if expired else _merge_alerts(
@@ -452,18 +473,18 @@ def _summary(point: dict, expired: bool) -> dict:
         "precipitation": current.get("precipitation"),
         "weather_code": current.get("weather_code"),
         "condition": current.get("condition"),
-        "label": current.get("label"),
+        "label": t(f"weather.condition.{current.get('condition') or config.UNKNOWN_CONDITION}", locale),
         "is_day": current.get("is_day"),
         "wind": {
             "speed": current.get("wind_speed"),
             "direction": current.get("wind_direction"),
-            "cardinal": config.cardinal(current.get("wind_direction")),
+            "cardinal": _cardinal_label(current.get("wind_direction"), locale),
             "gusts": current.get("wind_gusts"),
         },
         "alert_level": level,
-        "alert_label": config.ALERT_LABELS[level],
+        "alert_label": t(f"weather.alert.{level}", locale),
         "alerts": alerts,
-        "equipment": [] if expired else point["equipment"],
+        "equipment": [] if expired else [_equipement_rendu(e, locale) for e in point["equipment"]],
         # Recalculé à chaque lecture : les délais qu'il porte se comptent depuis
         # maintenant, et un instantané peut avoir jusqu'à `REFRESH_INTERVAL_S`
         # quand il arrive au client.
@@ -473,14 +494,14 @@ def _summary(point: dict, expired: bool) -> dict:
     }
 
 
-def _public_point(point: dict, expired: bool) -> dict:
+def _public_point(point: dict, expired: bool, locale: str = DEFAULT_LOCALE) -> dict:
     return {
         "lat": point["lat"],
         "lon": point["lon"],
         "zone_index": point["zone_index"],
         "timezone": point.get("timezone"),
         "utc_offset_seconds": point.get("utc_offset_seconds"),
-        "summary": _summary(point, expired),
+        "summary": _summary(point, expired, locale),
         "hourly": point["hourly"],
         "minutely_15": point["minutely_15"],
     }
@@ -507,7 +528,7 @@ def _public_zone(index: int, bbox, points: list[dict]) -> dict:
 # --- Lecture par le routage --------------------------------------------------
 
 
-def conditions_at(G, lat: float, lon: float) -> dict | None:
+def conditions_at(G, lat: float, lon: float, locale: str = DEFAULT_LOCALE) -> dict | None:
     """Conditions du point de mesure le plus proche, prêtes à être servies.
 
     Le point le plus proche et non le centre de la zone : c'est toute la raison
@@ -527,7 +548,7 @@ def conditions_at(G, lat: float, lon: float) -> dict | None:
 
     point = min(_state.points,
                 key=lambda p: distance_km((lat, lon), (p["lat"], p["lon"])))
-    payload = _summary(point, expired=False)
+    payload = _summary(point, expired=False, locale=locale)
     payload["zone_index"] = point["zone_index"]
     payload["stale"] = _state.stale or _is_stale()
     payload["minutely_15"] = point["minutely_15"]

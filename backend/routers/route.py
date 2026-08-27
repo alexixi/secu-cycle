@@ -24,6 +24,7 @@ from datetime import datetime, timedelta
 from graph.guidance import build_maneuvers
 from graph.statistique import route_bridge_stats, wind_adjusted_travel_time
 from graph.config import ICE_BRIDGE_TEMP_C, WIND_HEADWIND_REPORT_PCT
+from i18n import get_locale
 from weather import config as weather_config
 from weather import service as weather_service
 from limiter import limiter
@@ -72,7 +73,7 @@ def _height_difference(route_info):
         return None, None
 
 
-def _apply_weather(G, result, start, bike_type, is_electric, cyclist_level):
+def _apply_weather(G, result, start, bike_type, is_electric, cyclist_level, locale):
     """Pose les conditions au départ et l'effet du vent sur un résultat de calcul.
 
     Ne touche jamais `duration` ni le tracé : la météo informe, elle ne fait pas
@@ -85,7 +86,7 @@ def _apply_weather(G, result, start, bike_type, is_electric, cyclist_level):
     fond. Silencieux si la météo est indisponible ou périmée — les champs restent
     simplement à None et les fronts n'affichent rien.
     """
-    conditions = weather_service.conditions_at(G, start[0], start[1])
+    conditions = weather_service.conditions_at(G, start[0], start[1], locale)
     if not conditions:
         return
 
@@ -121,7 +122,8 @@ def _apply_weather(G, result, start, bike_type, is_electric, cyclist_level):
 
 @router.post("/route", response_model=ComputeRoutesResponse)
 @limiter.limit("60/minute")
-async def compute_route(request: Request, data: ComputeRouteRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user_optional)):
+async def compute_route(request: Request, data: ComputeRouteRequest, db: Session = Depends(get_db),
+                        current_user=Depends(get_current_user_optional), locale: str = Depends(get_locale)):
     G = request.app.state.G
     if G is None:
         raise HTTPException(status_code=503, detail="Graphe non chargé")
@@ -219,7 +221,7 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
     #
     # Muter `result` est sans risque : `route_cache.get()` renvoie une copie
     # profonde — c'est déjà ce sur quoi repose l'ajout de `route_id` plus bas.
-    _apply_weather(G, result, start, bike_type, is_electric, cyclist_level)
+    _apply_weather(G, result, start, bike_type, is_electric, cyclist_level, locale)
 
     for route in result.get("routes", []):
             maneuvers = build_maneuvers(route["nodes"], G)

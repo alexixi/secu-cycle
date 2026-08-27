@@ -47,4 +47,4 @@ async def get_weather(request: Request, locale: str = Depends(get_locale)):
         headers["ETag"] = etag
         if request.headers.get("if-none-match") == etag:
             return Response(status_code=304, headers=headers)
-    return JSONResponse(service.snapshot(), headers=headers)
+    return JSONResponse(service.snapshot(locale), headers=headers)

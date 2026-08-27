@@ -1,1 +1,141 @@
-{}
+{
+    "weather": {
+        "condition": {
+            "clear": "Ciel dégagé",
+            "mainly_clear": "Peu nuageux",
+            "partly_cloudy": "Partiellement nuageux",
+            "overcast": "Couvert",
+            "fog": "Brouillard",
+            "rime_fog": "Brouillard givrant",
+            "drizzle_light": "Bruine faible",
+            "drizzle": "Bruine",
+            "drizzle_dense": "Bruine dense",
+            "freezing_drizzle_light": "Bruine verglaçante",
+            "freezing_drizzle": "Bruine verglaçante dense",
+            "rain_slight": "Pluie faible",
+            "rain": "Pluie",
+            "rain_heavy": "Fortes pluies",
+            "freezing_rain_light": "Pluie verglaçante",
+            "freezing_rain": "Pluie verglaçante forte",
+            "snow_slight": "Neige faible",
+            "snow": "Neige",
+            "snow_heavy": "Fortes chutes de neige",
+            "snow_grains": "Grésil",
+            "showers_slight": "Averses",
+            "showers": "Averses modérées",
+            "showers_violent": "Averses violentes",
+            "snow_showers_slight": "Averses de neige",
+            "snow_showers": "Fortes averses de neige",
+            "thunderstorm": "Orage",
+            "thunderstorm_hail": "Orage avec grêle",
+            "thunderstorm_hail_heavy": "Orage violent avec grêle",
+            "unknown": "Conditions inconnues"
+        },
+        "alert": {
+            "none": "Rien à signaler",
+            "watch": "Vigilance",
+            "warning": "Conditions difficiles",
+            "severe": "Danger"
+        },
+        "hazard": {
+            "hail": "Risque de grêle",
+            "thunderstorm": "Risque d'orage",
+            "gust": "Rafales",
+            "ice": "Risque de verglas",
+            "freezing": "Températures négatives",
+            "cold": "Froid",
+            "heavy_rain": "Fortes pluies",
+            "rain": "Pluie",
+            "snow": "Neige",
+            "fog": "Visibilité réduite"
+        },
+        "equipment": {
+            "rain_jacket": "Imperméable",
+            "mudguards": "Garde-boue",
+            "gloves": "Gants",
+            "warm_layer": "Couche chaude",
+            "lights": "Éclairage",
+            "windbreaker": "Coupe-vent"
+        },
+        "reason": {
+            "rain_now": "{mm} mm en cours",
+            "rain_soon": "{mm} mm attendus dans les {hours} h",
+            "rain_probability": "{percent} % de risque de pluie",
+            "wet_road": "Chaussée mouillée",
+            "felt_temperature": "{degrees} °C ressentis",
+            "gusts": "Rafales à {speed} km/h",
+            "wind": "Vent à {speed} km/h",
+            "fog": "Brouillard",
+            "night": "Trajet de nuit"
+        },
+        "cardinal": {
+            "N": "N",
+            "NNE": "NNE",
+            "NE": "NE",
+            "ENE": "ENE",
+            "E": "E",
+            "ESE": "ESE",
+            "SE": "SE",
+            "SSE": "SSE",
+            "S": "S",
+            "SSW": "SSO",
+            "SW": "SO",
+            "WSW": "OSO",
+            "W": "O",
+            "WNW": "ONO",
+            "NW": "NO",
+            "NNW": "NNO"
+        }
+    },
+    "air": {
+        "band": {
+            "good": "Bon",
+            "fair": "Moyen",
+            "moderate": "Dégradé",
+            "poor": "Mauvais",
+            "very_poor": "Très mauvais",
+            "extreme": "Extrêmement mauvais"
+        },
+        "us_band": {
+            "good": "Bon",
+            "moderate": "Moyen",
+            "usg": "Mauvais pour sensibles",
+            "unhealthy": "Mauvais",
+            "very_unhealthy": "Très mauvais",
+            "hazardous": "Dangereux"
+        },
+        "pollutant": {
+            "european_aqi_pm2_5": "Particules fines (PM2.5)",
+            "european_aqi_pm10": "Particules (PM10)",
+            "european_aqi_nitrogen_dioxide": "Dioxyde d'azote (NO₂)",
+            "european_aqi_ozone": "Ozone (O₃)",
+            "european_aqi_sulphur_dioxide": "Dioxyde de soufre (SO₂)"
+        }
+    },
+    "badge": {
+        "first_route": {
+            "name": "Premier itinéraire",
+            "description": "Terminer votre premier trajet."
+        },
+        "routes_10": {
+            "name": "10 itinéraires",
+            "description": "Terminer 10 trajets."
+        },
+        "rain_rider": {
+            "name": "Rouleur sous la pluie",
+            "description": "Terminer 5 trajets partis sous la pluie."
+        },
+        "safe_routes_10": {
+            "name": "10 itinéraires sécurisés",
+            "description": "Terminer 10 trajets en suivant l'itinéraire sécurisé."
+        },
+        "distance_50": {
+            "name": "50 km parcourus",
+            "description": "Cumuler 50 km sur vos trajets terminés."
+        },
+        "distance_200": {
+            "name": "200 km parcourus",
+            "description": "Cumuler 200 km sur vos trajets terminés."
+        }
+    }
+}
