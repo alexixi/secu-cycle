@@ -24,7 +24,8 @@ const lazyPage = (charger, ...namespaces) => lazy(() =>
 
 const HomePage = lazyPage(() => import('./pages/HomePage'), 'home');
 const ItinerairePage = lazyPage(() => import('./pages/ItinerairePage'), 'itineraire', 'carte');
-const ProfilePage = lazyPage(() => import('./pages/ProfilePage'), 'auth');
+// « carte » : l'historique ouvre une modale qui rend MapComponent.
+const ProfilePage = lazyPage(() => import('./pages/ProfilePage'), 'auth', 'carte');
 const LoginPage = lazyPage(() => import('./pages/LoginPage'), 'auth');
 const ForgotPasswordPage = lazyPage(() => import('./pages/ForgotPasswordPage'), 'auth');
 const ChangeEmailPage = lazyPage(() => import('./pages/ChangeEmailPage'), 'auth');

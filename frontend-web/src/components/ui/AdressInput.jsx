@@ -6,10 +6,9 @@ import { trackEvent } from "../../services/analytics";
 import { useAuth } from "../../context/AuthContext";
 import "./AdressInput.css";
 import "./Input.css"
-import i18n from '../../i18n/index';
 
 export default function AdressInput({ id, placeholder, onSelect, defaultValue, autoFocus = false, showFavorite = false, checkCoverage = false, children: icon }) {
-    const { t } = useTranslation('auth');
+    const { t } = useTranslation('common');
     const { user } = useAuth();
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
@@ -29,7 +28,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         if (user.home_address) {
             favs.push({
                 id: "fav-home",
-                name: i18n.t('adresses.domicile', { ns: 'common' }),
+                name: t('adresses.domicile'),
                 display_name: user.home_address,
                 isFavorite: true
             });
@@ -38,7 +37,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         if (user.work_address) {
             favs.push({
                 id: "fav-work",
-                name: i18n.t('adresses.travail', { ns: 'common' }),
+                name: t('adresses.travail'),
                 display_name: user.work_address,
                 isFavorite: true
             });
@@ -206,20 +205,20 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
 
             {hasError && (
                 <div className="error-text">
-                    {t('erreurs.adresseInvalide')}
+                    {t('adresses.adresseInvalide')}
                 </div>
             )}
 
             {outOfZone && !hasError && (
                 <div className="warning-text">
-                    {t('erreurs.adresseHorsZone')}
+                    {t('adresses.adresseHorsZone')}
                 </div>
             )}
 
             {isOpen && noResults && suggestions.length === 0 && (
                 <ul className="autocomplete-list">
                     <li className="autocomplete-empty" aria-disabled="true">
-                        {t('erreurs.aucunResultat')}
+                        {t('adresses.aucunResultat')}
                     </li>
                 </ul>
             )}

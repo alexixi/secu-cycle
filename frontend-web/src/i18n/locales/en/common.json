@@ -38,7 +38,10 @@
     },
     "adresses": {
         "domicile": "🏠 Home",
-        "travail": "💼 Work"
+        "travail": "💼 Work",
+        "adresseInvalide": "Invalid address. Please pick one from the list.",
+        "adresseHorsZone": "This address is outside the area Sécu-Cycle covers.",
+        "aucunResultat": "No results found"
     },
     "theme": {
         "clair": "Light",

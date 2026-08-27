@@ -16,7 +16,7 @@ const REASONS = [
 ];
 
 export default function ReportAbuseModal({ isOpen, onClose, onReport, onBlock }) {
-    const { t } = useTranslation('itineraire');
+    const { t } = useTranslation('carte');
     useEffect(() => {
         if (!isOpen) return;
 
@@ -44,15 +44,15 @@ export default function ReportAbuseModal({ isOpen, onClose, onReport, onBlock })
     return (
         <div className="modal-overlay">
             <div className="modal-content abuse-modal">
-                <h2>{t('signalement.abus.titre')}</h2>
-                <p className="abuse-lead">{t('signalement.abus.delai')}</p>
+                <h2>{t('ui.abus.titre')}</h2>
+                <p className="abuse-lead">{t('ui.abus.delai')}</p>
 
                 {REASONS.map(({ key, Icon, cle, sansAide }) => (
                     <button key={key} type="button" className="abuse-reason" onClick={() => onReport(key)}>
                         <Icon size={20} />
                         <span className="abuse-reason-text">
-                            <strong>{t(`signalement.abus.${cle}`)}</strong>
-                            {!sansAide && <small>{t(`signalement.abus.${cle}Aide`)}</small>}
+                            <strong>{t(`ui.abus.${cle}`)}</strong>
+                            {!sansAide && <small>{t(`ui.abus.${cle}Aide`)}</small>}
                         </span>
                     </button>
                 ))}
@@ -61,14 +61,14 @@ export default function ReportAbuseModal({ isOpen, onClose, onReport, onBlock })
                     <button type="button" className="abuse-reason" onClick={onBlock}>
                         <MdPersonOff size={20} />
                         <span className="abuse-reason-text">
-                            <strong>{t('signalement.abus.bloquer')}</strong>
-                            <small>{t('signalement.abus.bloquerAide')}</small>
+                            <strong>{t('ui.abus.bloquer')}</strong>
+                            <small>{t('ui.abus.bloquerAide')}</small>
                         </span>
                     </button>
                 </div>
 
                 <div className="modal-actions">
-                    <Button type="button" onClick={onClose}>{t('signalement.annuler')}</Button>
+                    <Button type="button" onClick={onClose}>{t('ui.abus.annuler')}</Button>
                 </div>
             </div>
         </div>

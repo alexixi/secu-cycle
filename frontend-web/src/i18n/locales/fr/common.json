@@ -38,7 +38,10 @@
     },
     "adresses": {
         "domicile": "🏠 Domicile",
-        "travail": "💼 Travail"
+        "travail": "💼 Travail",
+        "adresseInvalide": "Adresse invalide. Veuillez choisir dans la liste.",
+        "adresseHorsZone": "Cette adresse est en dehors de la zone couverte par Sécu-Cycle.",
+        "aucunResultat": "Aucun résultat trouvé"
     },
     "theme": {
         "clair": "Clair",

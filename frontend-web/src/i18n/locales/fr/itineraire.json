@@ -70,19 +70,6 @@
         "type": "Type de signalement",
         "description": "Description (optionnel)",
         "descriptionPlaceholder": "Décrivez le problème...",
-        "abus": {
-            "titre": "Signaler ce contenu",
-            "offensant": "Contenu offensant",
-            "offensantAide": "Insultes, haine, propos déplacés",
-            "spam": "Spam ou publicité",
-            "spamAide": "Message sans rapport avec la sécurité à vélo",
-            "fantaisiste": "Signalement fantaisiste",
-            "fantaisisteAide": "Danger inventé ou placé n'importe où",
-            "autre": "Autre motif",
-            "bloquer": "Bloquer cet auteur",
-            "bloquerAide": "Vous ne verrez plus aucun de ses signalements. Réversible depuis votre profil.",
-            "delai": "Nous examinons chaque signalement sous 24 heures. Au-delà de deux signalements, le contenu disparaît de la carte en attendant notre décision."
-        },
         "annuler": "Annuler",
         "envoyer": "Signaler"
     }

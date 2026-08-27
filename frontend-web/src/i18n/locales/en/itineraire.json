@@ -70,19 +70,6 @@
         "type": "Hazard type",
         "description": "Description (optional)",
         "descriptionPlaceholder": "Describe the problem...",
-        "abus": {
-            "titre": "Report this content",
-            "offensant": "Offensive content",
-            "offensantAide": "Insults, hate speech, inappropriate remarks",
-            "spam": "Spam or advertising",
-            "spamAide": "Unrelated to cycling safety",
-            "fantaisiste": "Bogus report",
-            "fantaisisteAide": "An invented hazard, or one dropped anywhere",
-            "autre": "Another reason",
-            "bloquer": "Block this author",
-            "bloquerAide": "You will no longer see any of their reports. Reversible from your profile.",
-            "delai": "We review every report within 24 hours. Past two reports, the content disappears from the map pending our decision."
-        },
         "annuler": "Cancel",
         "envoyer": "Report"
     }
