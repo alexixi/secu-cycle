@@ -290,3 +290,238 @@ def contact_email(
     )
 
     return mail_subject, html, text
+
+
+def _stat_grid(tuiles: list) -> str:
+    """Grille de chiffres clés, en tableau.
+
+    Un tableau et non une grille CSS : Outlook ignore `flex` comme `grid` et
+    empilerait les tuiles les unes sous les autres. Deux colonnes, parce que
+    trois deviennent illisibles sur un téléphone et qu'aucune requête média n'est
+    fiable ici.
+    """
+    if not tuiles:
+        return ""
+
+    lignes = []
+    for i in range(0, len(tuiles), 2):
+        paire = tuiles[i:i + 2]
+        cellules = []
+        for tuile in paire:
+            cellules.append(f"""\
+        <td width="50%" style="padding: 6px;">
+          <div style="padding: 14px 12px; background-color: {BRAND_BG};
+                      border-radius: 10px; text-align: center;">
+            <div style="font-size: 22px; font-weight: bold; color: {BRAND};
+                        line-height: 28px;">{escape(tuile["valeur"])}</div>
+            <div style="font-size: 12px; color: {TEXT_MUTED}; line-height: 18px;
+                        ">{escape(tuile["libelle"])}</div>
+          </div>
+        </td>""")
+        if len(paire) == 1:
+            cellules.append('        <td width="50%"></td>')
+        lignes.append("      <tr>\n" + "\n".join(cellules) + "\n      </tr>")
+
+    return f"""\
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+             style="margin: 20px 0; border-collapse: collapse;">
+{chr(10).join(lignes)}
+      </table>"""
+
+
+def _badge_list(badges: list) -> str:
+    """Badges débloqués pendant la période. Vide si aucun : pas de section creuse."""
+    if not badges:
+        return ""
+
+    items = "\n".join(
+        f"""\
+        <li style="margin: 0 0 6px; font-size: 14px; line-height: 21px;">
+          <strong>{escape(badge["nom"])}</strong>{
+              " — " + escape(badge["description"]) if badge.get("description") else ""
+          }</li>"""
+        for badge in badges
+    )
+
+    titre = "Nouveau badge" if len(badges) == 1 else f"{len(badges)} nouveaux badges"
+    return f"""\
+      <div style="margin: 20px 0; padding: 16px; border: 1px solid {BORDER};
+                  border-radius: 10px;">
+        <div style="font-size: 15px; font-weight: bold; margin-bottom: 10px;
+                    ">{titre}</div>
+        <ul style="margin: 0; padding-left: 20px; color: {BRAND_DARK};">
+{items}
+        </ul>
+      </div>"""
+
+
+def _unsubscribe_footer(lien_desabo: str) -> str:
+    """Pied de page portant le lien de désabonnement.
+
+    Le lien figure dans le corps *en plus* des en-têtes `List-Unsubscribe` : tous
+    les clients de messagerie n'affichent pas le bouton natif, et un désabonnement
+    introuvable se transforme en signalement de spam.
+    """
+    return f"""\
+      <p style="margin: 24px 0 0; padding-top: 16px; border-top: 1px solid {BORDER};
+                font-size: 12px; line-height: 18px; color: {TEXT_MUTED};">
+         Vous recevez cet e-mail parce que vous avez un compte Sécu'Cycle.
+         <a href="{escape(lien_desabo, quote=True)}" style="color: {TEXT_MUTED};">
+            Ne plus recevoir ces récapitulatifs</a>.</p>"""
+
+
+def recap_email(
+    genre: str,
+    libelle_periode: str,
+    prenom: str | None,
+    stats: dict,
+    lien_desabo: str,
+) -> tuple[str, str, str]:
+    """Récapitulatif d'activité, mensuel ou annuel.
+
+    Un seul gabarit pour les deux : seuls le titre et quelques tournures changent,
+    et deux gabarits jumeaux divergeraient à la première retouche.
+
+    Le lien de désabonnement est reçu en paramètre et jamais fabriqué ici : c'est
+    ce qui permet à `preview_emails.py` de rendre ce gabarit sans variable
+    d'environnement ni base de données.
+
+    `prenom` vient du profil et n'est validé qu'en longueur : c'est le premier
+    contenu utilisateur libre injecté dans un e-mail du projet, d'où l'échappement.
+
+    :param stats: sortie de `recap.stats.resume`.
+    """
+    annuel = genre == "yearly"
+
+    subject = (
+        f"Votre année {libelle_periode} à vélo"
+        if annuel
+        else f"Votre mois de {libelle_periode} à vélo"
+    )
+    titre = f"Votre année {libelle_periode}" if annuel else f"Votre mois de {libelle_periode}"
+
+    salutation = f"Bonjour {escape(prenom)}," if prenom else "Bonjour,"
+    intro = (
+        f"Voici ce que vous avez parcouru en {escape(libelle_periode)}&nbsp;: "
+        f"<strong>{escape(stats['phrase_trajets'])}</strong>."
+    )
+
+    complements = []
+    if stats.get("comparaison"):
+        complements.append(
+            f"""<p style="margin: 0 0 12px; font-size: 15px; line-height: 22px;"
+               >{escape(stats["comparaison"])}</p>"""
+        )
+    if stats.get("trajet_le_plus_long"):
+        complements.append(
+            f"""<p style="margin: 0 0 12px; font-size: 14px; line-height: 21px; color: {TEXT_MUTED};"
+               >Votre plus long trajet&nbsp;: {escape(stats["trajet_le_plus_long"])}.</p>"""
+        )
+    if stats.get("trajets_surs"):
+        complements.append(
+            f"""<p style="margin: 0 0 12px; font-size: 14px; line-height: 21px; color: {TEXT_MUTED};"
+               >Dont {stats["trajets_surs"]} en itinéraire sécurisé.</p>"""
+        )
+
+    html = _shell(
+        titre,
+        f"""\
+      <p style="margin: 0 0 12px; font-size: 15px; line-height: 22px;">{salutation}</p>
+      <p style="margin: 0 0 4px; font-size: 15px; line-height: 22px;">{intro}</p>
+{_stat_grid(stats["tuiles"])}
+{"".join(complements)}
+{_badge_list(stats["badges"])}
+      <p style="margin: 16px 0 0; font-size: 13px; line-height: 19px; color: {TEXT_MUTED};">
+         Les durées sont celles estimées au calcul de vos itinéraires.</p>
+{_unsubscribe_footer(lien_desabo)}""",
+    )
+
+    lignes = [titre, "", f"{salutation.replace('&nbsp;', ' ')}", "",
+              f"Voici ce que vous avez parcouru en {libelle_periode} : {stats['phrase_trajets']}.", ""]
+    for tuile in stats["tuiles"]:
+        lignes.append(f"- {tuile['libelle']} : {tuile['valeur']}")
+    if stats.get("comparaison"):
+        lignes += ["", stats["comparaison"]]
+    if stats.get("trajet_le_plus_long"):
+        lignes.append(f"Votre plus long trajet : {stats['trajet_le_plus_long']}.")
+    if stats.get("trajets_surs"):
+        lignes.append(f"Dont {stats['trajets_surs']} en itinéraire sécurisé.")
+    if stats["badges"]:
+        lignes += ["", "Badges débloqués :"]
+        lignes += [
+            f"- {b['nom']}" + (f" — {b['description']}" if b.get("description") else "")
+            for b in stats["badges"]
+        ]
+    lignes += [
+        "",
+        "Les durées sont celles estimées au calcul de vos itinéraires.",
+        "",
+        "Vous recevez cet e-mail parce que vous avez un compte Sécu'Cycle.",
+        f"Pour ne plus recevoir ces récapitulatifs : {lien_desabo}",
+    ]
+
+    return subject, html, "\n".join(lignes)
+
+
+def unsubscribe_confirm_page(lien_action: str) -> str:
+    """Page demandant confirmation avant de désabonner.
+
+    Cette page ne désabonne pas : elle propose un bouton qui, lui, poste.
+
+    La distinction n'est pas de la politesse HTTP. Outlook SafeLinks, les
+    antivirus de messagerie et les proxys d'images visitent en `GET` les liens
+    qu'ils trouvent dans un message, sans que personne n'ait cliqué. Un `GET` qui
+    désabonnerait retirerait donc du service des gens qui n'ont rien demandé.
+    """
+    return _shell(
+        "Ne plus recevoir les récapitulatifs&nbsp;?",
+        f"""\
+      <p style="margin: 0 0 20px; font-size: 15px; line-height: 22px;">Vous ne recevrez
+         plus le récapitulatif mensuel et annuel de vos trajets. Votre compte et vos
+         données restent inchangés.</p>
+      <form method="post" action="{escape(lien_action, quote=True)}" style="margin: 0;">
+        <button type="submit"
+                style="display: inline-block; padding: 12px 24px; font-size: 15px;
+                       font-weight: bold; color: #ffffff; background-color: {BRAND};
+                       border: 0; border-radius: 8px; cursor: pointer;">
+          Confirmer le désabonnement
+        </button>
+      </form>
+      <p style="margin: 20px 0 0; font-size: 13px; line-height: 19px; color: {TEXT_MUTED};">
+         Vous pourrez les réactiver à tout moment depuis les réglages de
+         l'application.</p>""",
+    )
+
+
+def unsubscribe_done_page() -> str:
+    """Page affichée une fois le désabonnement enregistré."""
+    return _shell(
+        "C'est fait",
+        f"""\
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Vous ne recevrez
+         plus de récapitulatif d'activité.</p>
+      <p style="margin: 0; font-size: 14px; line-height: 21px; color: {TEXT_MUTED};">
+         Les e-mails liés à votre compte — vérification, réinitialisation de mot de
+         passe — continuent d'être envoyés&nbsp;: ils ne relèvent pas de ce réglage.
+         Vous pouvez réactiver les récapitulatifs quand vous le souhaitez depuis les
+         réglages de l'application.</p>""",
+    )
+
+
+def unsubscribe_invalid_page() -> str:
+    """Page affichée quand le lien est illisible.
+
+    Surtout pas un message de succès&nbsp;: un lien tronqué par un client de
+    messagerie ferait croire au désabonnement alors que les envois continueraient.
+    """
+    return _shell(
+        "Ce lien n'est plus valide",
+        f"""\
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Nous n'avons pas
+         pu traiter cette demande&nbsp;: le lien est incomplet ou a été remplacé.</p>
+      <p style="margin: 0; font-size: 14px; line-height: 21px; color: {TEXT_MUTED};">
+         Vous pouvez désactiver les récapitulatifs depuis les réglages de
+         l'application, ou nous écrire à
+         <a href="mailto:contact@secu-cycle.fr" style="color: {BRAND};"
+            >contact@secu-cycle.fr</a>.</p>""",
+    )

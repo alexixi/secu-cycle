@@ -23,6 +23,7 @@ class UserRead(UserBase):
     is_banned: bool = False
     reports_blocked: bool = False
     ban_reason: Optional[str] = None
+    recap_emails: bool = True
     created_at: datetime
 
     class Config:
@@ -39,6 +40,10 @@ class UserUpdate(BaseModel):
     sport_level: Optional[str] = Field(default=None, max_length=50)
     home_address: Optional[str] = Field(default=None, max_length=500)
     work_address: Optional[str] = Field(default=None, max_length=500)
+    # Réception du récapitulatif périodique. Absent de `UserAdminUpdate` à
+    # dessein : réactiver ce réglage pour quelqu'un d'autre n'est pas une
+    # fonctionnalité d'administration.
+    recap_emails: Optional[bool] = None
 
 class UserAdminUpdate(BaseModel):
     first_name: Optional[str] = Field(default=None, max_length=100)

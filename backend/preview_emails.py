@@ -16,6 +16,36 @@ BACKEND_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BACKEND_DIR))
 
 from mailer import templates as t  # noqa: E402
+from recap.stats import resume  # noqa: E402
+
+# Lien de démonstration : les gabarits reçoivent le lien de désabonnement tout
+# fait, précisément pour que cette prévisualisation tourne sans configuration.
+LIEN_DEMO = "https://api.secu-cycle.fr/recaps/unsubscribe?u=42&t=jeton-de-demo"
+
+MOIS_CHARGE = resume(
+    {"trajets": 18, "km": 142.6, "minutes": 512, "denivele": 638.0,
+     "trajets_avec_denivele": 18, "km_precedent": 96.0, "plus_long_km": 23.4,
+     "trajets_surs": 11, "trajets_pluie": 3},
+    [{"name": "10 itinéraires", "description": "Terminer 10 trajets."},
+     {"name": "Rouleur sous la pluie", "description": "Terminer 5 trajets partis sous la pluie."}],
+    "juin",
+)
+
+# Le cas qui compte pour la relecture : c'est lui qui montre les sections
+# conditionnelles quand elles s'effacent (ni badge, ni comparaison, ni dénivelé).
+MOIS_CREUX = resume(
+    {"trajets": 1, "km": 3.8, "minutes": 16, "denivele": 0.0,
+     "trajets_avec_denivele": 0, "km_precedent": 0.0},
+    [], "juin",
+)
+
+ANNEE = resume(
+    {"trajets": 164, "km": 1284.0, "minutes": 4620, "denivele": 5940.0,
+     "trajets_avec_denivele": 164, "km_precedent": 1100.0, "plus_long_km": 47.2,
+     "trajets_surs": 98, "trajets_pluie": 21},
+    [{"name": "200 km parcourus", "description": "Cumuler 200 km sur vos trajets terminés."}],
+    "2025",
+)
 
 CASES = [
     ("Vérification de compte", t.verification_email("123456")),
@@ -29,6 +59,20 @@ CASES = [
         "Jean", "Dupont", "jean.dupont@exemple.fr", "Question sur un itinéraire",
         "Bonjour,\n\nJ'ai une question à propos d'un trajet.\n\nMerci !",
     )),
+    ("Récapitulatif mensuel — mois chargé",
+     t.recap_email("monthly", "juillet 2026", "Alexis", MOIS_CHARGE, LIEN_DEMO)),
+    ("Récapitulatif mensuel — mois creux (sections conditionnelles effacées)",
+     t.recap_email("monthly", "juillet 2026", None, MOIS_CREUX, LIEN_DEMO)),
+    ("Récapitulatif annuel",
+     t.recap_email("yearly", "2026", "Alexis", ANNEE, LIEN_DEMO)),
+]
+
+# Pages web servies par l'API, relues ici avec les e-mails : elles partagent leur
+# charte (`_shell`) et se dégraderaient en silence si personne ne les regardait.
+PAGES = [
+    ("Désabonnement — confirmation", t.unsubscribe_confirm_page(LIEN_DEMO)),
+    ("Désabonnement — enregistré", t.unsubscribe_done_page()),
+    ("Désabonnement — lien invalide", t.unsubscribe_invalid_page()),
 ]
 
 
@@ -46,6 +90,16 @@ def build_page() -> str:
     <summary style="cursor: pointer;">Version texte brut (repli sans HTML)</summary>
     <pre style="background: #f5f5f5; padding: 12px; white-space: pre-wrap;">{text}</pre>
   </details>
+</section>""")
+
+    for name, html in PAGES:
+        sections.append(f"""
+<section style="margin-bottom: 48px;">
+  <h2 style="font: bold 16px/1.4 system-ui, sans-serif; margin: 0 0 4px;">{name}</h2>
+  <p style="font: 13px/1.4 system-ui, sans-serif; color: #555; margin: 0 0 12px;">
+    Page web, pas un e-mail.
+  </p>
+  <div style="border: 1px dashed #bbb;">{html}</div>
 </section>""")
 
     return f"""<!doctype html>
@@ -69,7 +123,7 @@ def main() -> None:
 
     target = out_dir / "emails.html"
     target.write_text(build_page(), encoding="utf-8")
-    print(f"📧 {len(CASES)} gabarits écrits dans {target}")
+    print(f"📧 {len(CASES)} gabarits et {len(PAGES)} page(s) écrits dans {target}")
 
 
 if __name__ == "__main__":
