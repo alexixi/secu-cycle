@@ -12,14 +12,14 @@ export default function StepAddresses({ home, setHome, work, setWork, onNext, on
         <div className="form onboarding-form">
             <h2>{t('onboarding.adresses.h2')}</h2>
             <p className="onboarding-subtitle">
-                Enregistrez votre domicile et votre travail pour des itinéraires plus rapides. Facultatif.
+                {t('onboarding.adresses.intro')}
             </p>
 
             <div className="input-group">
-                <label htmlFor="home-address">{t('onboarding.adresses.domicile')}</label>
+                <label htmlFor="home-address">{t('adresses.domicile')}</label>
                 <AdressInput
                     id="home-address"
-                    placeholder={t('onboarding.adresses.domicilePlaceholder')}
+                    placeholder={t('adresses.labelDomicile')}
                     defaultValue={home}
                     onSelect={(address) => setHome(address?.name || "")}
                 >
@@ -28,10 +28,10 @@ export default function StepAddresses({ home, setHome, work, setWork, onNext, on
             </div>
 
             <div className="input-group">
-                <label htmlFor="work-address">{t('onboarding.adresses.travail')}</label>
+                <label htmlFor="work-address">{t('adresses.travail')}</label>
                 <AdressInput
                     id="work-address"
-                    placeholder={t('onboarding.adresses.travailPlaceholder')}
+                    placeholder={t('adresses.labelTravail')}
                     defaultValue={work}
                     onSelect={(address) => setWork(address?.name || "")}
                 >

@@ -100,7 +100,7 @@ export default function ProfilePage() {
   const handleBike = (bike, index) => {
     const isElec = bike.is_electric === true;
     const type = bike.type?.toLowerCase();
-    const nameLabel = bike.name || (type === "vtt" ? "VTT" : type === "route" ? "Route" : "Ville");
+    const nameLabel = bike.name || t(`velo.${type === "vtt" || type === "route" ? type : "ville"}`);
 
     if (type === "vtt") {
       return (
@@ -274,7 +274,7 @@ export default function ProfilePage() {
           ) : (
             <h1>{t('profil.h1')}</h1>
           )}
-          <IconButton className="button-modification" onClick={() => setIsModalOpenInfo(true)}>Modifier mon compte < FaUserEdit size={30} /></IconButton>
+          <IconButton className="button-modification" onClick={() => setIsModalOpenInfo(true)}>{t('profil.modifierCompte')} < FaUserEdit size={30} /></IconButton>
         </div>
 
         <div className="content">
@@ -299,7 +299,7 @@ export default function ProfilePage() {
               >
                 <span className="address-card-icon address-home"><FaHome size={20} /></span>
                 <div className="address-card-text">
-                  <span className="address-card-label">{t('profil.adresses.domicile')}</span>
+                  <span className="address-card-label">{t('adresses.domicile')}</span>
                   <span className={`address-card-value${homeAddress ? "" : " address-empty"}`}>
                     {homeAddress || t('profil.adresses.aucune')}
                   </span>
@@ -315,7 +315,7 @@ export default function ProfilePage() {
               >
                 <span className="address-card-icon address-work"><MdOutlineWork size={20} /></span>
                 <div className="address-card-text">
-                  <span className="address-card-label">{t('profil.adresses.travail')}</span>
+                  <span className="address-card-label">{t('adresses.travail')}</span>
                   <span className={`address-card-value${workAddress ? "" : " address-empty"}`}>
                     {workAddress || t('profil.adresses.aucune')}
                   </span>
@@ -330,7 +330,7 @@ export default function ProfilePage() {
               <h2>{t('profil.velos.h2')}</h2>
               {bikes.length > 0 && (
                 <IconButton className="button-suppress-bike" onClick={() => setIsModalOpenSuppress(true)}>
-                  Supprimer un vélo <MdDelete size={20} />
+                  {t('profil.supprimerVelo')} <MdDelete size={20} />
                 </IconButton>
               )}
             </div>
@@ -349,15 +349,15 @@ export default function ProfilePage() {
                   <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                     <span style={{ fontSize: "0.9em", color: "var(--text-secondary)" }}>{t('profil.historique.confirmer')}</span>
                     <IconButton className="button-suppress-bike" onClick={handleDeleteAllHistoric}>
-                      Oui <MdDelete size={16} />
+                      {t('profil.oui')} <MdDelete size={16} />
                     </IconButton>
                     <IconButton className="button-address" onClick={() => setConfirmDeleteHistoric(false)}>
-                      Non
+                      {t('profil.non')}
                     </IconButton>
                   </div>
                 ) : (
                   <IconButton className="button-suppress-bike" onClick={handleDeleteAllHistoric}>
-                    Supprimer l'historique <MdDelete size={20} />
+                    {t('profil.supprimerHistorique')} <MdDelete size={20} />
                   </IconButton>
                 )
               )}
@@ -404,7 +404,7 @@ export default function ProfilePage() {
                   return acc;
                 }, {});
                 // Les identifiants viennent de l'API ; seuls les libellés sont traduits.
-                const typeLabels = { fast: t('profil.statistiques.fast'), safe: t('profil.statistiques.safe'), compromise: t('profil.statistiques.compromise') };
+                const typeLabels = { fast: t('variantes.fast'), safe: t('variantes.safe'), compromise: t('variantes.compromise') };
                 const typeIcons = { fast: MdOutlineSpeed, safe: MdHealthAndSafety, compromise: FaBalanceScale };
                 const prefType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
                 const PrefTypeIcon = prefType ? (typeIcons[prefType[0]] || FaStar) : FaStar;

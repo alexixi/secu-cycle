@@ -22,8 +22,8 @@ export default function StepSportLevel({ level, setLevel, onNext, onSkip, isLoad
                             className={`onboarding-option ${selected ? "selected" : ""}`}
                             onClick={() => setLevel(valeur)}
                         >
-                            <span className="onboarding-option-label">{t(`onboarding.niveau.${valeur}`)}</span>
-                            <span className="onboarding-option-description">{t(`onboarding.niveau.${valeur}Description`)}</span>
+                            <span className="onboarding-option-label">{t(`niveau.${valeur}`)}</span>
+                            <span className="onboarding-option-description">{t(`niveau.${valeur}Description`)}</span>
                         </button>
                     );
                 })}
