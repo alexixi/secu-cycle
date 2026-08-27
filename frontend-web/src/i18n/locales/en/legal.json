@@ -96,7 +96,7 @@
         "titrePage": "Sécu'Cycle | Privacy policy",
         "metaDescription": "Sécu'Cycle privacy policy: data collected, purposes, retention periods and your GDPR rights on the website and mobile app.",
         "h1": "Privacy policy",
-        "maj": "Last updated: 24 August 2026",
+        "maj": "Last updated: 26 August 2026",
         "chapo": "This policy explains what personal data is processed when you use the website <b>secu-cycle.fr</b> and the mobile app<b> Sécu'Cycle</b>, for what purpose, on what legal basis, for how long, and what your rights are. It is written in accordance with the General Data Protection Regulation (GDPR, articles 12 to 14) and the French Data Protection Act.",
         "responsables": {
             "h2": "1. Data controllers",
@@ -159,6 +159,8 @@
             "signalementsDd": "Legal basis: legitimate interest (improving cyclist safety).",
             "audienceDt": "Anonymous audience measurement",
             "audienceDd": "Legal basis: legitimate interest (tools without cookies or trackers, with no identifying data).",
+            "recapDt": "Periodic summary of your activity",
+            "recapDd": "Legal basis: legitimate interest (returning your own usage statistics to you). You may object at any time, in one click from the email itself or from your account settings, without affecting the emails required for the service to function.",
             "securiteDt": "Service security and technical logs",
             "securiteDd": "Legal basis: legitimate interest and compliance with our legal obligations."
         },
@@ -169,7 +171,8 @@
             "maptiler": "<b>MapTiler</b> — base map tiles (the map display coordinates pass through this service)&nbsp;;",
             "ban": "<b>Base Adresse Nationale</b> (adresse.data.gouv.fr, a French public service) — autocomplete for the addresses you type&nbsp;;",
             "aptabase": "<b>Aptabase</b> (European Union region) — anonymous app analytics&nbsp;;",
-            "umami": "<b>Umami</b> — anonymous website analytics, self-hosted by us."
+            "umami": "<b>Umami</b> — anonymous website analytics, self-hosted by us.",
+            "resend": "<b>Resend</b> — delivery of our emails (account verification, password reset, activity summaries); your email address is passed to this provider for that sole purpose."
         },
         "transferts": {
             "h2": "6. Transfers outside the European Union",
@@ -179,6 +182,7 @@
             "h2": "7. Retention periods",
             "compte": "<b>Account and associated data</b>: kept for as long as your account is active, then deleted when you delete your account&nbsp;;",
             "historique": "<b>History and routes</b>: kept until you delete them, or until you delete your account&nbsp;;",
+            "recaps": "<b>Summary delivery log</b>: the record of the summaries sent to you is kept for as long as your account exists, and deleted along with it.",
             "signalements": "<b>Hazard reports</b>: kept for cyclist safety, unlinked from your account if you delete it&nbsp;;",
             "journaux": "<b>Technical logs</b>: 12 months maximum&nbsp;;",
             "statistiques": "<b>Audience analytics</b>: aggregated and anonymous."

@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../../context/AuthContext";
 import Button from "../../ui/Button";
-import { FaUserEdit, FaEnvelope, FaLock, FaChevronRight, FaTrashAlt, FaUserSlash } from "react-icons/fa";
+import { FaUserEdit, FaEnvelope, FaLock, FaChevronRight, FaTrashAlt, FaUserSlash, FaRegNewspaper } from "react-icons/fa";
 import EditPasswordModal from "./EditPasswordModal"
 import DeleteAccountModal from "./DeleteAccountModal";
 import BlockedAuthorsModal from "./BlockedAuthorsModal";
+import NewsletterModal from "./NewsletterModal";
 import { changePassword, deleteAccount } from "../../../services/apiBack";
 import { useLocalizedPath } from '../../../i18n/useLang';
 
@@ -29,6 +30,7 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
     const [isModalOpenPassword, setIsModalOpenPassword] = useState(false);
     const [isModalOpenDelete, setIsModalOpenDelete] = useState(false);
     const [isModalOpenBlocks, setIsModalOpenBlocks] = useState(false);
+    const [isModalOpenNewsletter, setIsModalOpenNewsletter] = useState(false);
     const [deletePasswordError, setDeletePasswordError] = useState(false);
     const [deleteError, setDeleteError] = useState(false);
 
@@ -223,6 +225,19 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
 
                         <button
                             type="button"
+                            className="secondary-action-card"
+                            onClick={() => setIsModalOpenNewsletter(true)}
+                        >
+                            <FaRegNewspaper className="secondary-action-icon" size={18} />
+                            <span className="secondary-action-text">
+                                <strong>Newsletter</strong>
+                                <small>Gérer vos e-mails d&apos;information</small>
+                            </span>
+                            <FaChevronRight className="secondary-action-chevron" size={13} />
+                        </button>
+
+                        <button
+                            type="button"
                             className="secondary-action-card secondary-action-card-danger"
                             onClick={() => setIsModalOpenDelete(true)}
                         >
@@ -254,6 +269,11 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                 isOpen={isModalOpenBlocks}
                 onClose={() => setIsModalOpenBlocks(false)}
                 token={token}
+            />
+
+            <NewsletterModal
+                isOpen={isModalOpenNewsletter}
+                onClose={() => setIsModalOpenNewsletter(false)}
             />
 
             <DeleteAccountModal

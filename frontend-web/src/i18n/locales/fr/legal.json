@@ -96,7 +96,7 @@
         "titrePage": "Sécu'Cycle | Politique de confidentialité",
         "metaDescription": "Politique de confidentialité de Sécu'Cycle : données collectées, finalités, durée de conservation et vos droits (RGPD) sur le site et l'app mobile.",
         "h1": "Politique de confidentialité",
-        "maj": "Dernière mise à jour : 24 août 2026",
+        "maj": "Dernière mise à jour : 26 août 2026",
         "chapo": "La présente politique explique quelles données personnelles sont traitées lorsque vous utilisez le site <b>secu-cycle.fr</b> et l'application mobile<b> Sécu'Cycle</b>, dans quel but, sur quelle base légale, pendant combien de temps et quels sont vos droits. Elle est rédigée conformément au Règlement général sur la protection des données (RGPD, articles 12 à 14) et à la loi Informatique et Libertés.",
         "responsables": {
             "h2": "1. Responsables du traitement",
@@ -159,6 +159,8 @@
             "signalementsDd": "Base légale : intérêt légitime (améliorer la sécurité des cyclistes).",
             "audienceDt": "Mesure d'audience anonyme",
             "audienceDd": "Base légale : intérêt légitime (outils sans cookie ni traceur, sans données identifiantes).",
+            "recapDt": "Récapitulatif périodique de votre activité",
+            "recapDd": "Base légale : intérêt légitime (vous restituer vos propres statistiques d'utilisation). Vous pouvez vous y opposer à tout moment, en un clic depuis l'e-mail lui-même ou depuis les réglages de votre compte, sans que cela affecte les e-mails nécessaires au fonctionnement du service.",
             "securiteDt": "Sécurité du service et journaux techniques",
             "securiteDd": "Base légale : intérêt légitime et respect de nos obligations légales."
         },
@@ -169,7 +171,8 @@
             "maptiler": "<b>MapTiler</b> — fourniture des fonds de carte (les coordonnées d'affichage de la carte transitent par ce service)&nbsp;;",
             "ban": "<b>Base Adresse Nationale</b> (adresse.data.gouv.fr, service public de l'État français) — autocomplétion des adresses que vous saisissez&nbsp;;",
             "aptabase": "<b>Aptabase</b> (région Union européenne) — statistiques anonymes de l'application&nbsp;;",
-            "umami": "<b>Umami</b> — statistiques anonymes du site, auto-hébergé par nos soins."
+            "umami": "<b>Umami</b> — statistiques anonymes du site, auto-hébergé par nos soins.",
+            "resend": "<b>Resend</b> — acheminement de nos e-mails (vérification de compte, réinitialisation de mot de passe, récapitulatifs d'activité)&nbsp;; votre adresse e-mail lui est transmise pour cet unique usage."
         },
         "transferts": {
             "h2": "6. Transferts hors Union européenne",
@@ -179,6 +182,7 @@
             "h2": "7. Durées de conservation",
             "compte": "<b>Compte et données associées</b> : conservés tant que votre compte est actif, puis supprimés à la suppression de votre compte&nbsp;;",
             "historique": "<b>Historique et itinéraires</b> : conservés jusqu'à leur suppression par vos soins ou jusqu'à la suppression de votre compte&nbsp;;",
+            "recaps": "<b>Journal d'envoi des récapitulatifs</b> : la trace des récapitulatifs qui vous ont été envoyés est conservée tant que votre compte existe, et supprimée avec lui.",
             "signalements": "<b>Signalements de dangers</b> : conservés pour la sécurité des cyclistes, dissociés de votre compte en cas de suppression de celui-ci&nbsp;;",
             "journaux": "<b>Journaux techniques</b> : 12 mois maximum&nbsp;;",
             "statistiques": "<b>Statistiques d'audience</b> : agrégées et anonymes."

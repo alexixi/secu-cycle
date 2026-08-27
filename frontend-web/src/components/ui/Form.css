@@ -156,6 +156,45 @@
     color: var(--text-secondary);
 }
 
+/* Variante de `secondary-action-card` qui bascule un réglage au lieu d'ouvrir un
+   écran : le chevron cède la place à une case à cocher. Le bloc est un `<label>`,
+   toute la carte est donc cliquable — une case de 16px seule serait une cible
+   trop petite. */
+.secondary-action-card-check {
+    align-items: flex-start;
+}
+
+.secondary-action-card-check .secondary-action-icon {
+    margin-top: 0.15rem;
+}
+
+/* Ces cartes décrivent un réglage, pas une adresse e-mail : contrairement au cas
+   général (voir `.secondary-action-text small`), le texte doit revenir à la ligne
+   plutôt que d'être tronqué — la modale ne fait que 460px. */
+.secondary-action-card-check .secondary-action-text small {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.35;
+}
+
+.secondary-action-checkbox {
+    flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0.15rem 0 0;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+/* Précision sous les réglages d'abonnement : ce qui n'en dépend pas. */
+.newsletter-note {
+    margin: 0.9rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+}
+
 .forgot-password-link {
     display: block;
     text-align: center;
