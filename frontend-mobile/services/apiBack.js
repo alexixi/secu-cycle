@@ -340,6 +340,14 @@ export async function confirmEmailChange(token, code) {
     }
 }
 
+export async function setRecapEmails(token, enabled) {
+    const data = await apiFetch("/users/me", {
+        method: "PATCH",
+        body: JSON.stringify({ recap_emails: enabled }),
+    }, token);
+    return data;
+}
+
 export async function changeAddress(token, homeAddress, workAddress) {
     try {
         const data = await apiFetch("/users/me", {
