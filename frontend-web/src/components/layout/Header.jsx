@@ -45,7 +45,7 @@ const CONTEXTUAL_EXIT_MS = 200;
 
 const ProfileButton = ({ className, onClick, ariaLabel }) => {
     return (
-        <button id="profile-button" className={className} onClick={onClick} aria-label="Menu profil" aria-haspopup="true">
+        <button id="profile-button" className={className} onClick={onClick} aria-label={ariaLabel} aria-haspopup="true">
             <FaUser size={20} />
         </button>
     );

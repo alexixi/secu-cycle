@@ -89,7 +89,11 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
             setPasswordError(false);
             setGeneralError(false);
         } catch (error) {
-            if (error.status === 401 && error.message === "Ancien mot de passe incorrect.") {
+            // Sur PATCH /users/me/password, 401 ne signifie que « ancien mot de
+            // passe faux » : les 401 de session morte sont interceptés en amont
+            // par l'en-tête X-Auth-Error. Comparer le message traduit casserait
+            // dès que l'API répond en anglais.
+            if (error.status === 401) {
                 setPasswordError(true);
                 setGeneralError(false);
             } else {

@@ -76,7 +76,7 @@ export default function ChangeEmailPage() {
             startResendCooldown();
             setStep(1);
         } catch (err) {
-            setError(mapRequestError(err));
+            setError(mapRequestError(err, t));
         } finally {
             setIsLoading(false);
         }
@@ -122,7 +122,7 @@ export default function ChangeEmailPage() {
                 state: { message: t('changementEmail.succes') },
             });
         } catch (err) {
-            setError(mapConfirmError(err));
+            setError(mapConfirmError(err, t));
         } finally {
             setIsLoading(false);
         }
