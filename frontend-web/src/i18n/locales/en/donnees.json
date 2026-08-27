@@ -135,5 +135,12 @@
         "h2": "Reusing our data",
         "texte": "Sécu'Cycle exposes a public API. The datasets we reuse remain the property of their producers and are subject to their respective licences, listed above&nbsp;: any downstream reuse must respect them, in particular the ODbL share-alike clause. For any question, write to us at <mail>contact@secu-cycle.fr</mail>.",
         "voirAussi": "See also our <mentions>legal notice</mentions> and our <faq>frequently asked questions</faq>."
+    },
+    "licence": {
+        "fluxOuvertsParSysteme": "Open feeds, attribution per system",
+        "copernicus": "Copernicus — attribution required",
+        "attributionRequise": "Attribution required",
+        "eumetnetIrm": "EUMETNET and RMI attribution required",
+        "commercial": "Commercial service — not open data"
     }
 }

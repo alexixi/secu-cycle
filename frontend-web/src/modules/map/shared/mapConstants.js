@@ -14,6 +14,7 @@ import { MdElectricBike, MdLocalParking } from 'react-icons/md';
 // i18n/locales/<langue>/carte.json, sous les préfixes fond./parking./toilettes./
 // reparation./poi. C'est ce qui permet de les partager entre la carte
 // d'itinéraire et les cartes thématiques sans dupliquer le texte.
+import i18n from '../../../i18n/index.js';
 import { carteLabel } from '../../../i18n/carteLabels.js';
 
 export const MAP_STYLES = [
@@ -32,7 +33,19 @@ export function mapStyleUrl(styleId, theme) {
     return `https://api.maptiler.com/maps/${id}/style.json?key=${import.meta.env.VITE_MAPTILER_KEY}`;
 }
 
-export const RELATIVE_TIME_FR = new Intl.RelativeTimeFormat('fr-FR', { numeric: 'auto' });
+const relatifsParLangue = new Map();
+
+/** Formateur de durées relatives, dans la langue active de la page. */
+export const relativeTime = () => {
+    const lang = i18n.language || 'fr';
+    if (!relatifsParLangue.has(lang)) {
+        relatifsParLangue.set(lang, new Intl.RelativeTimeFormat(lang, { numeric: 'auto' }));
+    }
+    return relatifsParLangue.get(lang);
+};
+
+/** Langue de formatage des dates et heures — jamais figée sur le français. */
+export const localeActive = () => i18n.language || 'fr';
 
 /* ------------------------------------------------------------------------- POI */
 
@@ -302,7 +315,7 @@ export const formatAccidentDate = (properties) => {
     const options = properties.date_precision === 'month'
         ? { month: 'long', year: 'numeric' }
         : { day: 'numeric', month: 'long', year: 'numeric' };
-    return parsed.toLocaleDateString('fr-FR', options);
+    return parsed.toLocaleDateString(localeActive(), options);
 };
 
 export const ACCIDENT_HEAT_PAINT = {
@@ -339,17 +352,13 @@ export const TRAFFIC_HITBOX_LAYER_ID = 'traffic-hitbox';
 
 export const TRAFFIC_COLORS = { green: "#22c55e", orange: "#f97316", red: "#ef4444", gray: "#9ca3af" };
 
-export const TRAFFIC_LABELS = {
-    green: 'Circulation fluide',
-    orange: 'Circulation dense',
-    red: 'Axe embouteillé',
-    gray: 'État inconnu',
-};
+/** Libellé d'un niveau de trafic, dans la langue active. */
+export const trafficLabel = (level) => carteLabel('trafic', level in TRAFFIC_COLORS ? level : 'gray');
 
-export const TRAFFIC_CYCLIST_HINT = {
-    orange: '🚲 Trafic ralenti : dépassements serrés et portières, restez visible.',
-    red: '🚲 Axe évité par nos itinéraires sécurisés dès que possible.',
-};
+/** Conseil au cycliste pour un niveau de trafic, ou `null` s'il n'y en a pas. */
+export const trafficCyclistHint = (level) => (
+    level === 'orange' || level === 'red' ? carteLabel('traficConseil', level) : null
+);
 
 export const TRAFFIC_LINE_PAINT = {
     'line-color': ['match', ['get', 'level'],
@@ -455,11 +464,12 @@ export const formatStationFreshness = (lastReported) => {
     const then = new Date(lastReported).getTime();
     if (Number.isNaN(then)) return null;
     const minutes = Math.round((Date.now() - then) / 60000);
-    if (minutes < 1) return 'Données à jour';
-    if (minutes < 60) return `Relevé ${RELATIVE_TIME_FR.format(-minutes, 'minute')}`;
+    const dire = (cle, options) => i18n.t(`ui.popupCarte.${cle}`, { ns: 'carte', ...options });
+    if (minutes < 1) return dire('donneesAJour');
+    if (minutes < 60) return dire('releve', { quand: relativeTime().format(-minutes, 'minute') });
     const hours = Math.round(minutes / 60);
-    if (hours < 24) return `Relevé ${RELATIVE_TIME_FR.format(-hours, 'hour')}`;
-    return 'Relevé ancien, fiabilité incertaine';
+    if (hours < 24) return dire('releve', { quand: relativeTime().format(-hours, 'hour') });
+    return dire('releveAncien');
 };
 
 export const BIKESHARE_HITBOX_PAINT = {

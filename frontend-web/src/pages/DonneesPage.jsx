@@ -5,12 +5,16 @@ import { Helmet } from "react-helmet-async";
 import Meta from "../components/Meta";
 import "./legal.css";
 import { useLocalizedPath } from '../i18n/useLang';
+import { SITE_URL } from '../data/thematicMapsCore';
 
 const ODBL = { label: "ODbL", href: "https://opendatacommons.org/licenses/odbl/" };
 const LO = { label: "Licence Ouverte", href: "https://www.etalab.gouv.fr/licence-ouverte-open-licence/" };
 const LO2 = { label: "Licence Ouverte 2.0", href: "https://www.etalab.gouv.fr/licence-ouverte-open-licence/" };
 const CCBY = { label: "CC BY 4.0", href: "https://creativecommons.org/licenses/by/4.0/deed.fr" };
 
+// i18n-exempt-start: titres officiels de jeux de données, noms d'opérateurs et de
+// services de vélos partagés. Ce sont des noms propres, identiques en anglais ;
+// seules les licences décrites en toutes lettres portent une `labelKey`.
 const SOURCES = [
     {
         name: "OpenStreetMap",
@@ -105,19 +109,19 @@ const SOURCES = [
     {
         name: "GBFS",
         cle: "gbfs",
-        licence: { label: "Flux ouverts, attribution par système" },
+        licence: { labelKey: "licence.fluxOuvertsParSysteme" },
         producer: { label: "gbfs.org", href: "https://gbfs.org/" },
     },
     {
         name: "CAMS",
         cle: "cams",
-        licence: { label: "Copernicus — attribution requise", href: "https://atmosphere.copernicus.eu/data-access" },
+        licence: { labelKey: "licence.copernicus", href: "https://atmosphere.copernicus.eu/data-access" },
         producer: { label: "atmosphere.copernicus.eu", href: "https://atmosphere.copernicus.eu/" },
     },
     {
         name: "World Air Quality Index",
         cle: "world_air_quality_index",
-        licence: { label: "Attribution requise" },
+        licence: { labelKey: "licence.attributionRequise" },
         producer: { label: "waqi.info", href: "https://waqi.info/" },
     },
     {
@@ -135,17 +139,21 @@ const SOURCES = [
     {
         name: "MeteoAlarm",
         cle: "meteoalarm",
-        licence: { label: "Attribution EUMETNET et IRM requise", href: "https://meteoalarm.org/en/live/page/disclaimer" },
+        licence: { labelKey: "licence.eumetnetIrm", href: "https://meteoalarm.org/en/live/page/disclaimer" },
         producer: { label: "meteoalarm.org", href: "https://meteoalarm.org/" },
     },
     {
         name: "MapTiler",
         cle: "maptiler",
-        licence: { label: "Service commercial — hors open data" },
+        licence: { labelKey: "licence.commercial" },
         producer: { label: "maptiler.com", href: "https://www.maptiler.com/" },
     },
 ];
+// i18n-exempt-end
 
+// i18n-exempt-start: titres officiels de jeux de données, noms d'opérateurs et de
+// services de vélos partagés. Ce sont des noms propres, identiques en anglais ;
+// seules les licences décrites en toutes lettres portent une `labelKey`.
 const BIKESHARE_SYSTEMS = [
     ["Le Vélo", "Bordeaux Métropole / Keolis"],
     ["Vélib' Métropole", "Smovengo"],
@@ -157,14 +165,22 @@ const BIKESHARE_SYSTEMS = [
     ["Villo!", "Bruxelles-Capitale / JCDecaux"],
     ["Blue-bike", "Blue-mobility"],
 ];
+// i18n-exempt-end
 
-const construireJsonLd = (t, detail) => ({
+// L'URL canonique dépend de la langue : la figer publierait la page anglaise
+// sous l'adresse française.
+const libelleLicence = (licence, t) =>
+    licence?.labelKey ? t(licence.labelKey) : (licence?.label ?? '');
+
+const absolu = (chemin) => `${SITE_URL}${chemin.endsWith('/') ? chemin : `${chemin}/`}`;
+
+const construireJsonLd = (t, detail, path) => ({
     "@context": "https://schema.org",
     "@type": "WebPage",
     name: t("jsonLd.nom"),
-    url: "https://secu-cycle.fr/donnees/",
+    url: absolu(path("donnees")),
     description: t("jsonLd.description"),
-    isPartOf: { "@type": "WebSite", name: "Sécu'Cycle", url: "https://secu-cycle.fr/" },
+    isPartOf: { "@type": "WebSite", name: "Sécu'Cycle", url: `${SITE_URL}/` },
     mentions: SOURCES.map((s) => ({
         "@type": "Dataset",
         name: detail(s) ? `${s.name} (${detail(s)})` : s.name,
@@ -183,7 +199,7 @@ export default function DonneesPage() {
     // parseMissingKeyHandler l'emporte et renverrait la clé, qui s'afficherait telle
     // quelle dans le tableau et dans le JSON-LD.
     const detail = (s) => (i18n.exists(`donnees:sources.${s.cle}.detail`) ? t(`sources.${s.cle}.detail`) : "");
-    const jsonLd = construireJsonLd(t, detail);
+    const jsonLd = construireJsonLd(t, detail, path);
 
     const composants = {
         b: <strong />,
@@ -245,8 +261,8 @@ export default function DonneesPage() {
                                         <td>{t(`sources.${s.cle}.usage`)}</td>
                                         <td>
                                             {s.licence.href
-                                                ? <a href={s.licence.href} target="_blank" rel="noopener noreferrer">{s.licence.label}</a>
-                                                : s.licence.label}
+                                                ? <a href={s.licence.href} target="_blank" rel="noopener noreferrer">{libelleLicence(s.licence, t)}</a>
+                                                : libelleLicence(s.licence, t)}
                                         </td>
                                         <td>
                                             {s.producer.href

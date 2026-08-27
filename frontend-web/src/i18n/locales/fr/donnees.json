@@ -135,5 +135,12 @@
         "h2": "Réutiliser nos données",
         "texte": "Sécu'Cycle expose une API publique. Les jeux réutilisés restent la propriété de leurs producteurs et sont soumis à leurs licences respectives, rappelées ci-dessus&nbsp;: toute réutilisation en cascade doit les respecter, en particulier la clause de partage à l'identique de l'ODbL. Pour toute question, écrivez-nous à <mail>contact@secu-cycle.fr</mail>.",
         "voirAussi": "Voir aussi nos <mentions>mentions légales</mentions> et notre <faq>foire aux questions</faq>."
+    },
+    "licence": {
+        "fluxOuvertsParSysteme": "Flux ouverts, attribution par système",
+        "copernicus": "Copernicus — attribution requise",
+        "attributionRequise": "Attribution requise",
+        "eumetnetIrm": "Attribution EUMETNET et IRM requise",
+        "commercial": "Service commercial — hors open data"
     }
 }

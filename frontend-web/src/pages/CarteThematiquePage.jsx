@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { Trans, useTranslation } from 'react-i18next';
 import { langFromPathname, matchPath, pathFor } from '../i18n/routes';
-import { sourceDetail, statLabel, themeLabel } from '../i18n/carteLabels';
+import { licenceLabel, sourceDetail, statLabel, themeLabel } from '../i18n/carteLabels';
 import { Helmet } from 'react-helmet-async';
 import { MdOutlineOpenInFull, MdOutlineCloseFullscreen } from 'react-icons/md';
 import Meta from '../components/Meta';
@@ -43,11 +43,7 @@ function CtaItineraire({ page, position, lang, t, routableCitiesLabel }) {
         <aside className="carte-cta">
             <div>
                 <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep, ville: city.name })}</p>
-                <p className="carte-cta-texte">
-                    Sécu’Cycle calcule un itinéraire cyclable sécurisé qui tient compte des
-                    aménagements, de l’éclairage, du trafic et des accidents recensés — avec cette
-                    couche affichée sur la carte.
-                </p>
+                <p className="carte-cta-texte">{t('ui.cta.themeTexte')}</p>
             </div>
             <Link
                 className="button carte-cta-bouton"
@@ -123,7 +119,7 @@ export default function CarteThematiquePage({ registre }) {
                 '@id': canonical,
                 name: content.h1,
                 description: content.description,
-                inLanguage: 'fr',
+                inLanguage: lang,
                 isPartOf: { '@type': 'WebSite', url: abs(pathFor('home', lang)), name: 'Sécu’Cycle' },
                 about: { '@type': 'Place', name: city.name },
                 mentions: page.sources.map(source => ({
@@ -201,9 +197,7 @@ export default function CarteThematiquePage({ registre }) {
                 </div>
 
                 {theme.realtime && (
-                    <p className="carte-note">
-                        Données rafraîchies en continu à partir du flux officiel.
-                    </p>
+                    <p className="carte-note">{t('ui.theme.tempsReel')}</p>
                 )}
 
                 <CtaItineraire page={page} lang={lang} t={t} routableCitiesLabel={routableCitiesLabel} position="sous-carte" />
@@ -250,8 +244,8 @@ export default function CarteThematiquePage({ registre }) {
                                         <>
                                             {' · '}
                                             {source.licence.href
-                                                ? <a href={source.licence.href} target="_blank" rel="noreferrer noopener">{source.licence.label}</a>
-                                                : source.licence.label}
+                                                ? <a href={source.licence.href} target="_blank" rel="noreferrer noopener">{licenceLabel(source.licence)}</a>
+                                                : licenceLabel(source.licence)}
                                         </>
                                     )}
                                 </li>

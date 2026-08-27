@@ -10,7 +10,7 @@ const ALERT_LEGEND = ["none", "watch", "warning", "severe"];
 
 export default function WeatherInfoModal({ isOpen, onClose }) {
     const { t } = useTranslation('carte');
-    const T = ({ k }) => <Trans t={t} i18nKey={k} components={{ b: <strong /> }} />;
+    const T = ({ k }) => <Trans t={t} i18nKey={k} components={{ b: <strong />, em: <em /> }} />;
     useEffect(() => {
         if (!isOpen) return;
 
@@ -64,13 +64,7 @@ export default function WeatherInfoModal({ isOpen, onClose }) {
                         <h3 className="weather-info-sources-title">{t('ui.meteoModal.pluie30')}</h3>
                         <p><T k="ui.meteoModal.pluie30Texte" /></p>
 
-                        <p className="weather-info-warn">
-                            Le <strong>vent</strong> ajuste la durée <em>affichée</em> de
-                            l'itinéraire, jamais le tracé retenu. Sous 3 °C, les
-                            <strong> ponts</strong> d'au moins 30 m sont signalés : un tablier perd
-                            sa chaleur par ses deux faces et gèle une à deux heures avant la
-                            chaussée voisine.
-                        </p>
+                        <p className="weather-info-warn"><T k="ui.meteoModal.ventPonts" /></p>
                     </div>
                 </div>
 
