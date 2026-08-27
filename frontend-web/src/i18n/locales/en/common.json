@@ -17,7 +17,8 @@
         "seConnecter": "Log in",
         "seDeconnecter": "Log out",
         "creerCompte": "Create an account",
-        "monProfil": "My profile"
+        "monProfil": "My profile",
+        "sessionExpiree": "Your session expired for security reasons. Please sign in again."
     },
     "a11y": {
         "menuProfil": "Profile menu",
@@ -34,5 +35,14 @@
         "introuvable": "The page you are looking for does not exist.",
         "verifier": "Please check the URL, or go back to the home page.",
         "retour": "Back to home"
+    },
+    "adresses": {
+        "domicile": "🏠 Home",
+        "travail": "💼 Work"
+    },
+    "theme": {
+        "clair": "Light",
+        "auto": "Auto",
+        "sombre": "Dark"
     }
 }

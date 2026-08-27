@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { MdWarningAmber, MdCampaign, MdWrongLocation, MdMoreHoriz, MdPersonOff } from "react-icons/md";
 import Button from "../../ui/Button";
@@ -5,14 +6,17 @@ import Button from "../../ui/Button";
 import "../../ui/PopUp.css"
 import "./ReportAbuseModal.css"
 
+// `key` part au backend, `cle` désigne le libellé : les deux ne coïncident pas
+// toujours (`wrong_place` / `fantaisiste`), d'où les deux champs.
 const REASONS = [
-    { key: "offensive", Icon: MdWarningAmber, label: "Contenu offensant", hint: "Insultes, haine, propos déplacés" },
-    { key: "spam", Icon: MdCampaign, label: "Spam ou publicité", hint: "Message sans rapport avec la sécurité à vélo" },
-    { key: "wrong_place", Icon: MdWrongLocation, label: "Signalement fantaisiste", hint: "Danger inventé ou placé n'importe où" },
-    { key: "other", Icon: MdMoreHoriz, label: "Autre motif", hint: null },
+    { key: "offensive", Icon: MdWarningAmber, cle: "offensant" },
+    { key: "spam", Icon: MdCampaign, cle: "spam" },
+    { key: "wrong_place", Icon: MdWrongLocation, cle: "fantaisiste" },
+    { key: "other", Icon: MdMoreHoriz, cle: "autre", sansAide: true },
 ];
 
 export default function ReportAbuseModal({ isOpen, onClose, onReport, onBlock }) {
+    const { t } = useTranslation('itineraire');
     useEffect(() => {
         if (!isOpen) return;
 
@@ -40,18 +44,15 @@ export default function ReportAbuseModal({ isOpen, onClose, onReport, onBlock })
     return (
         <div className="modal-overlay">
             <div className="modal-content abuse-modal">
-                <h2>Signaler ce contenu</h2>
-                <p className="abuse-lead">
-                    Nous examinons chaque signalement sous 24 heures. Au-delà de deux
-                    signalements, le contenu disparaît de la carte en attendant notre décision.
-                </p>
+                <h2>{t('signalement.abus.titre')}</h2>
+                <p className="abuse-lead">{t('signalement.abus.delai')}</p>
 
-                {REASONS.map(({ key, Icon, label, hint }) => (
+                {REASONS.map(({ key, Icon, cle, sansAide }) => (
                     <button key={key} type="button" className="abuse-reason" onClick={() => onReport(key)}>
                         <Icon size={20} />
                         <span className="abuse-reason-text">
-                            <strong>{label}</strong>
-                            {hint && <small>{hint}</small>}
+                            <strong>{t(`signalement.abus.${cle}`)}</strong>
+                            {!sansAide && <small>{t(`signalement.abus.${cle}Aide`)}</small>}
                         </span>
                     </button>
                 ))}
@@ -60,14 +61,14 @@ export default function ReportAbuseModal({ isOpen, onClose, onReport, onBlock })
                     <button type="button" className="abuse-reason" onClick={onBlock}>
                         <MdPersonOff size={20} />
                         <span className="abuse-reason-text">
-                            <strong>Bloquer cet auteur</strong>
-                            <small>Vous ne verrez plus aucun de ses signalements. Réversible depuis votre profil.</small>
+                            <strong>{t('signalement.abus.bloquer')}</strong>
+                            <small>{t('signalement.abus.bloquerAide')}</small>
                         </span>
                     </button>
                 </div>
 
                 <div className="modal-actions">
-                    <Button type="button" onClick={onClose}>Annuler</Button>
+                    <Button type="button" onClick={onClose}>{t('signalement.annuler')}</Button>
                 </div>
             </div>
         </div>

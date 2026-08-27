@@ -31,7 +31,7 @@ export default function ItinerairePage() {
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [isReportMode, setIsReportMode] = useState(false);
     const [traffic, setTraffic] = useState(null);
-    const [trafficError, setTrafficError] = useState(null);
+    const [trafficError, setTrafficError] = useState(false);
     const [showTraffic, setShowTraffic] = useState(
         () => new URLSearchParams(window.location.search).get('couche') === 'traffic'
     );
@@ -53,11 +53,11 @@ export default function ItinerairePage() {
                 const data = await getTraffic();
                 if (cancelled) return;
                 setTraffic(data);
-                setTrafficError(null);
+                setTrafficError(false);
                 timer = setTimeout(load, (data?.refresh_interval_s || 300) * 1000);
             } catch (error) {
                 if (cancelled) return;
-                setTrafficError("Trafic momentanément indisponible.");
+                setTrafficError(true);
                 timer = setTimeout(load, 60000);
             }
         };
