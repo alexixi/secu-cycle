@@ -28,7 +28,7 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
                     <span className="weather-detail-now-label">{summary.label}</span>
                     {showFeels && (
                         <span className="weather-detail-muted">
-                            Ressenti {Math.round(feels)} °C
+                            {t('ui.meteo.ressenti', { degres: Math.round(feels) })}
                         </span>
                     )}
                 </span>

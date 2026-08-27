@@ -194,7 +194,7 @@ export default function ChangeEmailPage() {
                                         required
                                     />
                                     {emailError && (
-                                        <div className="error-text">Adresse mail invalide.</div>
+                                        <div className="error-text">{t('erreurs.emailInvalide')}</div>
                                     )}
                                     {isSameAsCurrent && newEmail.length > 0 && (
                                         <div className="error-text">{t('erreurs.emailDejaActuel')}</div>

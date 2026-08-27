@@ -81,7 +81,7 @@ export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, 
                                 />
                             )}
                             {Math.round(wind.speed)} km/h
-                            {gusty ? ` · rafales ${Math.round(wind.gusts)}` : ''}
+                            {gusty ? t('ui.meteo.rafalesTitre', { vitesse: Math.round(wind.gusts) }) : ''}
                         </span>
                     )}
                 </span>
