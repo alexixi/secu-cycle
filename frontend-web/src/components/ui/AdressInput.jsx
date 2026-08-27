@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect, useRef } from "react";
 import { searchAddressAutocomplete, getCoordinatesFromAddress } from "../../services/geocodingService";
 import { isCovered } from "../../services/apiBack";
@@ -5,8 +6,10 @@ import { trackEvent } from "../../services/analytics";
 import { useAuth } from "../../context/AuthContext";
 import "./AdressInput.css";
 import "./Input.css"
+import i18n from '../../i18n/index';
 
 export default function AdressInput({ id, placeholder, onSelect, defaultValue, autoFocus = false, showFavorite = false, checkCoverage = false, children: icon }) {
+    const { t } = useTranslation('auth');
     const { user } = useAuth();
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
@@ -26,7 +29,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         if (user.home_address) {
             favs.push({
                 id: "fav-home",
-                name: "🏠 Domicile",
+                name: i18n.t('adresses.domicile', { ns: 'common' }),
                 display_name: user.home_address,
                 isFavorite: true
             });
@@ -35,7 +38,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         if (user.work_address) {
             favs.push({
                 id: "fav-work",
-                name: "💼 Travail",
+                name: i18n.t('adresses.travail', { ns: 'common' }),
                 display_name: user.work_address,
                 isFavorite: true
             });
@@ -203,20 +206,20 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
 
             {hasError && (
                 <div className="error-text">
-                    Adresse invalide. Veuillez choisir dans la liste.
+                    {t('erreurs.adresseInvalide')}
                 </div>
             )}
 
             {outOfZone && !hasError && (
                 <div className="warning-text">
-                    Cette adresse est en dehors de la zone couverte par Sécu-Cycle.
+                    {t('erreurs.adresseHorsZone')}
                 </div>
             )}
 
             {isOpen && noResults && suggestions.length === 0 && (
                 <ul className="autocomplete-list">
                     <li className="autocomplete-empty" aria-disabled="true">
-                        Aucun résultat trouvé
+                        {t('erreurs.aucunResultat')}
                     </li>
                 </ul>
             )}

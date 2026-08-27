@@ -55,7 +55,7 @@ export default function StepVerifyEmail({
                     {resendLabel}
                 </button>
                 <button type="button" className="onboarding-link secondary" onClick={onEditEmail}>
-                    Modifier l&apos;e-mail
+                    {t('onboarding.verifEmail.modifierEmail')}
                 </button>
             </div>
 

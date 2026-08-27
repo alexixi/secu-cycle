@@ -162,7 +162,7 @@ export default function ForgotPasswordPage() {
                             </Button>
 
                             <Link to={path("login")} className="forgot-password-link" style={{ textAlign: "center" }}>
-                                Retour à la connexion
+                                {t('motDePasseOublie.retourConnexion')}
                             </Link>
                         </form>
                     ) : (
@@ -205,7 +205,7 @@ export default function ForgotPasswordPage() {
                                         }}
                                     />
                                     <div className="rule" style={{ marginTop: "0.5rem" }}>
-                                        Au moins {MIN_PASSWORD_LENGTH} caractères.
+                                        {t('champs.regleMotDePasse', { min: MIN_PASSWORD_LENGTH })}
                                     </div>
                                 </div>
 

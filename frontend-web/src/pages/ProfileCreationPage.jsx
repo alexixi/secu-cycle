@@ -387,7 +387,7 @@ export default function ProfileCreationPage() {
             <div className="page-form-container">
                 <div className="form-container">
                     <div className="onboarding-header">
-                        <button type="button" className="onboarding-back" onClick={handleBack} aria-label="Retour">
+                        <button type="button" className="onboarding-back" onClick={handleBack} aria-label={t('actions.retour')}>
                             <IoArrowBack size={24} />
                         </button>
                         <OnboardingProgress current={step} total={TOTAL_STEPS} />

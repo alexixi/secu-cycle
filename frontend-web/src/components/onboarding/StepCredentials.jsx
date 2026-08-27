@@ -62,7 +62,7 @@ export default function StepCredentials({
                             setEmailSyntaxError(false);
                         }
                     }}
-                    placeholder="exemple@gmail.com"
+                    placeholder={t('champs.emailPlaceholder')}
                     required
                     autoFocus
                 />
@@ -112,7 +112,7 @@ export default function StepCredentials({
             )}
         </form>
 
-        <div className="separator">ou</div>
+        <div className="separator">{t('connexion.ou')}</div>
 
         <LinkButton to={path("login")}>{t('onboarding.identifiants.dejaUnCompte')} <LuLogIn /></LinkButton>
         </div>

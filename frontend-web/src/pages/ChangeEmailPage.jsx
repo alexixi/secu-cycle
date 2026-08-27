@@ -197,12 +197,12 @@ export default function ChangeEmailPage() {
                                         <div className="error-text">Adresse mail invalide.</div>
                                     )}
                                     {isSameAsCurrent && newEmail.length > 0 && (
-                                        <div className="error-text">C&apos;est déjà votre adresse actuelle.</div>
+                                        <div className="error-text">{t('erreurs.emailDejaActuel')}</div>
                                     )}
                                 </div>
 
                                 <div className="input-group">
-                                    <label htmlFor="password">Votre mot de passe</label>
+                                    <label htmlFor="password">{t('champs.votreMotDePasse')}</label>
                                     <PasswordInput
                                         name="password"
                                         autoComplete="current-password"
