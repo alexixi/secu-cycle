@@ -111,6 +111,7 @@ const Header = () => {
         <header>
             <span id="header-logo-title" onClick={() => go("home")}>
                 <Logo id="header-logo" />
+                {/* i18n-exempt: nom de la marque */}
                 <div id="header-title">Sécu'Cycle</div>
             </span>
             <nav className='media-large'>

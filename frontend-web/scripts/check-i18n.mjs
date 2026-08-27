@@ -16,7 +16,7 @@
 // (« période couverte » suppose des dates). On l'appelle donc deux fois, à vide
 // et avec un jeu représentatif, et on prend l'union.
 
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -161,6 +161,116 @@ async function verifierRegistres() {
     return anomalies;
 }
 
+// --- littéraux français en dur ------------------------------------------------
+//
+// Le contrôle qui manquait. Les catalogues peuvent être parfaitement à parité
+// pendant qu'un composant entier rend du français en dur : c'est exactement ce
+// qui s'est produit sur la page itinéraire, où cinq composants n'avaient aucun
+// `t()` alors que le domaine `itineraire` existait depuis des mois.
+//
+// Heuristique : un littéral est suspect s'il porte un accent OU un mot-outil
+// français, ET au moins une espace. La condition d'espace élimine l'essentiel du
+// bruit — un mot isolé est bien plus souvent un identifiant, une classe CSS ou
+// un nom propre qu'une phrase d'interface. Elle laisse donc passer « Terminer »
+// ou « Retour » : c'est le prix d'un contrôle qu'on ne contourne pas.
+//
+// On attrape aussi, indépendamment de tout mot français, les formateurs figés
+// sur une locale littérale. C'est la classe de défaut la plus dangereuse : elle
+// ne contient aucun mot à repérer, survit à toute relecture, et produit « il y a
+// 5 minutes » au milieu d'une page anglaise.
+
+const ACCENT = /[éèêëàâçùûüôöîïœÉÈÀÇÔÎ]/;
+const MOT_OUTIL = /\b(le|la|les|des|une|un|du|vous|votre|vos|pour|avec|sur|dans|est|sont|par|aucun|aucune|cette|ce|et|au|aux|qui|que|pas|plus|non|ses|son|sa|nos|notre|ou)\b/i;
+// L'élision est le marqueur le plus spécifiquement français : « d'administration »,
+// « l'éclairage », « n'est ». L'anglais ne la connaît pas — « don't » a bien une
+// apostrophe, mais précédée d'une lettre, d'où l'ancrage sur un début de mot.
+const ELISION = /(?:^|[\s(«"'`>])[dlnmtsjcDLNMTSJC]'/;
+const LITTERAL = /(["'`])((?:(?!\1)[^\\]|\\.){2,})\1/g;
+const TEXTE_JSX = />\s*([A-Za-zÀ-ÿ][^<>{}\n]{3,})\s*</g;
+const LOCALE_FIGEE = /(?:toLocale(?:Date|Time)?String|Intl\.[A-Za-z]+Format)\s*\(\s*['"][a-z]{2}(?:-[A-Z]{2})?['"]/;
+
+// Fichiers hors du contrôle : le catalogue de référence, les deux registres
+// éditoriaux et les jeux d'essai. Les registres sont de la prose relue comme
+// telle, et l'anglais y cite forcément des noms propres français — « Métropole
+// de Lyon », « Île-de-France » — que l'heuristique ne peut pas distinguer d'une
+// phrase oubliée.
+const CHEMINS_EXEMPTS = [
+    /src[/\\]i18n[/\\]locales[/\\]fr[/\\]/,
+    /thematicMaps\.(fr|en)\.js$/,
+    /\.mock\.[jt]sx?$/,
+];
+
+// Deux formes d'exemption, la raison étant obligatoire dans les deux cas : c'est
+// elle qui distingue une exemption réfléchie d'un contournement.
+//
+//   // i18n-exempt: <raison>              -> la ligne suivante
+//   // i18n-exempt-start: <raison>  ...   -> jusqu'à // i18n-exempt-end
+//
+// Les deux s'écrivent aussi en commentaire JSX — {/* i18n-exempt: … */} — car
+// dans du JSX, `//` n'est pas un commentaire : il est rendu comme du texte.
+//
+// La forme par région existe pour les tables de noms propres — titres officiels
+// de jeux de données, opérateurs, licences — où quarante marqueurs de ligne
+// noieraient la raison au lieu de la porter.
+const OUVERTURE = String.raw`^\s*(?:\/\/|\{\s*\/\*)\s*`;
+const EXEMPTION = new RegExp(OUVERTURE + String.raw`i18n-exempt\s*:\s*\S`);
+const EXEMPTION_DEBUT = new RegExp(OUVERTURE + String.raw`i18n-exempt-start\s*:\s*\S`);
+const EXEMPTION_FIN = new RegExp(OUVERTURE + String.raw`i18n-exempt-end\b`);
+
+function fichiersSource(racine) {
+    const out = [];
+    for (const entree of readdirSync(racine, { withFileTypes: true })) {
+        const chemin = join(racine, entree.name);
+        if (entree.isDirectory()) out.push(...fichiersSource(chemin));
+        else if (/\.(jsx?|tsx?)$/.test(entree.name)) out.push(chemin);
+    }
+    return out;
+}
+
+function verifierLitteraux() {
+    const anomalies = [];
+    const racine = join(ici, '..', 'src');
+
+    for (const chemin of fichiersSource(racine)) {
+        const relatif = chemin.slice(join(ici, '..').length + 1);
+        if (CHEMINS_EXEMPTS.some(motif => motif.test(relatif))) continue;
+
+        const lignes = readFileSync(chemin, 'utf-8').split('\n');
+        let dansRegion = false;
+        lignes.forEach((ligne, index) => {
+            if (EXEMPTION_DEBUT.test(ligne)) { dansRegion = true; return; }
+            if (EXEMPTION_FIN.test(ligne)) { dansRegion = false; return; }
+            if (dansRegion) return;
+
+            const nu = ligne.trim();
+            if (nu.startsWith('//') || nu.startsWith('*') || nu.startsWith('/*') || nu.startsWith('{/*')) return;
+            if (ligne.includes('console.')) return;
+            if (index > 0 && EXEMPTION.test(lignes[index - 1])) return;
+
+            if (LOCALE_FIGEE.test(ligne)) {
+                anomalies.push(`${relatif}:${index + 1} — locale figée : ${nu.slice(0, 70)}`);
+                return;
+            }
+
+            const suspects = [];
+            for (const m of ligne.matchAll(LITTERAL)) {
+                const texte = m[2];
+                if (!texte.includes(' ')) continue;
+                if (/^(https?:|#|var\(|data:|M )/.test(texte)) continue;
+                if (ACCENT.test(texte) || MOT_OUTIL.test(texte) || ELISION.test(texte)) suspects.push(texte);
+            }
+            for (const m of ligne.matchAll(TEXTE_JSX)) {
+                const texte = m[1].trim();
+                if (ACCENT.test(texte) || MOT_OUTIL.test(texte) || ELISION.test(texte)) suspects.push(texte);
+            }
+            for (const texte of suspects) {
+                anomalies.push(`${relatif}:${index + 1} — littéral français : « ${texte.slice(0, 60)} »`);
+            }
+        });
+    }
+    return anomalies;
+}
+
 let anomalies = 0;
 let restantes = 0;
 
@@ -292,7 +402,17 @@ for (const ligne of await verifierRegistres()) {
     anomalies += 1;
 }
 
+const litteraux = verifierLitteraux();
+for (const ligne of litteraux) {
+    console.error(`LITTÉRAL   ${ligne}`);
+    anomalies += 1;
+}
+if (!litteraux.length) console.log('aucun littéral français en dur hors des fichiers exemptés.');
+
 if (anomalies > 0) {
-    console.error(`\n${anomalies} clé(s) sans texte. Ces libellés s'afficheraient bruts.`);
+    console.error(`\n${anomalies} anomalie(s). Une clé sans texte s'affiche brute ; un littéral en dur`
+        + ` ou une locale figée reste en français au milieu d'une page anglaise.`);
+    console.error(`Pour un cas légitime — nom propre, titre officiel de jeu de données — poser`
+        + ` « // i18n-exempt: <raison> » sur la ligne précédente.`);
     process.exit(1);
 }
