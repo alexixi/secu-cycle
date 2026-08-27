@@ -12,7 +12,6 @@ from models import (  # noqa: F401
     bike,
     commune_lighting,
     email_verification,
-    faq,
     geocode_cache,
     graph_profile,
     history,
