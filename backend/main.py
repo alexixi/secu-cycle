@@ -24,14 +24,12 @@ from routers import traffic
 from routers import air_quality
 from routers import bikeshare
 from routers import weather
-from routers import faq
 from routers import task
 from routers import tag
 from routers import graph as graph_router
 from routers import geo
 from routers import contact
 from routers import badge
-from seed_faqs import seed_faqs
 from routers import recap as recap_router
 from seed_badges import seed_badges
 from graph import builder as graph_builder
@@ -323,7 +321,6 @@ async def periodic_lighting_sync(app: FastAPI):
             print(f"[Background Task] Échec de la synchro éclairage : {exc}", flush=True)
 
 
-seed_faqs()
 seed_badges()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -478,7 +475,6 @@ app.include_router(traffic.router)
 app.include_router(air_quality.router)
 app.include_router(weather.router)
 app.include_router(bikeshare.router)
-app.include_router(faq.router)
 app.include_router(task.router)
 app.include_router(tag.router)
 app.include_router(graph_router.router)

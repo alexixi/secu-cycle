@@ -131,6 +131,33 @@ async function verifierRegistres() {
             }
         }
     }
+
+    // La réponse « villes » de la FAQ cite chaque ville du socle et la lie à sa page :
+    // c'est le maillage interne du référencement local. Une ville ajoutée au registre
+    // sans être citée là reste invisible depuis la FAQ ; une ville citée après son
+    // retrait du registre perd son lien en silence, puisque <Trans> rend une balise
+    // sans composant homonyme comme du texte nu. Les deux sens se vérifient donc.
+    const BALISES_HORS_VILLE = new Set(['carte', 'itineraire', 'donnees', 'mail']);
+    for (const lang of LANGS) {
+        let faq;
+        try {
+            faq = readFileSync(join(ici, '..', 'src', 'i18n', 'locales', lang, 'faq.json'), 'utf-8');
+        } catch {
+            continue;
+        }
+        const balises = new Set([...faq.matchAll(/<(\w+)>/g)].map(m => m[1]));
+        for (const slug of villesConnues) {
+            if (!balises.has(slug)) {
+                anomalies.push(`${lang}/faq.json — la ville « ${slug} » du socle n'est ni citée ni liée`);
+            }
+        }
+        for (const balise of balises) {
+            if (!villesConnues.has(balise) && !BALISES_HORS_VILLE.has(balise)) {
+                anomalies.push(`${lang}/faq.json — balise « ${balise} » : ni ville du socle, ni lien connu`);
+            }
+        }
+    }
+
     return anomalies;
 }
 

@@ -1,6 +1,6 @@
 """Seed idempotent du catalogue de badges.
 
-Idempotent par `code` (et non par « table vide » comme seed_faqs) : un badge
+Idempotent par `code`, et non par « table vide » : un badge
 déjà présent voit ses libellés, icône et seuil mis à jour, ce qui permet d'ajuster le
 catalogue au fil des déploiements sans dupliquer.
 
