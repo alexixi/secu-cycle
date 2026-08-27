@@ -46,6 +46,7 @@ export const cityHubTitle = (city) => `Cycling maps in ${city.name}`;
 
 export const CITIES_CONTENT = {
     bordeaux: {
+        name: 'Bordeaux',
         label: 'Bordeaux and its metropolitan area',
         communes: 'the 28 municipalities of Bordeaux Métropole and around fifteen more in southern Gironde',
         metaDescription: 'Every cycling map for Bordeaux Métropole: bike parking, toilets, '
@@ -56,6 +57,7 @@ export const CITIES_CONTENT = {
     },
 
     rennes: {
+        name: 'Rennes',
         label: 'Rennes and its metropolitan area',
         communes: 'the 43 municipalities of Rennes Métropole',
         metaDescription: 'Every cycling map for Rennes Métropole: bike parking, toilets, drinking '
@@ -72,6 +74,7 @@ export const CITIES_CONTENT = {
         },
     },
     nantes: {
+        name: 'Nantes',
         label: 'Nantes and its metropolitan area',
         communes: 'the 24 municipalities of Nantes Métropole',
         metaDescription: 'Every cycling map for Nantes Métropole: bike parking, toilets, drinking '
@@ -84,6 +87,7 @@ export const CITIES_CONTENT = {
             + 'here does remain synchronised.',
     },
     paris: {
+        name: 'Paris',
         label: 'Paris and Greater Paris',
         communes: 'the 130 municipalities of the Métropole du Grand Paris',
         metaDescription: 'Every cycling map for Greater Paris: bike parking, toilets, drinking water, '
@@ -102,6 +106,7 @@ export const CITIES_CONTENT = {
         },
     },
     lyon: {
+        name: 'Lyon',
         label: 'Lyon and its metropolitan area',
         communes: 'the 58 municipalities of the Métropole de Lyon',
         metaDescription: 'Every cycling map for the Métropole de Lyon: bike parking, toilets, drinking '
@@ -119,6 +124,7 @@ export const CITIES_CONTENT = {
         },
     },
     lille: {
+        name: 'Lille',
         label: 'Lille and its metropolitan area',
         communes: 'the 95 municipalities of the Métropole Européenne de Lille',
         metaDescription: 'Every cycling map for the Métropole Européenne de Lille: bike parking, '
@@ -138,6 +144,7 @@ export const CITIES_CONTENT = {
         },
     },
     strasbourg: {
+        name: 'Strasbourg',
         label: 'Strasbourg and the Eurométropole',
         communes: 'the 33 municipalities of the Eurométropole de Strasbourg',
         metaDescription: 'Every cycling map for the Eurométropole de Strasbourg: bike parking, toilets, '
@@ -156,6 +163,7 @@ export const CITIES_CONTENT = {
         },
     },
     tournai: {
+        name: 'Tournai',
         label: 'Tournai, Mouscron and the Tournaisis',
         communes: 'Tournai, Antoing, Leuze-en-Hainaut, Estaimpuis, Mont-de-l’Enclus and Mouscron',
         metaDescription: 'Cycling maps for the Tournaisis and the Mouscron area: bike parking, cycling '
@@ -173,6 +181,12 @@ export const CITIES_CONTENT = {
         },
     },
     bruxelles: {
+        // Seule ville du socle dont le nom diffère en anglais. Sans cette
+        // surcharge, buildRegistry retombe sur le `name` français du socle, et
+        // « Bruxelles » apparaît dans les fils d'Ariane et les appels à l'action
+        // des pages anglaises — alors que son slug d'URL, lui, est bien traduit
+        // (`/en/map/brussels`, cf. i18n/slugs.js).
+        name: 'Brussels',
         label: 'Brussels and its 19 municipalities',
         communes: 'the 19 municipalities of the Brussels-Capital Region',
         metaDescription: 'Every cycling map for Brussels-Capital: bike parking, toilets, drinking water, '

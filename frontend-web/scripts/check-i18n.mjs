@@ -16,7 +16,7 @@
 // (« période couverte » suppose des dates). On l'appelle donc deux fois, à vide
 // et avec un jeu représentatif, et on prend l'union.
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -158,6 +158,27 @@ async function verifierRegistres() {
         }
     }
 
+    // Le nom de ville est le SEUL champ textuel que le socle transmet aux
+    // registres éditoriaux. Sans surcharge, buildRegistry retombe dessus — et il
+    // est écrit en français. « Bruxelles » s'est ainsi affiché sur les pages
+    // anglaises alors que son slug d'URL, lui, était bien traduit. On exige donc
+    // une déclaration explicite : même « Paris » vaut mieux dit que sous-entendu.
+    for (const lang of LANGS.filter(l => l !== 'fr')) {
+        let registre;
+        try {
+            registre = await import(`../src/data/thematicMaps.${lang}.js`);
+        } catch {
+            continue;
+        }
+        for (const city of CITIES) {
+            const editorial = registre.CITIES_CONTENT?.[city.slug];
+            if (editorial && !editorial.name) {
+                anomalies.push(`${lang} — la ville « ${city.slug} » ne déclare pas son nom :`
+                    + ` le socle imposerait « ${city.name} », en français`);
+            }
+        }
+    }
+
     return anomalies;
 }
 
@@ -185,8 +206,21 @@ const MOT_OUTIL = /\b(le|la|les|des|une|un|du|vous|votre|vos|pour|avec|sur|dans|
 // « l'éclairage », « n'est ». L'anglais ne la connaît pas — « don't » a bien une
 // apostrophe, mais précédée d'une lettre, d'où l'ancrage sur un début de mot.
 const ELISION = /(?:^|[\s(«"'`>])[dlnmtsjcDLNMTSJC]'/;
+// Mots d'interface français dépourvus d'accent, de mot-outil et d'élision : ni
+// l'un ni l'autre des filtres précédents ne les voit. La liste est courte et
+// volontairement sans ambiguïté avec l'anglais — « Ressenti », « rafales » et
+// « Page d'administration » sont passés au travers avant qu'elle existe.
+const MOT_FRANCAIS = /\b(ressenti|rafales?|couvert|terminer|retour|clair|sombre|ajouter|modifier|supprimer|confirmer|annuler|fermer|enregistrer|valider|envoyer|rechercher|connexion|deconnexion|parametres|adresse|velo|trajet|itineraire|depart|arrivee|duree|vitesse|semaine|aucun|oui|non|precedent|suivant|nuage|pluie|neige|brouillard|vent)\b/i;
 const LITTERAL = /(["'`])((?:(?!\1)[^\\]|\\.){2,})\1/g;
 const TEXTE_JSX = />\s*([A-Za-zÀ-ÿ][^<>{}\n]{3,})\s*</g;
+// Positions où un littéral est forcément lu par l'utilisateur. Là, on ne cherche
+// plus des indices de français : TOUT littéral est suspect, quelle que soit la
+// langue. C'est ce qui attrape « Ressenti », « Terminer » ou « Clair » — des mots
+// sans accent, sans mot-outil et sans élision, que l'heuristique française
+// laisse passer par construction. Le bruit mesuré est de six exemptions sur tout
+// le dépôt, toutes des noms propres.
+const ATTRIBUT_VISIBLE = /\b(title|aria-label|placeholder|alt)=(["'])([^"']{2,})\2/g;
+const TEXTE_JSX_NU = />\s*([A-Za-zÀ-ÿ][^<>{}\n]{1,})\s*</g;
 const LOCALE_FIGEE = /(?:toLocale(?:Date|Time)?String|Intl\.[A-Za-z]+Format)\s*\(\s*['"][a-z]{2}(?:-[A-Z]{2})?['"]/;
 
 // Fichiers hors du contrôle : le catalogue de référence, les deux registres
@@ -257,16 +291,105 @@ function verifierLitteraux() {
                 const texte = m[2];
                 if (!texte.includes(' ')) continue;
                 if (/^(https?:|#|var\(|data:|M )/.test(texte)) continue;
-                if (ACCENT.test(texte) || MOT_OUTIL.test(texte) || ELISION.test(texte)) suspects.push(texte);
+                // Un gabarit qui commence par un préfixe de clé ou par une
+                // interpolation est un chemin ou une clé de catalogue —
+                // « velo.${type} », « ${pathFor(…)}?couche=… » — jamais du texte
+                // affiché. Le mot français qu'il contient est un identifiant.
+                if (/^[\w.]*\$\{/.test(texte)) continue;
+                if (ACCENT.test(texte) || MOT_OUTIL.test(texte) || ELISION.test(texte) || MOT_FRANCAIS.test(texte)) suspects.push(texte);
             }
             for (const m of ligne.matchAll(TEXTE_JSX)) {
                 const texte = m[1].trim();
-                if (ACCENT.test(texte) || MOT_OUTIL.test(texte) || ELISION.test(texte)) suspects.push(texte);
+                if (ACCENT.test(texte) || MOT_OUTIL.test(texte) || ELISION.test(texte) || MOT_FRANCAIS.test(texte)) suspects.push(texte);
             }
             for (const texte of suspects) {
                 anomalies.push(`${relatif}:${index + 1} — littéral français : « ${texte.slice(0, 60)} »`);
             }
+            if (!/\.(jsx|tsx)$/.test(relatif)) return;
+            const visibles = [];
+            for (const m of ligne.matchAll(ATTRIBUT_VISIBLE)) visibles.push(`${m[1]}="${m[3]}"`);
+            for (const m of ligne.matchAll(TEXTE_JSX_NU)) {
+                const texte = m[1].trim();
+                if (texte) visibles.push(texte);
+            }
+            for (const texte of visibles) {
+                if (suspects.includes(texte)) continue;
+                anomalies.push(`${relatif}:${index + 1} — texte visible en dur : « ${texte.slice(0, 60)} »`);
+            }
         });
+    }
+    return anomalies;
+}
+
+// --- domaines chargés vs domaines consommés -----------------------------------
+//
+// Troisième mode de défaillance, distinct des deux autres et tout aussi
+// silencieux : un composant déclare `useTranslation('carte')` alors que la page
+// qui l'affiche ne charge pas ce domaine. La clé est alors servie telle quelle.
+//
+// C'est arrivé deux fois. `AdressInput` lisait le domaine `auth` alors qu'il est
+// rendu par la page itinéraire ; et `ProfilePage` rendait MapComponent, via la
+// modale d'historique, sans charger `carte` — l'infobulle du bouton de fond de
+// carte y affichait « ui.controles.changerFond ».
+//
+// On remonte donc le graphe d'imports de chaque page et on compare ce que ses
+// composants consomment à ce que `lazyPage` déclare. `common` est chargé à
+// l'initialisation, il est donc toujours disponible.
+
+const resoudreImport = (depuis, spec) => {
+    if (!spec.startsWith('.')) return null;
+    const base = join(dirname(depuis), spec);
+    for (const candidat of [base, `${base}.jsx`, `${base}.js`, join(base, 'index.jsx'), join(base, 'index.js')]) {
+        if (existsSync(candidat) && !candidat.endsWith('.json')) return candidat;
+    }
+    return null;
+};
+
+const grapheImports = (racine, vus = new Set()) => {
+    if (vus.has(racine)) return vus;
+    vus.add(racine);
+    for (const m of readFileSync(racine, 'utf-8').matchAll(/from\s+["']([^"']+)["']/g)) {
+        const resolu = resoudreImport(racine, m[1]);
+        if (resolu) grapheImports(resolu, vus);
+    }
+    return vus;
+};
+
+const domainesConsommes = (fichier) => {
+    const src = readFileSync(fichier, 'utf-8');
+    const out = new Set();
+    for (const m of src.matchAll(/useTranslation\(\s*['"](\w+)['"]/g)) out.add(m[1]);
+    for (const m of src.matchAll(/ns:\s*['"](\w+)['"]/g)) out.add(m[1]);
+    return out;
+};
+
+function verifierDomaines() {
+    const anomalies = [];
+    const src = join(ici, '..', 'src');
+    const app = readFileSync(join(src, 'App.jsx'), 'utf-8');
+
+    const pages = [
+        ...[...app.matchAll(/const (\w+) = lazyPage\(\(\) => import\('\.\/([^']+)'\)((?:,\s*'\w+')*)\)/g)]
+            .map(m => ({ nom: m[1], fichier: join(src, `${m[2]}.jsx`),
+                declares: new Set(['common', ...[...m[3].matchAll(/'(\w+)'/g)].map(x => x[1])]) })),
+        // carteLazy charge « carte » pour les trois pages de cartes thématiques.
+        ...[...app.matchAll(/const (\w+) = carteLazy\(\(\) => import\('\.\/([^']+)'\)\)/g)]
+            .map(m => ({ nom: m[1], fichier: join(src, `${m[2]}.jsx`),
+                declares: new Set(['common', 'carte']) })),
+    ];
+
+    for (const page of pages) {
+        if (!existsSync(page.fichier)) {
+            anomalies.push(`${page.nom} — fichier introuvable : ${page.fichier}`);
+            continue;
+        }
+        for (const fichier of grapheImports(page.fichier)) {
+            for (const ns of domainesConsommes(fichier)) {
+                if (page.declares.has(ns)) continue;
+                const relatif = fichier.slice(src.length + 1);
+                anomalies.push(`${page.nom} ne charge pas « ${ns} », consommé par ${relatif}`);
+            }
+        }
     }
     return anomalies;
 }
@@ -401,6 +524,13 @@ for (const ligne of await verifierRegistres()) {
     console.error(`REGISTRE   ${ligne}`);
     anomalies += 1;
 }
+
+const domaines = verifierDomaines();
+for (const ligne of domaines) {
+    console.error(`DOMAINE    ${ligne}`);
+    anomalies += 1;
+}
+if (!domaines.length) console.log('chaque page charge les domaines que ses composants consomment.');
 
 const litteraux = verifierLitteraux();
 for (const ligne of litteraux) {

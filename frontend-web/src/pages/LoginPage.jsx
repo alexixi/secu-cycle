@@ -66,6 +66,7 @@ export default function Login() {
                 {errorMessage && (
                     <div className="info-box">
                         <p>{errorMessage}</p>
+                        {/* i18n-exempt: « OK » est identique dans les deux langues */}
                         <button className="button" onClick={() => setErrorMessage("")}>OK</button>
                     </div>
                 )}
