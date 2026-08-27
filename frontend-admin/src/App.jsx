@@ -3,7 +3,6 @@ import ProtectedRoute from "./components/layout/ProtectedRoute";
 import AdminLayout from "./components/layout/AdminLayout";
 import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
-import FaqPage from "./pages/FaqPage";
 import PlanningPage from "./pages/PlanningPage";
 import ReportsPage from "./pages/ReportsPage";
 import PoisPage from "./pages/PoisPage";
@@ -26,7 +25,6 @@ export default function App() {
       >
         <Route path="/" element={<UsersPage />} />
         <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/faq" element={<FaqPage />} />
         <Route path="/planning" element={<PlanningPage />} />
         <Route path="/pois" element={<PoisPage />} />
         <Route path="/accidents" element={<AccidentsPage />} />
