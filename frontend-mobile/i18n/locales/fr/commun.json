@@ -13,5 +13,6 @@
     "chargement": "Chargement…",
     "oui": "Oui",
     "non": "Non",
-    "erreurReseau": "Connexion impossible. Vérifiez votre connexion et réessayez."
+    "erreurReseau": "Connexion impossible. Vérifiez votre connexion et réessayez.",
+    "erreur": "Erreur"
 }

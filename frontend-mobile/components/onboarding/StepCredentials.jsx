@@ -6,6 +6,7 @@ import EmailInput from "../ui/EmailInput";
 import PasswordInput from "../ui/PasswordInput";
 import { useTheme } from "../../hooks/useTheme";
 import { LEGAL_LINKS, openLegalPage } from "../../constants/legal";
+import { Trans, useTranslation } from "react-i18next";
 
 export const MIN_PASSWORD_LENGTH = 10;
 
@@ -26,6 +27,7 @@ export default function StepCredentials({
     isLoading,
 }) {
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
 
     const passwordTooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH;
     const isValidated =
@@ -37,13 +39,13 @@ export default function StepCredentials({
 
     return (
         <View style={styles.formContainer}>
-            <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Créer un compte</Text>
+            <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>{t('auth.onboarding.identifiants.h2')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Commençons par vos identifiants de connexion.
+                {t('auth.onboarding.identifiants.intro')}
             </Text>
 
             <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Adresse mail *</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.onboarding.identifiants.email')}</Text>
                 <EmailInput
                     email={email}
                     setEmail={setEmail}
@@ -55,7 +57,7 @@ export default function StepCredentials({
             </View>
 
             <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Mot de passe *</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.onboarding.identifiants.motDePasse')}</Text>
                 <PasswordInput
                     password={password}
                     setPassword={setPassword}
@@ -63,16 +65,16 @@ export default function StepCredentials({
                     setHasError={() => setPasswordMismatch(false)}
                     autoComplete="new-password"
                 />
-                <Text style={[styles.hintText, { color: colors.textSecondary }]}>Au moins {MIN_PASSWORD_LENGTH} caractères.</Text>
+                <Text style={[styles.hintText, { color: colors.textSecondary }]}>{t('auth.onboarding.identifiants.regleLongueur', { count: MIN_PASSWORD_LENGTH })}</Text>
                 {passwordTooShort && (
                     <Text style={[styles.errorText, { color: colors.error }]}>
-                        Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères.
+                        {t('auth.onboarding.identifiants.tropCourt', { count: MIN_PASSWORD_LENGTH })}
                     </Text>
                 )}
             </View>
 
             <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Confirmation du mot de passe *</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.onboarding.identifiants.confirmation')}</Text>
                 <PasswordInput
                     password={password2}
                     setPassword={setPassword2}
@@ -82,7 +84,7 @@ export default function StepCredentials({
                 />
                 {passwordMismatch && (
                     <Text style={[styles.errorText, { color: colors.error, marginTop: 5 }]}>
-                        Les mots de passe ne correspondent pas.
+                        {t('auth.onboarding.identifiants.motsDePasseDifferents')}
                     </Text>
                 )}
             </View>
@@ -101,43 +103,45 @@ export default function StepCredentials({
                     onPress={onSubmit}
                     isLoading={isLoading}
                     disabled={!isValidated}
-                    title="Continuer"
+                    title={t('auth.onboarding.continuer')}
                     iconName="arrow-forward-outline"
                 />
 
                 <Text style={[styles.consentText, { color: colors.textSecondary }]}>
-                    En créant un compte, vous acceptez nos{" "}
-                    <Text
-                        style={[styles.consentLink, { color: colors.primary }]}
-                        onPress={() => openLegalPage(LEGAL_LINKS.terms)}
-                    >
-                        conditions d&apos;utilisation
-                    </Text>
-                    {" "}et notre{" "}
-                    <Text
-                        style={[styles.consentLink, { color: colors.primary }]}
-                        onPress={() => openLegalPage(LEGAL_LINKS.privacy)}
-                    >
-                        politique de confidentialité
-                    </Text>
-                    .
+                    <Trans
+                        i18nKey="auth.onboarding.identifiants.consentement"
+                        components={{
+                            cgu: (
+                                <Text
+                                    style={[styles.consentLink, { color: colors.primary }]}
+                                    onPress={() => openLegalPage(LEGAL_LINKS.terms)}
+                                />
+                            ),
+                            confidentialite: (
+                                <Text
+                                    style={[styles.consentLink, { color: colors.primary }]}
+                                    onPress={() => openLegalPage(LEGAL_LINKS.privacy)}
+                                />
+                            ),
+                        }}
+                    />
                 </Text>
 
                 <View style={styles.separatorContainer}>
                     <View style={[styles.separatorLine, { backgroundColor: colors.borderLight }]} />
-                    <Text style={[styles.separatorText, { color: colors.textSecondary }]}>ou</Text>
+                    <Text style={[styles.separatorText, { color: colors.textSecondary }]}>{t('auth.connexion.ou')}</Text>
                     <View style={[styles.separatorLine, { backgroundColor: colors.borderLight }]} />
                 </View>
 
                 <OutlineButton
                     onPress={onGoLogin}
-                    title="J'ai déjà un compte"
+                    title={t('auth.onboarding.identifiants.dejaUnCompte')}
                     iconName="log-in-outline"
                 />
             </View>
 
             <Text style={[styles.ruleText, { color: colors.textSecondary }]}>
-                * Les champs marqués d&apos;une étoile sont obligatoires.
+                {t('auth.onboarding.identifiants.champsObligatoires')}
             </Text>
         </View>
     );

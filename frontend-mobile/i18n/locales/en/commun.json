@@ -13,5 +13,6 @@
     "chargement": "Loading…",
     "oui": "Yes",
     "non": "No",
-    "erreurReseau": "Could not connect. Check your connection and try again."
+    "erreurReseau": "Could not connect. Check your connection and try again.",
+    "erreur": "Error"
 }

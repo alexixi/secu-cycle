@@ -1,45 +1,46 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import StepFooter from "./StepFooter";
 import { useTheme } from "../../hooks/useTheme";
 
-const LEVELS = [
-    { label: "Débutant", value: "debutant" },
-    { label: "Intermédiaire", value: "intermediaire" },
-    { label: "Expérimenté", value: "experimente" },
-];
+// Valeurs seules : une table de libellés au niveau module serait figée à la
+// langue du chargement du bundle. Les mots sont résolus au rendu, et les
+// identifiants sont ceux du catalogue (auth.niveau.*), partagés avec le web.
+const LEVELS = ["debutant", "intermediaire", "experimente"];
 
 export default function StepSportLevel({ level, setLevel, onNext, onSkip, isLoading }) {
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
 
     return (
         <View style={styles.formContainer}>
-            <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Votre niveau sportif</Text>
+            <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>{t('auth.onboarding.niveau.h2')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Pour adapter les itinéraires proposés et l'estimation des temps de trajet. Facultatif.
+                {t('auth.onboarding.niveau.intro')}
             </Text>
 
             <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Niveau</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.onboarding.niveau.label')}</Text>
                 <View style={styles.levelContainer}>
-                    {LEVELS.map((item) => {
-                        const isSelected = level === item.value;
+                    {LEVELS.map((valeur) => {
+                        const isSelected = level === valeur;
                         return (
                             <TouchableOpacity
-                                key={item.value}
+                                key={valeur}
                                 style={[
                                     styles.levelButton,
                                     { borderColor: colors.borderStrong, backgroundColor: colors.bgSurface },
                                     isSelected && { backgroundColor: colors.primary, borderColor: colors.primary },
                                 ]}
-                                onPress={() => setLevel(item.value)}
+                                onPress={() => setLevel(valeur)}
                             >
                                 <Text style={[
                                     styles.levelButtonText,
                                     { color: colors.textMain },
                                     isSelected && { color: "#FFF", fontWeight: "bold" },
                                 ]}>
-                                    {item.label}
+                                    {t(`auth.niveau.${valeur}`)}
                                 </Text>
                             </TouchableOpacity>
                         );
