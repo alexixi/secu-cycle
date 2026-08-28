@@ -43,6 +43,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
 
     const style = ROUTE_STYLES[itineraire.id];
     const meta = {
+        // i18n-suffixes: safe fast compromise
         label: itineraire.name || (style ? t(`itineraire.variant.${itineraire.id}`) : itineraire.name),
         icon: style?.icon ?? "map-marker-path",
         color: style?.color ?? colors.primary,
@@ -347,6 +348,7 @@ export default function ItineraryPanel({ itineraires, weather, selectedItinerair
                         const isSelected = selectedItineraire === it.id;
                         const style = ROUTE_STYLES[it.id];
                         const meta = {
+                            // i18n-suffixes: safe fast compromise
                             label: it.name || (style ? t(`itineraire.variant.${it.id}`) : it.name),
                             icon: style?.icon ?? "map-marker-path",
                             color: style?.color ?? colors.primary,

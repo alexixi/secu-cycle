@@ -30,6 +30,7 @@ export default function HazardAlert({ report, distance, canVote, onVote, onDismi
 
     const { t } = useTranslation();
     const type = REPORT_ICONS[report.report_type] ? report.report_type : 'danger';
+    // i18n-suffixes: accident travaux danger obstacle
     const meta = { icon: REPORT_ICONS[type], label: t(`carte.signalement.${type}`) };
 
     const { width } = useWindowDimensions();

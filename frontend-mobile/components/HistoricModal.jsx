@@ -96,6 +96,7 @@ export default function HistoricModal({ isOpen, onClose, entry, onDelete, colors
                                 </View>
                                 <View style={styles.statItem}>
                                     <Ionicons name="shield-checkmark-outline" size={20} color="#059669" />
+                                    {/* i18n-suffixes: safe fast compromise */}
                                     <Text style={[styles.statValue, { color: colors.textMain }]}>{t(`itineraire.variant.${route.route_type}`)}</Text>
                                     <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('compte.historique.type')}</Text>
                                 </View>

@@ -40,6 +40,7 @@ export default function StepSportLevel({ level, setLevel, onNext, onSkip, isLoad
                                     { color: colors.textMain },
                                     isSelected && { color: "#FFF", fontWeight: "bold" },
                                 ]}>
+                                    {/* i18n-suffixes: debutant intermediaire experimente */}
                                     {t(`auth.niveau.${valeur}`)}
                                 </Text>
                             </TouchableOpacity>

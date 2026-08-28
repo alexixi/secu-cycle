@@ -96,6 +96,8 @@ export default function DeleteAccountPage() {
                                 <View key={ligne} style={styles.bulletRow}>
                                     <Ionicons name="close-circle-outline" size={18} color={colors.error} />
                                     <Text style={[styles.bulletText, { color: colors.textSecondary }]}>
+                                        {/* i18n-suffixes: ligneCompte ligneIdentite
+                                            ligneAdresses ligneVelos ligneTrajets ligneBadges */}
                                         {t(`compte.modales.suppressionCompte.${ligne}`)}
                                     </Text>
                                 </View>

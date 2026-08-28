@@ -70,9 +70,11 @@ export default function ReportAbuseModal({ visible, status, onClose, onReport, o
                                 <Ionicons name={outcome.icon} size={40} color={toneColor} />
                             </View>
                             <Text style={[typography.h1, styles.outcomeTitle, { color: colors.textMain }]}>
+                                {/* i18n-suffixes: reported blocked error */}
                                 {t(`carte.ui.abus.issue.${status}.titre`)}
                             </Text>
                             <Text style={[styles.outcomeBody, { color: colors.textSecondary }]}>
+                                {/* i18n-suffixes: reported blocked error */}
                                 {t(`carte.ui.abus.issue.${status}.corps`)}
                             </Text>
                             <View style={styles.outcomeAction}>
@@ -106,10 +108,13 @@ export default function ReportAbuseModal({ visible, status, onClose, onReport, o
                                     <Ionicons name={icon} size={22} color={colors.error} />
                                     <View style={styles.rowText}>
                                         <Text style={[styles.rowLabel, { color: colors.textMain }]}>
+                                            {/* i18n-suffixes: offensive spam wrong_place other */}
                                             {t(`carte.ui.abus.motif.${key}.label`)}
                                         </Text>
                                         {avecAide && (
                                             <Text style={[styles.rowHint, { color: colors.textSecondary }]}>
+                                                {/* « other » n'a pas d'aide, et REASONS le marque avecAide: false. */}
+                                                {/* i18n-suffixes: offensive spam wrong_place */}
                                                 {t(`carte.ui.abus.motif.${key}.aide`)}
                                             </Text>
                                         )}

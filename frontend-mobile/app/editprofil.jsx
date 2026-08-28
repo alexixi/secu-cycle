@@ -147,6 +147,7 @@ export default function EditProfilePage() {
                                     { color: colors.textMain },
                                     level === valeur && { color: '#FFF', fontWeight: 'bold' }
                                 ]}>
+                                    {/* i18n-suffixes: debutant intermediaire experimente */}
                                     {t(`auth.niveau.${valeur}`)}
                                 </Text>
                             </TouchableOpacity>
