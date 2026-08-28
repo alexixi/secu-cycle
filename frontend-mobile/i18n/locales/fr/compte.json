@@ -30,7 +30,22 @@
         "tropDeDemandes": "Trop de demandes. Veuillez réessayer plus tard.",
         "envoiImpossible": "Impossible d'envoyer le code pour le moment.",
         "titre": "Modifier mon adresse mail",
-        "motDePasseAide": "Demandé pour confirmer que c'est bien vous."
+        "motDePasseAide": "Demandé pour confirmer que c'est bien vous.",
+        "erreursDemande": {
+            "motDePasseIncorrect": "Mot de passe incorrect.",
+            "emailPris": "Cette adresse mail est déjà utilisée par un autre compte.",
+            "tropDeDemandes": "Trop de demandes de changement. Réessayez plus tard.",
+            "emailInvalide": "Adresse mail invalide.",
+            "horsLigne": "Connexion impossible. Vérifiez votre connexion internet.",
+            "generique": "Une erreur est survenue lors de l'envoi du code."
+        },
+        "erreursConfirmation": {
+            "codeInvalide": "Code invalide ou expiré.",
+            "emailPris": "Cette adresse vient d'être utilisée par un autre compte. Essayez-en une autre.",
+            "tropDeTentatives": "Trop de tentatives. Veuillez réessayer plus tard.",
+            "horsLigne": "Connexion impossible. Vérifiez votre connexion internet.",
+            "generique": "Une erreur est survenue lors de la confirmation."
+        }
     },
     "historique": {
         "titreEcran": "Mon historique",
@@ -78,7 +93,6 @@
             "ligneBadges": "Vos badges et vos sessions de connexion",
             "conserve": "Vos signalements de dangers restent visibles pour les autres cyclistes, mais ils ne sont plus reliés à votre compte.",
             "confirmezMotDePasse": "Confirmez avec votre mot de passe",
-            "acquittement": "Je comprends que mon compte et mes données seront supprimés sans possibilité de restauration.",
             "motDePasseIncorrect": "Mot de passe incorrect.",
             "sectionConserve": "Ce qui est conservé",
             "erreurSuppression": "Une erreur est survenue lors de la suppression.",
