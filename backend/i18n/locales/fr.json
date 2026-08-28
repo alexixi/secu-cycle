@@ -195,7 +195,13 @@
         },
         "route": {
             "not_found": "Route introuvable",
-            "computation_failed": "Erreur lors du calcul de l'itinéraire."
+            "computation_failed": "Erreur lors du calcul de l'itinéraire.",
+            "snap_failed": "Impossible d'accrocher le départ ou l'arrivée au réseau cyclable.",
+            "out_of_zone_start": "Le départ est en dehors de la zone couverte par Sécu-Cycle.",
+            "out_of_zone_end": "L'arrivée est en dehors de la zone couverte par Sécu-Cycle.",
+            "no_route": "Aucun itinéraire trouvé entre le départ et l'arrivée.",
+            "unexpected": "Le calcul d'itinéraire a échoué.",
+            "failed": "Calcul échoué."
         },
         "tag": {
             "name_taken": "Une étiquette portant ce nom existe déjà.",
@@ -311,6 +317,13 @@
         "arrival": {
             "near": "L'arrivée est proche",
             "reached": "Vous êtes arrivé à destination"
+        }
+    },
+    "route": {
+        "variant": {
+            "fast": "Rapide",
+            "safe": "Sécurisé",
+            "compromise": "Compromis"
         }
     }
 }

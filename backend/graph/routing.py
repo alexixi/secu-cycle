@@ -1,3 +1,5 @@
+import logging
+
 import osmnx as ox
 import networkx as nx
 import numpy as np
@@ -9,6 +11,8 @@ from shapely.ops import substring
 from graph.config import *
 from graph.statistique import calculate_route_elevation, calculate_exact_travel_time, calculate_route_distance, get_route_safety_score, extract_route_geometry, get_lighting_condition, main_zone_center, zone_center_of, air_intensity_at, calculate_infra_stats, is_dark_now, extinction_states, edge_use_on, parse_lit_conditional
 from graph.route_cache import route_cache
+
+logger = logging.getLogger(__name__)
 
 def _get_speed_score(vmax):
     if vmax <= 20: return 10
@@ -548,16 +552,19 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
         snap_s = _project_to_nearest_edge(G, start_coords[0], start_coords[1])
         snap_e = _project_to_nearest_edge(G, end_coords[0], end_coords[1])
         if snap_s is None or snap_e is None:
-            return {"success": False, "error": "Impossible d'accrocher le départ ou l'arrivée au réseau cyclable."}
+            return {"success": False, "error_key": "error.route.snap_failed"}
 
         # L'accroche réussit à n'importe quelle distance : sans ce seuil, un point
         # hors du graphe chargé donnerait un itinéraire partant de très loin.
         if snap_s['dist_m'] > MAX_SNAP_DISTANCE_M or snap_e['dist_m'] > MAX_SNAP_DISTANCE_M:
-            which = "Le départ" if snap_s['dist_m'] > MAX_SNAP_DISTANCE_M else "L'arrivée"
+            # Deux clés pleines plutôt qu'une concaténation : « Le départ est en
+            # dehors… » ne se recompose pas en anglais à partir d'un sujet isolé.
+            depart_hors_zone = snap_s['dist_m'] > MAX_SNAP_DISTANCE_M
             return {
                 "success": False,
                 "error_code": "OUT_OF_ZONE",
-                "error": f"{which} est en dehors de la zone couverte par Sécu-Cycle.",
+                "error_key": ("error.route.out_of_zone_start" if depart_hors_zone
+                              else "error.route.out_of_zone_end"),
             }
 
         # Départ et arrivée sur la même arête : segment direct (pas d'aller-retour
@@ -565,8 +572,8 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
         if frozenset((snap_s['u'], snap_s['v'])) == frozenset((snap_e['u'], snap_e['v'])):
             direct = _direct_edge_route(G, snap_s, start_coords, end_coords, bike_type, is_electric, cyclist_level)
             res = {"success": True, "routes": [
-                {"id": "fast", "name": "Rapide", **direct},
-                {"id": "safe", "name": "Sécurisé", **direct},
+                {"id": "fast", **direct},
+                {"id": "safe", **direct},
             ]}
             _tag_lighting_aware(res, lighting_aware)
             route_cache.set(cache_key, res)
@@ -595,7 +602,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
                     best_combo = {'total': total, 'sc': sc, 'ec': ec, 'fast_nodes': path}
 
         if best_combo is None:
-            return {"success": False, "error": "Aucun itinéraire trouvé entre le départ et l'arrivée."}
+            return {"success": False, "error_key": "error.route.no_route"}
 
         start_c, end_c = best_combo['sc'], best_combo['ec']
         start_node, end_node = start_c['node'], end_c['node']
@@ -605,7 +612,7 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
         fast_data = _route_with_stubs(G, fast_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
         safe_data = _route_with_stubs(G, safe_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
 
-        res = {"success": True, "routes": [{"id": "fast", "name": "Rapide", **fast_data}, {"id": "safe", "name": "Sécurisé", **safe_data}]}
+        res = {"success": True, "routes": [{"id": "fast", **fast_data}, {"id": "safe", **safe_data}]}
 
         if max_time_min and safe_data["duration"] > float(max_time_min):
             iterations = max(1, min(int(iterations), 10))
@@ -620,8 +627,12 @@ def get_optimal_routes(G, start_coords, end_coords, bike_type="standard", is_ele
                 else:
                     a_low = a_mid
             best_data = _route_with_stubs(G, best_nodes, start_c, end_c, start_coords, end_coords, bike_type, is_electric, cyclist_level)
-            res["routes"].append({"id": "compromise", "name": "Compromis", "alpha_final": a_high, **best_data})
+            res["routes"].append({"id": "compromise", "alpha_final": a_high, **best_data})
         _tag_lighting_aware(res, lighting_aware)
         route_cache.set(cache_key, res)
         return res
-    except Exception as e: return {"success": False, "error": str(e)}
+    except Exception:
+        # Le message Python était renvoyé tel quel au client : ni traduisible, ni
+        # présentable. Il part au journal, le client reçoit une clé.
+        logger.exception("Échec inattendu du calcul d'itinéraire")
+        return {"success": False, "error_key": "error.route.unexpected"}

@@ -195,7 +195,13 @@
         },
         "route": {
             "not_found": "Route not found",
-            "computation_failed": "The route could not be computed."
+            "computation_failed": "The route could not be computed.",
+            "snap_failed": "Neither the start nor the destination could be attached to the cycle network.",
+            "out_of_zone_start": "The start is outside the area covered by Sécu-Cycle.",
+            "out_of_zone_end": "The destination is outside the area covered by Sécu-Cycle.",
+            "no_route": "No route found between the start and the destination.",
+            "unexpected": "The route computation failed.",
+            "failed": "Computation failed."
         },
         "tag": {
             "name_taken": "A label with this name already exists.",
@@ -311,6 +317,13 @@
         "arrival": {
             "near": "You are nearly there",
             "reached": "You have arrived at your destination"
+        }
+    },
+    "route": {
+        "variant": {
+            "fast": "Fastest",
+            "safe": "Safest",
+            "compromise": "Balanced"
         }
     }
 }
