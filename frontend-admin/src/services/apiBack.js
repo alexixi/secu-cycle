@@ -8,6 +8,13 @@ function clearSession() {
     STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
 }
 
+const API_LANG = "fr";
+
+function withLang(url) {
+    const path = url.toString();
+    return `${path}${path.includes("?") ? "&" : "?"}lang=${API_LANG}`;
+}
+
 function getApiBaseUrl() {
     const url = import.meta.env.VITE_API_BASE_URL;
     if (!url) {
@@ -20,7 +27,7 @@ async function refreshAccessToken() {
     const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) return null;
     try {
-        const response = await fetch(`${getApiBaseUrl()}/users/refresh`, {
+        const response = await fetch(`${getApiBaseUrl()}${withLang("/users/refresh")}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ refresh_token: refreshToken }),
@@ -47,7 +54,7 @@ export async function apiFetch(url, options = {}, token = null, _retried = false
         headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${getApiBaseUrl()}${url}`, { ...options, headers });
+    const response = await fetch(`${getApiBaseUrl()}${withLang(url)}`, { ...options, headers });
 
     if (!response.ok) {
         const errorData = await response.text();

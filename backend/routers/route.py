@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from graph.guidance import build_maneuvers
 from graph.statistique import route_bridge_stats, wind_adjusted_travel_time
 from graph.config import ICE_BRIDGE_TEMP_C, WIND_HEADWIND_REPORT_PCT
-from i18n import get_locale
+from i18n import get_locale, t
 from weather import config as weather_config
 from weather import service as weather_service
 from limiter import limiter
@@ -43,10 +43,11 @@ def get_my_routes(db: Session = Depends(get_db), current_user=Depends(get_curren
     return db.query(Route).filter(Route.user_id == current_user.id).order_by(Route.created_at.desc()).all()
 
 @router.get("/{route_id}", response_model=RouteRead)
-def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),
+              locale: str = Depends(get_locale)):
     route = db.query(Route).filter(Route.id == route_id, Route.user_id == current_user.id).first()
     if not route:
-        raise HTTPException(status_code=404, detail="Route introuvable")
+        raise HTTPException(status_code=404, detail=t("error.route.not_found", locale))
     return route
 
 def _height_difference(route_info):
@@ -126,7 +127,7 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
                         current_user=Depends(get_current_user_optional), locale: str = Depends(get_locale)):
     G = request.app.state.G
     if G is None:
-        raise HTTPException(status_code=503, detail="Graphe non chargé")
+        raise HTTPException(status_code=503, detail=t("error.common.graph_not_loaded", locale))
 
     start = (data.start_lat, data.start_lon)
     end = (data.end_lat, data.end_lon)
@@ -205,7 +206,7 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
     except Exception:
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Erreur lors du calcul de l'itinéraire.")
+        raise HTTPException(status_code=500, detail=t("error.route.computation_failed", locale))
 
 
     if not result.get("success"):
@@ -273,7 +274,7 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
 
 @router.post("/{route_id}/complete", response_model=CompleteRouteResponse)
 def complete_route(route_id: int, db: Session = Depends(get_db),
-                   current_user=Depends(get_current_user)):
+                   current_user=Depends(get_current_user), locale: str = Depends(get_locale)):
     """Marque un trajet comme terminé (appelé à l'arrivée) et débloque les badges atteints."""
     # Un seul UPDATE : appartenance (anti-IDOR), idempotence et pose du timestamp.
     updated = db.execute(text("""
@@ -290,7 +291,7 @@ def complete_route(route_id: int, db: Session = Depends(get_db),
         ), {"rid": route_id, "uid": current_user.id}).first()
         db.commit()
         if already_mine is None:
-            raise HTTPException(status_code=404, detail="Route introuvable")
+            raise HTTPException(status_code=404, detail=t("error.route.not_found", locale))
         return CompleteRouteResponse(completed=False, newly_unlocked=[])
 
     # L'historique n'enregistre que les trajets réellement parcourus en guidage.

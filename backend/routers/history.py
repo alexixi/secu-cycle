@@ -6,6 +6,7 @@ from schemas.history import UserHistoryRead
 from models.history import UserHistory
 from models.route import Route
 from dependencies import get_current_user
+from i18n import get_locale, t
 
 # L'historique n'est plus écrit par le client : la seule source d'entrées est
 # POST /routes/{id}/complete, appelé à l'arrivée d'un guidage.
@@ -32,17 +33,19 @@ def delete_all_history(db: Session = Depends(get_db), current_user=Depends(get_c
 
 
 @router.delete("/{history_id}", status_code=204)
-def delete_history_entry(history_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def delete_history_entry(history_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),
+                         locale: str = Depends(get_locale)):
     entry = db.query(UserHistory).filter(UserHistory.id == history_id, UserHistory.user_id == current_user.id).first()
     if not entry:
-        raise HTTPException(status_code=404, detail="Entrée d'historique introuvable")
+        raise HTTPException(status_code=404, detail=t("error.history.not_found", locale))
     db.delete(entry)
     db.commit()
 
 
 # Récupérer une entrée d'historique par son ID
 @router.get("/{history_id}", response_model=UserHistoryRead)
-def get_history_entry(history_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def get_history_entry(history_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),
+                      locale: str = Depends(get_locale)):
     entry = (
         db.query(UserHistory)
         .join(UserHistory.route)
@@ -52,6 +55,6 @@ def get_history_entry(history_id: int, db: Session = Depends(get_db), current_us
         .first()
     )
     if not entry:
-        raise HTTPException(status_code=404, detail="Entrée d'historique introuvable")
+        raise HTTPException(status_code=404, detail=t("error.history.not_found", locale))
     return entry
 

@@ -3,6 +3,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
+from i18n import get_locale, t
 from models.task import Task
 from models.tag import Tag
 from models.user import User
@@ -13,25 +14,25 @@ from admin_emails import is_user_admin
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 
-def _ensure_assignee_is_admin(db: Session, assignee_id):
+def _ensure_assignee_is_admin(db: Session, assignee_id, locale: str):
     """Vérifie que l'assigné existe et est bien administrateur (ou None)."""
     if assignee_id is None:
         return
     user = db.query(User).filter(User.id == assignee_id).first()
     if user is None:
-        raise HTTPException(status_code=404, detail="Utilisateur assigné introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.task.assignee_not_found", locale))
     if not is_user_admin(user):
-        raise HTTPException(status_code=400, detail="Une tâche ne peut être assignée qu'à un administrateur.")
+        raise HTTPException(status_code=400, detail=t("error.task.assignee_not_admin", locale))
 
 
-def _resolve_tags(db: Session, tag_ids):
+def _resolve_tags(db: Session, tag_ids, locale: str):
     """Renvoie les étiquettes correspondant aux ids fournis (404 si l'une manque)."""
     if not tag_ids:
         return []
     unique_ids = list(dict.fromkeys(tag_ids))
     tags = db.query(Tag).filter(Tag.id.in_(unique_ids)).all()
     if len(tags) != len(unique_ids):
-        raise HTTPException(status_code=404, detail="Une ou plusieurs étiquettes sont introuvables.")
+        raise HTTPException(status_code=404, detail=t("error.task.tags_not_found", locale))
     return tags
 
 
@@ -50,8 +51,9 @@ def create_task(
     data: TaskCreate,
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
-    _ensure_assignee_is_admin(db, data.assignee_id)
+    _ensure_assignee_is_admin(db, data.assignee_id, locale)
 
     # La nouvelle tâche se place en fin de sa colonne.
     max_position = (
@@ -69,7 +71,7 @@ def create_task(
         position=position,
     )
     if data.tag_ids is not None:
-        task.tags = _resolve_tags(db, data.tag_ids)
+        task.tags = _resolve_tags(db, data.tag_ids, locale)
     db.add(task)
     db.commit()
     db.refresh(task)
@@ -82,21 +84,22 @@ def update_task(
     updates: TaskUpdate,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     task = db.query(Task).filter(Task.id == task_id).first()
     if task is None:
-        raise HTTPException(status_code=404, detail="Tâche introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.task.not_found", locale))
 
     update_data = updates.model_dump(exclude_unset=True)
     if not update_data:
-        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+        raise HTTPException(status_code=400, detail=t("error.common.no_fields", locale))
 
     if "assignee_id" in update_data:
-        _ensure_assignee_is_admin(db, update_data["assignee_id"])
+        _ensure_assignee_is_admin(db, update_data["assignee_id"], locale)
 
     # tag_ids n'est pas une colonne : on remplace la relation à part.
     if "tag_ids" in update_data:
-        task.tags = _resolve_tags(db, update_data.pop("tag_ids"))
+        task.tags = _resolve_tags(db, update_data.pop("tag_ids"), locale)
 
     # Si la colonne change sans position explicite, on place la tâche en fin de
     # sa nouvelle colonne.
@@ -120,10 +123,11 @@ def delete_task(
     task_id: int,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     task = db.query(Task).filter(Task.id == task_id).first()
     if task is None:
-        raise HTTPException(status_code=404, detail="Tâche introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.task.not_found", locale))
     db.delete(task)
     db.commit()
 
@@ -139,7 +143,7 @@ def reorder_tasks(
     Gère à la fois le réordonnancement dans une colonne et le passage d'une
     colonne à l'autre (glisser-déposer du planning).
     """
-    tasks = {t.id: t for t in db.query(Task).all()}
+    tasks = {tache.id: tache for tache in db.query(Task).all()}
     for item in data.items:
         task = tasks.get(item.id)
         if task is not None:

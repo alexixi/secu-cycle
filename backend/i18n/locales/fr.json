@@ -137,5 +137,115 @@
             "name": "200 km parcourus",
             "description": "Cumuler 200 km sur vos trajets terminés."
         }
+    },
+    "error": {
+        "common": {
+            "no_fields": "Aucun champ à mettre à jour.",
+            "graph_unavailable": "Graphe indisponible.",
+            "graph_not_loaded": "Graphe non chargé",
+            "sync_running": "Une synchronisation est déjà en cours.",
+            "bbox_format": "bbox attendu au format lon_min,lat_min,lon_max,lat_max.",
+            "bbox_bounds": "bbox : les bornes min dépassent les max."
+        },
+        "auth": {
+            "invalid_token": "Jeton invalide.",
+            "invalid_token_payload": "Contenu de jeton invalide.",
+            "user_not_found": "Utilisateur introuvable.",
+            "account_suspended": "Compte suspendu.",
+            "account_suspended_contact": "Compte suspendu. Contactez l'administration.",
+            "account_unverified": "Compte non vérifié. Vérifiez votre e-mail.",
+            "token_revoked": "Jeton révoqué.",
+            "admin_only": "Accès réservé aux administrateurs",
+            "invalid_credentials": "Identifiants invalides.",
+            "refresh_invalid_or_expired": "Refresh token invalide ou expiré",
+            "refresh_invalid": "Refresh token invalide",
+            "refresh_revoked": "Refresh token révoqué",
+            "code_invalid_or_expired": "Code invalide ou expiré.",
+            "wrong_old_password": "Ancien mot de passe incorrect.",
+            "wrong_password": "Mot de passe incorrect.",
+            "email_taken": "Cette adresse e-mail est déjà associée à un compte.",
+            "email_unchanged": "Cette adresse est déjà celle de votre compte.",
+            "code_cooldown": "Un code vient d'être envoyé. Réessayez dans une minute.",
+            "change_request_not_found": "Demande de changement introuvable."
+        },
+        "user": {
+            "self_demote": "Vous ne pouvez pas retirer vos propres droits d'administrateur.",
+            "self_sanction": "Vous ne pouvez pas vous sanctionner vous-même.",
+            "self_delete": "Vous ne pouvez pas supprimer votre propre compte."
+        },
+        "bike": {
+            "not_found": "Vélo introuvable"
+        },
+        "history": {
+            "not_found": "Entrée d'historique introuvable"
+        },
+        "report": {
+            "banned": "Vous n'êtes plus autorisé à déposer des signalements.",
+            "not_found": "Signalement introuvable.",
+            "self_vote": "Vous ne pouvez pas voter sur votre propre signalement.",
+            "self_flag": "Vous ne pouvez pas dénoncer votre propre signalement.",
+            "no_author": "Ce signalement n'a plus d'auteur, il n'y a personne à bloquer.",
+            "self_block": "Vous ne pouvez pas vous bloquer vous-même."
+        },
+        "geo": {
+            "no_address": "Aucune adresse à cet endroit."
+        },
+        "poi": {
+            "unknown_categories": "Catégories inconnues : {unknown}. Valeurs acceptées : {accepted}."
+        },
+        "route": {
+            "not_found": "Route introuvable",
+            "computation_failed": "Erreur lors du calcul de l'itinéraire."
+        },
+        "tag": {
+            "name_taken": "Une étiquette portant ce nom existe déjà.",
+            "not_found": "Étiquette introuvable."
+        },
+        "task": {
+            "assignee_not_found": "Utilisateur assigné introuvable.",
+            "assignee_not_admin": "Une tâche ne peut être assignée qu'à un administrateur.",
+            "tags_not_found": "Une ou plusieurs étiquettes sont introuvables.",
+            "not_found": "Tâche introuvable."
+        },
+        "recap": {
+            "no_period": "Aucune période calculable.",
+            "no_recap": "Aucun récapitulatif pour cet utilisateur sur la période : pas de trajet terminé, désabonné, non vérifié, ou déjà envoyé."
+        },
+        "contact": {
+            "send_failed": "L'envoi du message a échoué. Réessayez plus tard ou écrivez-nous directement."
+        },
+        "commune": {
+            "not_found": "Commune introuvable : « {name} ».",
+            "not_found_reason": "Commune introuvable : « {name} » ({reason})."
+        },
+        "graph": {
+            "profile_not_found": "Profil introuvable.",
+            "profile_name_taken": "Un profil porte déjà ce nom.",
+            "base_profile_not_found": "Profil de base introuvable (id {id}).",
+            "profile_needs_commune": "Un profil doit contenir au moins une commune : sélectionnez un profil de base ou ajoutez une commune.",
+            "rename_active": "Impossible de renommer le profil actif : activez-en un autre d'abord.",
+            "delete_active": "Impossible de supprimer le profil actif : activez-en un autre d'abord.",
+            "delete_default": "Impossible de supprimer le profil par défaut : désignez-en un autre d'abord.",
+            "delete_data_scope": "Ce profil délimite les données : le supprimer ferait retomber les synchros sur l'emprise du graphe, qui purgerait les communes hors de celle-ci. Désignez une autre emprise de données d'abord.",
+            "import_empty": "Ce fichier ne contient aucun profil.",
+            "import_duplicate": "Le fichier contient deux profils nommés « {name} ».",
+            "import_name_taken": "Un profil porte déjà ce nom : « {name} ».",
+            "build_running": "Une génération est déjà en cours.",
+            "not_built": "Le graphe de ce profil n'a pas encore été généré.",
+            "reload_running": "Un rechargement est déjà en cours.",
+            "build_running_activate": "Une génération est en cours : attendez sa fin avant d'activer un profil.",
+            "already_active": "Ce profil est déjà actif.",
+            "scope_no_commune": "Ce profil ne contient aucune commune : les synchros n'auraient rien à récupérer et purgeraient toute la base.",
+            "already_data_scope": "Ce profil délimite déjà les données."
+        }
+    },
+    "message": {
+        "account_verified": "Compte vérifié.",
+        "verification_code_sent": "Si un compte non vérifié existe pour cet e-mail, un code a été envoyé.",
+        "reset_code_sent": "Si un compte existe pour cet e-mail, un code a été envoyé.",
+        "password_reset": "Mot de passe réinitialisé.",
+        "email_change_code_sent": "Un code de confirmation a été envoyé à la nouvelle adresse.",
+        "contact_sent": "Message envoyé.",
+        "recap_test_sent": "Récapitulatif de test envoyé à {email}."
     }
 }

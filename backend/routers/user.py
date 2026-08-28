@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from database import get_db
+from i18n import get_locale, t
 from models.user import User
 from models.email_verification import EmailVerification
 from models.refresh_session import RefreshSession
@@ -101,7 +102,8 @@ def _with_effective_admin(db: Session, user: User) -> User:
 
 @router.post("/", response_model=UserRead)
 @limiter.limit("30/hour")
-def create_user(request: Request, user: UserCreate, db: Session = Depends(get_db)):
+def create_user(request: Request, user: UserCreate, db: Session = Depends(get_db),
+                locale: str = Depends(get_locale)):
     db_user = User(
         email=user.email,
         password_hash= hash_password(user.password),
@@ -122,7 +124,7 @@ def create_user(request: Request, user: UserCreate, db: Session = Depends(get_db
         db.rollback()
         raise HTTPException(
             status_code=409,
-            detail="Cette adresse e-mail est déjà associée à un compte."
+            detail=t("error.auth.email_taken", locale)
         )
     _send_verification_code(db, db_user)
     return db_user
@@ -132,27 +134,28 @@ def create_user(request: Request, user: UserCreate, db: Session = Depends(get_db
 def login(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     db_user = db.query(User).filter(User.email == form_data.username).first()
 
     if not db_user:
         verify_password(form_data.password, _DUMMY_PASSWORD_HASH)
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail=t("error.auth.invalid_credentials", locale))
 
     if not verify_password(form_data.password, db_user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail=t("error.auth.invalid_credentials", locale))
 
     if not db_user.is_verified:
         raise HTTPException(
             status_code=403,
-            detail="Compte non vérifié. Vérifiez votre e-mail.",
+            detail=t("error.auth.account_unverified", locale),
         )
 
     if db_user.is_banned:
         raise HTTPException(
             status_code=403,
-            detail="Compte suspendu. Contactez l'administration.",
+            detail=t("error.auth.account_suspended_contact", locale),
         )
 
     token_data = {"sub": str(db_user.id), "tv": db_user.token_version}
@@ -169,29 +172,30 @@ def login(
 
 @router.post("/refresh")
 @limiter.limit("30/minute")
-def refresh_access_token(request: Request, data: TokenRefresh, db: Session = Depends(get_db)):
+def refresh_access_token(request: Request, data: TokenRefresh, db: Session = Depends(get_db),
+                         locale: str = Depends(get_locale)):
     payload = verify_token(data.refresh_token, expected_type="refresh")
     if payload is None:
-        raise HTTPException(status_code=401, detail="Refresh token invalide ou expiré")
+        raise HTTPException(status_code=401, detail=t("error.auth.refresh_invalid_or_expired", locale))
 
     user_id = payload.get("sub")
     if user_id is None:
-        raise HTTPException(status_code=401, detail="Refresh token invalide")
+        raise HTTPException(status_code=401, detail=t("error.auth.refresh_invalid", locale))
 
     try:
         user_id = int(user_id)
     except (TypeError, ValueError):
-        raise HTTPException(status_code=401, detail="Refresh token invalide")
+        raise HTTPException(status_code=401, detail=t("error.auth.refresh_invalid", locale))
 
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
-        raise HTTPException(status_code=401, detail="Utilisateur introuvable")
+        raise HTTPException(status_code=401, detail=t("error.auth.user_not_found", locale))
 
     if user.is_banned:
-        raise HTTPException(status_code=403, detail="Compte suspendu.")
+        raise HTTPException(status_code=403, detail=t("error.auth.account_suspended", locale))
 
     if payload.get("tv", 0) != (user.token_version or 0):
-        raise HTTPException(status_code=401, detail="Refresh token révoqué")
+        raise HTTPException(status_code=401, detail=t("error.auth.refresh_revoked", locale))
 
     sid = payload.get("sid")
     jti = payload.get("jti")
@@ -199,7 +203,7 @@ def refresh_access_token(request: Request, data: TokenRefresh, db: Session = Dep
     if sid and jti:
         new_jti = refresh_sessions.rotate(db, sid, jti)
         if new_jti is None:
-            raise HTTPException(status_code=401, detail="Refresh token révoqué")
+            raise HTTPException(status_code=401, detail=t("error.auth.refresh_revoked", locale))
 
     token_data = {"sub": str(user.id), "tv": user.token_version}
     access_token = create_access_token(data=token_data)
@@ -214,53 +218,57 @@ def refresh_access_token(request: Request, data: TokenRefresh, db: Session = Dep
 
 @router.post("/verify")
 @limiter.limit("5/minute")
-def verify_email(request: Request, data: EmailVerifyRequest, db: Session = Depends(get_db)):
+def verify_email(request: Request, data: EmailVerifyRequest, db: Session = Depends(get_db),
+                 locale: str = Depends(get_locale)):
     user = db.query(User).filter(User.email == data.email).first()
     if user is None or not verify_code(db, user, data.code):
-        raise HTTPException(status_code=400, detail="Code invalide ou expiré.")
-    return {"detail": "Compte vérifié."}
+        raise HTTPException(status_code=400, detail=t("error.auth.code_invalid_or_expired", locale))
+    return {"detail": t("message.account_verified", locale)}
 
 
 @router.post("/resend-verification")
 @limiter.limit("3/hour")
 def resend_verification(
-    request: Request, data: ResendVerificationRequest, db: Session = Depends(get_db)
+    request: Request, data: ResendVerificationRequest, db: Session = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     # Réponse générique dans tous les cas pour ne pas divulguer l'existence d'un compte.
     user = db.query(User).filter(User.email == data.email).first()
     if user is not None and not user.is_verified:
         _send_verification_code(db, user)
-    return {"detail": "Si un compte non vérifié existe pour cet e-mail, un code a été envoyé."}
+    return {"detail": t("message.verification_code_sent", locale)}
 
 
 @router.post("/forgot-password")
 @limiter.limit("3/hour")
 def forgot_password(
-    request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db)
+    request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     # Réponse générique dans tous les cas pour ne pas divulguer l'existence d'un compte.
     user = db.query(User).filter(User.email == data.email).first()
     if user is not None:
         _send_reset_code(db, user)
-    return {"detail": "Si un compte existe pour cet e-mail, un code a été envoyé."}
+    return {"detail": t("message.reset_code_sent", locale)}
 
 
 @router.post("/reset-password")
 @limiter.limit("5/minute")
 def reset_password(
-    request: Request, data: ResetPasswordRequest, db: Session = Depends(get_db)
+    request: Request, data: ResetPasswordRequest, db: Session = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     user = db.query(User).filter(User.email == data.email).first()
     if user is None or not verify_code(
         db, user, data.code, purpose=PASSWORD_RESET_PURPOSE
     ):
-        raise HTTPException(status_code=400, detail="Code invalide ou expiré.")
+        raise HTTPException(status_code=400, detail=t("error.auth.code_invalid_or_expired", locale))
 
     user.password_hash = hash_password(data.new_password)
     user.is_verified = True
     user.token_version = (user.token_version or 0) + 1
     db.commit()
-    return {"detail": "Mot de passe réinitialisé."}
+    return {"detail": t("message.password_reset", locale)}
 
 
 @router.get("/me", response_model=UserRead)
@@ -276,10 +284,11 @@ def update_me(
     updates: UserUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    locale: str = Depends(get_locale),
 ):
     update_data = updates.model_dump(exclude_unset=True)
     if not update_data:
-        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+        raise HTTPException(status_code=400, detail=t("error.common.no_fields", locale))
     for field, value in update_data.items():
         setattr(current_user, field, value)
     db.commit()
@@ -292,9 +301,10 @@ def update_password(
     data: PasswordChange,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    locale: str = Depends(get_locale),
 ):
     if not verify_password(data.old_password, current_user.password_hash):
-        raise HTTPException(status_code=401, detail="Ancien mot de passe incorrect.")
+        raise HTTPException(status_code=401, detail=t("error.auth.wrong_old_password", locale))
     current_user.password_hash = hash_password(data.new_password)
     db.commit()
 
@@ -335,6 +345,7 @@ def delete_me(
     data: AccountDelete,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    locale: str = Depends(get_locale),
 ):
     """Suppression définitive du compte par son propriétaire.
 
@@ -344,7 +355,7 @@ def delete_me(
     échoué alors qu'elle est déjà actée.
     """
     if not verify_password(data.password, current_user.password_hash):
-        raise HTTPException(status_code=401, detail="Mot de passe incorrect.")
+        raise HTTPException(status_code=401, detail=t("error.auth.wrong_password", locale))
 
     email = current_user.email
     _purge_user(db, current_user)
@@ -363,6 +374,7 @@ def request_email_change(
     data: EmailChangeRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    locale: str = Depends(get_locale),
 ):
     """Étape 1 : demande de changement d'adresse.
 
@@ -374,11 +386,11 @@ def request_email_change(
     new_email = data.new_email.strip().lower()
 
     if not verify_password(data.password, current_user.password_hash):
-        raise HTTPException(status_code=401, detail="Mot de passe incorrect.")
+        raise HTTPException(status_code=401, detail=t("error.auth.wrong_password", locale))
 
     if new_email == (current_user.email or "").lower():
         raise HTTPException(
-            status_code=400, detail="Cette adresse est déjà celle de votre compte."
+            status_code=400, detail=t("error.auth.email_unchanged", locale)
         )
 
     taken = (
@@ -388,12 +400,12 @@ def request_email_change(
     )
     if taken is not None:
         raise HTTPException(
-            status_code=409, detail="Cette adresse e-mail est déjà associée à un compte."
+            status_code=409, detail=t("error.auth.email_taken", locale)
         )
 
     if is_admin_email(new_email) and not is_admin_email(current_user.email):
         raise HTTPException(
-            status_code=409, detail="Cette adresse e-mail est déjà associée à un compte."
+            status_code=409, detail=t("error.auth.email_taken", locale)
         )
 
     pending = (
@@ -414,7 +426,7 @@ def request_email_change(
         if datetime.utcnow() - issued_at < EMAIL_CHANGE_COOLDOWN:
             raise HTTPException(
                 status_code=429,
-                detail="Un code vient d'être envoyé. Réessayez dans une minute.",
+                detail=t("error.auth.code_cooldown", locale),
             )
 
     old_email = current_user.email
@@ -441,7 +453,7 @@ def request_email_change(
         )
 
     return EmailChangeRequested(
-        detail="Un code de confirmation a été envoyé à la nouvelle adresse.",
+        detail=t("message.email_change_code_sent", locale),
         pending_email=new_email,
     )
 
@@ -453,6 +465,7 @@ def confirm_email_change(
     data: EmailChangeConfirm,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    locale: str = Depends(get_locale),
 ):
     """Étape 2 : confirmation par le code reçu sur la nouvelle adresse.
 
@@ -461,7 +474,7 @@ def confirm_email_change(
     """
     entry = consume_code(db, current_user, data.code, purpose=EMAIL_CHANGE_PURPOSE)
     if entry is None:
-        raise HTTPException(status_code=400, detail="Code invalide ou expiré.")
+        raise HTTPException(status_code=400, detail=t("error.auth.code_invalid_or_expired", locale))
 
     new_email = entry.target_email
     if not new_email:
@@ -470,7 +483,7 @@ def confirm_email_change(
             "Code de changement d'e-mail sans adresse cible (entry=%s, user=%s)",
             entry.id, current_user.id,
         )
-        raise HTTPException(status_code=400, detail="Demande de changement introuvable.")
+        raise HTTPException(status_code=400, detail=t("error.auth.change_request_not_found", locale))
 
     current_user.email = new_email
     current_user.is_verified = True
@@ -487,7 +500,7 @@ def confirm_email_change(
         # distinct dans consume_code) : pas de rejeu, il faut relancer une demande.
         db.rollback()
         raise HTTPException(
-            status_code=409, detail="Cette adresse e-mail est déjà associée à un compte."
+            status_code=409, detail=t("error.auth.email_taken", locale)
         )
 
     # Les sessions de refresh échouent désormais le contrôle `tv` : on les purge,
@@ -544,10 +557,11 @@ def get_user(
     user_id: int,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
-        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.auth.user_not_found", locale))
     return _with_effective_admin(db, user)
 
 
@@ -557,20 +571,21 @@ def admin_update_user(
     updates: UserAdminUpdate,
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
-        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.auth.user_not_found", locale))
 
     update_data = updates.model_dump(exclude_unset=True)
     if not update_data:
-        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+        raise HTTPException(status_code=400, detail=t("error.common.no_fields", locale))
 
     # Un admin ne peut pas se retirer à lui-même ses propres droits (évite de se verrouiller dehors).
     if user.id == admin.id and update_data.get("is_admin") is False:
         raise HTTPException(
             status_code=400,
-            detail="Vous ne pouvez pas retirer vos propres droits d'administrateur.",
+            detail=t("error.user.self_demote", locale),
         )
 
     if user.id == admin.id and (
@@ -578,7 +593,7 @@ def admin_update_user(
     ):
         raise HTTPException(
             status_code=400,
-            detail="Vous ne pouvez pas vous sanctionner vous-même.",
+            detail=t("error.user.self_sanction", locale),
         )
 
     for field, value in update_data.items():
@@ -595,13 +610,14 @@ def admin_delete_user(
     user_id: int,
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     if user_id == admin.id:
         raise HTTPException(
             status_code=400,
-            detail="Vous ne pouvez pas supprimer votre propre compte.",
+            detail=t("error.user.self_delete", locale),
         )
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
-        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.auth.user_not_found", locale))
     _purge_user(db, user)

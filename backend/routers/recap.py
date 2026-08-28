@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from dependencies import require_admin
+from i18n import get_locale, t
 from limiter import limiter
 from mailer import send_email
 from mailer.templates import (
@@ -121,6 +122,7 @@ def update_recap_settings(
     updates: RecapSettingsUpdate,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Active ou coupe l'envoi automatique.
 
@@ -129,7 +131,7 @@ def update_recap_settings(
     """
     donnees = updates.model_dump(exclude_unset=True)
     if not donnees:
-        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+        raise HTTPException(status_code=400, detail=t("error.common.no_fields", locale))
 
     settings = runner.get_settings(db)
     for champ, valeur in donnees.items():
@@ -179,7 +181,7 @@ def recap_status(
     )
 
 
-def _rendre_pour(db: Session, user_id: int, genre: str | None):
+def _rendre_pour(db: Session, user_id: int, genre: str | None, locale: str):
     """Rend le récapitulatif d'un utilisateur, sans rien envoyer ni enregistrer.
 
     Hors fenêtre d'envoi, on retombe sur le mois précédent : cet outil sert
@@ -191,7 +193,7 @@ def _rendre_pour(db: Session, user_id: int, genre: str | None):
         maintenant = datetime.now()
         due = periodes.periode_due(maintenant.replace(day=1, hour=12, minute=0))
     if due is None:
-        raise HTTPException(status_code=503, detail="Aucune période calculable.")
+        raise HTTPException(status_code=503, detail=t("error.recap.no_period", locale))
 
     genre_effectif = genre or due[0]
     _, debut, fin, debut_precedent = due
@@ -207,10 +209,7 @@ def _rendre_pour(db: Session, user_id: int, genre: str | None):
     if ligne is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Aucun récapitulatif pour cet utilisateur sur la période : "
-                "pas de trajet terminé, désabonné, non vérifié, ou déjà envoyé."
-            ),
+            detail=t("error.recap.no_recap", locale),
         )
 
     badges = requetes.badges_par_utilisateur(db, [user_id], debut, fin).get(user_id, [])
@@ -231,13 +230,14 @@ def preview_recap(
     data: RecapPreviewRequest,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Rend le récapitulatif d'un utilisateur sans l'envoyer.
 
     L'outil de diagnostic principal : il montre exactement ce que la personne
     recevrait, sans effet de bord et sans consommer sa période.
     """
-    sujet, html, texte = _rendre_pour(db, data.user_id, data.kind)
+    sujet, html, texte = _rendre_pour(db, data.user_id, data.kind, locale)
     return RecapPreviewResponse(subject=sujet, html=html, text=texte)
 
 
@@ -246,6 +246,7 @@ def test_recap(
     data: RecapPreviewRequest,
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Envoie un récapitulatif à l'administrateur appelant, et à lui seul.
 
@@ -256,6 +257,6 @@ def test_recap(
     Aucune ligne `recap_sends` n'est créée : un test ne consomme la période de
     personne.
     """
-    sujet, html, texte = _rendre_pour(db, data.user_id, data.kind)
+    sujet, html, texte = _rendre_pour(db, data.user_id, data.kind, locale)
     send_email(admin.email, f"[Test] {sujet}", html, texte)
-    return {"detail": f"Récapitulatif de test envoyé à {admin.email}."}
+    return {"detail": t("message.recap_test_sent", locale, email=admin.email)}

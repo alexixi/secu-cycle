@@ -3,6 +3,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
+from i18n import get_locale, t
 from models.tag import Tag
 from models.user import User
 from schemas.tag import TagCreate, TagUpdate, TagRead
@@ -22,11 +23,12 @@ def create_tag(
     data: TagCreate,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     name = data.name.strip()
     existing = db.query(Tag).filter(func.lower(Tag.name) == name.lower()).first()
     if existing is not None:
-        raise HTTPException(status_code=400, detail="Une étiquette portant ce nom existe déjà.")
+        raise HTTPException(status_code=400, detail=t("error.tag.name_taken", locale))
 
     tag = Tag(name=name, color=data.color)
     db.add(tag)
@@ -41,14 +43,15 @@ def update_tag(
     updates: TagUpdate,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     tag = db.query(Tag).filter(Tag.id == tag_id).first()
     if tag is None:
-        raise HTTPException(status_code=404, detail="Étiquette introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.tag.not_found", locale))
 
     update_data = updates.model_dump(exclude_unset=True)
     if not update_data:
-        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+        raise HTTPException(status_code=400, detail=t("error.common.no_fields", locale))
 
     if "name" in update_data:
         name = update_data["name"].strip()
@@ -58,7 +61,7 @@ def update_tag(
             .first()
         )
         if duplicate is not None:
-            raise HTTPException(status_code=400, detail="Une étiquette portant ce nom existe déjà.")
+            raise HTTPException(status_code=400, detail=t("error.tag.name_taken", locale))
         update_data["name"] = name
 
     for field, value in update_data.items():
@@ -73,9 +76,10 @@ def delete_tag(
     tag_id: int,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     tag = db.query(Tag).filter(Tag.id == tag_id).first()
     if tag is None:
-        raise HTTPException(status_code=404, detail="Étiquette introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.tag.not_found", locale))
     db.delete(tag)
     db.commit()

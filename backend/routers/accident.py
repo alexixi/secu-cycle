@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from accidents import runner
 from database import get_db
-from i18n import etag_for, get_locale
+from i18n import etag_for, get_locale, t
 from dependencies import require_admin
 from models.accident import RoadAccident, SEVERITY_LABELS, SOURCE_ATTRIBUTIONS
 from models.accident_sync import AccidentSyncRun
@@ -27,7 +27,7 @@ router = APIRouter(prefix="/accidents", tags=["Accidents"])
 CACHE_CONTROL = "no-cache"
 
 
-def _parse_bbox(bbox: str | None) -> tuple[float, float, float, float] | None:
+def _parse_bbox(bbox: str | None, locale: str) -> tuple[float, float, float, float] | None:
     if not bbox:
         return None
     try:
@@ -35,10 +35,10 @@ def _parse_bbox(bbox: str | None) -> tuple[float, float, float, float] | None:
     except ValueError:
         raise HTTPException(
             status_code=400,
-            detail="bbox attendu au format lon_min,lat_min,lon_max,lat_max.",
+            detail=t("error.common.bbox_format", locale),
         )
     if lon_min > lon_max or lat_min > lat_max:
-        raise HTTPException(status_code=400, detail="bbox : les bornes min dépassent les max.")
+        raise HTTPException(status_code=400, detail=t("error.common.bbox_bounds", locale))
     return lon_min, lat_min, lon_max, lat_max
 
 
@@ -52,7 +52,7 @@ def get_accidents(
     locale: str = Depends(get_locale),
 ):
     """Accidents corporels recensés, en GeoJSON FeatureCollection. Public, sans authentification."""
-    bounds = _parse_bbox(bbox)
+    bounds = _parse_bbox(bbox, locale)
 
     def apply_filters(query):
         if bounds:
@@ -147,6 +147,7 @@ async def trigger_accident_sync(
     request: Request,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Déclenche une récupération des accidents en tâche de fond.
 
@@ -154,7 +155,7 @@ async def trigger_accident_sync(
     renvoie le run « en cours », dont l'issue se lit via `/accidents/admin/runs`.
     """
     if runner.is_running(db):
-        raise HTTPException(status_code=409, detail="Une synchronisation est déjà en cours.")
+        raise HTTPException(status_code=409, detail=t("error.common.sync_running", locale))
 
     run = runner.create_run(db, "manual")
 
@@ -195,11 +196,12 @@ def update_accident_sync_settings(
     updates: AccidentSyncSettingsUpdate,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Règle l'intervalle de synchronisation automatique (0 ou null = désactivé)."""
     update_data = updates.model_dump(exclude_unset=True)
     if not update_data:
-        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+        raise HTTPException(status_code=400, detail=t("error.common.no_fields", locale))
 
     settings = runner.get_settings(db)
     for field, value in update_data.items():
