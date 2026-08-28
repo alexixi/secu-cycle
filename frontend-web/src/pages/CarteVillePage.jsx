@@ -47,7 +47,7 @@ export default function CarteVillePage({ registre }) {
                 '@type': 'CollectionPage',
                 '@id': canonical,
                 name: cityHubTitle(city),
-                inLanguage: 'fr',
+                inLanguage: lang,
                 about: { '@type': 'Place', name: city.name },
                 isPartOf: { '@type': 'WebSite', url: abs(pathFor('home', lang)), name: 'Sécu’Cycle' },
                 hasPart: pages.map(page => ({
@@ -123,11 +123,7 @@ export default function CarteVillePage({ registre }) {
                     <aside className="carte-cta">
                         <div>
                             <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep, ville: city.name })}</p>
-                            <p className="carte-cta-texte">
-                                Toutes ces couches alimentent le calculateur d’itinéraires : il en
-                                tient compte pour proposer un trajet cyclable réellement praticable,
-                                adapté à votre vélo et à votre profil.
-                            </p>
+                            <p className="carte-cta-texte">{t('ui.cta.villeTexte')}</p>
                         </div>
                         <Link
                             className="button carte-cta-bouton"

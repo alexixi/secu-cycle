@@ -76,7 +76,7 @@ export default function ChangeEmailPage() {
             startResendCooldown();
             setStep(1);
         } catch (err) {
-            setError(mapRequestError(err));
+            setError(mapRequestError(err, t));
         } finally {
             setIsLoading(false);
         }
@@ -122,7 +122,7 @@ export default function ChangeEmailPage() {
                 state: { message: t('changementEmail.succes') },
             });
         } catch (err) {
-            setError(mapConfirmError(err));
+            setError(mapConfirmError(err, t));
         } finally {
             setIsLoading(false);
         }
@@ -194,15 +194,15 @@ export default function ChangeEmailPage() {
                                         required
                                     />
                                     {emailError && (
-                                        <div className="error-text">Adresse mail invalide.</div>
+                                        <div className="error-text">{t('erreurs.emailInvalide')}</div>
                                     )}
                                     {isSameAsCurrent && newEmail.length > 0 && (
-                                        <div className="error-text">C&apos;est déjà votre adresse actuelle.</div>
+                                        <div className="error-text">{t('erreurs.emailDejaActuel')}</div>
                                     )}
                                 </div>
 
                                 <div className="input-group">
-                                    <label htmlFor="password">Votre mot de passe</label>
+                                    <label htmlFor="password">{t('champs.votreMotDePasse')}</label>
                                     <PasswordInput
                                         name="password"
                                         autoComplete="current-password"

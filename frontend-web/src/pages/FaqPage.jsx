@@ -15,6 +15,7 @@ const QUESTIONS = ['quoi', 'calcul', 'gratuit', 'villes', 'compte',
 
 // Le JSON-LD veut du texte nu : si une réponse gagne un jour un lien, sa balise
 // ne doit pas fuiter dans les données structurées.
+// i18n-exempt: expression régulière, pas du texte d'interface
 const sansBalises = (texte) => texte.replace(/<\/?\w+>/g, '');
 
 export default function FaqPage() {

@@ -2,5 +2,75 @@
     "titrePage": "Sécu'Cycle | Routes",
     "metaDescription": "Plan a safer bike route in Bordeaux and Tournai with Sécu'Cycle: a route matched to your profile, your bike and the kind of road.",
     "h1": "Safer bike route planner for Bordeaux and Tournai",
-    "erreurGenerique": "Something went wrong while planning your route."
+    "erreurGenerique": "Something went wrong while planning your route.",
+    "recherche": {
+        "depart": "From",
+        "destination": "To",
+        "contraintes": "Time constraints",
+        "heureMax": "Latest arrival time",
+        "dureeMax": "Maximum duration",
+        "dureeMaxUnite": "(minutes)",
+        "calculer": "Plan routes"
+    },
+    "velo": {
+        "choix": "Choose your bike",
+        "selectionne": "<nom>{{nom}}</nom> selected",
+        "ville": "City",
+        "vtt": "Mountain",
+        "route": "Road"
+    },
+    "itineraires": {
+        "titre": "Available routes",
+        "altitude": "Elevation",
+        "nom": {
+            "fast": "Fastest",
+            "safe": "Safest",
+            "compromise": "Balanced"
+        }
+    },
+    "badges": {
+        "pisteCyclable": "{{pct}}% cycle lanes",
+        "zoneLente": "{{pct}}% in 30 km/h zones",
+        "eclaire": "{{pct}}% lit",
+        "eclairageActif": "It is dark out: street lighting is factored into this route.",
+        "eclairageInactif": "In daylight (or during the overnight switch-off), street lighting is not factored into the route.",
+        "accidents_one": "{{count}} recorded crash",
+        "accidents_other": "{{count}} recorded crashes",
+        "horsTrafic": "{{pct}}% away from traffic",
+        "airDegrade": "Regional air quality is poor: this route favours streets set back from traffic, where exposure to pollution is lowest.",
+        "ventDeFace": "Headwind for {{pct}}%",
+        "ventMinutes": " · +{{minutes}} min",
+        "ventTitre": "{{vitesse}} km/h wind. The duration estimate accounts for it, but the route itself was not changed.",
+        "ponts_one": "{{count}} bridge · risk of ice",
+        "ponts_other": "{{count}} bridges · risk of ice",
+        "pontsTitre": "A bridge deck loses heat from both sides and freezes one to two hours before the road on either side of it."
+    },
+    "securite": {
+        "bouton": "Why is this route safer?",
+        "titre": "Why this route is safer",
+        "cyclableFort": "More than half the route ({{pct}}%) runs on dedicated cycle tracks or lanes, separated from motor traffic.",
+        "cyclableMoyen": "{{pct}}% of the route uses cycling infrastructure (track, lane or greenway), limiting interactions with cars.",
+        "cyclableFaible": "The route favours residential streets and calmed roads to keep motor traffic to a minimum.",
+        "lentFort": "{{pct}}% of the route is in a 30 km/h zone, which markedly lowers both the risk and the severity of a crash.",
+        "lentMoyen": "{{pct}}% of the route runs through reduced-speed zones (30 km/h or less).",
+        "eclaire": "{{pct}}% of the route is lit, giving good visibility after dark.",
+        "sansAccident": "No cycling crash has been officially recorded along this route.",
+        "accidents_one": "{{count}} cycling crash has been recorded along this route; those segments carry a lowered safety score.",
+        "accidents_other": "{{count}} cycling crashes have been recorded along this route; those segments carry a lowered safety score.",
+        "varianteSafe": "The algorithm picked this route as the safest of the options it computed, favouring the safety score over speed.",
+        "varianteCompromise": "This route balances safety against duration: it stays within the time you allowed while maximising the distance spent on safer roads.",
+        "ponts_one": "It is {{temperature}} °C and this route crosses {{count}} bridge: a deck loses heat from both sides and can be icy while the road beside it is not.",
+        "ponts_other": "It is {{temperature}} °C and this route crosses {{count}} bridges: a deck loses heat from both sides and can be icy while the road beside it is not.",
+        "alerte": "{{libelle}} {{quand}} over the departure area. This did not change the route: at this resolution (~28 km), the forecast warns you without steering the route away.",
+        "alerteVers": "around {{heure}}",
+        "alerteEnCours": "currently"
+    },
+    "signalement": {
+        "titre": "Report a hazard",
+        "type": "Hazard type",
+        "description": "Description (optional)",
+        "descriptionPlaceholder": "Describe the problem...",
+        "annuler": "Cancel",
+        "envoyer": "Report"
+    }
 }

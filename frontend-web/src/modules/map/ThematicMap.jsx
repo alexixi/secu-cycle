@@ -18,8 +18,8 @@ import {
     LIGHTING_HEATMAP_PAINT, LIT_ROADS_GLOW_PAINT, LIT_ROADS_LINE_PAINT,
     ACCIDENT_HEAT_LAYER_ID, ACCIDENT_POINT_LAYER_ID, ACCIDENT_SWITCH_ZOOM,
     ACCIDENT_HEAT_PAINT, ACCIDENT_POINT_PAINT, ACCIDENT_DETAIL_FIELDS, formatAccidentDate,
-    TRAFFIC_LAYER_ID, TRAFFIC_HITBOX_LAYER_ID, TRAFFIC_COLORS, TRAFFIC_LABELS,
-    TRAFFIC_CYCLIST_HINT, TRAFFIC_LINE_PAINT,
+    TRAFFIC_LAYER_ID, TRAFFIC_HITBOX_LAYER_ID, TRAFFIC_COLORS, trafficLabel,
+    trafficCyclistHint, TRAFFIC_LINE_PAINT,
     BIKESHARE_ICON_LAYER_ID, BIKESHARE_HITBOX_LAYER_ID, BIKESHARE_BADGE_LAYER_ID,
     BIKESHARE_HAS_BADGE, BIKESHARE_HITBOX_PAINT, BIKESHARE_ICON_LAYOUT, BIKESHARE_ICON_PAINT,
     BIKESHARE_BADGE_LAYOUT, BIKESHARE_BADGE_PAINT, BIKESHARE_COLORS, BIKESHARE_LOGOS,
@@ -256,7 +256,7 @@ export default function ThematicMap({ city, theme, onData }) {
     if (prerender) {
         return (
             <div className="thematic-map thematic-map--placeholder">
-                <p>Carte interactive {city.prep} — {themeLabel(theme).toLowerCase()}.</p>
+                <p>{t('ui.carte.placeholderPrerendu', { prep: city.prep, ville: city.name, theme: themeLabel(theme).toLowerCase() })}</p>
             </div>
         );
     }
@@ -438,7 +438,7 @@ export default function ThematicMap({ city, theme, onData }) {
             )}
             {erreur && (
                 <div className="thematic-map-overlay thematic-map-overlay--error" role="alert">
-                    Les données ne sont pas disponibles pour le moment. Le fond de carte reste consultable.
+                    {t('ui.erreursCarte.donneesIndisponibles')}
                 </div>
             )}
             {collection && featureCount === 0 && !erreur && (
@@ -506,11 +506,11 @@ function ThematicPopup({ active }) {
                     className="thematic-popup-header"
                     style={{ backgroundColor: TRAFFIC_COLORS[p.level] || TRAFFIC_COLORS.gray }}
                 >
-                    <span>{TRAFFIC_LABELS[p.level] || 'État inconnu'}</span>
+                    <span>{trafficLabel(p.level)}</span>
                 </div>
                 <div className="thematic-popup-body">
                     {p.commune && <p>{t('ui.carte.commune')} : <strong>{p.commune}</strong></p>}
-                    {TRAFFIC_CYCLIST_HINT[p.level] && <p>{TRAFFIC_CYCLIST_HINT[p.level]}</p>}
+                    {trafficCyclistHint(p.level) && <p>{trafficCyclistHint(p.level)}</p>}
                 </div>
             </>
         );

@@ -54,6 +54,7 @@ export default function HomePage() {
             linkedin: "https://www.linkedin.com/in/joan-dumarchat-813269344/"
         },
         {
+            // i18n-exempt: nom d'une personne de l'équipe
             name: "Léia Daragnès",
             linkedin: "https://www.linkedin.com/in/l%C3%A9ia-daragn%C3%A8s/"
         },
@@ -66,6 +67,7 @@ export default function HomePage() {
             <div id="container-top-homepage">
                 <Logo id="logo-homepage" />
                 <div>
+                    {/* i18n-exempt: nom de la marque */}
                     <h1 id="title-homepage">Sécu'Cycle</h1>
                     <p>{t('sousTitre')}</p>
                 </div>

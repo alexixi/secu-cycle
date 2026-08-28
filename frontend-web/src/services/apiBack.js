@@ -1,3 +1,6 @@
+import i18n from '../i18n/index';
+import { pathFor } from '../i18n/routes';
+
 function clearSession() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
@@ -45,6 +48,7 @@ const SESSION_INVALID_CODE = "session_invalid";
 const SESSION_INVALID_DETAILS = [
     "Invalid token",
     "Invalid token payload",
+    // i18n-exempt: détail de 401 renvoyé par l'API, comparé et non affiché — voir X-Auth-Error
     "Token révoqué",
     "Compte suspendu.",
 ];
@@ -77,6 +81,7 @@ export async function apiFetch(url, options = {}, token = null, _retried = false
 
     let API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
     if (!API_BASE_URL) {
+        // i18n-exempt: erreur de configuration du build, jamais servie à un visiteur
         throw new Error("VITE_API_BASE_URL n'est pas défini dans les variables d'environnement");
     }
     const fullUrl = `${API_BASE_URL}${url}`
@@ -94,10 +99,14 @@ export async function apiFetch(url, options = {}, token = null, _retried = false
             }
             if (localStorage.getItem("access_token")) {
                 clearSession();
-                window.location.href = "/login";
+                // Une redirection en dur renverrait un visiteur de /en/ vers la
+                // page française : la cible se résout dans la langue de la page.
+                window.location.href = pathFor('login', i18n.language) || '/login';
             }
+            // i18n-exempt: message d'Error interne, jamais rendu
             throw new Error("Non autorisé");
         }
+        // i18n-exempt: message d'Error interne, jamais rendu — le texte affiché vient de l'API
         const apiError = new Error(errorData || "Erreur lors de la requête API");
         apiError.status = response.status;
         apiError.statusText = response.statusText;

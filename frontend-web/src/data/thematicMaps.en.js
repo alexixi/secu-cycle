@@ -14,9 +14,21 @@
 import {
     SOURCE_BAAC,
     SOURCE_GBFS,
+    SOURCE_GBFS_BLUEBIKE,
+    SOURCE_GBFS_BRUXELLES,
+    SOURCE_GBFS_LILLE,
+    SOURCE_GBFS_LYON,
+    SOURCE_GBFS_NANTES,
+    SOURCE_GBFS_PARIS,
+    SOURCE_GBFS_RENNES,
+    SOURCE_GBFS_STRASBOURG,
+    SOURCE_LUM_NANTES,
     SOURCE_OSM,
     SOURCE_PTLUM,
+    SOURCE_STATBEL,
     SOURCE_TRAFIC_BM,
+    SOURCE_TRAFIC_NANTES,
+    SOURCE_TRAFIC_RENNES,
 } from './thematicMapsCore.js';
 
 export const LANG = 'en';
@@ -34,6 +46,7 @@ export const cityHubTitle = (city) => `Cycling maps in ${city.name}`;
 
 export const CITIES_CONTENT = {
     bordeaux: {
+        name: 'Bordeaux',
         label: 'Bordeaux and its metropolitan area',
         communes: 'the 28 municipalities of Bordeaux Métropole and around fifteen more in southern Gironde',
         metaDescription: 'Every cycling map for Bordeaux Métropole: bike parking, toilets, '
@@ -44,6 +57,7 @@ export const CITIES_CONTENT = {
     },
 
     rennes: {
+        name: 'Rennes',
         label: 'Rennes and its metropolitan area',
         communes: 'the 43 municipalities of Rennes Métropole',
         metaDescription: 'Every cycling map for Rennes Métropole: bike parking, toilets, drinking '
@@ -60,6 +74,7 @@ export const CITIES_CONTENT = {
         },
     },
     nantes: {
+        name: 'Nantes',
         label: 'Nantes and its metropolitan area',
         communes: 'the 24 municipalities of Nantes Métropole',
         metaDescription: 'Every cycling map for Nantes Métropole: bike parking, toilets, drinking '
@@ -72,6 +87,7 @@ export const CITIES_CONTENT = {
             + 'here does remain synchronised.',
     },
     paris: {
+        name: 'Paris',
         label: 'Paris and Greater Paris',
         communes: 'the 130 municipalities of the Métropole du Grand Paris',
         metaDescription: 'Every cycling map for Greater Paris: bike parking, toilets, drinking water, '
@@ -90,6 +106,7 @@ export const CITIES_CONTENT = {
         },
     },
     lyon: {
+        name: 'Lyon',
         label: 'Lyon and its metropolitan area',
         communes: 'the 58 municipalities of the Métropole de Lyon',
         metaDescription: 'Every cycling map for the Métropole de Lyon: bike parking, toilets, drinking '
@@ -107,6 +124,7 @@ export const CITIES_CONTENT = {
         },
     },
     lille: {
+        name: 'Lille',
         label: 'Lille and its metropolitan area',
         communes: 'the 95 municipalities of the Métropole Européenne de Lille',
         metaDescription: 'Every cycling map for the Métropole Européenne de Lille: bike parking, '
@@ -126,6 +144,7 @@ export const CITIES_CONTENT = {
         },
     },
     strasbourg: {
+        name: 'Strasbourg',
         label: 'Strasbourg and the Eurométropole',
         communes: 'the 33 municipalities of the Eurométropole de Strasbourg',
         metaDescription: 'Every cycling map for the Eurométropole de Strasbourg: bike parking, toilets, '
@@ -144,6 +163,7 @@ export const CITIES_CONTENT = {
         },
     },
     tournai: {
+        name: 'Tournai',
         label: 'Tournai, Mouscron and the Tournaisis',
         communes: 'Tournai, Antoing, Leuze-en-Hainaut, Estaimpuis, Mont-de-l’Enclus and Mouscron',
         metaDescription: 'Cycling maps for the Tournaisis and the Mouscron area: bike parking, cycling '
@@ -161,6 +181,12 @@ export const CITIES_CONTENT = {
         },
     },
     bruxelles: {
+        // Seule ville du socle dont le nom diffère en anglais. Sans cette
+        // surcharge, buildRegistry retombe sur le `name` français du socle, et
+        // « Bruxelles » apparaît dans les fils d'Ariane et les appels à l'action
+        // des pages anglaises — alors que son slug d'URL, lui, est bien traduit
+        // (`/en/map/brussels`, cf. i18n/slugs.js).
+        name: 'Brussels',
         label: 'Brussels and its 19 municipalities',
         communes: 'the 19 municipalities of the Brussels-Capital Region',
         metaDescription: 'Every cycling map for Brussels-Capital: bike parking, toilets, drinking water, '
@@ -551,6 +577,7 @@ export const PAGE_CONTENT = {
     },
 
     'bordeaux/accidents-velo': {
+        sources: [SOURCE_BAAC],
         title: 'Cycling accidents in Bordeaux — accident map',
         description: 'Map of injury accidents involving a cyclist across Bordeaux Métropole, from 2015 to '
             + '2023, from the ONISR BAAC records.',
@@ -930,6 +957,7 @@ export const PAGE_CONTENT = {
     },
 
     'rennes/velos-libre-service': {
+        sources: [SOURCE_GBFS_RENNES],
         title: 'LE vélo STAR in Rennes — live stations',
         description: 'Live map of the LE vélo STAR bike-share stations across Rennes Métropole: bikes '
             + 'available and free docks, station by station.',
@@ -992,6 +1020,7 @@ export const PAGE_CONTENT = {
     },
 
     'rennes/trafic-routier': {
+        sources: [SOURCE_TRAFIC_RENNES],
         title: 'Live traffic in Rennes — congestion map',
         description: 'Live road traffic map for Rennes Métropole: ring road, radial and urban roads, '
             + 'free-flowing, heavy or congested, read through a cyclist\'s eyes.',
@@ -1054,6 +1083,7 @@ export const PAGE_CONTENT = {
     },
 
     'rennes/accidents-velo': {
+        sources: [SOURCE_BAAC],
         title: 'Cycling accidents in Rennes — accident map',
         description: 'Map of injury accidents involving a cyclist across Rennes Métropole, from 2015 to '
             + '2023, from the BAAC records published by ONISR.',
@@ -1370,6 +1400,7 @@ export const PAGE_CONTENT = {
     },
 
     'nantes/eclairage-public': {
+        sources: [SOURCE_OSM, SOURCE_LUM_NANTES],
         title: 'Street lighting in Nantes — map of street lights',
         description: 'Map of street lighting across Nantes Métropole: close to 100,000 recorded units '
             + 'and lit streets, to help you plan night rides.',
@@ -1425,6 +1456,7 @@ export const PAGE_CONTENT = {
     },
 
     'nantes/velos-libre-service': {
+        sources: [SOURCE_GBFS_NANTES],
         title: 'Bike share in Nantes — live Naolib stations',
         description: 'Live map of the bike-share stations across Nantes Métropole: bikes available and '
             + 'free docks, station by station.',
@@ -1480,6 +1512,7 @@ export const PAGE_CONTENT = {
     },
 
     'nantes/trafic-routier': {
+        sources: [SOURCE_TRAFIC_NANTES],
         title: 'Live traffic in Nantes — congestion map',
         description: 'Live road traffic map for Nantes Métropole: ring road, Loire bridges and urban '
             + 'roads, free-flowing, heavy or congested.',
@@ -1540,6 +1573,7 @@ export const PAGE_CONTENT = {
     },
 
     'nantes/accidents-velo': {
+        sources: [SOURCE_BAAC],
         title: 'Cycling accidents in Nantes — accident map',
         description: 'Map of injury accidents involving a cyclist across Nantes Métropole, from 2015 to '
             + '2023, from the BAAC records.',
@@ -1792,6 +1826,7 @@ export const PAGE_CONTENT = {
     },
 
     'paris/velos-libre-service': {
+        sources: [SOURCE_GBFS_PARIS],
         title: 'Vélib’ stations in Paris — live availability',
         description: 'Live map of Vélib’ Métropole stations: mechanical and electric bikes available, '
             + 'free docks, station by station.',
@@ -1856,6 +1891,7 @@ export const PAGE_CONTENT = {
     },
 
     'paris/accidents-velo': {
+        sources: [SOURCE_BAAC],
         title: 'Cycling accidents in Paris — risk area map',
         description: 'Map of injury accidents involving a cyclist in Paris and Greater Paris, from '
             + 'official data.',
@@ -2156,6 +2192,7 @@ export const PAGE_CONTENT = {
     },
 
     'lyon/velos-libre-service': {
+        sources: [SOURCE_GBFS_LYON],
         title: 'Vélo’v stations in Lyon — live availability',
         description: 'Live map of Vélo’v stations: mechanical and electric bikes available, free docks.',
         h1: 'Bike share in Lyon',
@@ -2216,6 +2253,7 @@ export const PAGE_CONTENT = {
     },
 
     'lyon/accidents-velo': {
+        sources: [SOURCE_BAAC],
         title: 'Cycling accidents in Lyon — risk area map',
         description: 'Map of injury accidents involving a cyclist across the Métropole de Lyon, from '
             + 'official data.',
@@ -2511,6 +2549,7 @@ export const PAGE_CONTENT = {
     },
 
     'lille/velos-libre-service': {
+        sources: [SOURCE_GBFS_LILLE],
         title: 'V’Lille stations — live availability',
         description: 'Live map of V’Lille stations: bikes available and free docks, station by station.',
         h1: 'Bike share in Lille',
@@ -2568,6 +2607,7 @@ export const PAGE_CONTENT = {
     },
 
     'lille/accidents-velo': {
+        sources: [SOURCE_BAAC],
         title: 'Cycling accidents in Lille — risk area map',
         description: 'Map of injury accidents involving a cyclist across the Métropole Européenne de '
             + 'Lille, from official data.',
@@ -2865,6 +2905,7 @@ export const PAGE_CONTENT = {
     },
 
     'strasbourg/velos-libre-service': {
+        sources: [SOURCE_GBFS_STRASBOURG],
         title: 'Vélhop stations in Strasbourg — live availability',
         description: 'Live map of Vélhop bike-share stations across the Eurométropole de Strasbourg: '
             + 'bikes available and free docks.',
@@ -2924,6 +2965,7 @@ export const PAGE_CONTENT = {
     },
 
     'strasbourg/accidents-velo': {
+        sources: [SOURCE_BAAC],
         title: 'Cycling accidents in Strasbourg — risk area map',
         description: 'Map of injury accidents involving a cyclist across the Eurométropole de '
             + 'Strasbourg, from official data.',
@@ -3108,6 +3150,7 @@ export const PAGE_CONTENT = {
     },
 
     'tournai/accidents-velo': {
+        sources: [SOURCE_STATBEL],
         title: 'Cycling accidents in Tournai — accident map',
         description: 'Map of accidents involving a cyclist in Tournai, Mouscron and the Tournaisis, from '
             + 'Belgian open data.',
@@ -3393,6 +3436,7 @@ export const PAGE_CONTENT = {
     },
 
     'bruxelles/velos-libre-service': {
+        sources: [SOURCE_GBFS_BRUXELLES, SOURCE_GBFS_BLUEBIKE],
         title: 'Villo! stations in Brussels — live availability',
         description: 'Live map of Villo! and Blue-bike stations: bikes available and free docks, station '
             + 'by station.',
@@ -3453,6 +3497,7 @@ export const PAGE_CONTENT = {
     },
 
     'bruxelles/accidents-velo': {
+        sources: [SOURCE_STATBEL],
         title: 'Cycling accidents in Brussels — risk area map',
         description: 'Map of injury accidents involving a cyclist across the 19 municipalities of '
             + 'Brussels-Capital, from Statbel data.',

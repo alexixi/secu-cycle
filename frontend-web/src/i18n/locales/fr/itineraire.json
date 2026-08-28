@@ -2,5 +2,75 @@
     "titrePage": "Sécu'Cycle | Itinéraires",
     "metaDescription": "Calculez un itinéraire à vélo sécurisé à Bordeaux et à Tournai avec Sécu'Cycle : trajet adapté à votre profil, votre vélo et au type de route.",
     "h1": "Calculateur d'itinéraire à vélo sécurisé à Bordeaux et à Tournai",
-    "erreurGenerique": "Une erreur est survenue lors de la recherche de l'itinéraire."
+    "erreurGenerique": "Une erreur est survenue lors de la recherche de l'itinéraire.",
+    "recherche": {
+        "depart": "Départ",
+        "destination": "Destination",
+        "contraintes": "Contraintes horaires",
+        "heureMax": "Heure d'arrivée maximale",
+        "dureeMax": "Durée maximale",
+        "dureeMaxUnite": "(minutes)",
+        "calculer": "Calculer les itinéraires"
+    },
+    "velo": {
+        "choix": "Choix du vélo",
+        "selectionne": "<nom>{{nom}}</nom> sélectionné",
+        "ville": "Ville",
+        "vtt": "VTT",
+        "route": "Route"
+    },
+    "itineraires": {
+        "titre": "Itinéraires disponibles",
+        "altitude": "Altitude",
+        "nom": {
+            "fast": "Rapide",
+            "safe": "Sécurisé",
+            "compromise": "Compromis"
+        }
+    },
+    "badges": {
+        "pisteCyclable": "{{pct}}% piste cyclable",
+        "zoneLente": "{{pct}}% zone ≤30 km/h",
+        "eclaire": "{{pct}}% éclairé",
+        "eclairageActif": "Il fait nuit : l'éclairage est pris en compte dans le calcul de cet itinéraire.",
+        "eclairageInactif": "De jour (ou pendant la coupure nocturne), l'éclairage n'entre pas dans le calcul de l'itinéraire.",
+        "accidents_one": "{{count}} accident recensé",
+        "accidents_other": "{{count}} accidents recensés",
+        "horsTrafic": "{{pct}}% à l'écart du trafic",
+        "airDegrade": "L'air régional est dégradé : cet itinéraire privilégie les rues les plus à l'écart de la circulation, où l'exposition à la pollution est la plus faible.",
+        "ventDeFace": "Vent de face sur {{pct}}%",
+        "ventMinutes": " · +{{minutes}} min",
+        "ventTitre": "Vent de {{vitesse}} km/h. L'estimation de durée en tient compte, mais le tracé n'a pas été modifié.",
+        "ponts_one": "{{count}} pont · risque de verglas",
+        "ponts_other": "{{count}} ponts · risque de verglas",
+        "pontsTitre": "Un tablier de pont perd sa chaleur par ses deux faces et gèle une à deux heures avant la chaussée voisine."
+    },
+    "securite": {
+        "bouton": "Pourquoi ce trajet est-il sécurisé ?",
+        "titre": "Pourquoi ce trajet est sécurisé ?",
+        "cyclableFort": "Plus de la moitié du trajet ({{pct}}%) emprunte des pistes ou bandes cyclables dédiées, séparées du trafic motorisé.",
+        "cyclableMoyen": "{{pct}}% du trajet utilise des infrastructures cyclables (piste, bande ou voie verte), limitant les interactions avec les voitures.",
+        "cyclableFaible": "Le trajet favorise les rues résidentielles et voies apaisées pour minimiser le trafic motorisé.",
+        "lentFort": "{{pct}}% du trajet se déroule en zone ≤30 km/h, ce qui réduit significativement le risque et la gravité des accidents.",
+        "lentMoyen": "{{pct}}% du trajet passe par des zones à vitesse réduite (≤30 km/h).",
+        "eclaire": "{{pct}}% du trajet est éclairé, assurant une bonne visibilité de nuit.",
+        "sansAccident": "Aucun accident à vélo n'a été officiellement recensé le long de ce trajet.",
+        "accidents_one": "{{count}} accident à vélo a été recensé le long de ce trajet ; ces segments voient leur note de sécurité abaissée.",
+        "accidents_other": "{{count}} accidents à vélo ont été recensés le long de ce trajet ; ces segments voient leur note de sécurité abaissée.",
+        "varianteSafe": "Ce trajet a été sélectionné par l'algorithme comme le plus sécurisé parmi les options calculées, en privilégiant le score de sécurité sur la vitesse.",
+        "varianteCompromise": "Ce trajet équilibre sécurité et durée : il reste dans le temps imparti tout en maximisant le passage sur des voies sécurisées.",
+        "ponts_one": "Il fait {{temperature}} °C et ce trajet franchit {{count}} pont : un tablier perd sa chaleur par ses deux faces et peut être verglacé alors que la chaussée voisine ne l'est pas.",
+        "ponts_other": "Il fait {{temperature}} °C et ce trajet franchit {{count}} ponts : un tablier perd sa chaleur par ses deux faces et peut être verglacé alors que la chaussée voisine ne l'est pas.",
+        "alerte": "{{libelle}} {{quand}} sur la zone de départ. Cette information n'a pas modifié le tracé : à cette résolution (~28 km), la météo vous avertit sans faire dévier l'itinéraire.",
+        "alerteVers": "vers {{heure}}",
+        "alerteEnCours": "en cours"
+    },
+    "signalement": {
+        "titre": "Signaler un danger",
+        "type": "Type de signalement",
+        "description": "Description (optionnel)",
+        "descriptionPlaceholder": "Décrivez le problème...",
+        "annuler": "Annuler",
+        "envoyer": "Signaler"
+    }
 }

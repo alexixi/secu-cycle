@@ -23,7 +23,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
         let finalName = name.trim();
         if (finalName === "") {
             const sameTypeCount = addedBikes.filter((b) => b.type === type).length;
-            finalName = t(`onboarding.velos.${type}`) + (sameTypeCount === 0 ? "" : ` ${sameTypeCount + 1}`);
+            finalName = t(`velo.${type}`) + (sameTypeCount === 0 ? "" : ` ${sameTypeCount + 1}`);
         } else if (finalName.length < 3 || finalName.length > 30) {
             setNameError(true);
             return;
@@ -58,8 +58,8 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                             <div className="onboarding-bike-info">
                                 <span className="onboarding-bike-name">{bike.name}</span>
                                 <span className="onboarding-bike-type">
-                                    {BIKE_TYPES.includes(bike.type) ? t(`onboarding.velos.${bike.type}`) : bike.type}
-                                    {bike.is_electric ? " • électrique" : ""}
+                                    {BIKE_TYPES.includes(bike.type) ? t(`velo.${bike.type}`) : bike.type}
+                                    {bike.is_electric ? t('velo.electriqueSuffixePuce') : ""}
                                 </span>
                             </div>
                             <FaCheckCircle className="onboarding-bike-check" />
@@ -70,12 +70,12 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
 
             <form onSubmit={handleAdd}>
                 <div className={`input-group ${nameError ? "input-error" : ""}`}>
-                    <label htmlFor="bikeName">{t('onboarding.velos.nom')}</label>
+                    <label htmlFor="bikeName">{t('velo.nom')}</label>
                     <input
                         className="input"
                         type="text"
                         id="bikeName"
-                        placeholder={t('onboarding.velos.nomPlaceholder')}
+                        placeholder={t('velo.nomPlaceholder')}
                         value={name}
                         onChange={(e) => {
                             setName(e.target.value);
@@ -83,15 +83,15 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                         }}
                     />
                     {nameError && (
-                        <div className="error-text">{t('onboarding.velos.nomInvalide')}</div>
+                        <div className="error-text">{t('velo.nomInvalide')}</div>
                     )}
                 </div>
 
                 <div className="input-group">
-                    <label htmlFor="bikeType">{t('onboarding.velos.type')}</label>
+                    <label htmlFor="bikeType">{t('velo.type')}</label>
                     <select className="input" id="bikeType" value={type} onChange={(e) => setType(e.target.value)}>
                         {BIKE_TYPES.map((valeur) => (
-                            <option key={valeur} value={valeur}>{t(`onboarding.velos.${valeur}`)}</option>
+                            <option key={valeur} value={valeur}>{t(`velo.${valeur}`)}</option>
                         ))}
                     </select>
                 </div>
@@ -113,13 +113,13 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                 {addError && <p className="error-text">{t('onboarding.velos.erreurAjout')}</p>}
 
                 <Button type="submit" disabled={isAdding}>
-                    <AiFillPlusCircle size={13} /> {isAdding ? t('onboarding.velos.ajout') : "Ajouter ce vélo"}
+                    <AiFillPlusCircle size={13} /> {isAdding ? t('onboarding.velos.ajout') : t('velo.ajouterCeVelo')}
                 </Button>
             </form>
 
             <div className="onboarding-footer">
                 <Button type="button" className="active" onClick={onFinish} disabled={isFinishing}>
-                    <FaCheckCircle /> {isFinishing ? "…" : "Terminer"}
+                    <FaCheckCircle /> {isFinishing ? "…" : t('actions.terminer')}
                 </Button>
             </div>
         </div>

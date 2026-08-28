@@ -17,7 +17,8 @@
         "seConnecter": "Se connecter",
         "seDeconnecter": "Se déconnecter",
         "creerCompte": "Créer un compte",
-        "monProfil": "Mon Profil"
+        "monProfil": "Mon Profil",
+        "sessionExpiree": "Votre session a expiré pour des raisons de sécurité. Veuillez vous reconnecter."
     },
     "a11y": {
         "menuProfil": "Menu profil",
@@ -34,5 +35,17 @@
         "introuvable": "La page que vous recherchez n'existe pas.",
         "verifier": "Veuillez vérifier l'URL ou revenir à la page d'accueil.",
         "retour": "Retour à l'accueil"
+    },
+    "adresses": {
+        "domicile": "🏠 Domicile",
+        "travail": "💼 Travail",
+        "adresseInvalide": "Adresse invalide. Veuillez choisir dans la liste.",
+        "adresseHorsZone": "Cette adresse est en dehors de la zone couverte par Sécu-Cycle.",
+        "aucunResultat": "Aucun résultat trouvé"
+    },
+    "theme": {
+        "clair": "Clair",
+        "auto": "Auto",
+        "sombre": "Sombre"
     }
 }

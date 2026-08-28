@@ -1,13 +1,15 @@
+import { useTranslation } from "react-i18next";
 import Meta from "../components/Meta";
 
 export default function AdminPage() {
+  const { t } = useTranslation('auth');
   return (
     <>
-    <Meta title="Admin | Sécu'Cycle" description="Page d'administration de Sécu'Cycle" noindex />
-    <div>
-      <h1>Page d'administration</h1>
-      <p>Cette page est réservée aux administrateurs pour consulter les statistiques d'utilisation.</p>
-    </div>
+      <Meta title={t('admin.titrePage')} description={t('admin.metaDescription')} noindex />
+      <div>
+        <h1>{t('admin.h1')}</h1>
+        <p>{t('admin.intro')}</p>
+      </div>
     </>
   )
 }

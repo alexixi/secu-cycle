@@ -52,9 +52,11 @@ export default function MentionsLegalesPage() {
                     <h2>{t('mentions.editeurs.h2')}</h2>
                     <p><Trans t={t} i18nKey="mentions.editeurs.projet" components={composants} /></p>
                     <p><Trans t={t} i18nKey="mentions.editeurs.conjointement" components={composants} /></p>
+                    {/* i18n-exempt-start: noms des éditeurs du site */}
                     <ul>
                         <li><strong>Alexis Gaudray Bouju</strong></li>
                         <li><strong>Matheline Chevalier</strong></li>
+                        {/* i18n-exempt-end */}
                     </ul>
                     <p><Trans t={t} i18nKey="mentions.editeurs.contact" components={composants} /></p>
 
@@ -65,10 +67,12 @@ export default function MentionsLegalesPage() {
                     <p><Trans t={t} i18nKey="mentions.hebergeur.intro" components={composants} /></p>
                     {/* Coordonnées de l'hébergeur : une adresse postale ne se traduit pas. */}
                     <p>
+                        {/* i18n-exempt: raison sociale de l'hébergeur */}
                         <strong>IONOS SARL</strong><br />
                         7 place de la Gare, BP 70109<br />
                         57201 Sarreguemines Cedex, France<br />
                         {t('mentions.hebergeur.telephone')}<br />
+                        {/* i18n-exempt: adresse du site de l'hébergeur */}
                         <ExternalLink href="https://www.ionos.fr">www.ionos.fr</ExternalLink>
                     </p>
 

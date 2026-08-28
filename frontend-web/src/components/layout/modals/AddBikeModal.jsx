@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { AiFillPlusCircle } from "react-icons/ai";
 import Button from "../../ui/Button";
@@ -9,6 +10,7 @@ import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 
 export default function AddBikeModal({ isOpen, hasError, onClose, onConfirm }) {
+    const { t } = useTranslation('auth');
   const [bikeName, setBikeName] = useState("");
   const [nameError, setNameError] = useState(false)
   const [bikeType, setBikeType] = useState("ville");
@@ -49,12 +51,11 @@ export default function AddBikeModal({ isOpen, hasError, onClose, onConfirm }) {
     e.preventDefault();
     let name = bikeName.trim();
     if (name === "") {
+      // Nom par défaut tiré du type, dans la langue de l'utilisateur — c'est une
+      // donnée qu'il pourra renommer, pas un identifiant. StepBikes fait de même.
       const sameTypeCount = userBikes.filter((v) => v.type === bikeType).length;
-      if (sameTypeCount === 0) {
-        name = bikeType.charAt(0).toUpperCase() + bikeType.slice(1);
-      } else {
-        name = `${bikeType.charAt(0).toUpperCase() + bikeType.slice(1)} ${sameTypeCount + 1}`;
-      }
+      const libelle = t(`velo.${bikeType}`);
+      name = sameTypeCount === 0 ? libelle : `${libelle} ${sameTypeCount + 1}`;
     } else if (name.length < 3 || name.length > 30) {
       setNameError(true);
       return;
@@ -92,16 +93,16 @@ export default function AddBikeModal({ isOpen, hasError, onClose, onConfirm }) {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2>Ajouter un vélo</h2>
+        <h2>{t('modales.ajoutVelo.titre')}</h2>
         <form onSubmit={handleSubmit}>
           <div className="input-container">
             <div className={"input-group" + (nameError ? " input-error" : "")}>
-              <label htmlFor="bikeName">Nom du vélo :</label>
+              <label htmlFor="bikeName">{t('velo.nom')}</label>
               <input
                 className="input"
                 type="text"
                 id="bikeName"
-                placeholder="Ex: Nakamura Summit 700"
+                placeholder={t('velo.nomPlaceholder')}
                 value={bikeName}
                 onBlur={handleBlur}
                 onChange={handleChange}
@@ -109,28 +110,28 @@ export default function AddBikeModal({ isOpen, hasError, onClose, onConfirm }) {
               />
               {nameError && (
                 <div className="error-text">
-                  Veuillez entrer un nom de vélo valide.<br />Le nom doit faire entre 3 et 30 caractères.
+                  {t('velo.nomRequis')}<br />{t('velo.nomInvalide')}
                 </div>
               )}
             </div>
 
             <div className="input-group">
-              <label htmlFor="bikeType">Type :</label>
+              <label htmlFor="bikeType">{t('velo.type')}</label>
               <select
                 className="input"
                 id="bikeType"
                 value={bikeType}
                 onChange={(e) => setBikeType(e.target.value)}
               >
-                <option value="ville">Ville</option>
-                <option value="route">Route</option>
-                <option value="vtt">VTT</option>
+                <option value="ville">{t('velo.ville')}</option>
+                <option value="route">{t('velo.route')}</option>
+                <option value="vtt">{t('velo.vtt')}</option>
               </select>
             </div>
 
             <div className="input-group">
               <div className="form-group-checkbox">
-                <label htmlFor="bikeIsElectric" style={{ margin: 0 }}>Électrique</label>
+                <label htmlFor="bikeIsElectric" style={{ margin: 0 }}>{t('velo.electrique')}</label>
                 <input
                   type="checkbox"
                   id="bikeIsElectric"
@@ -139,12 +140,12 @@ export default function AddBikeModal({ isOpen, hasError, onClose, onConfirm }) {
                 />
               </div>
             </div>
-            {hasError && <p className="error-text">Une erreur est survenue. Veuillez réessayer.</p>}
+            {hasError && <p className="error-text">{t('erreurs.generique')}</p>}
           </div>
 
           <div className="modal-actions">
-            <Button type="button" onClick={onClose}>Annuler</Button>
-            <Button type="submit">Ajouter <AiFillPlusCircle size={13} /></Button>
+            <Button type="button" onClick={onClose}>{t('actions.annuler')}</Button>
+            <Button type="submit">{t('actions.ajouter')} <AiFillPlusCircle size={13} /></Button>
           </div>
         </form>
 

@@ -126,6 +126,9 @@
         },
         "baac": {
             "detail": "derived from the ONISR BAAC files, published by Koumoul"
+        },
+        "licence": {
+            "fluxOuvert": "Open feed, attribution required"
         }
     },
     "carte": {
@@ -196,6 +199,22 @@
             "mortel": "Fatal accident",
             "hospitalise": "Hospitalised injury",
             "leger": "Slight injury"
+        },
+        "signalement": {
+            "accident": "Crash",
+            "travaux": "Roadworks",
+            "danger": "Hazard",
+            "obstacle": "Obstacle"
+        },
+        "trafic": {
+            "green": "Traffic flowing",
+            "orange": "Heavy traffic",
+            "red": "Congested road",
+            "gray": "Unknown"
+        },
+        "traficConseil": {
+            "orange": "🚲 Traffic is slow: close passes and car doors — stay visible.",
+            "red": "🚲 Our safer routes avoid this road wherever they can."
         }
     },
     "ui": {
@@ -209,7 +228,10 @@
             "metaDescription": "All Sécu'Cycle maps: bike parking, toilets, drinking water, street lighting, live traffic and accidents in {{villes}}.",
             "h1": "Cycling maps by city",
             "villeManquante": "A city missing?",
-            "villeManquanteTexte": "We only publish a map once the open data for an area is complete enough to be useful — a sparse survey would give a false picture. Coverage grows as new areas are added to the route planner: you can suggest a city through our <contact>contact page</contact>."
+            "villeManquanteTexte": "We only publish a map once the open data for an area is complete enough to be useful — a sparse survey would give a false picture. Coverage grows as new areas are added to the route planner: you can suggest a city through our <contact>contact page</contact>.",
+            "intro": "Sécu’Cycle plans safer bike routes from around a dozen open data sets. These thematic maps open up each of those layers on its own, city by city: where to park a bike, where to find water, which streets are lit, where cyclists are hurt.",
+            "sansItineraire": " Route planning is not available there yet.",
+            "couvertureTexte": "We only publish a map once a territory’s open data is complete enough to be useful — a sparse survey would paint a false picture. Coverage grows as new territories join the route planner: you can suggest a city through our <contact>contact page</contact>."
         },
         "ville": {
             "zoneCouverte": "Area covered",
@@ -224,7 +246,9 @@
             "trajet": "Riding in {{ville}}?",
             "trajetTexte": "Sécu'Cycle plans a safer cycling route that accounts for bike infrastructure, street lighting, traffic and recorded accidents — with this layer shown on the map.",
             "calculer": "Plan my route",
-            "itinerairesCalculesA": "Routes are currently available in {{villes}}."
+            "itinerairesCalculesA": "Routes are currently available in {{villes}}.",
+            "villeTexte": "Every one of these layers feeds the route planner: it takes them into account to propose a bike route that is genuinely rideable, matched to your bike and your profile.",
+            "themeTexte": "Sécu’Cycle plans a safer bike route that accounts for cycling infrastructure, street lighting, traffic and recorded crashes — with this layer shown on the map."
         },
         "theme": {
             "reduireCarte": "Shrink the map",
@@ -234,7 +258,8 @@
             "detailDonnees": "Each dataset and its licence are listed on the <donnees>Data sources</donnees> page.",
             "autresCartes": "Other maps in {{ville}}",
             "memeThemeAilleurs": "{{theme}} in other cities",
-            "themeDansVille": "{{theme}} in {{ville}}"
+            "themeDansVille": "{{theme}} in {{ville}}",
+            "tempsReel": "Data refreshed continuously from the official feed."
         },
         "carte": {
             "changerFond": "Change the base map",
@@ -253,7 +278,8 @@
             "placesLibres": "Free docks",
             "reseau": "Network",
             "oui": "Yes",
-            "non": "No"
+            "non": "No",
+            "placeholderPrerendu": "Interactive map in {{ville}} — {{theme}}."
         },
         "menu": {
             "copiezCoordonnees": "Copy the coordinates:",
@@ -275,7 +301,31 @@
             "vigilance": "Warnings",
             "rienASignaler": "Nothing to report.",
             "aPrevoir": "Coming up",
-            "prochainesHeures": "Next few hours"
+            "prochainesHeures": "Next few hours",
+            "replier": "Click to collapse",
+            "detail": "Click for details",
+            "ventTitre": "wind {{vitesse}} km/h",
+            "ventDirection": " from the {{cardinal}}",
+            "rafalesTitre": ", gusts {{vitesse}}",
+            "dernierReleveTitre": "last reading {{heure}}",
+            "dernierReleveDispo": "Last available reading ({{heure}})",
+            "releveDe": "Reading from {{heure}}",
+            "echelle": "scale: {{mm}} mm / {{minutes}} min",
+            "ventDe": " from the {{cardinal}}",
+            "rafales": "Gusts up to {{vitesse}} km/h",
+            "heure": "{{h}}:{{m}}",
+            "pluiePersistante": "It is raining, and it is set to last.",
+            "accalmieDansVers": "Dry spell in ~{{minutes}} min (around {{heure}}).",
+            "accalmieDans": "Dry spell in ~{{minutes}} min.",
+            "accalmieVers": "A dry spell is forecast around {{heure}}.",
+            "accalmie": "A dry spell is forecast.",
+            "pluieDans": "Rain in ~{{minutes}} min.",
+            "pluieProchainesHeures": "Rain is forecast in the next few hours.",
+            "departConseille": "Leave around {{heure}} ({{minutes}} min from now): the shower will have passed.",
+            "cumulPeriode": "Total over the period: {{mm}} mm",
+            "nowcastExpire": "The 15-minute forecast has expired: the latest reading is too old to say anything about the next two hours.",
+            "nowcastHorsZone": "No 15-minute forecast for this area — it falls outside the fine-mesh models. Only the hourly probabilities are reliable here.",
+            "ressenti": "Feels like {{degres}} °C"
         },
         "eclairage": {
             "h2": "Street lighting",
@@ -306,7 +356,8 @@
                 "warningDetail": "Storms, snow, heavy rain, frost",
                 "severe": "Danger",
                 "severeDetail": "Black ice, hail, gusts ≥ 80 km/h"
-            }
+            },
+            "ventPonts": "<b>Wind</b> adjusts the <em>displayed</em> duration of the route, never the route itself. Below 3 °C, <b>bridges</b> of 30 m or more are flagged: a deck loses heat from both sides and freezes one to two hours before the road beside it."
         },
         "airModal": {
             "h2": "Air quality",
@@ -363,7 +414,22 @@
             "accidentsVelo": "Cycling accidents",
             "fondsCarte": "Base maps",
             "calques": "Layers",
-            "changerFond": "Change the base map"
+            "changerFond": "Change the base map",
+            "cliquezSurCarte": "Click on the map...",
+            "masquerTrafic": "Hide traffic",
+            "masquerAir": "Hide air quality",
+            "maPosition": "My location",
+            "localisationEnCours": "Locating...",
+            "releveDe": "Reading from {{heure}}",
+            "indiceAir": "Index {{indice}} · {{libelle}}",
+            "polluantDominant": "Main pollutant: {{polluant}}",
+            "degradationPrevue": "Expected to worsen around {{heure}}",
+            "dernierReleveDispo": "Last available reading",
+            "dernierReleveDispoHeure": "Last available reading ({{heure}})",
+            "releveMaille": "Reading from {{heure}} · ~{{km}} km grid",
+            "eclairageConnu": "Lighting on record",
+            "eclairageDeduit": "Lighting inferred",
+            "avertissementAccidents": "Crashes reported to the police: the absence of a point does not mean the absence of danger."
         },
         "popupCarte": {
             "capteurSol": "Ground sensor · US AQI scale",
@@ -371,13 +437,53 @@
             "retourImpossible": "Bike drop-off not possible.",
             "stationPleine": "Station full: no drop-off possible.",
             "donneesNonRafraichies": "Last available reading, data not refreshed.",
-            "accidentVelo": "Cycling accident"
+            "accidentVelo": "Cycling accident",
+            "stationVelos": "Bike station",
+            "stationHorsService": "Station out of service",
+            "disponibiliteInconnue": "Availability unknown",
+            "velosDisponibles_one": "{{count}} bike available",
+            "velosDisponibles_other": "{{count}} bikes available",
+            "donneesAJour": "Up to date",
+            "releve": "Recorded {{quand}}",
+            "releveAncien": "Old reading, reliability uncertain",
+            "signaleInstant": "Reported just now",
+            "signale": "Reported {{quand}}",
+            "signaleLe": "Reported on {{date}}",
+            "releveHeure": "Recorded {{heure}}",
+            "voteLa": "👍 {{count}} still there",
+            "votePasLa": "👎 {{count}} gone",
+            "confirmer": "Still there",
+            "pasLa": "Gone",
+            "supprimer": "Delete",
+            "signalerContenu": "Report this content",
+            "yAller": "Go there",
+            "reseau": "Network",
+            "repartition": "{{velos}} bike(s), {{places}} free space(s) — {{total}} docking points",
+            "repartitionIndispo": "{{velos}} bike(s), {{places}} free space(s), {{indispo}} unavailable — {{total}} docking points",
+            "attachesIndisponibles": "{{count}} docking points unavailable.",
+            "gravite": "Severity:"
         },
         "erreursCarte": {
             "airIndisponible": "Air quality temporarily unavailable.",
             "stationsIndisponibles": "Stations temporarily unavailable.",
             "geolocIndisponible": "Geolocation is not available in this browser.",
-            "positionImpossible": "Could not get your location. Check that location access is allowed for this site."
+            "positionImpossible": "Could not get your location. Check that location access is allowed for this site.",
+            "traficIndisponible": "Traffic data is temporarily unavailable.",
+            "donneesIndisponibles": "The data is unavailable right now. The base map remains usable."
+        },
+        "abus": {
+            "titre": "Report this content",
+            "offensant": "Offensive content",
+            "offensantAide": "Insults, hate speech, inappropriate remarks",
+            "spam": "Spam or advertising",
+            "spamAide": "Unrelated to cycling safety",
+            "fantaisiste": "Bogus report",
+            "fantaisisteAide": "An invented hazard, or one dropped anywhere",
+            "autre": "Another reason",
+            "bloquer": "Block this author",
+            "bloquerAide": "You will no longer see any of their reports. Reversible from your profile.",
+            "delai": "We review every report within 24 hours. Past two reports, the content disappears from the map pending our decision.",
+            "annuler": "Cancel"
         }
     }
 }

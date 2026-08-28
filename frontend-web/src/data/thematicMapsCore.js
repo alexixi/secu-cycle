@@ -16,6 +16,10 @@ export const SITE_URL = 'https://secu-cycle.fr';
 
 /* ------------------------------------------------------------------ licences & sources */
 
+// i18n-exempt-start: noms légaux de licences, titres officiels de jeux de données
+// et noms d'opérateurs. La règle 3 du README interdit de les traduire — c'est ce
+// qui garde /pois/ et /streetlights/ neutres en langue. Les formulations
+// descriptives, elles, portent une `labelKey` et se traduisent.
 export const ODBL = { label: 'ODbL', href: 'https://opendatacommons.org/licenses/odbl/' };
 export const LO = { label: 'Licence Ouverte', href: 'https://www.etalab.gouv.fr/licence-ouverte-open-licence/' };
 export const LO2 = { label: 'Licence Ouverte 2.0', href: 'https://www.etalab.gouv.fr/licence-ouverte-open-licence/' };
@@ -58,7 +62,7 @@ export const SOURCE_STATBEL = {
 export const SOURCE_GBFS = {
     name: 'Flux GBFS « Le Vélo »',
     detail: 'Bordeaux Métropole / Keolis',
-    licence: { label: 'Flux ouvert, attribution requise' },
+    licence: { labelKey: 'source.licence.fluxOuvert' },
     producer: { label: 'gbfs.org', href: 'https://gbfs.org/' },
 };
 
@@ -105,58 +109,59 @@ export const SOURCE_LUM_NANTES = {
 export const SOURCE_GBFS_RENNES = {
     name: 'Flux GBFS « LE vélo STAR »',
     detail: 'Rennes Métropole / STAR',
-    licence: { label: 'Flux ouvert, attribution requise' },
+    licence: { labelKey: 'source.licence.fluxOuvert' },
     producer: { label: 'gbfs.org', href: 'https://gbfs.org/' },
 };
 
 export const SOURCE_GBFS_NANTES = {
     name: 'Flux GBFS « Naolib »',
     detail: 'Nantes Métropole / JCDecaux',
-    licence: { label: 'Flux ouvert, attribution requise' },
+    licence: { labelKey: 'source.licence.fluxOuvert' },
     producer: { label: 'gbfs.org', href: 'https://gbfs.org/' },
 };
 
 export const SOURCE_GBFS_PARIS = {
     name: 'Flux GBFS « Vélib’ Métropole »',
     detail: 'Vélib’ Métropole / Smovengo',
-    licence: { label: 'Flux ouvert, attribution requise' },
+    licence: { labelKey: 'source.licence.fluxOuvert' },
     producer: { label: 'gbfs.org', href: 'https://gbfs.org/' },
 };
 
 export const SOURCE_GBFS_LYON = {
     name: 'Flux GBFS « Vélo’v »',
     detail: 'Métropole de Lyon / JCDecaux',
-    licence: { label: 'Flux ouvert, attribution requise' },
+    licence: { labelKey: 'source.licence.fluxOuvert' },
     producer: { label: 'gbfs.org', href: 'https://gbfs.org/' },
 };
 
 export const SOURCE_GBFS_LILLE = {
     name: 'Flux GBFS « V’Lille »',
     detail: 'Métropole Européenne de Lille / Ilévia',
-    licence: { label: 'Flux ouvert, attribution requise' },
+    licence: { labelKey: 'source.licence.fluxOuvert' },
     producer: { label: 'gbfs.org', href: 'https://gbfs.org/' },
 };
 
 export const SOURCE_GBFS_STRASBOURG = {
     name: 'Flux GBFS « Vélhop »',
     detail: 'Strasbourg Mobilités Vélo / nextbike',
-    licence: { label: 'Flux ouvert, attribution requise' },
+    licence: { labelKey: 'source.licence.fluxOuvert' },
     producer: { label: 'gbfs.org', href: 'https://gbfs.org/' },
 };
 
 export const SOURCE_GBFS_BRUXELLES = {
     name: 'Flux GBFS « Villo! »',
     detail: 'Bruxelles-Capitale / JCDecaux',
-    licence: { label: 'Flux ouvert, attribution requise' },
+    licence: { labelKey: 'source.licence.fluxOuvert' },
     producer: { label: 'gbfs.org', href: 'https://gbfs.org/' },
 };
 
 export const SOURCE_GBFS_BLUEBIKE = {
     name: 'Flux GBFS « Blue-bike »',
     detail: 'Blue-mobility',
-    licence: { label: 'Flux ouvert, attribution requise' },
+    licence: { labelKey: 'source.licence.fluxOuvert' },
     producer: { label: 'gbfs.org', href: 'https://gbfs.org/' },
 };
+// i18n-exempt-end
 
 /* ------------------------------------------------------------------------ utilitaires */
 

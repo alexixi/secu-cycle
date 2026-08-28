@@ -44,6 +44,17 @@ export const statLabel = (themeSlug, key) => lire(`theme.${themeSlug}.stats.${ke
 export const carteLabel = (prefixe, id) =>
     lire(prefixe === 'ui' ? `ui.carte.${id}` : `carte.${prefixe}.${id}`) ?? id;
 
+/**
+ * Libellé d'une licence.
+ *
+ * Les noms de licences (« ODbL », « Licence Ouverte 2.0 », « CC BY 4.0 ») sont
+ * des noms légaux, identiques dans toutes les langues : ils restent en clair.
+ * Seules les formulations descriptives — « Flux ouvert, attribution requise » —
+ * portent une `labelKey` et se traduisent.
+ */
+export const licenceLabel = (licence) =>
+    (licence?.labelKey ? lire(licence.labelKey) : licence?.label) ?? licence?.label ?? '';
+
 /** Détail d'une source, quand il est traduisible ; sinon le nom propre tel quel. */
 export const sourceDetail = (source) =>
     (source.detailKey ? lire(source.detailKey) : source.detail) ?? '';

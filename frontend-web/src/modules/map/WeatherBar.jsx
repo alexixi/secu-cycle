@@ -45,11 +45,12 @@ export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, 
     const title = [
         summary.label,
         wind?.speed != null
-            ? `vent ${Math.round(wind.speed)} km/h${wind.cardinal ? ` de ${wind.cardinal}` : ''}`
-                + (gusty ? `, rafales ${Math.round(wind.gusts)}` : '')
+            ? t('ui.meteo.ventTitre', { vitesse: Math.round(wind.speed) })
+                + (wind.cardinal ? t('ui.meteo.ventDirection', { cardinal: wind.cardinal }) : '')
+                + (gusty ? t('ui.meteo.rafalesTitre', { vitesse: Math.round(wind.gusts) }) : '')
             : null,
-        stale && updatedAt ? `dernier relevé ${updatedAt}` : null,
-        open ? 'Cliquer pour replier' : 'Cliquer pour le détail',
+        stale && updatedAt ? t('ui.meteo.dernierReleveTitre', { heure: updatedAt }) : null,
+        t(open ? 'ui.meteo.replier' : 'ui.meteo.detail'),
     ].filter(Boolean).join(' · ');
 
     return (
@@ -80,7 +81,7 @@ export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, 
                                 />
                             )}
                             {Math.round(wind.speed)} km/h
-                            {gusty ? ` · rafales ${Math.round(wind.gusts)}` : ''}
+                            {gusty ? t('ui.meteo.rafalesTitre', { vitesse: Math.round(wind.gusts) }) : ''}
                         </span>
                     )}
                 </span>
@@ -126,7 +127,7 @@ export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, 
 
                         {updatedAt && (
                             <p className="weather-bar-updated">
-                                {stale ? `Dernier relevé disponible (${updatedAt})` : `Relevé de ${updatedAt}`}
+                                {t(stale ? 'ui.meteo.dernierReleveDispo' : 'ui.meteo.releveDe', { heure: updatedAt })}
                             </p>
                         )}
                     </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { IoCheckmark } from "react-icons/io5";
 import Button from "../../ui/Button";
@@ -7,6 +8,7 @@ import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 
 export default function SuppressBikeModal({ isOpen, hasError, onClose, bikes, onConfirm }) {
+    const { t } = useTranslation('auth');
     const [selectedIndexes, setSelectedIndexes] = useState([]);
 
     useEffect(() => {
@@ -66,12 +68,12 @@ export default function SuppressBikeModal({ isOpen, hasError, onClose, bikes, on
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2>Supprimer mes vélos</h2>
+                <h2>{t('modales.supprVelo.titre')}</h2>
                 <form onSubmit={handleSubmit}>
 
                     <div className="input-container group-checkbox-container">
 
-                        <p>Sélectionnez les vélos à retirer de votre profil :</p>
+                        <p>{t('modales.supprVelo.intro')}</p>
 
                         {bikes.map((bike, index) => (
                             <div key={index} className="form-group-checkbox">
@@ -82,18 +84,18 @@ export default function SuppressBikeModal({ isOpen, hasError, onClose, bikes, on
                                     onChange={() => handleCheckboxChange(index)}
                                 />
                                 <label htmlFor={`bike-${index}`}>
-                                    <strong>{bike.name || bike.type?.toUpperCase() || "Vélo"}</strong>
-                                    {bike.is_electric ? " (Électrique)" : ""}
+                                    <strong>{bike.name || bike.type?.toUpperCase() || t('velo.sansNom')}</strong>
+                                    {bike.is_electric ? t('velo.electriqueSuffixe') : ""}
                                 </label>
                             </div>
                         ))}
 
-                        {hasError && <p className="error-text">Une erreur est survenue. Veuillez réessayer.</p>}
+                        {hasError && <p className="error-text">{t('erreurs.generique')}</p>}
                     </div>
 
                     <div className="modal-actions">
-                        <Button type="button" onClick={onClose}>Annuler</Button>
-                        <Button type="submit" className="danger-button">Confirmer <IoCheckmark size={13} /></Button>
+                        <Button type="button" onClick={onClose}>{t('actions.annuler')}</Button>
+                        <Button type="submit" className="danger-button">{t('actions.confirmer')} <IoCheckmark size={13} /></Button>
                     </div>
                 </form>
             </div>

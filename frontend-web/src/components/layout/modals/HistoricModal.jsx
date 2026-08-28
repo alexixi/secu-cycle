@@ -1,6 +1,8 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 
 import Button from "../../ui/Button";
+import i18n from "../../../i18n/index";
 import MapComponent from "../../../modules/map/MapComponent";
 
 import { MdDirectionsBike, MdOutlineTimer, MdOutlineSpeed, MdHealthAndSafety, MdBatteryChargingFull, MdElectricBike } from "react-icons/md";
@@ -12,26 +14,23 @@ import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from "recharts";
 import "../../ui/PopUp.css"
 import "./HistoricModal.css";
 
-const ROUTE_TYPE_LABELS = {
-    fast: "Rapide",
-    safe: "Sécurisé",
-    compromise: "Compromis",
-};
-
 const ROUTE_TYPE_ICONS = {
     fast: MdOutlineSpeed,
     safe: MdHealthAndSafety,
     compromise: FaBalanceScale,
 };
 
-const BIKE_TYPE_LABELS = {
-    standard: "Vélo standard",
-    ville: "Vélo de ville",
-    vtt: "VTT",
-    route: "Vélo de route",
+// Le type de vélo vient de l'historique en base ; sa clé de libellé n'a pas la
+// même forme que le type lui-même, d'où cette table de correspondance.
+const BIKE_TYPE_KEYS = {
+    standard: "standard",
+    ville: "veloVille",
+    vtt: "vtt",
+    route: "veloRoute",
 };
 
 export default function HistoricModal({ isOpen, onClose, onDelete, entry }) {
+    const { t } = useTranslation('auth');
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -65,10 +64,12 @@ export default function HistoricModal({ isOpen, onClose, onDelete, entry }) {
     if (!isOpen || !entry?.route) return null;
 
     const route = entry.route;
-    const routeLabel = ROUTE_TYPE_LABELS[route.route_type] || route.route_type;
-    const bikeLabel = route.bike_type ? BIKE_TYPE_LABELS[route.bike_type.toLowerCase()] || route.bike_type : null;
+    const cleVariante = `variantes.${route.route_type}`;
+    const routeLabel = t(cleVariante) === cleVariante ? route.route_type : t(cleVariante);
+    const cleVelo = BIKE_TYPE_KEYS[route.bike_type?.toLowerCase()];
+    const bikeLabel = route.bike_type ? (cleVelo ? t(`velo.${cleVelo}`) : route.bike_type) : null;
     const isElectric = route.is_electric === "True" || route.is_electric === true;
-    const date = new Date(entry.created_at).toLocaleDateString("fr-FR", {
+    const date = new Date(entry.created_at).toLocaleDateString(i18n.language, {
         day: "numeric", month: "long", year: "numeric"
     });
 
@@ -95,7 +96,7 @@ export default function HistoricModal({ isOpen, onClose, onDelete, entry }) {
     return (
         <div className="modal-overlay">
             <div className="modal-content big-modal">
-                <h2 className="modal-title"><PiPathBold /> Détails du trajet</h2>
+                <h2 className="modal-title"><PiPathBold /> {t('modales.historique.titre')}</h2>
                 <div className="modal-main">
                     <div className="modal-path-info">
                         <div className="route-box">
@@ -104,7 +105,7 @@ export default function HistoricModal({ isOpen, onClose, onDelete, entry }) {
                                     <MdDirectionsBike size={20} />
                                 </span>
                                 <div className="route-point-text">
-                                    <span className="route-point-label">Départ</span>
+                                    <span className="route-point-label">{t('modales.historique.depart')}</span>
                                     <span className="route-point-address">{route.start_address}</span>
                                 </div>
                             </div>
@@ -114,7 +115,7 @@ export default function HistoricModal({ isOpen, onClose, onDelete, entry }) {
                                     <FaFlagCheckered size={18} />
                                 </span>
                                 <div className="route-point-text">
-                                    <span className="route-point-label">Arrivée</span>
+                                    <span className="route-point-label">{t('modales.historique.arrivee')}</span>
                                     <span className="route-point-address">{route.end_address}</span>
                                 </div>
                             </div>
@@ -149,7 +150,7 @@ export default function HistoricModal({ isOpen, onClose, onDelete, entry }) {
 
                         {hasElevation && (
                             <div className="modal-elevation">
-                                <span className="modal-elevation-label">Profil altimétrique</span>
+                                <span className="modal-elevation-label">{t('modales.historique.profilAltimetrique')}</span>
                                 <div className="modal-elevation-chart">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={elevationData}>
@@ -165,7 +166,7 @@ export default function HistoricModal({ isOpen, onClose, onDelete, entry }) {
                                                 }}
                                                 itemStyle={{ color: 'var(--text-main)', margin: 0, fontWeight: 'bold' }}
                                                 labelFormatter={() => ""}
-                                                formatter={(value) => [`${value} m`, "Altitude"]}
+                                                formatter={(value) => [`${value} m`, t('modales.historique.altitude')]}
                                                 wrapperStyle={{ outline: 'none' }}
                                             />
                                             <Area
@@ -197,10 +198,10 @@ export default function HistoricModal({ isOpen, onClose, onDelete, entry }) {
                 <div className="modal-actions">
                     {onDelete && (
                         <Button type="button" className="danger-button" onClick={() => onDelete(entry.id)}>
-                            Supprimer <FaTrash size={13} />
+                            {t('actions.supprimer')} <FaTrash size={13} />
                         </Button>
                     )}
-                    <Button type="button" onClick={onClose}>Fermer</Button>
+                    <Button type="button" onClick={onClose}>{t('actions.fermer')}</Button>
                 </div>
             </div>
         </div>

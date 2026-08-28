@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../../context/AuthContext";
@@ -15,6 +16,7 @@ import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 
 export default function EditProfileModal({ isOpen, hasError, onClose, userData, onConfirm }) {
+    const { t } = useTranslation('auth');
     const path = useLocalizedPath();
     const { token, logoutAuth } = useAuth();
     const navigate = useNavigate();
@@ -89,7 +91,11 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
             setPasswordError(false);
             setGeneralError(false);
         } catch (error) {
-            if (error.status === 401 && error.message === "Ancien mot de passe incorrect.") {
+            // Sur PATCH /users/me/password, 401 ne signifie que « ancien mot de
+            // passe faux » : les 401 de session morte sont interceptés en amont
+            // par l'en-tête X-Auth-Error. Comparer le message traduit casserait
+            // dès que l'API répond en anglais.
+            if (error.status === 401) {
                 setPasswordError(true);
                 setGeneralError(false);
             } else {
@@ -122,13 +128,13 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2>Modifier mon profil</h2>
+                <h2>{t('modales.profil.titre')}</h2>
                 <form onSubmit={handleSubmit}>
 
                     <div className="input-container">
 
                         <div className="input-group">
-                            <label htmlFor="firstName">Prénom</label>
+                            <label htmlFor="firstName">{t('champs.prenom')}</label>
                             <input
                                 className="input"
                                 type="text"
@@ -141,7 +147,7 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                         </div>
 
                         <div className="input-group">
-                            <label htmlFor="lastName">Nom</label>
+                            <label htmlFor="lastName">{t('champs.nom')}</label>
                             <input
                                 className="input"
                                 type="text"
@@ -153,7 +159,7 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                         </div>
 
                         <div className="input-group">
-                            <label htmlFor="birthDate">Date de naissance</label>
+                            <label htmlFor="birthDate">{t('modales.profil.naissance')}</label>
                             <input
                                 className="input"
                                 type="date"
@@ -165,7 +171,7 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                         </div>
 
                         <div className="input-group">
-                            <label htmlFor="sport-level">Niveau sportif</label>
+                            <label htmlFor="sport-level">{t('modales.profil.niveauSportif')}</label>
                             <select
                                 className="input"
                                 name="level"
@@ -173,9 +179,9 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                                 value={formData.level}
                                 onChange={handleChange}
                             >
-                                <option value="debutant">Débutant</option>
-                                <option value="intermediaire">Intermédiaire</option>
-                                <option value="experimente">Experimenté</option>
+                                <option value="debutant">{t('niveau.debutant')}</option>
+                                <option value="intermediaire">{t('niveau.intermediaire')}</option>
+                                <option value="experimente">{t('niveau.experimente')}</option>
                             </select>
                         </div>
 
@@ -191,8 +197,8 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                         >
                             <FaEnvelope className="secondary-action-icon" size={18} />
                             <span className="secondary-action-text">
-                                <strong>Adresse mail</strong>
-                                <small>{userData?.email || "Non renseignée"}</small>
+                                <strong>{t('champs.email')}</strong>
+                                <small>{userData?.email || t('modales.profil.emailNonRenseigne')}</small>
                             </span>
                             <FaChevronRight className="secondary-action-chevron" size={13} />
                         </button>
@@ -204,8 +210,8 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                         >
                             <FaLock className="secondary-action-icon" size={18} />
                             <span className="secondary-action-text">
-                                <strong>Mot de passe</strong>
-                                <small>Modifier votre mot de passe</small>
+                                <strong>{t('champs.motDePasse')}</strong>
+                                <small>{t('modales.profil.motDePasseAction')}</small>
                             </span>
                             <FaChevronRight className="secondary-action-chevron" size={13} />
                         </button>
@@ -217,8 +223,8 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                         >
                             <FaUserSlash className="secondary-action-icon" size={18} />
                             <span className="secondary-action-text">
-                                <strong>Auteurs bloqués</strong>
-                                <small>Revenir sur un blocage</small>
+                                <strong>{t('modales.auteursBloques.titre')}</strong>
+                                <small>{t('modales.profil.auteursBloquesAction')}</small>
                             </span>
                             <FaChevronRight className="secondary-action-chevron" size={13} />
                         </button>
@@ -230,8 +236,8 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                         >
                             <FaRegNewspaper className="secondary-action-icon" size={18} />
                             <span className="secondary-action-text">
-                                <strong>Newsletter</strong>
-                                <small>Gérer vos e-mails d&apos;information</small>
+                                <strong>{t('modales.profil.newsletter')}</strong>
+                                <small>{t('modales.profil.newsletterAction')}</small>
                             </span>
                             <FaChevronRight className="secondary-action-chevron" size={13} />
                         </button>
@@ -243,16 +249,16 @@ export default function EditProfileModal({ isOpen, hasError, onClose, userData, 
                         >
                             <FaTrashAlt className="secondary-action-icon" size={18} />
                             <span className="secondary-action-text">
-                                <strong>Supprimer mon compte</strong>
-                                <small>Effacer définitivement vos données</small>
+                                <strong>{t('modales.profil.supprimerCompte')}</strong>
+                                <small>{t('modales.profil.supprimerCompteAction')}</small>
                             </span>
                             <FaChevronRight className="secondary-action-chevron" size={13} />
                         </button>
                     </div>
 
                     <div className="modal-actions">
-                        <Button type="button" onClick={onClose}>Annuler</Button>
-                        <Button type="submit">Modifier <FaUserEdit size={13} /></Button>
+                        <Button type="button" onClick={onClose}>{t('actions.annuler')}</Button>
+                        <Button type="submit">{t('actions.modifier')} <FaUserEdit size={13} /></Button>
                     </div>
                 </form>
             </div>

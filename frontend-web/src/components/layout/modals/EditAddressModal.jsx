@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, use } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import Button from "../../ui/Button";
@@ -11,6 +12,7 @@ import "../../ui/Form.css"
 import "./AddressModal.css"
 
 export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm, focusField = "home" }) {
+    const { t } = useTranslation('auth');
     const { user } = useAuth();
 
     const [homeAddress, setHomeAddress] = useState(user?.home_address || "");
@@ -61,15 +63,15 @@ export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm,
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2>Modifier mes adresses</h2>
+                <h2>{t('modales.adresses.titre')}</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="input-container">
 
                         <div className="input-group changeAddressInput">
-                            <label htmlFor="homeAddress"><FaHome size={15} /> Adresse du domicile</label>
+                            <label htmlFor="homeAddress"><FaHome size={15} /> {t('adresses.labelDomicile')}</label>
                             <AdressInput
                                 id="homeAddress"
-                                placeholder="Domicile"
+                                placeholder={t('adresses.domicile')}
                                 defaultValue={homeAddress}
                                 onSelect={(address) => setHomeAddress(address?.name || "")}
                                 autoFocus={focusField === "home"}
@@ -77,10 +79,10 @@ export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm,
                         </div>
 
                         <div className="input-group changeAddressInput">
-                            <label htmlFor="workAddress"><MdOutlineWork size={15} /> Adresse du travail</label>
+                            <label htmlFor="workAddress"><MdOutlineWork size={15} /> {t('adresses.labelTravail')}</label>
                             <AdressInput
                                 id="workAddress"
-                                placeholder="Travail"
+                                placeholder={t('adresses.travail')}
                                 defaultValue={workAddress}
                                 onSelect={(address) => setWorkAddress(address?.name || "")}
                                 autoFocus={focusField === "work"}
@@ -88,11 +90,11 @@ export default function EditAddressModal({ isOpen, hasError, onClose, onConfirm,
                         </div>
 
 
-                        {hasError && <p className="error-text">Une erreur est survenue. Veuillez réessayer.</p>}
+                        {hasError && <p className="error-text">{t('erreurs.generique')}</p>}
                     </div>
                     <div className="modal-actions">
-                        <Button type="button" onClick={onClose}>Annuler</Button>
-                        <Button type="submit">Modifier <MdEditLocationAlt size={13} /></Button>
+                        <Button type="button" onClick={onClose}>{t('actions.annuler')}</Button>
+                        <Button type="submit">{t('actions.modifier')} <MdEditLocationAlt size={13} /></Button>
                     </div>
                 </form>
             </div>

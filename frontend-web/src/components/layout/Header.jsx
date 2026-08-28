@@ -45,7 +45,7 @@ const CONTEXTUAL_EXIT_MS = 200;
 
 const ProfileButton = ({ className, onClick, ariaLabel }) => {
     return (
-        <button id="profile-button" className={className} onClick={onClick} aria-label="Menu profil" aria-haspopup="true">
+        <button id="profile-button" className={className} onClick={onClick} aria-label={ariaLabel} aria-haspopup="true">
             <FaUser size={20} />
         </button>
     );
@@ -111,6 +111,7 @@ const Header = () => {
         <header>
             <span id="header-logo-title" onClick={() => go("home")}>
                 <Logo id="header-logo" />
+                {/* i18n-exempt: nom de la marque */}
                 <div id="header-title">Sécu'Cycle</div>
             </span>
             <nav className='media-large'>

@@ -127,38 +127,38 @@ ATTRIBUTION = "Open-Meteo (DWD ICON-D2, Météo-France AROME, NOAA GFS)"
 # La clé est stable et partagée par les deux fronts (choix d'icône, de couleur) ;
 # le libellé est la seule formulation française du projet, écrite une fois ici
 # pour que le web et le mobile ne puissent pas diverger.
-WMO_CODES: dict[int, tuple[str, str]] = {
-    0: ("clear", "Ciel dégagé"),
-    1: ("mainly_clear", "Peu nuageux"),
-    2: ("partly_cloudy", "Partiellement nuageux"),
-    3: ("overcast", "Couvert"),
-    45: ("fog", "Brouillard"),
-    48: ("rime_fog", "Brouillard givrant"),
-    51: ("drizzle_light", "Bruine faible"),
-    53: ("drizzle", "Bruine"),
-    55: ("drizzle_dense", "Bruine dense"),
-    56: ("freezing_drizzle_light", "Bruine verglaçante"),
-    57: ("freezing_drizzle", "Bruine verglaçante dense"),
-    61: ("rain_slight", "Pluie faible"),
-    63: ("rain", "Pluie"),
-    65: ("rain_heavy", "Fortes pluies"),
-    66: ("freezing_rain_light", "Pluie verglaçante"),
-    67: ("freezing_rain", "Pluie verglaçante forte"),
-    71: ("snow_slight", "Neige faible"),
-    73: ("snow", "Neige"),
-    75: ("snow_heavy", "Fortes chutes de neige"),
-    77: ("snow_grains", "Grésil"),
-    80: ("showers_slight", "Averses"),
-    81: ("showers", "Averses modérées"),
-    82: ("showers_violent", "Averses violentes"),
-    85: ("snow_showers_slight", "Averses de neige"),
-    86: ("snow_showers", "Fortes averses de neige"),
-    95: ("thunderstorm", "Orage"),
-    96: ("thunderstorm_hail", "Orage avec grêle"),
-    99: ("thunderstorm_hail_heavy", "Orage violent avec grêle"),
+WMO_CODES: dict[int, str] = {
+    0: "clear",
+    1: "mainly_clear",
+    2: "partly_cloudy",
+    3: "overcast",
+    45: "fog",
+    48: "rime_fog",
+    51: "drizzle_light",
+    53: "drizzle",
+    55: "drizzle_dense",
+    56: "freezing_drizzle_light",
+    57: "freezing_drizzle",
+    61: "rain_slight",
+    63: "rain",
+    65: "rain_heavy",
+    66: "freezing_rain_light",
+    67: "freezing_rain",
+    71: "snow_slight",
+    73: "snow",
+    75: "snow_heavy",
+    77: "snow_grains",
+    80: "showers_slight",
+    81: "showers",
+    82: "showers_violent",
+    85: "snow_showers_slight",
+    86: "snow_showers",
+    95: "thunderstorm",
+    96: "thunderstorm_hail",
+    99: "thunderstorm_hail_heavy",
 }
 
-UNKNOWN_CONDITION = ("unknown", "Conditions inconnues")
+UNKNOWN_CONDITION = "unknown"
 
 HAIL_CODES = frozenset({96, 99})
 STORM_CODES = frozenset({95, 96, 99})
@@ -167,8 +167,8 @@ SNOW_CODES = frozenset({71, 73, 75, 77, 85, 86})
 FOG_CODES = frozenset({45, 48})
 
 
-def condition_for(code) -> tuple[str, str]:
-    """(clé stable, libellé français) d'un code OMM."""
+def condition_for(code) -> str:
+    """Clé stable de condition, pour un code OMM. Le mot vit au catalogue."""
     try:
         return WMO_CODES[int(code)]
     except (TypeError, ValueError, KeyError):
@@ -182,12 +182,6 @@ def condition_for(code) -> tuple[str, str]:
 # son vocabulaire donnerait à nos seuils une autorité qu'ils n'ont pas.
 ALERT_NONE = "none"
 ALERT_ORDER = {ALERT_NONE: 0, "watch": 1, "warning": 2, "severe": 3}
-ALERT_LABELS = {
-    ALERT_NONE: "Rien à signaler",
-    "watch": "Vigilance",
-    "warning": "Conditions difficiles",
-    "severe": "Danger",
-}
 
 # Rafales, en km/h. À vélo, c'est la rafale qui déséquilibre, pas le vent moyen.
 GUST_WATCH_KMH = 40.0
@@ -210,18 +204,6 @@ FREEZE_WARNING_C = 0.0
 # météo générale, pas de la sécurité d'un trajet.
 ALERT_HORIZON_H = 6
 
-HAZARD_LABELS = {
-    "hail": "Risque de grêle",
-    "thunderstorm": "Risque d'orage",
-    "gust": "Rafales",
-    "ice": "Risque de verglas",
-    "freezing": "Températures négatives",
-    "cold": "Froid",
-    "heavy_rain": "Fortes pluies",
-    "rain": "Pluie",
-    "snow": "Neige",
-    "fog": "Visibilité réduite",
-}
 
 
 # Provenance de nos propres alertes. Elles sont dérivées de seuils numériques, pas
@@ -234,7 +216,6 @@ def _hazard(level: str, key: str, value, at=None) -> dict:
     return {
         "level": level,
         "key": key,
-        "label": HAZARD_LABELS.get(key, key),
         "value": value,
         "at": at,
         "official": False,
@@ -314,14 +295,6 @@ def alert_level_of(alerts) -> str:
 # Dérivés ici, donc identiques sur le web et le mobile, et formulés une seule
 # fois. Le champ `reason` reprend le chiffre déclencheur (« Rafales à 41 km/h ») :
 # les fronts l'affichent tel quel, sans avoir à re-formuler ni à diverger.
-EQUIPMENT_LABELS = {
-    "rain_jacket": "Imperméable",
-    "mudguards": "Garde-boue",
-    "gloves": "Gants",
-    "warm_layer": "Couche chaude",
-    "lights": "Éclairage",
-    "windbreaker": "Coupe-vent",
-}
 
 # Fenêtre de prévision consultée pour l'équipement : on s'habille pour le trajet
 # qui vient, pas pour la journée.
@@ -336,8 +309,13 @@ WINDBREAKER_WIND_KMH = 25.0
 WINDBREAKER_GUST_KMH = 40.0
 
 
-def _advice(key: str, reason: str) -> dict:
-    return {"key": key, "label": EQUIPMENT_LABELS[key], "reason": reason}
+def _advice(key: str, reason_key: str, **params) -> dict:
+    """Conseil d'équipement, en clés : le rendu appartient à la sérialisation.
+
+    `equipment_for` tourne dans la boucle de collecte, toutes les 900 s, et son
+    résultat est mis en cache — il ne peut donc porter aucun mot déjà rendu.
+    """
+    return {"key": key, "reason_key": reason_key, "reason_params": params}
 
 
 def equipment_for(current: dict, hourly: list[dict]) -> list[dict]:
@@ -368,41 +346,44 @@ def equipment_for(current: dict, hourly: list[dict]) -> list[dict]:
     proba_soon = _worst("precipitation_probability", 0) or 0
 
     if precip_now >= WET_NOW_MM:
-        reason = f"{precip_now:.1f} mm en cours"
+        raison = ("rain_now", {"mm": f"{precip_now:.1f}"})
     elif precip_soon >= WET_SOON_MM:
-        reason = f"{precip_soon:.1f} mm attendus dans les {EQUIPMENT_HORIZON_H} h"
+        raison = ("rain_soon", {"mm": f"{precip_soon:.1f}", "hours": EQUIPMENT_HORIZON_H})
     elif proba_soon >= WET_SOON_PROBABILITY:
-        reason = f"{proba_soon} % de risque de pluie"
+        raison = ("rain_probability", {"percent": proba_soon})
     else:
-        reason = None
+        raison = None
 
-    if reason:
-        out.append(_advice("rain_jacket", reason))
+    if raison:
+        out.append(_advice("rain_jacket", raison[0], **raison[1]))
         # Chaussée mouillée : le garde-boue sert autant après l'averse que pendant.
-        out.append(_advice("mudguards", "Chaussée mouillée" if precip_now else reason))
+        if precip_now:
+            out.append(_advice("mudguards", "wet_road"))
+        else:
+            out.append(_advice("mudguards", raison[0], **raison[1]))
 
     felt = _coldest("apparent_temperature")
     if felt is None:
         felt = _coldest("temperature")
     if felt is not None:
         if felt <= WARM_LAYER_MAX_C:
-            out.append(_advice("warm_layer", f"{felt:.0f} °C ressentis"))
+            out.append(_advice("warm_layer", "felt_temperature", degrees=f"{felt:.0f}"))
         if felt <= GLOVES_MAX_C:
             # Les mains prennent le vent relatif de plein fouet : elles refroidissent
             # bien avant le reste du corps, qui produit de la chaleur en pédalant.
-            out.append(_advice("gloves", f"{felt:.0f} °C ressentis"))
+            out.append(_advice("gloves", "felt_temperature", degrees=f"{felt:.0f}"))
 
     gusts = _worst("wind_gusts", current.get("wind_gusts"))
     wind = _worst("wind_speed", current.get("wind_speed"))
     if (gusts or 0) >= WINDBREAKER_GUST_KMH:
-        out.append(_advice("windbreaker", f"Rafales à {gusts:.0f} km/h"))
+        out.append(_advice("windbreaker", "gusts", speed=f"{gusts:.0f}"))
     elif (wind or 0) >= WINDBREAKER_WIND_KMH:
-        out.append(_advice("windbreaker", f"Vent à {wind:.0f} km/h"))
+        out.append(_advice("windbreaker", "wind", speed=f"{wind:.0f}"))
 
     dark = current.get("is_day") is False or any(row.get("is_day") is False for row in window)
-    foggy = condition_for(current.get("weather_code"))[0] in {"fog", "rime_fog"}
+    foggy = condition_for(current.get("weather_code")) in {"fog", "rime_fog"}
     if dark or foggy:
-        out.append(_advice("lights", "Brouillard" if foggy and not dark else "Trajet de nuit"))
+        out.append(_advice("lights", "fog" if foggy and not dark else "night"))
 
     return out
 
@@ -461,8 +442,10 @@ def cardinal(degrees) -> str | None:
     """
     if degrees is None:
         return None
+    # Clés internationales : « SSO » est la forme française de « SSW », elle vit
+    # au catalogue. Renvoyer la clé garde la réponse neutre en langue.
     names = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-             "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO"]
+             "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
     try:
         index = int(math.floor((float(degrees) % 360) / 22.5 + 0.5)) % 16
     except (TypeError, ValueError):

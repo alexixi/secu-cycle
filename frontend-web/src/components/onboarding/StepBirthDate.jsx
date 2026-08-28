@@ -43,7 +43,7 @@ export default function StepBirthDate({ birthDate, setBirthDate, onNext, onSkip,
                 />
                 {tooYoung && (
                     <div className="error-text">
-                        Vous devez avoir au moins {MIN_AGE} ans pour utiliser l&apos;application.
+                        {t('onboarding.naissance.ageMinimum', { min: MIN_AGE })}
                     </div>
                 )}
             </div>

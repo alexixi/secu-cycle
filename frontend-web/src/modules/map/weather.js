@@ -2,6 +2,7 @@ import {
     MdWbSunny, MdNightlight, MdWbCloudy, MdNightsStay, MdCloud, MdCloudQueue,
     MdFoggy, MdGrain, MdSevereCold, MdSnowing, MdCloudySnowing, MdThunderstorm,
 } from 'react-icons/md';
+import i18n from '../../i18n/index.js';
 
 export const WEATHER_ALERT_COLORS = {
     none: '#94a3b8',
@@ -119,12 +120,19 @@ export function pointForCenter(data, center) {
  */
 export function formatHM(iso) {
     if (typeof iso !== 'string' || iso.length < 16) return null;
-    return iso.slice(11, 16).replace(':', 'h');
+    // « 18h30 » en français, « 18:30 » en anglais : la forme est dans le
+    // catalogue, pas ici. On découpe l'ISO plutôt que de construire une Date,
+    // pour ne pas réintroduire le fuseau que le backend a déjà résolu.
+    const [h, m] = iso.slice(11, 16).split(':');
+    return i18n.t('ui.meteo.heure', { ns: 'carte', h, m });
 }
 
 // Arrondi au multiple de 5 le plus proche : annoncer « dans 23 min » sur une
 // prévision au pas de 15 min afficherait une précision qu'on n'a pas.
 const roughMinutes = (minutes) => Math.max(5, Math.round(minutes / 5) * 5);
+
+// Module non-React : on lit l'instance globale, comme carteLabels.
+const dire = (cle, options) => i18n.t(`ui.meteo.${cle}`, { ns: 'carte', ...options });
 
 // Pas du nowcast, et âge à partir duquel l'instantané est présenté comme un
 // dernier relevé plutôt que comme le temps qu'il fait. Aligné sur
@@ -238,12 +246,12 @@ export function rainBanner(zone) {
 
     if (hint.wet_now) {
         if (hint.dry_in_min == null) {
-            return { kind: 'persistent', text: 'Il pleut, et ça devrait durer.' };
+            return { kind: 'persistent', text: dire('pluiePersistante') };
         }
         const at = formatHM(hint.dry_from);
         const text = precise
-            ? `Accalmie dans ~${roughMinutes(hint.dry_in_min)} min${at ? ` (vers ${at})` : ''}.`
-            : `Accalmie annoncée${at ? ` vers ${at}` : ''}.`;
+            ? dire(at ? 'accalmieDansVers' : 'accalmieDans', { minutes: roughMinutes(hint.dry_in_min), heure: at })
+            : dire(at ? 'accalmieVers' : 'accalmie', { heure: at });
         return { kind: 'clearing', text };
     }
 
@@ -253,8 +261,8 @@ export function rainBanner(zone) {
     // délai (`worsens_in_min`), `dry_from` désignant le début du créneau sec —
     // c'est-à-dire maintenant. On s'en tient donc au délai.
     const text = precise
-        ? `Pluie dans ~${roughMinutes(hint.worsens_in_min)} min.`
-        : 'Pluie annoncée dans les prochaines heures.';
+        ? dire('pluieDans', { minutes: roughMinutes(hint.worsens_in_min) })
+        : dire('pluieProchainesHeures');
     return { kind: 'onset', text };
 }
 
@@ -274,6 +282,6 @@ export function departureSuggestion(zone) {
     return {
         delayMin: hint.dry_in_min,
         at,
-        text: `Partez vers ${at} (dans ${hint.dry_in_min} min) : l'averse sera passée.`,
+        text: dire('departConseille', { heure: at, minutes: hint.dry_in_min }),
     };
 }

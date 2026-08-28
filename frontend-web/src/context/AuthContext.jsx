@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from "react-router";
 import { useLocalizedPath } from '../i18n/useLang';
+import i18n from '../i18n/index';
 
 const AuthContext = createContext();
 
@@ -86,7 +87,7 @@ export const AuthProvider = ({ children }) => {
             navigate(path("login"), {
                 state: {
                     sessionExpired: true,
-                    message: "Votre session a expiré pour des raisons de sécurité. Veuillez vous reconnecter."
+                    message: i18n.t('compte.sessionExpiree', { ns: 'common' })
                 }
             });
         };

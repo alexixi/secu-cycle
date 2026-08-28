@@ -38,7 +38,7 @@ export default function CarteHubPage({ registre }) {
                 '@type': 'CollectionPage',
                 '@id': abs(pathFor('carteHub', lang)),
                 name: t('ui.hub.h1'),
-                inLanguage: 'fr',
+                inLanguage: lang,
                 isPartOf: { '@type': 'WebSite', url: abs(pathFor('home', lang)), name: 'Sécu’Cycle' },
                 hasPart: PAGES.map(page => ({
                     '@type': 'WebPage',
@@ -70,12 +70,7 @@ export default function CarteHubPage({ registre }) {
 
                 <div className="carte-entete">
                     <h1>{t('ui.hub.h1')}</h1>
-                    <p className="carte-intro">
-                        Sécu’Cycle calcule des itinéraires à vélo sécurisés à partir d’une douzaine de
-                        jeux de données ouvertes. Ces cartes thématiques donnent accès à chacune de ces
-                        couches séparément, ville par ville : où garer son vélo, où trouver de l’eau,
-                        quelles rues sont éclairées, où les cyclistes sont accidentés.
-                    </p>
+                    <p className="carte-intro">{t('ui.hub.intro')}</p>
                     <p className="carte-note"><T k="ui.hub.villeManquanteTexte" /></p>
                 </div>
 
@@ -89,8 +84,7 @@ export default function CarteHubPage({ registre }) {
                             </h2>
                             <p className="carte-note">
                                 {city.intro}
-                                {city.routing === false
-                                    && ' Le calcul d’itinéraire n’y est pas encore disponible.'}
+                                {city.routing === false && t('ui.hub.sansItineraire')}
                             </p>
                             <ul className="carte-cartes">
                                 {pages.map(page => (
@@ -109,13 +103,7 @@ export default function CarteHubPage({ registre }) {
 
                 <section className="carte-maillage">
                     <h2>{t('ui.hub.villeManquante')}</h2>
-                    <p className="carte-note">
-                        Nous ne publions une carte que lorsque les données ouvertes du territoire sont
-                        assez complètes pour être utiles — un recensement trop clairsemé donnerait une
-                        image fausse. La couverture s’étend au fil des territoires intégrés au
-                        calculateur : vous pouvez nous suggérer une ville via la{' '}
-                        <Link to={pathFor("contact", lang)}>page de contact</Link>.
-                    </p>
+                    <p className="carte-note"><T k="ui.hub.couvertureTexte" /></p>
                 </section>
             </article>
         </>

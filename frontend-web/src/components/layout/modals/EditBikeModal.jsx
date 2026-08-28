@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { FaPen, FaTrash } from "react-icons/fa";
 import Button from "../../ui/Button";
@@ -9,6 +10,7 @@ import "../../ui/PopUp.css"
 import "../../ui/Form.css"
 
 export default function EditBikeModal({ isOpen, onClose, onConfirm, onDelete, hasError, bikeToEdit }) {
+    const { t } = useTranslation('auth');
   const [bikeName, setBikeName] = useState("");
   const [bikeType, setBikeType] = useState("ville");
   const [bikeIsElectric, setBikeIsElectric] = useState(false);
@@ -96,15 +98,15 @@ export default function EditBikeModal({ isOpen, onClose, onConfirm, onDelete, ha
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2>Modifier un vélo</h2>
+        <h2>{t('modales.modifVelo.titre')}</h2>
         <form onSubmit={handleSubmit}>
           <div className="input-container">
             <div className={"input-group" + (nameError ? " input-error" : "")}>
-              <label htmlFor="name">Nom du vélo :</label>
+              <label htmlFor="name">{t('velo.nom')}</label>
               <input
                 className="input"
                 type="text"
-                placeholder="Ex: Nakamura Summit 700"
+                placeholder={t('velo.nomPlaceholder')}
                 value={bikeName}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -113,27 +115,27 @@ export default function EditBikeModal({ isOpen, onClose, onConfirm, onDelete, ha
               />
               {nameError && (
                 <div className="error-text">
-                  Veuillez entrer un nom de vélo valide.<br />Le nom doit faire entre 3 et 30 caractères.
+                  {t('velo.nomRequis')}<br />{t('velo.nomInvalide')}
                 </div>
               )}
             </div>
 
             <div className="input-group">
-              <label htmlFor="type">Type :</label>
+              <label htmlFor="type">{t('velo.type')}</label>
               <select
                 className="input"
                 value={bikeType}
                 onChange={(e) => setBikeType(e.target.value)}
               >
-                <option value="ville">Ville</option>
-                <option value="route">Route</option>
-                <option value="vtt">VTT</option>
+                <option value="ville">{t('velo.ville')}</option>
+                <option value="route">{t('velo.route')}</option>
+                <option value="vtt">{t('velo.vtt')}</option>
               </select>
             </div>
 
             <div className="input-group">
               <div className="form-group-checkbox">
-                <label htmlFor="electric" style={{ margin: 0 }}>Électrique</label>
+                <label htmlFor="electric" style={{ margin: 0 }}>{t('velo.electrique')}</label>
                 <input
                   type="checkbox"
                   checked={bikeIsElectric}
@@ -141,13 +143,13 @@ export default function EditBikeModal({ isOpen, onClose, onConfirm, onDelete, ha
                 />
               </div>
             </div>
-            {hasError && <p className="error-text">Une erreur est survenue. Veuillez réessayer.</p>}
+            {hasError && <p className="error-text">{t('erreurs.generique')}</p>}
           </div>
 
           <div className="modal-actions">
-            <Button type="button" onClick={onClose}>Annuler</Button>
-            <Button type="button" className="danger-button" onClick={() => onDelete(bikeToEdit)} >Supprimer <FaTrash size={13} /></Button>
-            <Button type="submit">Modifier <FaPen size={13} /></Button>
+            <Button type="button" onClick={onClose}>{t('actions.annuler')}</Button>
+            <Button type="button" className="danger-button" onClick={() => onDelete(bikeToEdit)} >{t('actions.supprimer')} <FaTrash size={13} /></Button>
+            <Button type="submit">{t('actions.modifier')} <FaPen size={13} /></Button>
           </div>
         </form>
 

@@ -1,6 +1,8 @@
+import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
 import { MdPersonOff } from "react-icons/md";
 import Button from "../../ui/Button";
+import i18n from "../../../i18n/index";
 import { getMyBlocks, unblockUser } from "../../../services/apiBack";
 
 import "../../ui/PopUp.css"
@@ -10,10 +12,11 @@ const formatDate = (iso) => {
     if (!iso) return "";
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    return date.toLocaleDateString(i18n.language, { day: "numeric", month: "long", year: "numeric" });
 };
 
 export default function BlockedAuthorsModal({ isOpen, onClose, token }) {
+    const { t } = useTranslation('auth');
     const [blocks, setBlocks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -67,37 +70,34 @@ export default function BlockedAuthorsModal({ isOpen, onClose, token }) {
     return (
         <div className="modal-overlay">
             <div className="modal-content abuse-modal">
-                <h2>Auteurs bloqués</h2>
-                <p className="abuse-lead">
-                    Vous ne voyez plus les signalements de ces personnes. Les débloquer les
-                    fera réapparaître sur la carte.
-                </p>
+                <h2>{t('modales.auteursBloques.titre')}</h2>
+                <p className="abuse-lead">{t('modales.auteursBloques.intro')}</p>
 
-                {loading && <p className="abuse-lead">Chargement…</p>}
-                {!loading && error && <p className="error-text">La liste n'a pas pu être chargée.</p>}
+                {loading && <p className="abuse-lead">{t('actions.chargement')}</p>}
+                {!loading && error && <p className="error-text">{t('modales.auteursBloques.erreurChargement')}</p>}
                 {!loading && !error && blocks.length === 0 && (
-                    <p className="abuse-lead">Vous n'avez bloqué personne.</p>
+                    <p className="abuse-lead">{t('modales.auteursBloques.aucun')}</p>
                 )}
 
                 {blocks.map((block) => (
                     <div key={block.blocked_id} className="abuse-reason blocked-row">
                         <MdPersonOff size={20} />
                         <span className="abuse-reason-text">
-                            <strong>Auteur bloqué</strong>
-                            <small>Depuis le {formatDate(block.created_at)}</small>
+                            <strong>{t('modales.auteursBloques.auteur')}</strong>
+                            <small>{t('modales.auteursBloques.depuis', { date: formatDate(block.created_at) })}</small>
                         </span>
                         <button
                             type="button"
                             className="blocked-unblock"
                             onClick={() => handleUnblock(block.blocked_id)}
                         >
-                            Débloquer
+                            {t('actions.debloquer')}
                         </button>
                     </div>
                 ))}
 
                 <div className="modal-actions">
-                    <Button type="button" onClick={onClose}>Fermer</Button>
+                    <Button type="button" onClick={onClose}>{t('actions.fermer')}</Button>
                 </div>
             </div>
         </div>

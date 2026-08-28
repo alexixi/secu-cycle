@@ -1,1 +1,141 @@
-{}
+{
+    "weather": {
+        "condition": {
+            "clear": "Clear sky",
+            "mainly_clear": "Mainly clear",
+            "partly_cloudy": "Partly cloudy",
+            "overcast": "Overcast",
+            "fog": "Fog",
+            "rime_fog": "Freezing fog",
+            "drizzle_light": "Light drizzle",
+            "drizzle": "Drizzle",
+            "drizzle_dense": "Heavy drizzle",
+            "freezing_drizzle_light": "Freezing drizzle",
+            "freezing_drizzle": "Heavy freezing drizzle",
+            "rain_slight": "Light rain",
+            "rain": "Rain",
+            "rain_heavy": "Heavy rain",
+            "freezing_rain_light": "Freezing rain",
+            "freezing_rain": "Heavy freezing rain",
+            "snow_slight": "Light snow",
+            "snow": "Snow",
+            "snow_heavy": "Heavy snow",
+            "snow_grains": "Snow grains",
+            "showers_slight": "Showers",
+            "showers": "Moderate showers",
+            "showers_violent": "Violent showers",
+            "snow_showers_slight": "Snow showers",
+            "snow_showers": "Heavy snow showers",
+            "thunderstorm": "Thunderstorm",
+            "thunderstorm_hail": "Thunderstorm with hail",
+            "thunderstorm_hail_heavy": "Severe thunderstorm with hail",
+            "unknown": "Conditions unknown"
+        },
+        "alert": {
+            "none": "Nothing to report",
+            "watch": "Watch",
+            "warning": "Difficult conditions",
+            "severe": "Danger"
+        },
+        "hazard": {
+            "hail": "Risk of hail",
+            "thunderstorm": "Risk of thunderstorm",
+            "gust": "Gusts",
+            "ice": "Risk of ice",
+            "freezing": "Sub-zero temperatures",
+            "cold": "Cold",
+            "heavy_rain": "Heavy rain",
+            "rain": "Rain",
+            "snow": "Snow",
+            "fog": "Reduced visibility"
+        },
+        "equipment": {
+            "rain_jacket": "Waterproof jacket",
+            "mudguards": "Mudguards",
+            "gloves": "Gloves",
+            "warm_layer": "Warm layer",
+            "lights": "Lights",
+            "windbreaker": "Windbreaker"
+        },
+        "reason": {
+            "rain_now": "{mm} mm falling",
+            "rain_soon": "{mm} mm expected in the next {hours} h",
+            "rain_probability": "{percent}% chance of rain",
+            "wet_road": "Wet road",
+            "felt_temperature": "Feels like {degrees} °C",
+            "gusts": "Gusts at {speed} km/h",
+            "wind": "Wind at {speed} km/h",
+            "fog": "Fog",
+            "night": "Riding after dark"
+        },
+        "cardinal": {
+            "N": "N",
+            "NNE": "NNE",
+            "NE": "NE",
+            "ENE": "ENE",
+            "E": "E",
+            "ESE": "ESE",
+            "SE": "SE",
+            "SSE": "SSE",
+            "S": "S",
+            "SSW": "SSW",
+            "SW": "SW",
+            "WSW": "WSW",
+            "W": "W",
+            "WNW": "WNW",
+            "NW": "NW",
+            "NNW": "NNW"
+        }
+    },
+    "air": {
+        "band": {
+            "good": "Good",
+            "fair": "Fair",
+            "moderate": "Moderate",
+            "poor": "Poor",
+            "very_poor": "Very poor",
+            "extreme": "Extremely poor"
+        },
+        "us_band": {
+            "good": "Good",
+            "moderate": "Moderate",
+            "usg": "Unhealthy for sensitive groups",
+            "unhealthy": "Unhealthy",
+            "very_unhealthy": "Very unhealthy",
+            "hazardous": "Hazardous"
+        },
+        "pollutant": {
+            "european_aqi_pm2_5": "Fine particles (PM2.5)",
+            "european_aqi_pm10": "Particles (PM10)",
+            "european_aqi_nitrogen_dioxide": "Nitrogen dioxide (NO₂)",
+            "european_aqi_ozone": "Ozone (O₃)",
+            "european_aqi_sulphur_dioxide": "Sulphur dioxide (SO₂)"
+        }
+    },
+    "badge": {
+        "first_route": {
+            "name": "First route",
+            "description": "Complete your first ride."
+        },
+        "routes_10": {
+            "name": "10 routes",
+            "description": "Complete 10 rides."
+        },
+        "rain_rider": {
+            "name": "Rain rider",
+            "description": "Complete 5 rides that started in the rain."
+        },
+        "safe_routes_10": {
+            "name": "10 safer routes",
+            "description": "Complete 10 rides following the safer route."
+        },
+        "distance_50": {
+            "name": "50 km ridden",
+            "description": "Ride a total of 50 km on completed trips."
+        },
+        "distance_200": {
+            "name": "200 km ridden",
+            "description": "Ride a total of 200 km on completed trips."
+        }
+    }
+}

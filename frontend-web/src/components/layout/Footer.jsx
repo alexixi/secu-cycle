@@ -21,6 +21,7 @@ export default function Footer() {
         <footer className="footer">
             <div className="footer-brand">
                 <Logo className="footer-logo" />
+                {/* i18n-exempt: nom de la marque */}
                 <span className="footer-title">Sécu'Cycle</span>
             </div>
             <nav className="footer-links" aria-label={t('a11y.liensLegaux')}>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { FaRegNewspaper } from "react-icons/fa";
 import Button from "../../ui/Button";
@@ -20,6 +21,7 @@ import "../../ui/Form.css"
  * dans `preferences`, et l'enregistrement n'envoie que ce qui a changé.
  */
 export default function NewsletterModal({ isOpen, onClose }) {
+    const { t } = useTranslation('auth');
     const { user, token, updateUser } = useAuth();
 
     const [recapEmails, setRecapEmailsState] = useState(true);
@@ -85,17 +87,14 @@ export default function NewsletterModal({ isOpen, onClose }) {
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2>Newsletter</h2>
+                <h2>{t('modales.newsletter.titre')}</h2>
                 <form onSubmit={handleSubmit}>
 
                     <label className="secondary-action-card secondary-action-card-check">
                         <FaRegNewspaper className="secondary-action-icon" size={18} />
                         <span className="secondary-action-text">
-                            <strong>Récapitulatif d&apos;activité</strong>
-                            <small>
-                                Un bilan de vos trajets, kilomètres et badges au début de chaque
-                                mois, et en début d&apos;année.
-                            </small>
+                            <strong>{t('modales.newsletter.recap')}</strong>
+                            <small>{t('modales.newsletter.recapDescription')}</small>
                         </span>
                         <input
                             type="checkbox"
@@ -107,21 +106,15 @@ export default function NewsletterModal({ isOpen, onClose }) {
                         />
                     </label>
 
-                    <p className="newsletter-note">
-                        Les e-mails liés à votre compte — vérification, réinitialisation de mot
-                        de passe — ne dépendent pas de ce réglage et continueront de vous être
-                        envoyés.
-                    </p>
+                    <p className="newsletter-note">{t('modales.newsletter.note')}</p>
 
                     {error && (
-                        <p className="error-text" role="alert">
-                            Le réglage n&apos;a pas pu être enregistré. Réessayez dans un instant.
-                        </p>
+                        <p className="error-text" role="alert">{t('modales.newsletter.erreur')}</p>
                     )}
 
                     <div className="modal-actions">
-                        <Button type="button" onClick={onClose}>Annuler</Button>
-                        <Button type="submit" disabled={pending}>Enregistrer</Button>
+                        <Button type="button" onClick={onClose}>{t('actions.annuler')}</Button>
+                        <Button type="submit" disabled={pending}>{t('actions.enregistrer')}</Button>
                     </div>
                 </form>
             </div>
