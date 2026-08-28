@@ -2,11 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Linking, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 import { SwipeBackScreen } from '../components/SwipeBackScreen';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { SegmentedSelector } from '../components/ui/SegmentedSelector';
 import { useAuth } from '../context/AuthContext';
+import { useLocale } from '../hooks/useLocale';
 import { useTheme } from '../hooks/useTheme';
 import { LEGAL_LINKS, openLegalPage } from '../constants/legal';
 import { setRecapEmails } from '../services/apiBack';
@@ -25,10 +28,22 @@ import {
     setNotificationsEnabled,
 } from '../services/notificationPreference';
 
+const LANGUAGE_OPTIONS = [
+    { value: 'auto', icon: 'phone-portrait-outline' },
+    // i18n-exempt-start: endonymes — un sélecteur de langue s'affiche toujours
+    // dans la langue qu'il propose. « Français » reste « Français » sur une
+    // interface anglaise, sans quoi un anglophone égaré ne reconnaît pas
+    // l'option qu'il cherche. C'est la seule position de l'application où ne pas
+    // traduire est le comportement correct.
+    { value: 'fr', label: 'Français' },
+    { value: 'en', label: 'English' },
+    // i18n-exempt-end
+];
+
 const THEME_OPTIONS = [
-    { mode: 'light', label: 'Clair', icon: 'sunny' },
-    { mode: 'auto', label: 'Auto', icon: 'settings-outline' },
-    { mode: 'dark', label: 'Sombre', icon: 'moon' },
+    { value: 'light', label: 'Clair', icon: 'sunny' },
+    { value: 'auto', label: 'Auto', icon: 'settings-outline' },
+    { value: 'dark', label: 'Sombre', icon: 'moon' },
 ];
 
 function LinkRow({ icon, label, onPress, colors, isLast, tint }) {
@@ -52,6 +67,8 @@ function LinkRow({ icon, label, onPress, colors, isLast, tint }) {
 export default function SettingsPage() {
     const router = useRouter();
     const { colors, themeMode, setThemeMode } = useTheme();
+    const { languageMode, setLanguageMode } = useLocale();
+    const { t } = useTranslation();
     const { user, token, updateUser } = useAuth();
 
     const [notifEnabled, setNotifEnabled] = useState(true);
@@ -76,12 +93,6 @@ export default function SettingsPage() {
             getNotificationPermission().then(setPermission);
         }, []),
     );
-
-    const handleThemeChange = (mode) => {
-        if (mode === themeMode) return;
-        Haptics.selectionAsync().catch(() => { });
-        setThemeMode(mode);
-    };
 
     const handleNotifToggle = async (value) => {
         Haptics.selectionAsync().catch(() => { });
@@ -212,38 +223,36 @@ export default function SettingsPage() {
                             « Auto » suit le thème de votre téléphone.
                         </Text>
 
-                        <View style={[styles.themeSelector, { backgroundColor: colors.bgMain }]}>
-                            {THEME_OPTIONS.map(({ mode, label, icon }) => {
-                                const isActive = themeMode === mode;
-                                return (
-                                    <TouchableOpacity
-                                        key={mode}
-                                        style={[
-                                            styles.themeBtn,
-                                            isActive && [styles.themeBtnActive, { backgroundColor: colors.bgSurface }],
-                                        ]}
-                                        onPress={() => handleThemeChange(mode)}
-                                        accessibilityRole="radio"
-                                        accessibilityState={{ selected: isActive }}
-                                        accessibilityLabel={`Thème ${label}`}
-                                    >
-                                        <Ionicons
-                                            name={icon}
-                                            size={20}
-                                            color={isActive ? colors.primary : colors.textSecondary}
-                                        />
-                                        <Text
-                                            style={[
-                                                styles.themeBtnText,
-                                                { color: isActive ? colors.primary : colors.textSecondary },
-                                            ]}
-                                        >
-                                            {label}
-                                        </Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
+                        <SegmentedSelector
+                            value={themeMode}
+                            options={THEME_OPTIONS}
+                            onChange={setThemeMode}
+                            accessibilityLabelFor={(option) => `Thème ${option.label}`}
+                        />
+                    </View>
+
+                    <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
+                        <View style={styles.sectionTitleRow}>
+                            <Ionicons name="language-outline" size={24} color={colors.textMain} />
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+                                {t('parametres.langue.titre')}
+                            </Text>
                         </View>
+
+                        <Text style={[styles.hint, { color: colors.textSecondary }]}>
+                            {t('parametres.langue.indice')}
+                        </Text>
+
+                        <SegmentedSelector
+                            value={languageMode}
+                            options={LANGUAGE_OPTIONS.map((option) => ({
+                                ...option,
+                                label: option.label ?? t('parametres.langue.auto'),
+                            }))}
+                            onChange={setLanguageMode}
+                            accessibilityLabelFor={(option) =>
+                                t('parametres.langue.a11y', { langue: option.label })}
+                        />
                     </View>
 
                     <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
@@ -452,33 +461,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 15,
         fontWeight: '500',
-    },
-    themeSelector: {
-        flexDirection: 'row',
-        borderRadius: 12,
-        padding: 4,
-        marginTop: 15,
-        width: '100%',
-    },
-    themeBtn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 10,
-        borderRadius: 8,
-        gap: 6,
-    },
-    themeBtnActive: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    themeBtnText: {
-        fontSize: 14,
-        fontWeight: '600',
     },
     switchRow: {
         flexDirection: 'row',
