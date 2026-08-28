@@ -1,2 +1,22 @@
 {
+    "localisation": {
+        "titre": "Localisation pendant le guidage",
+        "points": {
+            "collecte": {
+                "titre": "Ce que nous collectons",
+                "texte": "Votre position GPS précise, relevée pendant toute la durée du guidage."
+            },
+            "arrierePlan": {
+                "titre": "Y compris en arrière-plan",
+                "texte": "Le relevé continue quand l'écran est éteint ou que l'application n'est plus au premier plan, pour poursuivre le guidage téléphone en poche."
+            },
+            "usage": {
+                "titre": "À quoi elle sert",
+                "texte": "Uniquement à vous guider : recaler votre position sur l'itinéraire et annoncer la prochaine instruction. Elle n'est ni conservée, ni utilisée pour de la publicité, ni transmise à des tiers à cette fin."
+            }
+        },
+        "retrait": "Vous pouvez retirer cette autorisation à tout moment dans les réglages de votre téléphone. Détails dans notre <lien>politique de confidentialité</lien>.",
+        "autoriser": "Autoriser",
+        "continuerSans": "Continuer sans"
+    }
 }
