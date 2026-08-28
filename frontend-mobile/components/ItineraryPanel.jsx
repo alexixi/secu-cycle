@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, Pressable, StyleSheet, Animated, Modal, Dimensions } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useRef, useEffect, useMemo } from 'react';
+import { useFormat } from '../hooks/useFormat';
 import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
 import { useDragToDismiss } from '../hooks/useDragToDismiss';
@@ -9,6 +10,7 @@ import { GestureHandlerRootView, GestureDetector } from 'react-native-gesture-ha
 import Reanimated from 'react-native-reanimated';
 import { VictoryArea, VictoryChart, VictoryAxis, VictoryTooltip, VictoryVoronoiContainer } from 'victory-native';
 import { weatherSummary } from '../services/weather';
+import { useTranslation } from 'react-i18next';
 
 const ROUTE_LABELS = {
     fast: { label: "Rapide", icon: "lightning-bolt", color: "#F59E0B" },
@@ -17,6 +19,8 @@ const ROUTE_LABELS = {
 };
 
 function DetailModal({ itineraire, visible, onClose, colors, typography, weather }) {
+    const { t } = useTranslation();
+    const f = useFormat();
     const summary = weatherSummary(weather);
     const screenWidth = Dimensions.get('window').width;
     const { gesture, sheetStyle, close } = useDragToDismiss({ visible, onClose });
@@ -80,17 +84,17 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
                         <View style={styles.mainStat}>
                             <Ionicons name="time-outline" size={22} color={colors.primary} />
                             <Text style={[styles.mainStatValue, { color: colors.textMain }]}>
-                                {Math.round(itineraire.duration)} min
+                                {t('itineraire.panneau.minutes', { n: f.nombre(Math.round(itineraire.duration)) })}
                             </Text>
-                            <Text style={[styles.mainStatLabel, { color: colors.textSecondary }]}>Durée</Text>
+                            <Text style={[styles.mainStatLabel, { color: colors.textSecondary }]}>{t('itineraire.panneau.duree')}</Text>
                         </View>
                         <View style={[styles.mainStatDivider, { backgroundColor: colors.borderLight }]} />
                         <View style={styles.mainStat}>
                             <MaterialCommunityIcons name="map-marker-distance" size={22} color={colors.primary} />
                             <Text style={[styles.mainStatValue, { color: colors.textMain }]}>
-                                {itineraire.distance.toFixed(2)} km
+                                {t('itineraire.panneau.kilometres', { n: f.nombre(itineraire.distance, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })}
                             </Text>
-                            <Text style={[styles.mainStatLabel, { color: colors.textSecondary }]}>Distance</Text>
+                            <Text style={[styles.mainStatLabel, { color: colors.textSecondary }]}>{t('itineraire.panneau.distance')}</Text>
                         </View>
                     </View>
 
@@ -98,30 +102,30 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
                         <View style={styles.elevationItem}>
                             <Ionicons name="trending-up-outline" size={18} color="#EF4444" />
                             <Text style={[styles.elevationValue, { color: colors.textMain }]}>
-                                +{itineraire.height_difference[0]} m
+                                {t('itineraire.panneau.metresPositif', { n: f.nombre(itineraire.height_difference[0]) })}
                             </Text>
                             <Text style={[styles.elevationLabel, { color: colors.textSecondary }]}>
-                                Dénivelé +
+                                {t('itineraire.panneau.denivelePositif')}
                             </Text>
                         </View>
                         <View style={[styles.mainStatDivider, { backgroundColor: colors.borderLight }]} />
                         <View style={styles.elevationItem}>
                             <Ionicons name="trending-down-outline" size={18} color="#10B981" />
                             <Text style={[styles.elevationValue, { color: colors.textMain }]}>
-                                -{itineraire.height_difference[1]} m
+                                {t('itineraire.panneau.metresNegatif', { n: f.nombre(itineraire.height_difference[1]) })}
                             </Text>
                             <Text style={[styles.elevationLabel, { color: colors.textSecondary }]}>
-                                Dénivelé -
+                                {t('itineraire.panneau.deniveleNegatif')}
                             </Text>
                         </View>
                         <View style={[styles.mainStatDivider, { backgroundColor: colors.borderLight }]} />
                         <View style={styles.elevationItem}>
                             <MaterialCommunityIcons name="image-filter-hdr" size={18} color={colors.textSecondary} />
                             <Text style={[styles.elevationValue, { color: colors.textMain }]}>
-                                {Math.round(minEle)}–{Math.round(maxEle)} m
+                                {t('itineraire.panneau.plageAltitude', { min: f.nombre(Math.round(minEle)), max: f.nombre(Math.round(maxEle)) })}
                             </Text>
                             <Text style={[styles.elevationLabel, { color: colors.textSecondary }]}>
-                                Altitude
+                                {t('itineraire.panneau.altitude')}
                             </Text>
                         </View>
                     </View>
@@ -129,7 +133,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
                     {elevationData.length > 1 && (
                         <View style={styles.chartSection}>
                             <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
-                                Profil altimétrique
+                                {t('itineraire.panneau.profilAltimetrique')}
                             </Text>
                             <VictoryChart
                                 width={screenWidth - 80}
@@ -166,7 +170,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
                                         tickLabels: { fill: colors.textSecondary, fontSize: 10 },
                                         grid: { stroke: colors.borderLight, strokeDasharray: '4,4' },
                                     }}
-                                    tickFormat={(t) => `${Math.round(t)}m`}
+                                    tickFormat={(valeur) => t('itineraire.panneau.metres', { n: Math.round(valeur) })}
                                     tickCount={4}
                                 />
                                 <VictoryArea
@@ -189,34 +193,34 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
                     {itineraire.infra_stats && (
                         <View style={styles.infraSection}>
                             <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
-                                Infrastructure
+                                {t('itineraire.panneau.infrastructure')}
                             </Text>
                             <View style={styles.infraGrid}>
                                 <View style={[styles.infraCard, { backgroundColor: '#10B98115', borderColor: '#10B98130' }]}>
                                     <MaterialCommunityIcons name="bicycle" size={20} color="#10B981" />
                                     <Text style={[styles.infraValue, { color: '#10B981' }]}>
-                                        {itineraire.infra_stats.pct_cyclable}%
+                                        {t('itineraire.panneau.pourcentage', { n: f.nombre(itineraire.infra_stats.pct_cyclable) })}
                                     </Text>
                                     <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
-                                        Piste cyclable
+                                        {t('itineraire.panneau.pisteCyclable')}
                                     </Text>
                                 </View>
                                 <View style={[styles.infraCard, { backgroundColor: '#6366F115', borderColor: '#6366F130' }]}>
                                     <MaterialCommunityIcons name="speedometer-slow" size={20} color="#6366F1" />
                                     <Text style={[styles.infraValue, { color: '#6366F1' }]}>
-                                        {itineraire.infra_stats.pct_low_speed}%
+                                        {t('itineraire.panneau.pourcentage', { n: f.nombre(itineraire.infra_stats.pct_low_speed) })}
                                     </Text>
                                     <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
-                                        Zone ≤30 km/h
+                                        {t('itineraire.panneau.zoneLente')}
                                     </Text>
                                 </View>
                                 <View style={[styles.infraCard, { backgroundColor: '#F59E0B15', borderColor: '#F59E0B30' }]}>
                                     <Ionicons name="bulb-outline" size={20} color="#F59E0B" />
                                     <Text style={[styles.infraValue, { color: '#F59E0B' }]}>
-                                        {itineraire.infra_stats.pct_lit}%
+                                        {t('itineraire.panneau.pourcentage', { n: f.nombre(itineraire.infra_stats.pct_lit) })}
                                     </Text>
                                     <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
-                                        Éclairé
+                                        {t('itineraire.panneau.eclaire')}
                                     </Text>
                                 </View>
                                 {itineraire.infra_stats.accidents_count > 0 && (
@@ -226,8 +230,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
                                             {itineraire.infra_stats.accidents_count}
                                         </Text>
                                         <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
-                                            {itineraire.infra_stats.accidents_count > 1
-                                                ? 'Accidents recensés' : 'Accident recensé'}
+                                            {t('itineraire.panneau.accidentsRecenses', { count: itineraire.infra_stats.accidents_count })}
                                         </Text>
                                     </View>
                                 )}
@@ -238,7 +241,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
                                             {itineraire.infra_stats.pct_low_air_exposure}%
                                         </Text>
                                         <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
-                                            À l'écart du trafic
+                                            {t('itineraire.panneau.ecartTrafic')}
                                         </Text>
                                     </View>
                                 )}
@@ -250,8 +253,8 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
                                         </Text>
                                         <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
                                             {itineraire.wind_effect_min > 0
-                                                ? `Vent de face · +${Math.round(itineraire.wind_effect_min)} min`
-                                                : 'Vent de face'}
+                                                ? t('itineraire.panneau.ventDeFaceMinutes', { minutes: f.nombre(Math.round(itineraire.wind_effect_min)) })
+                                                : t('itineraire.panneau.ventDeFace')}
                                         </Text>
                                     </View>
                                 )}
@@ -262,8 +265,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
                                             {summary.ice_bridges.count}
                                         </Text>
                                         <Text style={[styles.infraLabel, { color: colors.textSecondary }]}>
-                                            {summary.ice_bridges.count > 1
-                                                ? 'Ponts · risque de verglas' : 'Pont · risque de verglas'}
+                                            {t('itineraire.panneau.pontsVerglas', { count: summary.ice_bridges.count })}
                                         </Text>
                                     </View>
                                 )}
@@ -272,7 +274,7 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
                             {summary?.equipment?.length > 0 && (
                                 <>
                                     <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 18 }]}>
-                                        À prévoir
+                                        {t('carte.ui.meteo.aPrevoir')}
                                     </Text>
                                     <View style={styles.equipmentRow}>
                                         {summary.equipment.map((item) => (
@@ -301,6 +303,8 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
 }
 
 export default function ItineraryPanel({ itineraires, weather, selectedItineraire, setSelectedItineraire, bottomOffset = 0, detailItineraire = null, setDetailItineraire = () => { } }) {
+    const { t } = useTranslation();
+    const f = useFormat();
     const { colors, typography } = useTheme();
     const slideAnim = useRef(new Animated.Value(200)).current;
 
@@ -362,14 +366,14 @@ export default function ItineraryPanel({ itineraires, weather, selectedItinerair
                                     <View style={styles.stat}>
                                         <Ionicons name="time-outline" size={13} color={colors.textSecondary} />
                                         <Text style={[styles.statValue, { color: colors.textMain }]}>
-                                            {Math.round(it.duration)} min
+                                            {t('itineraire.panneau.minutes', { n: f.nombre(Math.round(it.duration)) })}
                                         </Text>
                                     </View>
                                     <View style={[styles.statDivider, { backgroundColor: colors.borderLight }]} />
                                     <View style={styles.stat}>
                                         <MaterialCommunityIcons name="map-marker-distance" size={13} color={colors.textSecondary} />
                                         <Text style={[styles.statValue, { color: colors.textMain }]}>
-                                            {it.distance.toFixed(1)} km
+                                            {t('itineraire.panneau.kilometres', { n: f.nombre(it.distance, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })}
                                         </Text>
                                     </View>
                                 </View>
@@ -380,7 +384,7 @@ export default function ItineraryPanel({ itineraires, weather, selectedItinerair
                                 >
                                     <Ionicons name="information-circle-outline" size={14} color={colors.textSecondary} />
                                     <Text style={[styles.infoButtonText, { color: colors.textSecondary }]}>
-                                        Plus de détails
+                                        {t('itineraire.panneau.plusDeDetails')}
                                     </Text>
                                 </TouchableOpacity>
                             </TouchableOpacity>

@@ -16,6 +16,7 @@ import BadgeUnlockedModal from '../../components/BadgeUnlockedModal';
 import * as Haptics from 'expo-haptics';
 import { trackEvent } from '../../services/analytics';
 import BackgroundLocationDisclosure from '../../components/BackgroundLocationDisclosure';
+import { useTranslation } from 'react-i18next';
 import {
     ACCEPTED,
     DECLINED,
@@ -24,6 +25,7 @@ import {
 } from '../../services/locationDisclosure';
 
 export default function Index() {
+    const { t } = useTranslation();
     const [startPoint, setStartPoint] = useState(null);
     const [endPoint, setEndPoint] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -169,8 +171,10 @@ export default function Index() {
             if (error.code === "OUT_OF_ZONE") {
                 trackEvent('address_out_of_zone', { city: startPoint?.city || endPoint?.city || "inconnue" });
                 Alert.alert(
-                    "Hors zone couverte",
-                    error.detailMessage || "Cette adresse est en dehors de la zone couverte par Sécu-Cycle.",
+                    t('itineraire.recherche.horsZoneTitre'),
+                    // Le message de l'API prime : il est déjà traduit et plus précis
+                    // que notre repli, qui sert face à un backend antérieur.
+                    error.detailMessage || t('itineraire.recherche.horsZoneTexte'),
                 );
             } else {
                 trackEvent('route_calculation_failed', { bike: selectedBike });
@@ -184,8 +188,8 @@ export default function Index() {
         if (!startPoint && !currentPosition) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert(
-                "Position introuvable",
-                "Veuillez patienter pendant la recherche de votre position GPS.",
+                t('carte.ui.position.introuvable'),
+                t('carte.ui.position.patienter'),
             );
             return;
         }
@@ -340,7 +344,7 @@ export default function Index() {
                     }}
                 >
                     <MaterialCommunityIcons name="close" size={20} color={colors.textMain} />
-                    <Text style={[styles.emergencyStopText, { color: colors.textMain }]}>Arrêter</Text>
+                    <Text style={[styles.emergencyStopText, { color: colors.textMain }]}>{t('itineraire.recherche.arreter')}</Text>
                 </TouchableOpacity>
             )}
 
@@ -353,7 +357,7 @@ export default function Index() {
                     }}
                     activeOpacity={0.85} >
                     <MaterialCommunityIcons name="navigation" size={20} color="#fff" />
-                    <Text style={styles.startButtonText}>Démarrer</Text>
+                    <Text style={styles.startButtonText}>{t('itineraire.recherche.demarrer')}</Text>
                 </TouchableOpacity>
             )}
 
@@ -370,7 +374,7 @@ export default function Index() {
                         }}
                         disabled={!selectedItineraire}
                         accessibilityRole="button"
-                        accessibilityLabel="Détails de l'itinéraire"
+                        accessibilityLabel={t('itineraire.recherche.details')}
                     >
                         <MaterialCommunityIcons name="information-variant" size={24} color={colors.textMain} />
                     </TouchableOpacity>
@@ -382,7 +386,7 @@ export default function Index() {
                         ]}
                         onPress={handleCloseResults}
                         accessibilityRole="button"
-                        accessibilityLabel="Fermer les itinéraires"
+                        accessibilityLabel={t('itineraire.recherche.fermerItineraires')}
                     >
                         <Ionicons name="close" size={24} color={colors.textMain} />
                     </TouchableOpacity>
