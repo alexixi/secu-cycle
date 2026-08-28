@@ -1,2 +1,24 @@
 {
+    "alerte": {
+        "prevuVers": "Expected around {{heure}}.",
+        "enCours": "Currently in your area.",
+        "source": " ({{source}})",
+        "parlePrevu": "Careful. {{alerte}} expected around {{heure}}.",
+        "parleEnCours": "Careful. {{alerte}} in your area.",
+        "averseImminente": "Shower imminent",
+        "pluieApproche": "Rain approaching",
+        "parleAverseImminente": "Careful, a shower is imminent.",
+        "parlePluieDans": "Rain expected in about {{minutes}} minutes."
+    },
+    "pill": {
+        "a11yMeteo": "Weather: {{condition}}",
+        "a11yTemperature": ", {{degres}} degrees",
+        "a11yVent": ", wind {{vitesse}} km/h",
+        "a11yVentDirection": " from {{cardinal}}",
+        "a11yEvenement": ". {{evenement}}"
+    },
+    "notification": {
+        "canalNom": "Weather alerts",
+        "canalDescription": "Showers, hail, thunderstorms or black ice during a trip."
+    }
 }

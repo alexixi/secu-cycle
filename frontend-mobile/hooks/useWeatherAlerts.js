@@ -3,6 +3,8 @@ import * as Speech from 'expo-speech';
 
 import { pointForCenter, weatherSummary, rainBanner, formatHM } from '../services/weather';
 import { notifyWeather, resetWeatherNotifications } from '../services/weatherNotification';
+import i18n from '../i18n';
+import { bcp47 } from '../utils/datetime';
 
 // Même structure que `useHazardAlerts` : une seule alerte visible à la fois, un
 // `Set` de ce qui a déjà été annoncé, remis à zéro à la fin de la navigation.
@@ -67,12 +69,12 @@ export default function useWeatherAlerts(weatherData, currentPosition, isNavigat
                 // La provenance n'est affichée que pour les vigilances officielles :
                 // c'est ce qui distingue un bulletin d'institut de nos seuils.
                 body: (alert.at
-                    ? `Prévu vers ${formatHM(alert.at) || alert.at}.`
-                    : 'En cours sur votre secteur.')
-                    + (alert.official && alert.source ? ` (${alert.source})` : ''),
+                    ? i18n.t('meteo.alerte.prevuVers', { heure: formatHM(alert.at) || alert.at })
+                    : i18n.t('meteo.alerte.enCours'))
+                    + (alert.official && alert.source ? i18n.t('meteo.alerte.source', { source: alert.source }) : ''),
                 spoken: alert.at
-                    ? `Attention. ${alert.label} prévu vers ${formatHM(alert.at) || ''}.`
-                    : `Attention. ${alert.label} sur votre secteur.`,
+                    ? i18n.t('meteo.alerte.parlePrevu', { alerte: alert.label, heure: formatHM(alert.at) || '' })
+                    : i18n.t('meteo.alerte.parleEnCours', { alerte: alert.label }),
             });
         }
 
@@ -85,11 +87,11 @@ export default function useWeatherAlerts(weatherData, currentPosition, isNavigat
                 rank: imminent ? 2 : 1,
                 level: imminent ? 'warning' : 'watch',
                 icon: '🌧️',
-                title: imminent ? 'Averse imminente' : 'Pluie en approche',
+                title: imminent ? i18n.t('meteo.alerte.averseImminente') : i18n.t('meteo.alerte.pluieApproche'),
                 body: rain.text,
                 spoken: imminent
-                    ? 'Attention, averse imminente.'
-                    : `Pluie prévue dans environ ${rain.minutes} minutes.`,
+                    ? i18n.t('meteo.alerte.parleAverseImminente')
+                    : i18n.t('meteo.alerte.parlePluieDans', { minutes: rain.minutes }),
             });
         }
 
@@ -100,7 +102,9 @@ export default function useWeatherAlerts(weatherData, currentPosition, isNavigat
 
         announcedRef.current.add(best.key);
         Speech.stop();
-        Speech.speak(best.spoken, { language: 'fr-FR', pitch: 1, rate: 1 });
+        // La voix suit la langue de l'application : une voix française lisant de
+        // l'anglais est inintelligible, et bien plus gênante qu'un libellé non traduit.
+        Speech.speak(best.spoken, { language: bcp47(i18n.language), pitch: 1, rate: 1 });
         // Sans await : une notification lente ne doit pas retarder le bandeau.
         notifyWeather(best);
         setActiveAlert(best);
