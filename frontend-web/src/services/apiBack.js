@@ -1,4 +1,4 @@
-import i18n from '../i18n/index';
+import i18n, { DEFAULT_LANG } from '../i18n/index';
 import { pathFor } from '../i18n/routes';
 
 function clearSession() {
@@ -17,7 +17,10 @@ async function refreshAccessToken() {
     try {
         const response = await fetch(`${API_BASE_URL}/users/refresh`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Accept-Language": i18n.language || DEFAULT_LANG,
+            },
             body: JSON.stringify({ refresh_token: refreshToken }),
         });
         if (!response.ok) return null;
@@ -72,6 +75,13 @@ function isSessionInvalid(response, errorData) {
 export async function apiFetch(url, options = {}, token = null, _retried = false) {
     const headers = {
         "Content-Type": "application/json",
+        // Le backend négocie ?lang= > Accept-Language > fr. Le navigateur en
+        // envoie un, mais c'est celui du système : sur /en/ avec un navigateur
+        // français, les messages d'erreur et la météo revenaient en français.
+        // C'est aussi lui qui renseigne users.language à l'inscription, donc la
+        // langue des e-mails. DEFAULT_LANG couvre le prérendu, où i18next peut
+        // ne pas être initialisé.
+        "Accept-Language": i18n.language || DEFAULT_LANG,
         ...options.headers,
     };
 
@@ -349,6 +359,16 @@ export async function confirmEmailChange(token, code) {
     } catch (error) {
         throw error;
     }
+}
+
+export async function setProfileLanguage(token, language) {
+    // La langue du site est dans l'URL ; la colonne users.language, elle, sert
+    // aux e-mails — dont le récapitulatif, envoyé par une boucle de fond qui
+    // n'a aucune requête d'où lire une préférence.
+    return apiFetch("/users/me", {
+        method: "PATCH",
+        body: JSON.stringify({ language }),
+    }, token);
 }
 
 export async function setRecapEmails(token, enabled) {
