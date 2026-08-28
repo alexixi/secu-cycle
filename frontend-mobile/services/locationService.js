@@ -5,6 +5,7 @@ let subscription = null;
 export async function startTracking(callback) {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
+        // i18n-exempt: message d'Error interne, lu par le code appelant
         throw new Error('Permission GPS refusée');
     }
 

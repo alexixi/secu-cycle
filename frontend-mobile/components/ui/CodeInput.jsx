@@ -1,6 +1,7 @@
 import { StyleSheet, TextInput } from "react-native";
 
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from 'react-i18next';
 
 export const CODE_LENGTH = 6;
 
@@ -11,6 +12,7 @@ export default function CodeInput({
     hasError = false,
     autoFocus = true,
 }) {
+    const { t } = useTranslation();
     const { colors } = useTheme();
 
     const handleChange = (text) => {
@@ -37,7 +39,7 @@ export default function CodeInput({
             textAlign="center"
             autoComplete="sms-otp"
             textContentType="oneTimeCode"
-            accessibilityLabel={`Code à ${length} chiffres`}
+            accessibilityLabel={t('a11y.codeChiffres', { n: length })}
         />
     );
 }
