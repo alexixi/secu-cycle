@@ -148,7 +148,11 @@
             "cumulPeriode": "Cumul sur la période : {{mm}} mm",
             "nowcastExpire": "Prévision au quart d'heure expirée : le dernier relevé est trop ancien pour dire quoi que ce soit des deux prochaines heures.",
             "nowcastHorsZone": "Pas de prévision au quart d'heure sur cette zone — hors couverture des modèles à fine maille. Seules les probabilités horaires sont fiables ici.",
-            "ressenti": "Ressenti {{degres}} °C"
+            "ressenti": "Ressenti {{degres}} °C",
+            "indisponible": "Météo momentanément indisponible.",
+            "vitesseVent": "{{vitesse}} km/h",
+            "alerteVers": " vers {{heure}}",
+            "alerteSource": " · {{source}}"
         },
         "eclairage": {
             "h2": "Éclairage public",

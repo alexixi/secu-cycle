@@ -148,7 +148,11 @@
             "cumulPeriode": "Total over the period: {{mm}} mm",
             "nowcastExpire": "The 15-minute forecast has expired: the latest reading is too old to say anything about the next two hours.",
             "nowcastHorsZone": "No 15-minute forecast for this area — it falls outside the fine-mesh models. Only the hourly probabilities are reliable here.",
-            "ressenti": "Feels like {{degres}} °C"
+            "ressenti": "Feels like {{degres}} °C",
+            "indisponible": "Weather temporarily unavailable.",
+            "vitesseVent": "{{vitesse}} km/h",
+            "alerteVers": " around {{heure}}",
+            "alerteSource": " · {{source}}"
         },
         "eclairage": {
             "h2": "Street lighting",
