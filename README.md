@@ -432,8 +432,8 @@ répercutée, ainsi que dans les mentions légales.
 
 ### Internationalisation (français, anglais)
 
-L'API, le site et l'application mobile sont traduits ; seul le dashboard d'administration
-reste en français. Le français demeure la langue par défaut ; l'anglais s'ajoute à côté, sans
+L'API, le site, l'application mobile et les e-mails transactionnels sont traduits ; seul
+le dashboard d'administration reste en français. Le français demeure la langue par défaut ; l'anglais s'ajoute à côté, sans
 qu'aucune URL française existante ne change — les 56 pages `/carte/<ville>/<thème>` sont
 indexées, et le préfixe `/fr` aurait cassé cette indexation.
 
@@ -509,6 +509,35 @@ Restent en français, faute de pouvoir faire autrement : le nom de l'application
 demandes de permission, traduits par la clé `locales` d'`app.config.js` mais **d'après la langue
 du système**, pas la préférence in-app — iOS lit l'Info.plist avant que le moindre code JS ne
 tourne. Ces textes n'apparaissent qu'à l'installation et au premier octroi de permission.
+
+**Côté e-mails.** Ils sont la seule exception à « la langue est négociée par requête », et
+elle est structurelle : le récapitulatif périodique part d'une boucle de fond
+(`recap/runner.py`), sans requête d'où lire un `Accept-Language`. Une colonne
+`users.language` porte donc la préférence, et **elle seule fait autorité pour les e-mails**
+— jamais pour les réponses de l'API, qui restent négociées. Elle est renseignée à
+l'inscription depuis la locale de la requête, puis corrigée par les deux fronts quand
+l'utilisateur change de langue (`PATCH /users/me`).
+
+Quatre points qui ne se devinent pas :
+
+- **Les gabarits ne portent aucune balise ni entité HTML dans le catalogue.** Les espaces
+  insécables y sont de vrais U+00A0 — ils rendent aussi bien en HTML qu'en texte brut, ce
+  qui permet à une même clé de servir les deux versions d'un message plutôt qu'à deux clés
+  jumelles de diverger. Ce qui doit être mis en avant (`<strong>`, un lien) est passé en
+  paramètre : la balise reste dans le code.
+- **Les libellés de période sont calculés par destinataire, pas par lot.** Deux personnes
+  du même lot n'ont pas forcément la même langue ; un « juillet 2026 » calculé en amont
+  partait tel quel à un anglophone.
+- **Le formulaire de contact reste en français.** Son destinataire est l'équipe, pas un
+  utilisateur — même raison que le dashboard d'administration.
+- **Les pages de désabonnement suivent le profil du lien, pas le navigateur.** Elles
+  prolongent l'e-mail dont on vient de cliquer le lien ; la locale négociée ne sert que
+  lorsque le jeton est illisible, cas où il n'y a personne dont lire la préférence.
+
+`make mail` rend tous les gabarits dans les deux langues, l'une sous l'autre : c'est la
+seule façon de relire une traduction d'e-mail. `tests/test_email_i18n.py` couvre le mode
+de défaillance qui compte — `t()` ne lève jamais, une clé absente produit un e-mail
+contenant « email.recap.intro » en toutes lettres, **et il part quand même**.
 
 **Vérifications.**
 
