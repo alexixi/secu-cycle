@@ -12,6 +12,7 @@ import PasswordInput from "../components/ui/PasswordInput";
 import { useTheme } from "../hooks/useTheme";
 import { forgotPassword, resetPassword } from "../services/apiBack";
 import { SwipeBackScreen } from "../components/SwipeBackScreen";
+import { useTranslation } from "react-i18next";
 
 const MIN_PASSWORD_LENGTH = 10;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -19,6 +20,7 @@ const RESEND_COOLDOWN_SECONDS = 60;
 export default function ForgotPassword() {
     const router = useRouter();
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
 
     const params = useLocalSearchParams();
     const initialEmail = typeof params?.email === "string" ? params.email : "";
@@ -84,14 +86,14 @@ export default function ForgotPassword() {
         setIsResending(true);
         try {
             await forgotPassword(email);
-            setResendMessage("Si un compte existe, un nouveau code a été envoyé.");
+            setResendMessage(t('auth.motDePasseOublie.codeRenvoye'));
             startResendCooldown();
         } catch (error) {
             if (error?.status === 429) {
-                setResendMessage("Trop de tentatives. Veuillez réessayer plus tard.");
+                setResendMessage(t('auth.motDePasseOublie.tropDeTentatives'));
                 startResendCooldown();
             } else {
-                setResendMessage("Impossible d'envoyer le code pour le moment.");
+                setResendMessage(t('auth.motDePasseOublie.envoiImpossible'));
             }
         } finally {
             setIsResending(false);
@@ -103,7 +105,7 @@ export default function ForgotPassword() {
         setResendMessage(null);
         if (password !== password2) {
             errorHaptic();
-            setResetError("Les mots de passe ne correspondent pas.");
+            setResetError(t('auth.motDePasseOublie.motsDePasseDifferents'));
             return;
         }
         setIsLoading(true);
@@ -113,9 +115,9 @@ export default function ForgotPassword() {
         } catch (error) {
             errorHaptic();
             if (error?.status === 429) {
-                setResetError("Trop de tentatives. Veuillez réessayer plus tard.");
+                setResetError(t('auth.motDePasseOublie.tropDeTentatives'));
             } else {
-                setResetError("Code invalide ou expiré.");
+                setResetError(t('auth.motDePasseOublie.codeInvalide'));
             }
         } finally {
             setIsLoading(false);
@@ -124,10 +126,10 @@ export default function ForgotPassword() {
 
     const resendDisabled = isResending || resendCooldown > 0;
     const resendLabel = isResending
-        ? "Envoi..."
+        ? t('auth.motDePasseOublie.envoi')
         : resendCooldown > 0
-            ? `Renvoyer le code (${resendCooldown}s)`
-            : "Renvoyer le code";
+            ? t('auth.motDePasseOublie.renvoyerCodeDelai', { secondes: resendCooldown })
+            : t('auth.motDePasseOublie.renvoyerCode');
 
     return (
         <SwipeBackScreen background={colors.bgMain}>
@@ -144,18 +146,17 @@ export default function ForgotPassword() {
 
             <View style={styles.formContainer}>
                 <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>
-                    Mot de passe oublié
+                    {t('auth.motDePasseOublie.h2')}
                 </Text>
 
                 {step === 0 ? (
                     <>
                         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                            Saisissez votre adresse mail : nous vous enverrons un code
-                            pour réinitialiser votre mot de passe.
+                            {t('auth.motDePasseOublie.intro')}
                         </Text>
 
                         <View style={styles.inputGroup}>
-                            <Text style={[styles.label, { color: colors.textSecondary }]}>Adresse mail</Text>
+                            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.champs.email')}</Text>
                             <EmailInput
                                 email={email}
                                 setEmail={setEmail}
@@ -170,19 +171,19 @@ export default function ForgotPassword() {
                             onPress={handleRequest}
                             isLoading={isLoading}
                             disabled={!email || emailError}
-                            title="Envoyer le code"
+                            title={t('auth.motDePasseOublie.envoyerCode')}
                             iconName="mail-outline"
                         />
                     </>
                 ) : (
                     <>
                         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                            Nous avons envoyé un code à {CODE_LENGTH} chiffres à{"\n"}
+                            {t('auth.motDePasseOublie.codeEnvoye', { longueur: CODE_LENGTH })}{"\n"}
                             <Text style={{ fontWeight: "bold", color: colors.textMain }}>{email}</Text>.
                         </Text>
 
                         <View style={styles.inputGroup}>
-                            <Text style={[styles.label, { color: colors.textSecondary }]}>Code de réinitialisation</Text>
+                            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.motDePasseOublie.labelCode')}</Text>
                             <CodeInput
                                 value={code}
                                 onChange={(v) => { setCode(v); setResetError(null); }}
@@ -191,7 +192,7 @@ export default function ForgotPassword() {
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={[styles.label, { color: colors.textSecondary }]}>Nouveau mot de passe</Text>
+                            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.motDePasseOublie.nouveauMotDePasse')}</Text>
                             <PasswordInput
                                 password={password}
                                 setPassword={setPassword}
@@ -200,12 +201,12 @@ export default function ForgotPassword() {
                                 autoComplete="new-password"
                             />
                             <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                Au moins {MIN_PASSWORD_LENGTH} caractères.
+                                {t('auth.champs.regleMotDePasse', { min: MIN_PASSWORD_LENGTH })}
                             </Text>
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={[styles.label, { color: colors.textSecondary }]}>Confirmer le mot de passe</Text>
+                            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.motDePasseOublie.confirmerMotDePasse')}</Text>
                             <PasswordInput
                                 password={password2}
                                 setPassword={setPassword2}
@@ -223,7 +224,7 @@ export default function ForgotPassword() {
                             onPress={handleReset}
                             isLoading={isLoading}
                             disabled={code.length < CODE_LENGTH || password.length < MIN_PASSWORD_LENGTH || password !== password2}
-                            title="Réinitialiser"
+                            title={t('auth.motDePasseOublie.reinitialiser')}
                             iconName="checkmark-circle-outline"
                         />
 

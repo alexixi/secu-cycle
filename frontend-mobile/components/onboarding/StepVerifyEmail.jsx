@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "../ui/Button";
 import CodeInput, { CODE_LENGTH } from "../ui/CodeInput";
@@ -18,24 +19,25 @@ export default function StepVerifyEmail({
     cooldown = 0,
 }) {
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
 
     const resendDisabled = isResending || cooldown > 0;
     const resendLabel = isResending
-        ? "Envoi..."
+        ? t('auth.onboarding.verifEmail.envoi')
         : cooldown > 0
-            ? `Renvoyer le code (${cooldown}s)`
-            : "Renvoyer le code";
+            ? t('auth.onboarding.verifEmail.renvoyerCodeDelai', { secondes: cooldown })
+            : t('auth.onboarding.verifEmail.renvoyerCode');
 
     return (
         <View style={styles.formContainer}>
-            <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Vérifiez votre e-mail</Text>
+            <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>{t('auth.onboarding.verifEmail.h2')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Nous avons envoyé un code à {CODE_LENGTH} chiffres à{"\n"}
+                {t('auth.onboarding.verifEmail.codeEnvoye', { longueur: CODE_LENGTH })}{"\n"}
                 <Text style={{ fontWeight: "bold", color: colors.textMain }}>{email}</Text>.
             </Text>
 
             <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Code de vérification</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.onboarding.verifEmail.labelCode')}</Text>
                 <CodeInput value={code} onChange={setCode} hasError={!!error} />
                 {error && <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>}
             </View>
@@ -44,7 +46,7 @@ export default function StepVerifyEmail({
                 onPress={onSubmit}
                 isLoading={isLoading}
                 disabled={code.length < CODE_LENGTH}
-                title="Vérifier"
+                title={t('auth.onboarding.verifEmail.verifier')}
                 iconName="checkmark-circle-outline"
             />
 
@@ -55,7 +57,7 @@ export default function StepVerifyEmail({
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={onEditEmail}>
-                    <Text style={[typography.link, { color: colors.textSecondary }]}>Modifier l&apos;e-mail</Text>
+                    <Text style={[typography.link, { color: colors.textSecondary }]}>{t('auth.onboarding.verifEmail.modifierEmail')}</Text>
                 </TouchableOpacity>
             </View>
 

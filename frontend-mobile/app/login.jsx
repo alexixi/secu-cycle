@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import {
     StyleSheet,
@@ -27,6 +28,7 @@ export default function Login() {
     const router = useRouter();
     const { loginAuth, updateUser, updateBikes, updateHistoric } = useAuth();
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
 
     const handleSubmit = async () => {
         if (!email || !password || emailError) return;
@@ -74,15 +76,15 @@ export default function Login() {
             </TouchableOpacity>
 
             <View style={styles.formContainer}>
-                <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Connexion</Text>
+                <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>{t('auth.connexion.h2')}</Text>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Adresse mail</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.champs.email')}</Text>
                     <EmailInput email={email} setEmail={setEmail} emailError={emailError} setEmailError={setEmailError} hasError={hasError} setHasError={setHasError} />
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Mot de passe</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.champs.motDePasse')}</Text>
                     <PasswordInput password={password} setPassword={setPassword} hasError={hasError} setHasError={setHasError} />
                 </View>
 
@@ -90,12 +92,12 @@ export default function Login() {
                     style={styles.forgotLink}
                     onPress={() => router.push({ pathname: "/forgotpassword", params: { email } })}
                 >
-                    <Text style={[typography.link, { color: colors.primary }]}>Mot de passe oublié ?</Text>
+                    <Text style={[typography.link, { color: colors.primary }]}>{t('auth.connexion.motDePasseOublie')}</Text>
                 </TouchableOpacity>
 
                 {hasError && (
                     <Text style={[styles.errorText, { color: colors.error, textAlign: 'center', marginBottom: 15 }]}>
-                        Adresse mail ou mot de passe incorrect.{"\n"}Veuillez réessayer.
+                        {t('auth.connexion.identifiantsIncorrects')}{"\n"}{t('auth.connexion.reessayer')}
                     </Text>
                 )}
 
@@ -103,19 +105,19 @@ export default function Login() {
                     onPress={handleSubmit}
                     isLoading={isLoading}
                     disabled={!email || emailError || !password || hasError}
-                    title="Se connecter"
+                    title={t('auth.connexion.seConnecter')}
                     iconName={"log-in-outline"}
                 />
 
                 <View style={styles.separatorContainer}>
                     <View style={[styles.separatorLine, { backgroundColor: colors.borderLight }]} />
-                    <Text style={[styles.separatorText, { color: colors.textSecondary }]}>ou</Text>
+                    <Text style={[styles.separatorText, { color: colors.textSecondary }]}>{t('auth.connexion.ou')}</Text>
                     <View style={[styles.separatorLine, { backgroundColor: colors.borderLight }]} />
                 </View>
 
                 <OutlineButton
                     onPress={() => router.push("/signin")}
-                    title="Créer un compte"
+                    title={t('auth.connexion.creerCompte')}
                     iconName="person-add-outline"
                 />
             </View>
