@@ -2,6 +2,7 @@ import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { AppState, DeviceEventEmitter } from 'react-native';
 
 import i18n from '../i18n';
+import { syncProfileLanguage } from '../services/profileLanguage';
 import {
     LANGUAGE_MODES,
     currentLanguage,
@@ -44,6 +45,10 @@ export function LocaleProvider({ children }) {
                 if (!vivant) return;
                 clearTimeout(secours);
                 setReady(true);
+                // Rattrape les comptes créés avant que la colonne n'existe, et
+                // ceux dont la langue a changé pendant que l'app était fermée.
+                // Sans effet si le profil est déjà à jour : aucun appel réseau.
+                syncProfileLanguage(currentLanguage());
             });
 
         return () => { vivant = false; clearTimeout(secours); };
@@ -60,6 +65,11 @@ export function LocaleProvider({ children }) {
         setLanguage(langue);
         await i18n.changeLanguage(langue);
         DeviceEventEmitter.emit(LANGUAGE_CHANGED, langue);
+        // Les e-mails ne passent pas par i18next : ils sont rendus par l'API,
+        // qui lit la langue sur le profil. Sans cette ligne, quelqu'un qui
+        // bascule en anglais continuerait de recevoir ses récapitulatifs en
+        // français.
+        syncProfileLanguage(langue);
     }, []);
 
     // « Auto » doit suivre la langue du téléphone, y compris changée pendant que
@@ -74,6 +84,7 @@ export function LocaleProvider({ children }) {
             setLanguage(langue);
             i18n.changeLanguage(langue);
             DeviceEventEmitter.emit(LANGUAGE_CHANGED, langue);
+            syncProfileLanguage(langue);
         });
         return () => sub.remove();
     }, [languageMode]);
