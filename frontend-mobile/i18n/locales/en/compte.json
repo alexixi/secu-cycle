@@ -30,7 +30,22 @@
         "tropDeDemandes": "Too many requests. Please try again later.",
         "envoiImpossible": "The code could not be sent right now.",
         "titre": "Change my email address",
-        "motDePasseAide": "Asked to confirm it is really you."
+        "motDePasseAide": "Asked to confirm it is really you.",
+        "erreursDemande": {
+            "motDePasseIncorrect": "Incorrect password.",
+            "emailPris": "This email address is already used by another account.",
+            "tropDeDemandes": "Too many change requests. Please try again later.",
+            "emailInvalide": "Invalid email address.",
+            "horsLigne": "Connection failed. Please check your internet connection.",
+            "generique": "Something went wrong while sending the code."
+        },
+        "erreursConfirmation": {
+            "codeInvalide": "Invalid or expired code.",
+            "emailPris": "This address has just been taken by another account. Please try a different one.",
+            "tropDeTentatives": "Too many attempts. Please try again later.",
+            "horsLigne": "Connection failed. Please check your internet connection.",
+            "generique": "Something went wrong while confirming the change."
+        }
     },
     "historique": {
         "titreEcran": "My history",
