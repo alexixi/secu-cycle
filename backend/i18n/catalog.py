@@ -78,6 +78,33 @@ def t(key: str, locale: str = DEFAULT_LOCALE, /, **params) -> str:
         return template
 
 
+def ordinal(count: int, locale: str = DEFAULT_LOCALE, /) -> str:
+    """Rang écrit : « 1ère », « 3ème » / “1st”, “3rd”.
+
+    Un ordinal n'est pas une chaîne mais une règle morphologique, et les deux
+    langues ne la partagent pas : le français ne distingue que le premier rang,
+    l'anglais en distingue quatre — avec l'exception 11/12/13, qui reprend la
+    forme générale (“11th”, pas “11st”). C'est la seule raison pour laquelle
+    cette fonction existe plutôt qu'une clé de catalogue interpolée.
+
+    Les catégories sont celles de CLDR (« one », « two », « few », « other »).
+    Le français les définit toutes malgré tout : la parité des catalogues est
+    contrôlée clé à clé, et trois d'entre elles y valent la même chose.
+    """
+    return t(f"ordinal.{_ordinal_category(count, locale)}", locale, count=count)
+
+
+def _ordinal_category(count: int, locale: str) -> str:
+    """Catégorie ordinale CLDR d'un entier, dans la locale donnée."""
+    n = abs(count)
+    if locale != "en":
+        return "one" if n == 1 else "other"
+    # 11, 12 et 13 sont réguliers en anglais, contrairement à 1, 2 et 3.
+    if n % 100 in (11, 12, 13):
+        return "other"
+    return {1: "one", 2: "two", 3: "few"}.get(n % 10, "other")
+
+
 def plural(count: int, one_key: str, other_key: str, locale: str = DEFAULT_LOCALE, /, **params) -> str:
     """Choisit la forme singulier/pluriel selon la règle CLDR de la locale.
 

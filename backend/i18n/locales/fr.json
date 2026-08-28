@@ -247,5 +247,70 @@
         "email_change_code_sent": "Un code de confirmation a été envoyé à la nouvelle adresse.",
         "contact_sent": "Message envoyé.",
         "recap_test_sent": "Récapitulatif de test envoyé à {email}."
+    },
+    "ordinal": {
+        "one": "{count}ère",
+        "two": "{count}ème",
+        "few": "{count}ème",
+        "other": "{count}ème"
+    },
+    "guidance": {
+        "distance": {
+            "now": "maintenant",
+            "meters": "dans {distance} m",
+            "kilometers": "dans {distance} km"
+        },
+        "turn": {
+            "depart": {
+                "plain": "Partez",
+                "street": "Partez sur {street}"
+            },
+            "continue": {
+                "plain": "Continuez tout droit",
+                "street": "Continuez tout droit sur {street}"
+            },
+            "slight_right": {
+                "plain": "Gardez la droite",
+                "street": "Gardez la droite sur {street}"
+            },
+            "turn_right": {
+                "plain": "Tournez à droite",
+                "street": "Tournez à droite sur {street}"
+            },
+            "sharp_right": {
+                "plain": "Virage serré à droite",
+                "street": "Virage serré à droite sur {street}"
+            },
+            "u_turn": {
+                "plain": "Faites demi-tour",
+                "street": "Faites demi-tour sur {street}"
+            },
+            "sharp_left": {
+                "plain": "Virage serré à gauche",
+                "street": "Virage serré à gauche sur {street}"
+            },
+            "turn_left": {
+                "plain": "Tournez à gauche",
+                "street": "Tournez à gauche sur {street}"
+            },
+            "slight_left": {
+                "plain": "Gardez la gauche",
+                "street": "Gardez la gauche sur {street}"
+            },
+            "fallback": {
+                "plain": "Continuez",
+                "street": "Continuez sur {street}"
+            }
+        },
+        "roundabout": {
+            "exit": "Au rond-point, prenez la {ordinal} sortie",
+            "exit_street": "Au rond-point, prenez la {ordinal} sortie sur {street}",
+            "generic": "Au rond-point, prenez la sortie",
+            "generic_street": "Au rond-point, prenez la sortie sur {street}"
+        },
+        "arrival": {
+            "near": "L'arrivée est proche",
+            "reached": "Vous êtes arrivé à destination"
+        }
     }
 }

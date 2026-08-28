@@ -35,9 +35,10 @@ def update_navigation(req: NavigationUpdateRequest, request: Request,
         result["instruction"] = build_instruction(
             result["current_maneuver"],
             result["distance_to_next_m"],
+            locale,
         )
         result["next_instruction"] = (
-            build_instruction(result["next_maneuver"], 0)
+            build_instruction(result["next_maneuver"], 0, locale)
             if result["next_maneuver"]
             else None
         )

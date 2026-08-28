@@ -15,11 +15,11 @@ réponses /pois/ et /streetlight/ neutres en langue — donc immunisées au piè
 cache partagé, puisqu'elles sont servies en ``public, max-age=3600``.
 """
 
-from i18n.catalog import plural, t
+from i18n.catalog import ordinal, plural, t
 from i18n.http import LocaleMiddleware, etag_for
 from i18n.negotiation import DEFAULT_LOCALE, SUPPORTED, get_locale, negotiate
 
 __all__ = [
     "DEFAULT_LOCALE", "SUPPORTED", "get_locale", "negotiate",
-    "t", "plural", "etag_for", "LocaleMiddleware",
+    "t", "plural", "ordinal", "etag_for", "LocaleMiddleware",
 ]
