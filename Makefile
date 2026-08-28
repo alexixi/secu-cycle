@@ -111,6 +111,9 @@ test:
 	cd backend && PYTHONPATH=. python3 -m pytest tests/
 
 check-i18n:
+	@echo "-> Catalogues de l'API (parité, paramètres, clés orphelines)"
 	@cd backend && PYTHONPATH=. python3 -m i18n.check
+	@echo "-> Front web (parité, registres, littéraux français en dur, formateurs figés)"
+	@cd frontend-web && node scripts/check-i18n.mjs
 
 .PHONY: all api api-background api-build api-stop web web-docker web-install mobile mobile-install appli install logs shell stop down clean prod deploy deploy-static regen-graph sync-pois sync-accidents sync-lighting screen mail test check-i18n
