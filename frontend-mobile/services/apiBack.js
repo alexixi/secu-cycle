@@ -118,8 +118,10 @@ export async function apiFetch(endpoint, options = {}, token = null, _retried = 
             }
             console.warn("Token expiré ! Déconnexion forcée.");
             DeviceEventEmitter.emit("force-logout");
+            // i18n-exempt: message d'Error interne, lu par le code et jamais affiché
             throw new Error("Session expirée");
         }
+        // i18n-exempt: repli de message d'Error interne, jamais affiché
         const apiError = new Error(errorData || "Erreur lors de la requête API");
         apiError.status = response.status;
         apiError.statusText = response.statusText;

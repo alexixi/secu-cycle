@@ -24,17 +24,23 @@ class NavGuidanceRecord : Record {
   // (services/navigationNotification.js). Les valeurs par défaut sont les textes
   // français d'origine : un binaire à jour reste compatible avec un bundle qui ne
   // les enverrait pas encore.
+  //
+  // i18n-exempt-start: replis de compatibilité — un bundle à jour envoie toujours
+  // ces libellés traduits, ces valeurs ne s'affichent que face à un JS antérieur.
   @Field var arrivedTitle: String = "Vous êtes arrivé !"
   @Field var rerouteTitle: String = "Recalcul de l'itinéraire…"
   @Field var fallbackTitle: String = "Navigation"
   @Field var nextPrefix: String = "Ensuite :"
+  // i18n-exempt-end
 }
 
 /** Libellés fixés à l'ouverture du canal, avant toute mise à jour de guidage. */
 class NavLabelsRecord : Record {
+  // i18n-exempt-start: replis de compatibilité, cf. NavGuidanceRecord
   @Field var channelName: String = "Navigation"
   @Field var startingInstruction: String = "Navigation en cours"
   @Field var startingDistanceLabel: String = "Calcul du guidage…"
+  // i18n-exempt-end
 }
 
 class NavNotificationModule : Module() {
