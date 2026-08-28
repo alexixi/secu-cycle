@@ -1,2 +1,22 @@
 {
+    "localisation": {
+        "titre": "Location during guidance",
+        "points": {
+            "collecte": {
+                "titre": "What we collect",
+                "texte": "Your precise GPS position, recorded for the whole duration of the guidance."
+            },
+            "arrierePlan": {
+                "titre": "Including in the background",
+                "texte": "Recording continues when the screen is off or the app is no longer in the foreground, so guidance can continue with the phone in your pocket."
+            },
+            "usage": {
+                "titre": "What it is used for",
+                "texte": "Only to guide you: to place your position on the route and announce the next instruction. It is neither kept, nor used for advertising, nor passed on to third parties for that purpose."
+            }
+        },
+        "retrait": "You can withdraw this permission at any time in your phone settings. Details in our <lien>privacy policy</lien>.",
+        "autoriser": "Allow",
+        "continuerSans": "Continue without"
+    }
 }

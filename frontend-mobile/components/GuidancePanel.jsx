@@ -84,7 +84,7 @@ export default function GuidancePanel({ guidanceState, onStop }) {
                 <View style={styles.textContainer}>
                     <Text style={styles.distanceToNext}>
                         {status === 'off_route'
-                            ? 'Recalcul...'
+                            ? t('itineraire.guidage.recalcul')
                             : formatDistance(distanceToNext)
                         }
                     </Text>

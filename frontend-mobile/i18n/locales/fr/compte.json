@@ -109,7 +109,8 @@
             "h2": "Mes badges",
             "debloqueTitre": "Badge débloqué !",
             "suivant": "Suivant ({{restants}})",
-            "termine": "Super !"
+            "termine": "Super !",
+            "debloque": "Débloqué"
         },
         "nonConnecte": "Connectez-vous pour accéder à vos informations personnelles, vos itinéraires favoris et vos vélos.",
         "domicile": "Domicile :",

@@ -12,10 +12,13 @@ import { VictoryArea, VictoryChart, VictoryAxis, VictoryTooltip, VictoryVoronoiC
 import { weatherSummary } from '../services/weather';
 import { useTranslation } from 'react-i18next';
 
-const ROUTE_LABELS = {
-    fast: { label: "Rapide", icon: "lightning-bolt", color: "#F59E0B" },
-    safe: { label: "Sécurisé", icon: "shield-check", color: "#10B981" },
-    compromise: { label: "Compromis", icon: "scale-balance", color: "#6366F1" },
+// Icône et couleur seulement : le nom de la variante vient du champ `name` que
+// l'API rend déjà traduit, et le catalogue ne sert que de repli — mêmes
+// identifiants, mêmes mots que backend/i18n/locales/*.json (route.variant.*).
+const ROUTE_STYLES = {
+    fast: { icon: "lightning-bolt", color: "#F59E0B" },
+    safe: { icon: "shield-check", color: "#10B981" },
+    compromise: { icon: "scale-balance", color: "#6366F1" },
 };
 
 function DetailModal({ itineraire, visible, onClose, colors, typography, weather }) {
@@ -38,7 +41,12 @@ function DetailModal({ itineraire, visible, onClose, colors, typography, weather
 
     if (!itineraire) return null;
 
-    const meta = ROUTE_LABELS[itineraire.id] ?? { label: itineraire.name, icon: "map-marker-path", color: colors.primary };
+    const style = ROUTE_STYLES[itineraire.id];
+    const meta = {
+        label: itineraire.name || (style ? t(`itineraire.variant.${itineraire.id}`) : itineraire.name),
+        icon: style?.icon ?? "map-marker-path",
+        color: style?.color ?? colors.primary,
+    };
 
     const minEle = elevationData.length > 0 ? Math.min(...elevationData.map(d => d.y)) : 0;
     const maxEle = elevationData.length > 0 ? Math.max(...elevationData.map(d => d.y)) : 0;
@@ -337,7 +345,12 @@ export default function ItineraryPanel({ itineraires, weather, selectedItinerair
                 >
                     {itineraires.map((it) => {
                         const isSelected = selectedItineraire === it.id;
-                        const meta = ROUTE_LABELS[it.id] ?? { label: it.name, icon: "map-marker-path", color: colors.primary };
+                        const style = ROUTE_STYLES[it.id];
+                        const meta = {
+                            label: it.name || (style ? t(`itineraire.variant.${it.id}`) : it.name),
+                            icon: style?.icon ?? "map-marker-path",
+                            color: style?.color ?? colors.primary,
+                        };
 
                         return (
                             <TouchableOpacity

@@ -2,6 +2,7 @@ import { StyleSheet, Text, TextInput } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { useState } from "react";
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 
 export default function EmailInput({
     email,
@@ -12,6 +13,7 @@ export default function EmailInput({
     setHasError,
     textContentType = "username",
 }) {
+    const { t } = useTranslation();
     const { colors } = useTheme();
     const [showEmailError, setShowEmailError] = useState(false);
 
@@ -65,7 +67,7 @@ export default function EmailInput({
             {
                 emailError && showEmailError && (
                     <Text style={[styles.errorText, { color: colors.error }]}>
-                        Adresse mail invalide.
+                        {t('auth.erreurs.emailInvalide')}
                     </Text>
                 )
             }

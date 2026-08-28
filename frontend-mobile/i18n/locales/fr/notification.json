@@ -7,5 +7,12 @@
         "arrive": "Vous êtes arrivé !",
         "recalcul": "Recalcul de l'itinéraire…",
         "ensuite": "Ensuite : {{instruction}}"
+    },
+    "localisation": {
+        "permissionRequise": "Permission requise",
+        "gpsNecessaire": "Le GPS est nécessaire pour la navigation.",
+        "modeRestreint": "Mode restreint",
+        "modeRestreintTexte": "La navigation s'arrêtera si vous verrouillez votre téléphone. Autorisez « Toujours » dans les paramètres pour corriger ça.",
+        "corps": "Guidage en cours"
     }
 }

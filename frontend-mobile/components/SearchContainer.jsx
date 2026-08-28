@@ -47,13 +47,13 @@ export default function SearchContainer({
     homeAddress && {
       id: 'home',
       icon: '🏠',
-      label: 'Domicile',
+      label: t('auth.adresses.domicile'),
       address: homeAddress,
     },
     workAddress && {
       id: 'work',
       icon: '💼',
-      label: 'Travail',
+      label: t('auth.adresses.travail'),
       address: workAddress,
     },
   ].filter(Boolean)
@@ -161,7 +161,7 @@ export default function SearchContainer({
             </View>
             <View style={{ zIndex: 1, position: 'relative' }}>
               <AdressInput
-                placeholder="Destination"
+                placeholder={t('itineraire.recherche.arrivee')}
                 defaultValue={end?.name ?? ''}
                 onSelect={(val) => {
                   Haptics.selectionAsync().catch(() => { });
