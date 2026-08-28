@@ -195,7 +195,13 @@
         },
         "route": {
             "not_found": "Route not found",
-            "computation_failed": "The route could not be computed."
+            "computation_failed": "The route could not be computed.",
+            "snap_failed": "Neither the start nor the destination could be attached to the cycle network.",
+            "out_of_zone_start": "The start is outside the area covered by Sécu-Cycle.",
+            "out_of_zone_end": "The destination is outside the area covered by Sécu-Cycle.",
+            "no_route": "No route found between the start and the destination.",
+            "unexpected": "The route computation failed.",
+            "failed": "Computation failed."
         },
         "tag": {
             "name_taken": "A label with this name already exists.",
@@ -247,5 +253,77 @@
         "email_change_code_sent": "A confirmation code has been sent to the new address.",
         "contact_sent": "Message sent.",
         "recap_test_sent": "Test summary sent to {email}."
+    },
+    "ordinal": {
+        "one": "{count}st",
+        "two": "{count}nd",
+        "few": "{count}rd",
+        "other": "{count}th"
+    },
+    "guidance": {
+        "distance": {
+            "now": "now",
+            "meters": "in {distance} m",
+            "kilometers": "in {distance} km"
+        },
+        "turn": {
+            "depart": {
+                "plain": "Set off",
+                "street": "Set off on {street}"
+            },
+            "continue": {
+                "plain": "Continue straight on",
+                "street": "Continue straight on {street}"
+            },
+            "slight_right": {
+                "plain": "Keep right",
+                "street": "Keep right onto {street}"
+            },
+            "turn_right": {
+                "plain": "Turn right",
+                "street": "Turn right onto {street}"
+            },
+            "sharp_right": {
+                "plain": "Sharp right",
+                "street": "Sharp right onto {street}"
+            },
+            "u_turn": {
+                "plain": "Make a U-turn",
+                "street": "Make a U-turn onto {street}"
+            },
+            "sharp_left": {
+                "plain": "Sharp left",
+                "street": "Sharp left onto {street}"
+            },
+            "turn_left": {
+                "plain": "Turn left",
+                "street": "Turn left onto {street}"
+            },
+            "slight_left": {
+                "plain": "Keep left",
+                "street": "Keep left onto {street}"
+            },
+            "fallback": {
+                "plain": "Continue",
+                "street": "Continue on {street}"
+            }
+        },
+        "roundabout": {
+            "exit": "At the roundabout, take the {ordinal} exit",
+            "exit_street": "At the roundabout, take the {ordinal} exit onto {street}",
+            "generic": "At the roundabout, take the exit",
+            "generic_street": "At the roundabout, take the exit onto {street}"
+        },
+        "arrival": {
+            "near": "You are nearly there",
+            "reached": "You have arrived at your destination"
+        }
+    },
+    "route": {
+        "variant": {
+            "fast": "Fastest",
+            "safe": "Safest",
+            "compromise": "Balanced"
+        }
     }
 }

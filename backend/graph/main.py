@@ -9,6 +9,7 @@ import osmnx as ox
 from graph_manager import create_graph, load_graph_with_ign, load_graph_profile
 from traffic import service as traffic_service
 from routing import get_optimal_routes, calculate_route_distance, _parse_maxspeed
+from i18n import t
 from statistique import calculer_statistiques_osm, analyser_qualite_trajet, calculate_route_elevation
 from elevation import verifier_altitudes
 
@@ -42,8 +43,10 @@ def main():
     end = time.perf_counter()
     print(f"Calculs terminés en {end - start:.2f} secondes !\n")
 
-    if isinstance(resultats, dict) and "error" in resultats:
-        print(f"Erreur : {resultats['error']}")
+    # `get_optimal_routes` n'émet plus de phrase mais une clé de catalogue : ce
+    # script tourne hors requête, sans locale, il rend donc en français.
+    if isinstance(resultats, dict) and "error_key" in resultats:
+        print(f"Erreur : {t(resultats['error_key'])}")
         return
 
     # Ajout de list() pour convertir les tableaux NumPy en listes natives Python

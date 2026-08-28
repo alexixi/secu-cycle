@@ -212,7 +212,7 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
     if not result.get("success"):
         raise HTTPException(status_code=404, detail={
             "code": result.get("error_code"),
-            "message": result.get("error", "Calcul échoué."),
+            "message": t(result.get("error_key", "error.route.failed"), locale),
         })
 
     # Enrichissement météo, APRÈS `get_optimal_routes` donc hors du cache, et
@@ -224,7 +224,13 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
     # profonde — c'est déjà ce sur quoi repose l'ajout de `route_id` plus bas.
     _apply_weather(G, result, start, bike_type, is_electric, cyclist_level, locale)
 
+    # Le nom de variante se rend ICI et pas dans `get_optimal_routes` : le
+    # résultat de celui-ci part dans `route_cache`, un LRU partagé par tous les
+    # visiteurs du worker et dont la clé ignore la langue. Un nom rendu en amont
+    # serait resservi tel quel à un visiteur de l'autre langue. Seul l'`id`
+    # voyage, comme pour `route_id` posé plus bas.
     for route in result.get("routes", []):
+            route["name"] = t(f"route.variant.{route['id']}", locale)
             maneuvers = build_maneuvers(route["nodes"], G)
 
             # Nettoyage : si OSMnx a renvoyé une liste pour le nom de la rue, on la fusionne en string
