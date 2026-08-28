@@ -1690,13 +1690,13 @@ export default function MapComponent({
                                 >
                                     <View style={styles.layerNameRow}>
                                         <Text style={[typography.body, { fontSize: 16, color: colors.textMain }]}>
-                                            Qualité de l'air
+                                            {t('carte.ui.airModal.h2')}
                                         </Text>
                                         <Ionicons name="information-circle-outline" size={15} color={colors.textSecondary} />
                                     </View>
                                     {activeAir?.summary?.aqi != null && (
                                         <Text style={[typography.body, { marginLeft: 15, fontSize: 12, color: colors.textSecondary }]}>
-                                            {`Indice ${activeAir.summary.aqi} · ${activeAir.summary.label}`}
+                                            {t('carte.ui.station.indiceAir', { indice: activeAir.summary.aqi, label: activeAir.summary.label })}
                                         </Text>
                                     )}
                                 </TouchableOpacity>

@@ -6,6 +6,7 @@ import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
 import * as Haptics from 'expo-haptics';
 import { searchAddressAutocomplete } from '../services/geocodingService';
+import { Trans, useTranslation } from 'react-i18next';
 
 export default function SearchContainer({
   onStartSelect, onEndSelect, start, end, onCalculate,
@@ -13,6 +14,7 @@ export default function SearchContainer({
   bikes = [], selectedBike, setSelectedBike,
   maxDuration, setMaxDuration
 }) {
+  const { t } = useTranslation();
   const { colors, typography } = useTheme();
   const [focusedField, setFocusedField] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -35,11 +37,11 @@ export default function SearchContainer({
     currentPosition && {
       id: 'current',
       icon: '📍',
-      label: 'Ma position',
+      label: t('itineraire.recherche.maPosition'),
       point: {
         lat: currentPosition.lat,
         lon: currentPosition.lon,
-        name: 'Ma position actuelle',
+        name: t('itineraire.recherche.maPositionActuelle'),
       }
     },
     homeAddress && {
@@ -146,7 +148,7 @@ export default function SearchContainer({
           <View style={styles.inputsColumn}>
             <View style={{ zIndex: 2, position: 'relative' }}>
               <AdressInput
-                placeholder="Départ"
+                placeholder={t('itineraire.recherche.depart')}
                 defaultValue={start?.name ?? ''}
                 onSelect={onStartSelect}
                 icon={<MaterialCommunityIcons name="bike" size={20} color={colors.primary} />}
@@ -209,13 +211,19 @@ export default function SearchContainer({
           <View style={styles.expandedSection}>
             <View style={[styles.expandedDivider, { backgroundColor: colors.borderLight }]} />
 
-            {displayedBikes.length > 1 && <Text style={[styles.settingLabel, { color: colors.textSecondary }]}>Choix du vélo</Text>}
+            {displayedBikes.length > 1 && <Text style={[styles.settingLabel, { color: colors.textSecondary }]}>{t('itineraire.recherche.choixVelo')}</Text>}
 
             {displayedBikes.length === 1 ? (
               <View style={styles.singleBikeInfo}>
                 <MaterialCommunityIcons name={displayedBikes[0].icon} size={22} color={colors.textMain} />
                 <Text style={[typography.body, { color: colors.textMain, marginLeft: 8 }]}>
-                  <Text style={{ fontWeight: 'bold' }}>{displayedBikes[0].name}</Text> sélectionné
+                  {/* Le nom du vélo reste en gras : la balise vit dans le catalogue,
+                      pour que l'ordre des mots puisse changer d'une langue à l'autre. */}
+                  <Trans
+                      i18nKey="itineraire.recherche.veloSelectionne"
+                      values={{ velo: displayedBikes[0].name }}
+                      components={{ b: <Text style={{ fontWeight: 'bold' }} /> }}
+                  />
                 </Text>
                 {displayedBikes[0].is_electric && <MaterialCommunityIcons name="lightning-bolt" size={16} color={colors.primary} style={{ marginLeft: 4 }} />}
               </View>
@@ -249,10 +257,10 @@ export default function SearchContainer({
               </ScrollView>
             )}
 
-            <Text style={[styles.settingLabel, { color: colors.textSecondary, marginTop: 15 }]}>{"Heure d'arrivée max. (Optionnel)"}</Text>
+            <Text style={[styles.settingLabel, { color: colors.textSecondary, marginTop: 15 }]}>{t('itineraire.recherche.heureArriveeMax')}</Text>
             <TextInput
               style={[styles.timeInput, { borderColor: colors.borderStrong, color: colors.textMain, backgroundColor: withAlpha(colors.bgSurface, 0.95) }]}
-              placeholder="ex: 18:30"
+              placeholder={t('itineraire.recherche.heurePlaceholder')}
               placeholderTextColor={colors.textSecondary}
               value={maxDuration}
               onChangeText={setMaxDuration}
@@ -283,7 +291,7 @@ export default function SearchContainer({
             }}
           >
             <MaterialCommunityIcons name="directions" size={18} color="white" style={{ marginRight: 6 }} />
-            <Text style={styles.calcButtonText}>Calculer</Text>
+            <Text style={styles.calcButtonText}>{t('itineraire.recherche.calculer')}</Text>
           </TouchableOpacity>
         )}
       </View>

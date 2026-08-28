@@ -375,7 +375,8 @@
             "reseau": "Network: {{nom}}",
             "releve": "Reading: {{heure}}",
             "gravite": "Severity: {{niveau}}",
-            "aqi": "AQI {{indice}} · {{label}}"
+            "aqi": "AQI {{indice}} · {{label}}",
+            "indiceAir": "Index {{indice}} · {{label}}"
         }
     }
 }
