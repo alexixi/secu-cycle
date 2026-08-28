@@ -1,8 +1,59 @@
 {
+    "apparence": {
+        "titre": "Appearance",
+        "indice": "“Auto” follows your phone’s theme.",
+        "clair": "Light",
+        "auto": "Auto",
+        "sombre": "Dark",
+        "a11y": "{{theme}} theme"
+    },
+    "compte": {
+        "titre": "Account",
+        "modifierInfos": "Edit my information",
+        "modifierEmail": "Change my email address",
+        "changerMotDePasse": "Change password",
+        "auteursBloques": "Blocked authors"
+    },
     "langue": {
         "titre": "Language",
         "auto": "Auto",
         "indice": "“Auto” follows your phone’s language.",
         "a11y": "{{langue}} language"
+    },
+    "legal": {
+        "titre": "Legal information",
+        "confidentialite": "Privacy policy",
+        "conditions": "Terms of use",
+        "mentions": "Legal notice"
+    },
+    "localisation": {
+        "titre": "Location",
+        "arrierePlan": "Background guidance",
+        "arrierePlanAide": "Keeps guiding you when the screen is off or the app is no longer in the foreground. Your location is only recorded during a trip, solely to guide you, and is not kept.",
+        "arrierePlanA11y": "Enable background guidance"
+    },
+    "notifications": {
+        "titre": "Notifications",
+        "guidage": "Guidance notifications",
+        "guidageAide": "Shows the next instruction in the notification bar during a trip.",
+        "guidageA11y": "Enable notifications",
+        "meteo": "Weather alerts",
+        "meteoAide": "Warns you about a shower, a thunderstorm, hail or black ice during a trip.",
+        "meteoA11y": "Enable weather alerts",
+        "recap": "Email summary",
+        "recapAide": "A summary of your trips, kilometres and badges at the start of each month, and at the start of the year.",
+        "recapA11y": "Receive the email summary",
+        "bloqueesTitre": "Notifications blocked",
+        "bloqueesTexte": "Allow notifications for Sécu'Cycle in your phone settings.",
+        "ouvrirReglages": "Open settings",
+        "bloqueesBandeau": "Notifications are blocked by your phone. Tap to open the settings.",
+        "reglageNonEnregistre": "Setting not saved",
+        "reglageErreur": "We could not reach the server. Try again in a moment."
+    },
+    "titre": "Settings",
+    "zoneDanger": {
+        "titre": "Danger zone",
+        "avertissement": "Deleting permanently erases your account and the data attached to it.",
+        "supprimerCompte": "Delete my account"
     }
 }

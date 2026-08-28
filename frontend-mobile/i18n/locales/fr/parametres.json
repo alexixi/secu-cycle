@@ -1,8 +1,59 @@
 {
+    "apparence": {
+        "titre": "Apparence",
+        "indice": "« Auto » suit le thème de votre téléphone.",
+        "clair": "Clair",
+        "auto": "Auto",
+        "sombre": "Sombre",
+        "a11y": "Thème {{theme}}"
+    },
+    "compte": {
+        "titre": "Compte",
+        "modifierInfos": "Modifier mes informations",
+        "modifierEmail": "Modifier mon adresse mail",
+        "changerMotDePasse": "Changer le mot de passe",
+        "auteursBloques": "Auteurs bloqués"
+    },
     "langue": {
         "titre": "Langue",
         "auto": "Auto",
         "indice": "« Auto » suit la langue de votre téléphone.",
         "a11y": "Langue {{langue}}"
+    },
+    "legal": {
+        "titre": "Informations légales",
+        "confidentialite": "Politique de confidentialité",
+        "conditions": "Conditions d'utilisation",
+        "mentions": "Mentions légales"
+    },
+    "localisation": {
+        "titre": "Localisation",
+        "arrierePlan": "Guidage en arrière-plan",
+        "arrierePlanAide": "Poursuit le guidage quand l'écran est éteint ou que l'application n'est plus au premier plan. Votre position n'est relevée que pendant un trajet, uniquement pour vous guider, et n'est pas conservée.",
+        "arrierePlanA11y": "Activer le guidage en arrière-plan"
+    },
+    "notifications": {
+        "titre": "Notifications",
+        "guidage": "Notifications de guidage",
+        "guidageAide": "Affiche la prochaine instruction dans la barre de notifications pendant un trajet.",
+        "guidageA11y": "Activer les notifications",
+        "meteo": "Alertes météo",
+        "meteoAide": "Prévient d'une averse, d'un orage, de la grêle ou du verglas pendant un trajet.",
+        "meteoA11y": "Activer les alertes météo",
+        "recap": "Récapitulatif par e-mail",
+        "recapAide": "Un bilan de vos trajets, kilomètres et badges au début de chaque mois, et en début d'année.",
+        "recapA11y": "Recevoir le récapitulatif par e-mail",
+        "bloqueesTitre": "Notifications bloquées",
+        "bloqueesTexte": "Autorisez les notifications pour Sécu'Cycle dans les réglages de votre téléphone.",
+        "ouvrirReglages": "Ouvrir les réglages",
+        "bloqueesBandeau": "Les notifications sont bloquées par votre téléphone. Appuyez pour ouvrir les réglages.",
+        "reglageNonEnregistre": "Réglage non enregistré",
+        "reglageErreur": "Nous n'avons pas pu joindre le serveur. Réessayez dans un instant."
+    },
+    "titre": "Paramètres",
+    "zoneDanger": {
+        "titre": "Zone de danger",
+        "avertissement": "La suppression efface définitivement votre compte et les données qui y sont rattachées.",
+        "supprimerCompte": "Supprimer mon compte"
     }
 }

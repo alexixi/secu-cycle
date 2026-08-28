@@ -41,9 +41,9 @@ const LANGUAGE_OPTIONS = [
 ];
 
 const THEME_OPTIONS = [
-    { value: 'light', label: 'Clair', icon: 'sunny' },
-    { value: 'auto', label: 'Auto', icon: 'settings-outline' },
-    { value: 'dark', label: 'Sombre', icon: 'moon' },
+    { value: 'light', icon: 'sunny' },
+    { value: 'auto', icon: 'settings-outline' },
+    { value: 'dark', icon: 'moon' },
 ];
 
 function LinkRow({ icon, label, onPress, colors, isLast, tint }) {
@@ -103,11 +103,11 @@ export default function SettingsPage() {
 
             if (status !== 'granted') {
                 Alert.alert(
-                    'Notifications bloquées',
-                    "Autorisez les notifications pour Sécu'Cycle dans les réglages de votre téléphone.",
+                    t('parametres.notifications.bloqueesTitre'),
+                    t('parametres.notifications.bloqueesTexte'),
                     [
-                        { text: 'Annuler', style: 'cancel' },
-                        { text: 'Ouvrir les réglages', onPress: () => Linking.openSettings() },
+                        { text: t('commun.annuler'), style: 'cancel' },
+                        { text: t('parametres.notifications.ouvrirReglages'), onPress: () => Linking.openSettings() },
                     ],
                 );
                 return;
@@ -126,11 +126,11 @@ export default function SettingsPage() {
             setPermission(status);
             if (status !== 'granted') {
                 Alert.alert(
-                    'Notifications bloquées',
-                    "Autorisez les notifications pour Sécu'Cycle dans les réglages de votre téléphone.",
+                    t('parametres.notifications.bloqueesTitre'),
+                    t('parametres.notifications.bloqueesTexte'),
                     [
-                        { text: 'Annuler', style: 'cancel' },
-                        { text: 'Ouvrir les réglages', onPress: () => Linking.openSettings() },
+                        { text: t('commun.annuler'), style: 'cancel' },
+                        { text: t('parametres.notifications.ouvrirReglages'), onPress: () => Linking.openSettings() },
                     ],
                 );
                 return;
@@ -153,8 +153,8 @@ export default function SettingsPage() {
         } catch {
             setRecapEmailsState(precedent);
             Alert.alert(
-                'Réglage non enregistré',
-                "Nous n'avons pas pu joindre le serveur. Réessayez dans un instant.",
+                t('parametres.notifications.reglageNonEnregistre'),
+                t('parametres.notifications.reglageErreur'),
             );
         } finally {
             setRecapPending(false);
@@ -176,36 +176,36 @@ export default function SettingsPage() {
                     style={[styles.container, { backgroundColor: colors.bgMain }]}
                     contentContainerStyle={styles.scrollContainer}
                 >
-                    <ScreenHeader title="Paramètres" onBack={close} />
+                    <ScreenHeader title={t('parametres.titre')} onBack={close} />
 
                     {user && (
                         <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                             <View style={styles.sectionTitleRow}>
                                 <Ionicons name="person-outline" size={24} color={colors.textMain} />
-                                <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Compte</Text>
+                                <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('parametres.compte.titre')}</Text>
                             </View>
 
                             <LinkRow
                                 icon="create-outline"
-                                label="Modifier mes informations"
+                                label={t('parametres.compte.modifierInfos')}
                                 onPress={() => router.push('/editprofil')}
                                 colors={colors}
                             />
                             <LinkRow
                                 icon="mail-outline"
-                                label="Modifier mon adresse mail"
+                                label={t('parametres.compte.modifierEmail')}
                                 onPress={() => router.push('/editemail')}
                                 colors={colors}
                             />
                             <LinkRow
                                 icon="lock-closed-outline"
-                                label="Changer le mot de passe"
+                                label={t('parametres.compte.changerMotDePasse')}
                                 onPress={() => router.push('/editpassword')}
                                 colors={colors}
                             />
                             <LinkRow
                                 icon="person-remove-outline"
-                                label="Auteurs bloqués"
+                                label={t('parametres.compte.auteursBloques')}
                                 onPress={() => router.push('/blockedauthors')}
                                 colors={colors}
                                 isLast
@@ -216,18 +216,22 @@ export default function SettingsPage() {
                     <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                         <View style={styles.sectionTitleRow}>
                             <Ionicons name="color-palette-outline" size={24} color={colors.textMain} />
-                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Apparence</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('parametres.apparence.titre')}</Text>
                         </View>
 
                         <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                            « Auto » suit le thème de votre téléphone.
+                            {t('parametres.apparence.indice')}
                         </Text>
 
                         <SegmentedSelector
                             value={themeMode}
-                            options={THEME_OPTIONS}
+                            options={THEME_OPTIONS.map((option) => ({
+                                ...option,
+                                label: t(`parametres.apparence.${option.value}`),
+                            }))}
                             onChange={setThemeMode}
-                            accessibilityLabelFor={(option) => `Thème ${option.label}`}
+                            accessibilityLabelFor={(option) =>
+                                t('parametres.apparence.a11y', { theme: option.label })}
                         />
                     </View>
 
@@ -258,17 +262,16 @@ export default function SettingsPage() {
                     <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                         <View style={styles.sectionTitleRow}>
                             <Ionicons name="notifications-outline" size={24} color={colors.textMain} />
-                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Notifications</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('parametres.notifications.titre')}</Text>
                         </View>
 
                         <View style={styles.switchRow}>
                             <View style={styles.switchLabel}>
                                 <Text style={[styles.rowTitle, { color: colors.textMain }]}>
-                                    Notifications de guidage
+                                    {t('parametres.notifications.guidage')}
                                 </Text>
                                 <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                    Affiche la prochaine instruction dans la barre de notifications
-                                    pendant un trajet.
+                                    {t('parametres.notifications.guidageAide')}
                                 </Text>
                             </View>
 
@@ -277,18 +280,17 @@ export default function SettingsPage() {
                                 onValueChange={handleNotifToggle}
                                 trackColor={{ false: colors.borderStrong, true: colors.primary }}
                                 thumbColor={colors.bgMain}
-                                accessibilityLabel="Activer les notifications"
+                                accessibilityLabel={t('parametres.notifications.guidageA11y')}
                             />
                         </View>
 
                         <View style={styles.switchRow}>
                             <View style={styles.switchLabel}>
                                 <Text style={[styles.rowTitle, { color: colors.textMain }]}>
-                                    Alertes météo
+                                    {t('parametres.notifications.meteo')}
                                 </Text>
                                 <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                    Prévient d'une averse, d'un orage, de la grêle ou du verglas
-                                    pendant un trajet.
+                                    {t('parametres.notifications.meteoAide')}
                                 </Text>
                             </View>
 
@@ -297,7 +299,7 @@ export default function SettingsPage() {
                                 onValueChange={handleWeatherAlertsToggle}
                                 trackColor={{ false: colors.borderStrong, true: colors.primary }}
                                 thumbColor={colors.bgMain}
-                                accessibilityLabel="Activer les alertes météo"
+                                accessibilityLabel={t('parametres.notifications.meteoA11y')}
                             />
                         </View>
 
@@ -305,11 +307,10 @@ export default function SettingsPage() {
                             <View style={styles.switchRow}>
                                 <View style={styles.switchLabel}>
                                     <Text style={[styles.rowTitle, { color: colors.textMain }]}>
-                                        Récapitulatif par e-mail
+                                        {t('parametres.notifications.recap')}
                                     </Text>
                                     <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                        Un bilan de vos trajets, kilomètres et badges au début de
-                                        chaque mois, et en début d&apos;année.
+                                        {t('parametres.notifications.recapAide')}
                                     </Text>
                                 </View>
 
@@ -319,7 +320,7 @@ export default function SettingsPage() {
                                     disabled={recapPending}
                                     trackColor={{ false: colors.borderStrong, true: colors.primary }}
                                     thumbColor={colors.bgMain}
-                                    accessibilityLabel="Recevoir le récapitulatif par e-mail"
+                                    accessibilityLabel={t('parametres.notifications.recapA11y')}
                                 />
                             </View>
                         )}
@@ -331,8 +332,7 @@ export default function SettingsPage() {
                             >
                                 <Ionicons name="warning-outline" size={20} color={colors.warning} />
                                 <Text style={[styles.warningText, { color: colors.warning }]}>
-                                    Les notifications sont bloquées par votre téléphone. Appuyez pour
-                                    ouvrir les réglages.
+                                    {t('parametres.notifications.bloqueesBandeau')}
                                 </Text>
                             </TouchableOpacity>
                         )}
@@ -341,19 +341,16 @@ export default function SettingsPage() {
                     <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                         <View style={styles.sectionTitleRow}>
                             <Ionicons name="location-outline" size={24} color={colors.textMain} />
-                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Localisation</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('parametres.localisation.titre')}</Text>
                         </View>
 
                         <View style={styles.switchRow}>
                             <View style={styles.switchLabel}>
                                 <Text style={[styles.rowTitle, { color: colors.textMain }]}>
-                                    Guidage en arrière-plan
+                                    {t('parametres.localisation.arrierePlan')}
                                 </Text>
                                 <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                    Poursuit le guidage quand l&apos;écran est éteint ou que
-                                    l&apos;application n&apos;est plus au premier plan. Votre position
-                                    n&apos;est relevée que pendant un trajet, uniquement pour vous guider,
-                                    et n&apos;est pas conservée.
+                                    {t('parametres.localisation.arrierePlanAide')}
                                 </Text>
                             </View>
 
@@ -362,7 +359,7 @@ export default function SettingsPage() {
                                 onValueChange={handleBackgroundLocationToggle}
                                 trackColor={{ false: colors.borderStrong, true: colors.primary }}
                                 thumbColor={colors.bgMain}
-                                accessibilityLabel="Activer le guidage en arrière-plan"
+                                accessibilityLabel={t('parametres.localisation.arrierePlanA11y')}
                             />
                         </View>
                     </View>
@@ -370,24 +367,24 @@ export default function SettingsPage() {
                     <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                         <View style={styles.sectionTitleRow}>
                             <Ionicons name="document-text-outline" size={24} color={colors.textMain} />
-                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Informations légales</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('parametres.legal.titre')}</Text>
                         </View>
 
                         <LinkRow
                             icon="shield-checkmark-outline"
-                            label="Politique de confidentialité"
+                            label={t('parametres.legal.confidentialite')}
                             onPress={() => openLegalPage(LEGAL_LINKS.privacy)}
                             colors={colors}
                         />
                         <LinkRow
                             icon="reader-outline"
-                            label="Conditions d'utilisation"
+                            label={t('parametres.legal.conditions')}
                             onPress={() => openLegalPage(LEGAL_LINKS.terms)}
                             colors={colors}
                         />
                         <LinkRow
                             icon="business-outline"
-                            label="Mentions légales"
+                            label={t('parametres.legal.mentions')}
                             onPress={() => openLegalPage(LEGAL_LINKS.legalNotice)}
                             colors={colors}
                             isLast
@@ -398,17 +395,16 @@ export default function SettingsPage() {
                         <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                             <View style={styles.sectionTitleRow}>
                                 <Ionicons name="alert-circle-outline" size={24} color={colors.error} />
-                                <Text style={[styles.sectionTitle, { color: colors.error }]}>Zone de danger</Text>
+                                <Text style={[styles.sectionTitle, { color: colors.error }]}>{t('parametres.zoneDanger.titre')}</Text>
                             </View>
 
                             <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                La suppression efface définitivement votre compte et les données
-                                qui y sont rattachées.
+                                {t('parametres.zoneDanger.avertissement')}
                             </Text>
 
                             <LinkRow
                                 icon="trash-outline"
-                                label="Supprimer mon compte"
+                                label={t('parametres.zoneDanger.supprimerCompte')}
                                 onPress={() => router.push('/deleteaccount')}
                                 colors={colors}
                                 tint={colors.error}

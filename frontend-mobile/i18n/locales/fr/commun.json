@@ -1,18 +1,6 @@
 {
     "annuler": "Annuler",
-    "fermer": "Fermer",
-    "confirmer": "Confirmer",
-    "enregistrer": "Enregistrer",
     "supprimer": "Supprimer",
-    "modifier": "Modifier",
-    "retour": "Retour",
-    "suivant": "Suivant",
-    "precedent": "Précédent",
     "terminer": "Terminer",
-    "reessayer": "Réessayer",
-    "chargement": "Chargement…",
-    "oui": "Oui",
-    "non": "Non",
-    "erreurReseau": "Connexion impossible. Vérifiez votre connexion et réessayez.",
     "erreur": "Erreur"
 }

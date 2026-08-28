@@ -1,26 +1,24 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { GestureHandlerRootView, GestureDetector } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import MapComponent from './MapComponent';
 import { useDragToDismiss } from '../hooks/useDragToDismiss';
+import { useFormat } from '../hooks/useFormat';
 import { GrabHandle } from './ui/GrabHandle';
 import * as Haptics from 'expo-haptics';
 
-const ROUTE_TYPE_LABELS = {
-    fast: "Rapide",
-    safe: "Sécurisé",
-    compromise: "Compromis",
-};
-
 export default function HistoricModal({ isOpen, onClose, entry, onDelete, colors }) {
     const { gesture, sheetStyle, close, dismiss } = useDragToDismiss({ visible: isOpen, onClose });
+    const { t } = useTranslation();
+    const f = useFormat();
 
     if (!entry) return null;
 
     const { route } = entry;
-    const date = new Date(entry.created_at).toLocaleDateString('fr-FR', {
+    const date = f.date(entry.created_at, {
         day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 
@@ -53,7 +51,7 @@ export default function HistoricModal({ isOpen, onClose, entry, onDelete, colors
                             <View>
                                 <GrabHandle />
                                 <View style={styles.header}>
-                                    <Text style={[styles.title, { color: colors.textMain }]}>Détails du trajet</Text>
+                                    <Text style={[styles.title, { color: colors.textMain }]}>{t('compte.modales.historique.titre')}</Text>
                                     <TouchableOpacity onPress={close}>
                                         <Ionicons name="close" size={28} color={colors.textMain} />
                                     </TouchableOpacity>
@@ -88,22 +86,22 @@ export default function HistoricModal({ isOpen, onClose, entry, onDelete, colors
                             <View style={[styles.statsRow, { borderColor: colors.borderStrong }]}>
                                 <View style={styles.statItem}>
                                     <Ionicons name="navigate-outline" size={20} color={colors.primary} />
-                                    <Text style={[styles.statValue, { color: colors.textMain }]}>{route.distance_km.toFixed(2)} km</Text>
-                                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Distance</Text>
+                                    <Text style={[styles.statValue, { color: colors.textMain }]}>{t('compte.historique.kilometres', { valeur: f.nombre(route.distance_km, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })}</Text>
+                                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('compte.historique.distance')}</Text>
                                 </View>
                                 <View style={styles.statItem}>
                                     <Ionicons name="time-outline" size={20} color="#F59E0B" />
-                                    <Text style={[styles.statValue, { color: colors.textMain }]}>{Math.round(route.duration_min)} min</Text>
-                                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Durée</Text>
+                                    <Text style={[styles.statValue, { color: colors.textMain }]}>{t('compte.historique.minutes', { valeur: f.nombre(Math.round(route.duration_min)) })}</Text>
+                                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('compte.historique.duree')}</Text>
                                 </View>
                                 <View style={styles.statItem}>
                                     <Ionicons name="shield-checkmark-outline" size={20} color="#059669" />
-                                    <Text style={[styles.statValue, { color: colors.textMain }]}>{ROUTE_TYPE_LABELS[route.route_type]}</Text>
-                                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Type</Text>
+                                    <Text style={[styles.statValue, { color: colors.textMain }]}>{t(`itineraire.variant.${route.route_type}`)}</Text>
+                                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('compte.historique.type')}</Text>
                                 </View>
                             </View>
 
-                            <Text style={[styles.dateText, { color: colors.textSecondary }]}>Effectué le {date}</Text>
+                            <Text style={[styles.dateText, { color: colors.textSecondary }]}>{t('compte.historique.effectueLe', { date })}</Text>
                         </ScrollView>
 
                         <TouchableOpacity
@@ -115,7 +113,7 @@ export default function HistoricModal({ isOpen, onClose, entry, onDelete, colors
                         >
                             <Ionicons name="trash-outline" size={20} color={colors.textMain} />
                             <Text style={[styles.deleteButtonText, { color: colors.textMain }]}>
-                                Supprimer le trajet
+                                {t('compte.historique.supprimerTrajet')}
                             </Text>
                         </TouchableOpacity>
                     </Animated.View>
