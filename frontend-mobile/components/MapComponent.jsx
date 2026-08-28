@@ -14,6 +14,7 @@ import WeatherDetailModal from './WeatherDetailModal';
 import useWeatherAlerts from '../hooks/useWeatherAlerts';
 import WeatherAlert from './WeatherAlert';
 import { useAuth } from '../context/AuthContext';
+import { useFormat } from '../hooks/useFormat';
 import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
 import { useDragToDismiss } from '../hooks/useDragToDismiss';
@@ -26,30 +27,35 @@ import { BlurView } from 'expo-blur';
 import { trackEvent } from '../services/analytics';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
+import { Trans, useTranslation } from 'react-i18next';
 
+// Les tables ne portent plus que leur identifiant : un libellé posé au niveau
+// module serait figé à la langue du chargement du bundle. Les mots vivent dans
+// i18n/locales/*/carte.json, sous les mêmes identifiants que le web et que
+// l'API — un grep sur « stands » traverse les trois.
 const PARKING_TYPES = [
-    { id: 'stands', label: 'Arceaux', color: '#22C55E' },
-    { id: 'racks', label: 'Râteliers, pince-roues', color: '#0D9488' },
-    { id: 'shelter', label: 'Abris et consignes', color: '#15803D' },
-    { id: 'other', label: 'Autres, non précisé', color: '#9CA3AF' },
+    { id: 'stands', color: '#22C55E' },
+    { id: 'racks', color: '#0D9488' },
+    { id: 'shelter', color: '#15803D' },
+    { id: 'other', color: '#9CA3AF' },
 ];
 
 const TOILET_TYPES = [
-    { id: 'free', label: 'Gratuites', color: '#EC4899' },
-    { id: 'paid', label: 'Payantes', color: '#9F1239' },
-    { id: 'unknown', label: 'Non précisé', color: '#8B5CF6' },
+    { id: 'free', color: '#EC4899' },
+    { id: 'paid', color: '#9F1239' },
+    { id: 'unknown', color: '#8B5CF6' },
 ];
 
 const REPAIR_TYPES = [
-    { id: 'selfservice', label: 'Libre-service', color: '#F97316' },
-    { id: 'shop', label: 'Atelier / magasin', color: '#C2410C' },
+    { id: 'selfservice', color: '#F97316' },
+    { id: 'shop', color: '#C2410C' },
 ];
 
 const POI_CATEGORIES = [
-    { id: 'water', label: "Points d'eau", icon: 'water', color: '#0EA5E9' },
-    { id: 'toilets', label: 'Toilettes', icon: 'toilet', color: '#8B5CF6', subTypes: TOILET_TYPES, subTypeProp: 'toilet_fee' },
-    { id: 'parking', label: 'Parkings vélo', icon: 'bicycle', color: '#22C55E', subTypes: PARKING_TYPES, subTypeProp: 'parking_type' },
-    { id: 'repair', label: 'Réparation', icon: 'wrench', color: '#F97316', subTypes: REPAIR_TYPES, subTypeProp: 'repair_kind' },
+    { id: 'water', icon: 'water', color: '#0EA5E9' },
+    { id: 'toilets', icon: 'toilet', color: '#8B5CF6', subTypes: TOILET_TYPES, subTypeProp: 'toilet_fee', sousCle: 'toilettes' },
+    { id: 'parking', icon: 'bicycle', color: '#22C55E', subTypes: PARKING_TYPES, subTypeProp: 'parking_type', sousCle: 'parking' },
+    { id: 'repair', icon: 'wrench', color: '#F97316', subTypes: REPAIR_TYPES, subTypeProp: 'repair_kind', sousCle: 'reparation' },
 ];
 
 const DEFAULT_SUB_TYPES = Object.fromEntries(
@@ -159,36 +165,35 @@ const BIKESHARE_LOGOS = {
     'be-bluebike': require('../assets/bikeshare/logos/be-bluebike.png'),
 };
 
-const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
-
+// `format` rend une CLÉ de catalogue quand la valeur est un identifiant connu,
+// et la valeur brute sinon : la traduction se fait au rendu, où t() existe.
 const POI_DETAIL_FIELDS = [
     {
         key: 'parking_type',
-        label: 'Aménagement',
-        format: (value) => PARKING_TYPES.find(t => t.id === value)?.label || value,
+        format: (value) => (PARKING_TYPES.some(p => p.id === value) ? `carte.parking.${value}` : value),
     },
     {
         key: 'toilet_fee',
-        label: 'Tarif',
-        format: (value) => TOILET_FEE_LABELS[value] || value,
+        format: (value) => (['free', 'paid', 'unknown'].includes(value) ? `carte.tarif.${value}` : value),
     },
     {
         key: 'repair_kind',
-        label: 'Type',
-        format: (value) => REPAIR_TYPES.find(t => t.id === value)?.label || value,
+        format: (value) => (REPAIR_TYPES.some(r => r.id === value) ? `carte.reparation.${value}` : value),
     },
-    { key: 'opening_hours', label: 'Horaires' },
-    { key: 'fee', label: 'Payant', except: 'toilets' },
-    { key: 'capacity', label: 'Capacité' },
-    { key: 'covered', label: 'Couvert' },
-    { key: 'access', label: 'Accès' },
-    { key: 'wheelchair', label: 'Accessible PMR' },
-    { key: 'seasonal', label: 'Saisonnier' },
+    { key: 'opening_hours' },
+    { key: 'fee', except: 'toilets' },
+    { key: 'capacity' },
+    { key: 'covered' },
+    { key: 'access' },
+    { key: 'wheelchair' },
+    { key: 'seasonal' },
 ];
 
+// Rend une clé pour les deux valeurs booléennes d'OpenStreetMap, la valeur
+// brute sinon (horaires, capacité : ce sont des données, pas des mots).
 const formatPoiTag = (value) => {
-    if (value === 'yes') return 'Oui';
-    if (value === 'no') return 'Non';
+    if (value === 'yes') return 'carte.ui.carte.oui';
+    if (value === 'no') return 'carte.ui.carte.non';
     return String(value);
 };
 
@@ -205,9 +210,9 @@ const ACCIDENT_SEVERITY_COLOR = [
 ];
 
 const ACCIDENT_LEGEND = [
-    { label: 'Accident mortel', color: '#7f1d1d' },
-    { label: 'Blessé hospitalisé', color: '#dc2626' },
-    { label: 'Blessé léger', color: '#f97316' },
+    { id: 'mortel', color: '#7f1d1d' },
+    { id: 'hospitalise', color: '#dc2626' },
+    { id: 'leger', color: '#f97316' },
 ];
 
 const LIT_ROADS_COLOR = ['match', ['get', 'lit_source'],
@@ -215,11 +220,11 @@ const LIT_ROADS_COLOR = ['match', ['get', 'lit_source'],
     '#ffcf3d'];
 
 const ACCIDENT_DETAIL_FIELDS = [
-    { key: 'light', label: 'Luminosité' },
-    { key: 'weather', label: 'Météo' },
-    { key: 'collision', label: 'Type de collision' },
-    { key: 'road_type', label: 'Type de voie' },
-    { key: 'intersection', label: 'Intersection' },
+    { key: 'light' },
+    { key: 'weather' },
+    { key: 'collision' },
+    { key: 'road_type' },
+    { key: 'intersection' },
 ];
 
 const formatAccidentDate = (properties) => {
@@ -336,13 +341,13 @@ const BIKESHARE_TONES = {
 };
 
 const BIKESHARE_COUNT_FIELDS = [
-    { key: 'bikes_mechanical', label: 'Mécaniques', icon: 'bicycle', tone: 'mechanical' },
-    { key: 'bikes_electric', label: 'Électriques', icon: 'bicycle-electric', tone: 'electric' },
-    { key: 'docks_available', label: 'Places libres', icon: 'parking', tone: 'docks' },
+    { key: 'bikes_mechanical', icon: 'bicycle', tone: 'mechanical' },
+    { key: 'bikes_electric', icon: 'bicycle-electric', tone: 'electric' },
+    { key: 'docks_available', icon: 'parking', tone: 'docks' },
 ];
 
 const BIKESHARE_TOTAL_FIELD = {
-    key: 'bikes_available', label: 'Vélos', icon: 'bicycle', tone: 'mechanical',
+    key: 'bikes_available', icon: 'bicycle', tone: 'mechanical',
 };
 
 function bikeshareShare(station, ventile) {
@@ -388,6 +393,8 @@ export default function MapComponent({
     }
 
     const { colors, typography, isDark } = useTheme();
+    const { t } = useTranslation();
+    const f = useFormat();
 
     const androidButtonBg = Platform.OS === 'android'
         ? { backgroundColor: withAlpha(colors.bgSurface, 0.9) }
@@ -395,17 +402,17 @@ export default function MapComponent({
     const { token, user } = useAuth();
 
     const MAP_STYLES = [
-        { id: "streets", lightId: "streets-v4", darkId: "streets-v4-dark", label: "Rues", icon: "🛣️" },
-        { id: "base", lightId: "base-v4", darkId: "base-v4-dark", label: "Basic", icon: "🍃" },
-        { id: "outdoor", lightId: "outdoor-v4", darkId: "outdoor-v4-dark", label: "Outdoor", icon: "🚴" },
-        { id: "hybrid", lightId: "hybrid-v4", darkId: "hybrid-v4", label: "Satellite", icon: "🛰️" },
+        { id: "streets", lightId: "streets-v4", darkId: "streets-v4-dark", icon: "🛣️" },
+        { id: "base", lightId: "base-v4", darkId: "base-v4-dark", icon: "🍃" },
+        { id: "outdoor", lightId: "outdoor-v4", darkId: "outdoor-v4-dark", icon: "🚴" },
+        { id: "hybrid", lightId: "hybrid-v4", darkId: "hybrid-v4", icon: "🛰️" },
     ];
 
     const REPORT_TYPES = [
-        { id: 'accident', label: 'Accident' },
-        { id: 'travaux', label: 'Travaux' },
-        { id: 'danger', label: 'Danger' },
-        { id: 'obstacle', label: 'Obstacle' },
+        { id: 'accident' },
+        { id: 'travaux' },
+        { id: 'danger' },
+        { id: 'obstacle' },
     ];
 
     const [activeBaseStyle, setActiveBaseStyle] = useState(MAP_STYLES[0].id);
@@ -1102,7 +1109,7 @@ export default function MapComponent({
         onNavigateToPoi({
             lat: activePoi.lat,
             lon: activePoi.lon,
-            name: activePoi.name || POI_CATEGORIES.find(c => c.id === activePoi.category)?.label,
+            name: activePoi.name || t(`carte.poi.${activePoi.category}`),
         });
         setActivePoi(null);
     };
@@ -1646,7 +1653,7 @@ export default function MapComponent({
                                 }}>
                                 <Text style={styles.layerEmoji}>{style.icon}</Text>
                                 <Text style={[styles.layerText, typography.body, { color: activeBaseStyle === style.id ? colors.primary : colors.textSecondary, fontWeight: activeBaseStyle === style.id ? 'bold' : 'normal' }]}>
-                                    {style.label}
+                                    {t(`carte.fond.${style.id}`)}
                                 </Text>
                             </TouchableOpacity>
                         ))}
@@ -1767,42 +1774,37 @@ export default function MapComponent({
                         onStartShouldSetResponder={() => true}
                     >
                         <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>
-                            Éclairage public
+                            {t('carte.ui.eclairage.h2')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                            <Text style={{ fontWeight: 'bold', color: colors.textMain }}>Rues éclairées</Text>
-                            {" : les rues marquées comme éclairées sur OpenStreetMap. Toutes les routes "}
-                            {"n'ont pas nécessairement cette information, c'est pour ça que nous déduisons "}
-                            {"l'éclairage de certaines routes avec la présence de lampadaires ou la "}
-                            {"proximité immédiate d'une rue éclairée."}
+                            {/* Le gras est porté par la phrase elle-même : la découper en
+                                morceaux figerait l'ordre des mots du français. */}
+                            <Trans
+                                i18nKey="carte.ui.eclairage.ruesEclairees"
+                                components={{ b: <Text style={{ fontWeight: 'bold', color: colors.textMain }} /> }}
+                            />
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                            {"Les lampadaires eux-mêmes (OpenStreetMap et jeux open data des métropoles) "}
-                            {"ne sont pas affichés sur mobile : ils sont trop nombreux pour la mémoire du "}
-                            {"téléphone. Ils servent en revanche à déduire les rues éclairées ci-dessus, "}
-                            {"et restent visibles sur la version web."}
+                            {t('carte.ui.eclairage.lampadairesMobile')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary, fontStyle: 'italic' }]}>
-                            {"Une rue non surlignée n'est pas forcément non éclairée : le plus souvent, "}
-                            {"c'est la donnée qui manque. Peu de villes françaises ont un jeu open data de "}
-                            {"lampadaires, et OpenStreetMap n'est pas complet partout, surtout dans les "}
-                            {"zones rurales."}
+                            {t('carte.ui.eclairage.avertissementMobile')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
-                            Sources sur cette zone
+                            {t('carte.ui.eclairage.sourcesZone')}
                         </Text>
 
                         {lightingSources === null ? (
                             <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                                Chargement…
+                                {t('carte.ui.eclairage.chargement')}
                             </Text>
                         ) : lightingSources.length === 0 ? (
                             <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                                Aucun lampadaire synchronisé sur cette zone.
+                                {t('carte.ui.eclairage.aucunLampadaire')}
                             </Text>
                         ) : (
                             lightingSources.map((s) => (
@@ -1810,8 +1812,9 @@ export default function MapComponent({
                                     key={s.source}
                                     style={[typography.body, styles.lightingInfoSource, { color: colors.textSecondary }]}
                                 >
-                                    {`• ${s.attribution}`}
-                                    {s.count ? ` — ${s.count.toLocaleString('fr-FR')} points` : ''}
+                                    {s.count
+                                        ? t('carte.ui.eclairage.sourcePointsCompte', { attribution: s.attribution, n: f.nombre(s.count) })
+                                        : t('carte.ui.eclairage.sourcePoints', { attribution: s.attribution })}
                                 </Text>
                             ))
                         )}
@@ -1820,7 +1823,7 @@ export default function MapComponent({
                             style={[styles.lightingInfoClose, { backgroundColor: colors.primary }]}
                             onPress={() => setLightingInfoVisible(false)}
                         >
-                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Fermer</Text>
+                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{t('carte.ui.fermer')}</Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
@@ -1857,52 +1860,43 @@ export default function MapComponent({
                         onStartShouldSetResponder={() => true}
                     >
                         <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>
-                            Météo
+                            {t('carte.ui.meteoModal.h2')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                            {"Le relevé est pris en un point au centre de l'agglomération, et le bandeau "}
-                            {"porte le niveau de vigilance le plus élevé du moment. C'est un niveau "}
-                            {"régional : une cellule orageuse fait 5 à 15 km, nous n'échantillonnons "}
-                            {"qu'un point. D'où « Risque d'orage », jamais « Orage sur votre trajet »."}
+                            {t('carte.ui.meteoModal.releve')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary, fontStyle: 'italic' }]}>
-                            {"On parle donc de risque d'orage, jamais d'orage sur votre trajet. La météo "}
-                            {"ne modifie pas le tracé calculé : elle vous informe, elle ne vous fait pas "}
-                            {"faire un détour sur une prévision de cette résolution."}
+                            {t('carte.ui.meteoModal.avertissement')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
-                            Pluie dans les 30 minutes
+                            {t('carte.ui.meteoModal.pluie30')}
                         </Text>
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                            {"La prévision au pas de 15 minutes vient des modèles à fine maille AROME "}
-                            {"(Météo-France) et ICON-D2 (DWD). Hors de leur couverture, elle n'est pas "}
-                            {"affichée du tout plutôt que d'être interpolée en silence depuis l'horaire."}
+                            {t('carte.ui.meteoModal.pluie30Texte')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
-                            Vent et ponts
+                            {t('carte.ui.meteoModal.ventPontsTitre')}
                         </Text>
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                            {"Le vent ajuste la durée affichée de l'itinéraire, jamais le tracé retenu. "}
-                            {"Sous 3 °C, les ponts d'au moins 30 m sont signalés : un tablier perd sa "}
-                            {"chaleur par ses deux faces et gèle une à deux heures avant la chaussée voisine."}
+                            {t('carte.ui.meteoModal.ventPonts')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
-                            Sources
+                            {t('carte.ui.meteoModal.sources')}
                         </Text>
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                            {"Prévisions : Open-Meteo (DWD ICON-D2, Météo-France AROME, NOAA GFS)."}
+                            {t('carte.ui.meteoModal.sourcesTexte')}
                         </Text>
 
                         <TouchableOpacity
                             style={[styles.lightingInfoClose, { backgroundColor: colors.primary }]}
                             onPress={() => setWeatherInfoVisible(false)}
                         >
-                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Fermer</Text>
+                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{t('carte.ui.fermer')}</Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
@@ -1924,45 +1918,36 @@ export default function MapComponent({
                         onStartShouldSetResponder={() => true}
                     >
                         <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>
-                            Qualité de l'air
+                            {t('carte.ui.airModal.h2')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                            {"L'indice affiché est l'indice européen de qualité de l'air (EAQI), calculé "}
-                            {"par le service européen Copernicus (CAMS). Chaque cellule colorée couvre "}
-                            {`environ ${airData?.resolution_km || 11} km de côté : c'est un niveau régional`}
+                            {t('carte.ui.airModal.cellulesTexte', { resolution: airData?.resolution_km || 11 })}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary, fontStyle: 'italic' }]}>
-                            {"À cette résolution, deux rues voisines partagent le même indice. Pour le "}
-                            {"calcul d'itinéraire, quand l'air régional se dégrade, l'algorithme s'appuie "}
-                            {"sur un indicateur d'exposition déduit du réseau routier  pour privilégier "}
-                            {"les rues les plus à l'écart de la circulation."}
+                            {t('carte.ui.airModal.cellulesAvertissement')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
-                            Capteurs au sol (pastilles)
+                            {t('carte.ui.airModal.pastilles')}
                         </Text>
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                            {"Les pastilles sont des stations de mesure réelles. Un modèle comme CAMS peut "}
-                            {"être en retard sur un événement soudain et local ; une "}
-                            {"station, elle, mesure l'air sans latence. Quand une station proche relève un "}
-                            {"pic, l'itinéraire en tient compte même si les cellules restent calmes."}
+                            {t('carte.ui.airModal.pastillesTexte')}
                         </Text>
 
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textMain, fontWeight: 'bold' }]}>
-                            Sources
+                            {t('carte.ui.airModal.sources')}
                         </Text>
                         <Text style={[typography.body, styles.lightingInfoText, { color: colors.textSecondary }]}>
-                            {"Cellules : CAMS ENSEMBLE, redistribuées par Open-Meteo (prévision jusqu'à 24 h). "}
-                            {"Pastilles : World Air Quality Index Project (waqi.info)."}
+                            {t('carte.ui.airModal.sourcesTexte')}
                         </Text>
 
                         <TouchableOpacity
                             style={[styles.lightingInfoClose, { backgroundColor: colors.primary }]}
                             onPress={() => setAirInfoVisible(false)}
                         >
-                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Fermer</Text>
+                            <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{t('carte.ui.fermer')}</Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
@@ -1999,7 +1984,7 @@ export default function MapComponent({
                                         <MaterialCommunityIcons name={category.icon} size={18} color="#FFF" />
                                     </View>
                                     <Text style={[styles.layerText, typography.body, { flex: 1, color: colors.textMain }]}>
-                                        {category.label}
+                                        {t(`carte.poi.${category.id}`)}
                                     </Text>
                                     <Switch
                                         value={!!enabledPoiCats[category.id]}
@@ -2015,7 +2000,7 @@ export default function MapComponent({
                                     <View key={subType.id} style={styles.poiSubOption}>
                                         <View style={[styles.poiSubDot, { backgroundColor: subType.color }]} />
                                         <Text style={[typography.body, { flex: 1, fontSize: 14, color: colors.textSecondary }]}>
-                                            {subType.label}
+                                            {t(`carte.${category.sousCle}.${subType.id}`)}
                                         </Text>
                                         <Switch
                                             value={!!enabledSubTypes[category.id]?.[subType.id]}
@@ -2061,10 +2046,10 @@ export default function MapComponent({
                         {showAccidents && (
                             <>
                                 {ACCIDENT_LEGEND.map((item) => (
-                                    <View key={item.label} style={styles.poiSubOption}>
+                                    <View key={item.id} style={styles.poiSubOption}>
                                         <View style={[styles.poiSubDot, { backgroundColor: item.color }]} />
                                         <Text style={[typography.body, { flex: 1, fontSize: 14, color: colors.textSecondary }]}>
-                                            {item.label}
+                                            {t(`carte.graviteAccident.${item.id}`)}
                                         </Text>
                                     </View>
                                 ))}
@@ -2157,7 +2142,7 @@ export default function MapComponent({
                                         resizeMode="contain"
                                     />
                                     <Text style={[typography.body, { fontSize: 14, fontWeight: selectedReportType === type.id ? 'bold' : 'normal', color: colors.textMain }]}>
-                                        {type.label}
+                                        {t(`carte.signalement.${type.id}`)}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -2322,7 +2307,14 @@ export default function MapComponent({
                             const details = POI_DETAIL_FIELDS
                                 .filter(field => field.except !== activePoi.category
                                     && activePoi[field.key] !== undefined && activePoi[field.key] !== null)
-                                .map(field => `${field.label} : ${(field.format || formatPoiTag)(activePoi[field.key])}`);
+                                .map((field) => {
+                                    const brut = (field.format || formatPoiTag)(activePoi[field.key]);
+                                    // `format` rend une clé quand la valeur est un identifiant connu,
+                                    // la donnée elle-même sinon (horaires, capacité).
+                                    // i18n-exempt: `brut` est une clé de catalogue produite juste au-dessus
+                                    const valeur = typeof brut === 'string' && brut.startsWith('carte.') ? t(brut) : brut;
+                                    return `${t(`carte.champPoi.${field.key}`)} : ${valeur}`;
+                                });
                             return (
                                 <>
                                     <View style={styles.header}>
@@ -2331,7 +2323,7 @@ export default function MapComponent({
                                                 <MaterialCommunityIcons name={category?.icon} size={18} color="#FFF" />
                                             </View>
                                             <Text style={[typography.h1, { fontSize: 18, lineHeight: 22, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
-                                                {activePoi.name || category?.label}
+                                                {activePoi.name || (category && t(`carte.poi.${category.id}`))}
                                             </Text>
                                         </View>
                                         <TouchableOpacity onPress={() => setActivePoi(null)}>
@@ -2340,7 +2332,7 @@ export default function MapComponent({
                                     </View>
 
                                     <Text style={[typography.body, { color: colors.textSecondary, marginBottom: details.length ? 8 : 20 }]}>
-                                        {category?.label}
+                                        {category && t(`carte.poi.${category.id}`)}
                                     </Text>
 
                                     {details.map(detail => (
@@ -2382,7 +2374,7 @@ export default function MapComponent({
                             const date = formatAccidentDate(activeAccident);
                             const details = ACCIDENT_DETAIL_FIELDS
                                 .filter(field => activeAccident[field.key])
-                                .map(field => `${field.label} : ${activeAccident[field.key]}`);
+                                .map(field => `${t(`carte.champAccident.${field.key}`)} : ${activeAccident[field.key]}`);
                             const color = activeAccident.severity >= 10 ? '#7f1d1d'
                                 : activeAccident.severity >= 3 ? '#dc2626' : '#f97316';
                             return (
@@ -2502,7 +2494,7 @@ export default function MapComponent({
                                                         </Text>
                                                     </View>
                                                     <Text style={[typography.body, { fontSize: 11, color: colors.textSecondary, textAlign: 'center' }]}>
-                                                        {field.label}
+                                                        {t(`carte.vls.${field.key}`)}
                                                     </Text>
                                                 </View>
                                             ))}
