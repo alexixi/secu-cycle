@@ -1,6 +1,8 @@
 User-agent: *
 Disallow: /profil
 Disallow: /admin
+Disallow: /en/profile
+Disallow: /en/admin
 
 User-agent: GPTBot
 Allow: /

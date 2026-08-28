@@ -2,451 +2,1351 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://secu-cycle.fr/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/itineraire/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/itineraire/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/route/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/itineraire/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/route/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/itineraire/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/route/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/itineraire/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/faq/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/faq/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/faq/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/faq/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/faq/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/faq/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/faq/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/faq/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/donnees/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/donnees/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/data-sources/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/donnees/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/data-sources/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/donnees/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/data-sources/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/donnees/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/confidentialite/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/confidentialite/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/privacy-policy/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/confidentialite/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/privacy-policy/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/confidentialite/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/privacy-policy/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/confidentialite/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/conditions-utilisation/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/conditions-utilisation/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/terms-of-use/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/conditions-utilisation/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/terms-of-use/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/conditions-utilisation/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/terms-of-use/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/conditions-utilisation/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/suppression-compte/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/suppression-compte/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/delete-account/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/suppression-compte/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/delete-account/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/suppression-compte/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/delete-account/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/suppression-compte/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/contact/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/contact/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/contact/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/contact/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/contact/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/contact/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/contact/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/contact/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/mentions-legales/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/mentions-legales/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/legal-notice/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/mentions-legales/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/legal-notice/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/mentions-legales/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/legal-notice/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/mentions-legales/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bordeaux/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/bordeaux/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/rennes/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/rennes/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/nantes/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/nantes/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/paris/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/paris/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lyon/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lyon/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lille/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lille/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/strasbourg/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/strasbourg/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/tournai/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/tournai/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/tournai/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/tournai/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/tournai/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/tournai/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/tournai/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/tournai/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bruxelles/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/brussels/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bordeaux/stationnements-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/bordeaux/bike-parking/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bordeaux/toilettes-publiques/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/bordeaux/public-toilets/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bordeaux/points-eau/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/bordeaux/drinking-water/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bordeaux/eclairage-public/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/eclairage-public/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/street-lighting/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/eclairage-public/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/bordeaux/street-lighting/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/eclairage-public/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/street-lighting/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/eclairage-public/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bordeaux/velos-libre-service/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/bordeaux/bike-share/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bordeaux/trafic-routier/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/trafic-routier/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/road-traffic/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/trafic-routier/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/bordeaux/road-traffic/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/trafic-routier/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/road-traffic/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/trafic-routier/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bordeaux/accidents-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/bordeaux/cycling-accidents/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bordeaux/reparation-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/bordeaux/bike-repair/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bordeaux/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/bordeaux/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bordeaux/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/rennes/stationnements-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/rennes/bike-parking/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/rennes/toilettes-publiques/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/rennes/public-toilets/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/rennes/points-eau/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/rennes/drinking-water/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/rennes/velos-libre-service/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/rennes/bike-share/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/rennes/trafic-routier/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/trafic-routier/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/road-traffic/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/trafic-routier/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/rennes/road-traffic/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/trafic-routier/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/road-traffic/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/trafic-routier/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/rennes/accidents-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/rennes/cycling-accidents/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/rennes/reparation-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/rennes/bike-repair/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/rennes/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/rennes/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/rennes/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/nantes/stationnements-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/nantes/bike-parking/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/nantes/toilettes-publiques/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/nantes/public-toilets/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/nantes/points-eau/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/nantes/drinking-water/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/nantes/eclairage-public/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/eclairage-public/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/street-lighting/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/eclairage-public/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/nantes/street-lighting/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/eclairage-public/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/street-lighting/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/eclairage-public/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/nantes/velos-libre-service/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/nantes/bike-share/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/nantes/trafic-routier/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/trafic-routier/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/road-traffic/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/trafic-routier/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/nantes/road-traffic/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/trafic-routier/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/road-traffic/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/trafic-routier/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/nantes/accidents-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/nantes/cycling-accidents/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/nantes/reparation-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/nantes/bike-repair/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/nantes/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/nantes/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/nantes/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/paris/stationnements-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/paris/bike-parking/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/paris/toilettes-publiques/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/paris/public-toilets/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/paris/points-eau/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/paris/drinking-water/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/paris/velos-libre-service/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/paris/bike-share/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/paris/accidents-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/paris/cycling-accidents/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/paris/reparation-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/paris/bike-repair/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/paris/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/paris/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/paris/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lyon/stationnements-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lyon/bike-parking/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lyon/toilettes-publiques/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lyon/public-toilets/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lyon/points-eau/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lyon/drinking-water/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lyon/velos-libre-service/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lyon/bike-share/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lyon/accidents-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lyon/cycling-accidents/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lyon/reparation-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lyon/bike-repair/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lyon/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lyon/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lyon/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lille/stationnements-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lille/bike-parking/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lille/toilettes-publiques/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lille/public-toilets/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lille/points-eau/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lille/drinking-water/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lille/velos-libre-service/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lille/bike-share/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lille/accidents-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lille/cycling-accidents/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/lille/reparation-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/lille/bike-repair/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/lille/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/lille/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/lille/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/strasbourg/stationnements-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/strasbourg/bike-parking/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/strasbourg/toilettes-publiques/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/strasbourg/public-toilets/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/strasbourg/points-eau/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/strasbourg/drinking-water/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/strasbourg/velos-libre-service/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/strasbourg/bike-share/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/strasbourg/accidents-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/strasbourg/cycling-accidents/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/strasbourg/reparation-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/strasbourg/bike-repair/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/strasbourg/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/strasbourg/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/strasbourg/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/tournai/stationnements-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/tournai/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/tournai/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/tournai/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/tournai/bike-parking/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/tournai/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/tournai/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/tournai/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/tournai/accidents-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/tournai/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/tournai/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/tournai/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/tournai/cycling-accidents/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/tournai/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/tournai/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/tournai/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/tournai/toilettes-et-points-eau/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/tournai/toilettes-et-points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/tournai/toilets-and-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/tournai/toilettes-et-points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/tournai/toilets-and-water/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/tournai/toilettes-et-points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/tournai/toilets-and-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/tournai/toilettes-et-points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bruxelles/stationnements-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/brussels/bike-parking/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/stationnements-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/bike-parking/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/stationnements-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bruxelles/toilettes-publiques/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/brussels/public-toilets/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/toilettes-publiques/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/public-toilets/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/toilettes-publiques/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bruxelles/points-eau/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/brussels/drinking-water/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/points-eau/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/drinking-water/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/points-eau/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bruxelles/velos-libre-service/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/brussels/bike-share/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/velos-libre-service/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/bike-share/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/velos-libre-service/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bruxelles/accidents-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/brussels/cycling-accidents/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/accidents-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/cycling-accidents/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/accidents-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://secu-cycle.fr/carte/bruxelles/reparation-velo/</loc>
-    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://secu-cycle.fr/en/map/brussels/bike-repair/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://secu-cycle.fr/carte/bruxelles/reparation-velo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://secu-cycle.fr/en/map/brussels/bike-repair/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://secu-cycle.fr/carte/bruxelles/reparation-velo/"/>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
