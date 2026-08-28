@@ -8,7 +8,8 @@
         "parleDansKilometres": "dans {{distance}} kilomètres",
         "parleDansMetres": "dans {{distance}} mètres",
         "parleArrive": "Vous êtes arrivé à destination",
-        "ensuite": "Ensuite : {{instruction}}"
+        "ensuite": "Ensuite : {{instruction}}",
+        "recalcul": "Recalcul..."
     },
     "panneau": {
         "duree": "Durée",
@@ -52,6 +53,7 @@
         "details": "Détails de l'itinéraire",
         "fermerItineraires": "Fermer les itinéraires",
         "horsZoneTitre": "Hors zone couverte",
-        "horsZoneTexte": "Cette adresse est en dehors de la zone couverte par Sécu-Cycle."
+        "horsZoneTexte": "Cette adresse est en dehors de la zone couverte par Sécu-Cycle.",
+        "aucunResultat": "Aucun résultat trouvé"
     }
 }

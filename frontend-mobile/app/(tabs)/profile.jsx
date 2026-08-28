@@ -104,7 +104,7 @@ export default function ProfilePage() {
                     onPress={() => router.push("/settings")}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     accessibilityRole="button"
-                    accessibilityLabel="Paramètres"
+                    accessibilityLabel={t('compte.profil.parametres')}
                 >
                     <Ionicons name="settings-outline" size={26} color={colors.textMain} />
                 </TouchableOpacity>
@@ -147,7 +147,7 @@ export default function ProfilePage() {
                     onPress={() => router.push("/settings")}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     accessibilityRole="button"
-                    accessibilityLabel="Paramètres"
+                    accessibilityLabel={t('compte.profil.parametres')}
                 >
                     <Ionicons name="settings-outline" size={26} color={colors.textMain} />
                 </TouchableOpacity>
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                                         </Text>
                                         <Text style={[styles.statLabel, { color: unlocked ? '#10B981' : colors.textSecondary }]}>
                                             {unlocked
-                                                ? 'Débloqué'
+                                                ? t('compte.profil.badges.debloque')
                                                 : `${formatProgress(badge.progress, badge.criteria)}/${badge.goal_value}`}
                                         </Text>
                                     </View>

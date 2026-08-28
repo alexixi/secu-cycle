@@ -8,7 +8,8 @@
         "parleDansKilometres": "in {{distance}} kilometres",
         "parleDansMetres": "in {{distance}} metres",
         "parleArrive": "You have arrived at your destination",
-        "ensuite": "Then: {{instruction}}"
+        "ensuite": "Then: {{instruction}}",
+        "recalcul": "Recalculating..."
     },
     "panneau": {
         "duree": "Duration",
@@ -52,6 +53,7 @@
         "details": "Route details",
         "fermerItineraires": "Close the routes",
         "horsZoneTitre": "Outside the covered area",
-        "horsZoneTexte": "This address is outside the area covered by Sécu-Cycle."
+        "horsZoneTexte": "This address is outside the area covered by Sécu-Cycle.",
+        "aucunResultat": "No result found"
     }
 }

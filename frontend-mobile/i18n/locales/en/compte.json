@@ -109,7 +109,8 @@
             "h2": "My badges",
             "debloqueTitre": "Badge unlocked!",
             "suivant": "Next ({{restants}})",
-            "termine": "Great!"
+            "termine": "Great!",
+            "debloque": "Unlocked"
         },
         "nonConnecte": "Log in to access your personal information, favourite routes and bikes.",
         "domicile": "Home:",

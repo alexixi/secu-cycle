@@ -58,6 +58,7 @@ class NavNotificationModule : Module() {
   // ensureChannel() est appelé aux deux endroits, et recréer le canal avec un
   // nom français écraserait celui que l'utilisateur voit dans les réglages
   // Android. Repli sur le français, comme les champs du record.
+  // i18n-exempt: repli de compatibilité, écrasé par start() dès le premier appel
   private var channelName: String = "Navigation"
 
   override fun definition() = ModuleDefinition {

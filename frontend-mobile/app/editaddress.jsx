@@ -83,7 +83,7 @@ export default function EditAddressPage() {
 
                     <View style={{ marginTop: 15 }}>
                         <OutlineButton
-                            title="Annuler"
+                            title={t('commun.annuler')}
                             onPress={close}
                         />
                     </View>

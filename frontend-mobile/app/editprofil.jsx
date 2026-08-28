@@ -8,6 +8,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Button, OutlineButton } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 import { useFormat } from "../hooks/useFormat";
+import { bcp47 } from "../utils/datetime";
 import { useTheme } from "../hooks/useTheme";
 import { changeProfileInfo } from "../services/apiBack";
 import { ScreenHeader } from "../components/ui/ScreenHeader";
@@ -163,7 +164,7 @@ export default function EditProfilePage() {
 
                     <View style={{ marginTop: 15 }}>
                         <OutlineButton
-                            title="Annuler"
+                            title={t('commun.annuler')}
                             onPress={close}
                         />
                     </View>
