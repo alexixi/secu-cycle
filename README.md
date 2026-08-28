@@ -432,7 +432,8 @@ répercutée, ainsi que dans les mentions légales.
 
 ### Internationalisation (français, anglais)
 
-Chantier en cours. Le français reste la langue par défaut ; l'anglais s'ajoute à côté, sans
+L'API, le site et l'application mobile sont traduits ; seul le dashboard d'administration
+reste en français. Le français demeure la langue par défaut ; l'anglais s'ajoute à côté, sans
 qu'aucune URL française existante ne change — les 56 pages `/carte/<ville>/<thème>` sont
 indexées, et le préfixe `/fr` aurait cassé cette indexation.
 
@@ -482,6 +483,33 @@ handler 422 : ils sont levés à l'analyse de la requête, avant l'endpoint, là
 négociée n'est pas atteignable sans variable de contexte globale — et leur seule surface est
 le dashboard d'administration, qui n'est pas traduit.
 
+**Côté mobile.** La langue ne vient pas de l'URL comme sur le web — il n'y en a pas. Elle vient
+d'une préférence à trois états (`auto`, `fr`, `en`) rangée dans AsyncStorage, « auto » suivant
+la langue du téléphone via `expo-localization`. Le sélecteur est dans les réglages, à côté de
+celui du thème et calqué dessus.
+
+Quatre points qui ne se devinent pas :
+
+- **`i18next` est initialisé de façon synchrone**, sur la langue du téléphone, au chargement du
+  module. C'est ce qui garantit que `t()` ne rend jamais une clé brute, même appelé par un
+  service au démarrage. La préférence explicite est relue ensuite, derrière le splash maintenu
+  par `LocaleProvider` — sans quoi l'écran clignoterait d'une langue à l'autre au lancement.
+- **`apiFetch` pose `Accept-Language`.** Contrairement au navigateur, `fetch` en React Native
+  n'en envoie aucun d'exploitable : sans cette ligne, les messages d'erreur, la météo, les
+  badges et les instructions de guidage reviennent en français quelle que soit la langue
+  choisie. C'est le maillon entre les deux moitiés du dispositif.
+- **La synthèse vocale suit la langue** (`Speech.speak(..., { language: bcp47(i18n.language) })`,
+  guidage et alertes météo). Une voix française lisant de l'anglais est inintelligible en
+  roulant — c'est plus gênant qu'un libellé non traduit.
+- **Une table de libellés au niveau module est figée à la langue du chargement du bundle.**
+  Toutes ont donc été réduites à leurs identifiants — ceux de l'API — les mots étant résolus au
+  rendu : ``t(`carte.parking.${type}`)``. Un `grep stands` traverse le mobile, le web et l'API.
+
+Restent en français, faute de pouvoir faire autrement : le nom de l'application et les
+demandes de permission, traduits par la clé `locales` d'`app.config.js` mais **d'après la langue
+du système**, pas la préférence in-app — iOS lit l'Info.plist avant que le moindre code JS ne
+tourne. Ces textes n'apparaissent qu'à l'installation et au premier octroi de permission.
+
 **Vérifications.**
 
 ```bash
@@ -490,7 +518,17 @@ make test         # suite de tests du backend (fonctions pures : ni base, ni gra
 ```
 
 `make check-i18n` est le filet minimal : l'internationalisation échoue *silencieusement*, une
-clé absente est servie telle quelle sans exception ni code d'erreur.
+clé absente est servie telle quelle sans exception ni code d'erreur. Il enchaîne les trois
+plateformes, et le workflow `i18n.yml` les rejoue en CI, où ils bloquent la fusion.
+
+Le contrôle mobile (`frontend-mobile/scripts/check-i18n.mjs`) ajoute au contrôle web ce que
+React Native impose : le texte d'un `<Text>` s'écrit souvent sur sa propre ligne, les deux
+premiers arguments d'`Alert.alert` sont invisibles pour une heuristique d'attribut, et une
+locale figée se cache aussi dans `Speech.speak`. En position visible, **tout** littéral est
+suspect quelle que soit sa langue : c'est ce qui attrape « Destination » ou « Auto », que
+l'heuristique française laisse passer par construction. Pour un cas légitime — nom propre,
+attribution de source, repli de compatibilité — poser `// i18n-exempt: <raison>` ; la raison
+est obligatoire, c'est elle qui distingue une exemption d'un contournement.
 
 ### Sécurité : limitation du débit (rate-limiting)
 L'API limite déjà le débit des tentatives de connexion (`5/minute` par IP via `slowapi`).
