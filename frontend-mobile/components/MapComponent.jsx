@@ -227,14 +227,14 @@ const ACCIDENT_DETAIL_FIELDS = [
     { key: 'intersection' },
 ];
 
-const formatAccidentDate = (properties) => {
+const formatAccidentDate = (properties, formateurs) => {
     if (!properties?.date) return null;
     const parsed = new Date(properties.date);
     if (Number.isNaN(parsed.getTime())) return properties.date;
     const options = properties.date_precision === 'month'
         ? { month: 'long', year: 'numeric' }
         : { day: 'numeric', month: 'long', year: 'numeric' };
-    return parsed.toLocaleDateString('fr-FR', options);
+    return formateurs.date(parsed, options);
 };
 
 const TRAFFIC_COLORS = { green: '#22c55e', orange: '#f97316', red: '#ef4444', gray: '#9ca3af' };
@@ -689,8 +689,8 @@ export default function MapComponent({
         if (!currentPosition || !cameraRef.current) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert(
-                "Position introuvable",
-                "Veuillez patienter pendant la recherche de votre position GPS."
+                t('carte.ui.position.introuvable'),
+                t('carte.ui.position.patienter')
             );
             return;
         }
@@ -850,8 +850,8 @@ export default function MapComponent({
         if (!weatherData?.updated_at) return null;
         const date = new Date(weatherData.updated_at);
         if (Number.isNaN(date.getTime())) return null;
-        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    }, [weatherData]);
+        return f.heure(date);
+    }, [weatherData, f]);
 
     useEffect(() => {
         if (miniMap) return;
@@ -1120,7 +1120,7 @@ export default function MapComponent({
         onNavigateToPoi({
             lat: activeStation.lat,
             lon: activeStation.lon,
-            name: activeStation.name || 'Station de vélos',
+            name: activeStation.name || t('carte.ui.popupCarte.stationVelos'),
         });
         trackEvent("bikeshare_navigated", {
             system: activeStation.system || 'inconnu',
@@ -1624,20 +1624,20 @@ export default function MapComponent({
                 <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => closeMenu(setLayerMenuVisible)}>
                     <Animated.View onStartShouldSetResponder={() => true} style={[styles.modalContent, { transform: [{ translateY: slideAnim }], backgroundColor: colors.bgMain }]}>
 
-                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>Fond de carte</Text>
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>{t('carte.ui.controles.fondCarte')}</Text>
 
                         <View style={[styles.themeSelector, { backgroundColor: colors.bgSurface }]}>
                             <TouchableOpacity style={[styles.themeBtn, mapThemeMode === 'light' && [styles.themeBtnActive, { backgroundColor: colors.bgMain }]]} onPress={() => { Haptics.selectionAsync(); handleThemeChange('light'); }}>
                                 <Ionicons name="sunny" size={20} color={mapThemeMode === 'light' ? colors.primary : colors.textSecondary} />
-                                <Text style={[styles.themeBtnText, { color: mapThemeMode === 'light' ? colors.primary : colors.textSecondary }]}>Clair</Text>
+                                <Text style={[styles.themeBtnText, { color: mapThemeMode === 'light' ? colors.primary : colors.textSecondary }]}>{t('parametres.apparence.clair')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={[styles.themeBtn, mapThemeMode === 'auto' && [styles.themeBtnActive, { backgroundColor: colors.bgMain }]]} onPress={() => { Haptics.selectionAsync(); handleThemeChange('auto'); }}>
                                 <Ionicons name="settings-outline" size={20} color={mapThemeMode === 'auto' ? colors.primary : colors.textSecondary} />
-                                <Text style={[styles.themeBtnText, { color: mapThemeMode === 'auto' ? colors.primary : colors.textSecondary }]}>Auto</Text>
+                                <Text style={[styles.themeBtnText, { color: mapThemeMode === 'auto' ? colors.primary : colors.textSecondary }]}>{t('parametres.apparence.auto')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={[styles.themeBtn, mapThemeMode === 'dark' && [styles.themeBtnActive, { backgroundColor: colors.bgMain }]]} onPress={() => { Haptics.selectionAsync(); handleThemeChange('dark'); }}>
                                 <Ionicons name="moon" size={20} color={mapThemeMode === 'dark' ? colors.primary : colors.textSecondary} />
-                                <Text style={[styles.themeBtnText, { color: mapThemeMode === 'dark' ? colors.primary : colors.textSecondary }]}>Sombre</Text>
+                                <Text style={[styles.themeBtnText, { color: mapThemeMode === 'dark' ? colors.primary : colors.textSecondary }]}>{t('parametres.apparence.sombre')}</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -1659,7 +1659,7 @@ export default function MapComponent({
                         ))}
 
                         <View style={styles.divider} />
-                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>Calques</Text>
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>{t('carte.ui.controles.calques')}</Text>
 
                         {traffic?.available && (
                             <View style={styles.poiOption}>
@@ -1667,7 +1667,7 @@ export default function MapComponent({
                                     <MaterialCommunityIcons name="traffic-light" size={18} color="#FFF" />
                                 </View>
                                 <Text style={[styles.layerText, typography.body, { flex: 1, color: colors.textMain }]}>
-                                    Trafic automobile
+                                    {t('carte.ui.controles.traficAutomobile')}
                                 </Text>
                                 <Switch
                                     value={showTraffic}
@@ -1686,7 +1686,7 @@ export default function MapComponent({
                                     style={{ flex: 1 }}
                                     activeOpacity={0.6}
                                     onPress={() => { Haptics.selectionAsync(); setAirInfoVisible(true); }}
-                                    accessibilityLabel="Informations sur la qualité de l'air"
+                                    accessibilityLabel={t('carte.ui.controles.infoAir')}
                                 >
                                     <View style={styles.layerNameRow}>
                                         <Text style={[typography.body, { fontSize: 16, color: colors.textMain }]}>
@@ -1716,7 +1716,7 @@ export default function MapComponent({
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={[typography.body, { fontSize: 16, color: colors.textMain }]}>
-                                    Stations de vélos
+                                    {t('carte.ui.controles.stationsVelos')}
                                 </Text>
                                 {showBikeshare && bikeshareData?.counts?.stations > 0 && (
                                     <Text style={[typography.body, { marginLeft: 15, fontSize: 12, color: colors.textSecondary }]}>
@@ -1739,11 +1739,11 @@ export default function MapComponent({
                                 style={{ flex: 1 }}
                                 activeOpacity={0.6}
                                 onPress={() => { Haptics.selectionAsync(); openLightingInfo(); }}
-                                accessibilityLabel="Informations sur l'éclairage"
+                                accessibilityLabel={t('carte.ui.controles.infoEclairage')}
                             >
                                 <View style={styles.layerNameRow}>
                                     <Text style={[typography.body, { fontSize: 16, color: colors.textMain }]}>
-                                        Éclairage public
+                                        {t('carte.ui.controles.eclairagePublic')}
                                     </Text>
                                     <Ionicons name="information-circle-outline" size={15} color={colors.textSecondary} />
                                 </View>
@@ -1975,7 +1975,7 @@ export default function MapComponent({
                 <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closePoiSheet}>
                     <Animated.View onStartShouldSetResponder={() => true} style={[styles.modalContent, { transform: [{ translateY: slideAnim }], backgroundColor: colors.bgMain }]}>
 
-                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>{"Points d'intérêt"}</Text>
+                        <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>{t('carte.ui.controles.pointsInteret')}</Text>
 
                         {POI_CATEGORIES.map((category) => (
                             <View key={category.id} style={{ width: '100%' }}>
@@ -2017,13 +2017,13 @@ export default function MapComponent({
                         ))}
 
                         <Text style={[typography.body, { fontSize: 12, color: colors.textSecondary, marginTop: 10 }]}>
-                            {"Zoomez pour faire apparaître les points d'intérêt."}
+                            {t('carte.ui.controles.zoomerPoi')}
                         </Text>
 
                         <View style={[styles.divider, { marginTop: 14 }]} />
 
                         <Text style={[styles.modalTitle, typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>
-                            Accidentologie
+                            {t('carte.ui.controles.accidentologie')}
                         </Text>
 
                         <View style={styles.poiOption}>
@@ -2031,7 +2031,7 @@ export default function MapComponent({
                                 <MaterialCommunityIcons name="alert-octagon" size={18} color="#FFF" />
                             </View>
                             <Text style={[styles.layerText, typography.body, { flex: 1, color: colors.textMain }]}>
-                                Accidents à vélo
+                                {t('carte.ui.controles.accidentsVelo')}
                             </Text>
                             <Switch
                                 value={showAccidents}
@@ -2054,10 +2054,11 @@ export default function MapComponent({
                                     </View>
                                 ))}
                                 <Text style={[typography.body, { fontSize: 12, color: colors.textSecondary, marginTop: 10 }]}>
-                                    {"Accidents déclarés aux forces de l'ordre : l'absence de point ne signifie pas l'absence de danger."}
+                                    {t('carte.ui.controles.accidentsAvertissement')}
                                 </Text>
                                 {accidentData?.attributions?.length > 0 && (
                                     <Text style={[typography.body, { fontSize: 11, color: colors.textSecondary, marginTop: 6, opacity: 0.75 }]}>
+                                        {/* i18n-exempt: séparateur typographique entre attributions de sources */}
                                         {accidentData.attributions.join(' · ')}
                                     </Text>
                                 )}
@@ -2075,8 +2076,8 @@ export default function MapComponent({
                         if (!currentPosition) {
                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
                             Alert.alert(
-                                "Position introuvable",
-                                "Veuillez patienter pendant la recherche de votre position GPS."
+                                t('carte.ui.position.introuvable'),
+                                t('carte.ui.position.patienter')
                             );
                             return;
                         }
@@ -2110,7 +2111,7 @@ export default function MapComponent({
                         <View>
                             <GrabHandle />
                             <View style={styles.header}>
-                                <Text style={[typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>Signaler un incident</Text>
+                                <Text style={[typography.h1, { fontSize: 20, lineHeight: 24, color: colors.textMain }]}>{t('carte.ui.signalement.titre')}</Text>
                                 <TouchableOpacity onPress={closeReport}>
                                     <Ionicons name="close" size={28} color={colors.textMain} />
                                 </TouchableOpacity>
@@ -2119,7 +2120,7 @@ export default function MapComponent({
                         </GestureDetector>
 
                         <Text style={[typography.body, { color: colors.textSecondary, marginBottom: 15 }]}>
-                            {"Quel type d'incident rencontrez-vous ?"}
+                            {t('carte.ui.signalement.question')}
                         </Text>
 
                         <View style={styles.grid}>
@@ -2150,7 +2151,7 @@ export default function MapComponent({
 
                         <TextInput
                             style={[styles.input, typography.body, { backgroundColor: colors.bgMain, color: colors.textMain, borderColor: colors.borderLight }]}
-                            placeholder="Description (optionnel)..."
+                            placeholder={t('carte.ui.signalement.description')}
                             placeholderTextColor={colors.textSecondary}
                             value={reportDescription}
                             onChangeText={setReportDescription}
@@ -2172,7 +2173,7 @@ export default function MapComponent({
                             }}
                         >
                             <Text style={[typography.body, { color: '#FFF', fontWeight: 'bold' }]}>
-                                Envoyer le signalement
+                                {t('carte.ui.signalement.envoyer')}
                             </Text>
                         </TouchableOpacity>
 
@@ -2220,10 +2221,10 @@ export default function MapComponent({
 
                         <View style={{ flexDirection: 'row', gap: 20, marginBottom: 16 }}>
                             <Text style={[typography.body, { color: colors.textSecondary }]}>
-                                👍 {activeReport?.confirmations_count ?? 0} là
+                                {t('carte.ui.popupCarte.voteLaMobile', { count: activeReport?.confirmations_count ?? 0 })}
                             </Text>
                             <Text style={[typography.body, { color: colors.textSecondary }]}>
-                                👎 {activeReport?.denials_count ?? 0} pas là
+                                {t('carte.ui.popupCarte.votePasLaMobile', { count: activeReport?.denials_count ?? 0 })}
                             </Text>
                         </View>
 
@@ -2236,7 +2237,7 @@ export default function MapComponent({
                                         handleVoteReport(activeReport.id, true);
                                     }}
                                 >
-                                    <Text style={[typography.body, { color: '#FFF', fontWeight: 'bold' }]}>Confirmer</Text>
+                                    <Text style={[typography.body, { color: '#FFF', fontWeight: 'bold' }]}>{t('carte.ui.signalement.confirmer')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[styles.submitButton, { flex: 1, backgroundColor: colors.bgSurface, borderWidth: 2, borderColor: colors.error }]}
@@ -2245,7 +2246,7 @@ export default function MapComponent({
                                         handleVoteReport(activeReport.id, false);
                                     }}
                                 >
-                                    <Text style={[typography.body, { color: colors.error, fontWeight: 'bold' }]}>Pas là</Text>
+                                    <Text style={[typography.body, { color: colors.error, fontWeight: 'bold' }]}>{t('carte.ui.signalement.pasLa')}</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -2255,11 +2256,11 @@ export default function MapComponent({
                                 style={styles.abuseLink}
                                 onPress={() => setAbuseTarget(activeReport)}
                                 accessibilityRole="button"
-                                accessibilityLabel="Signaler ce contenu"
+                                accessibilityLabel={t('carte.ui.abus.titre')}
                             >
                                 <Ionicons name="flag-outline" size={15} color={colors.textSecondary} />
                                 <Text style={[styles.abuseLinkText, { color: colors.textSecondary }]}>
-                                    Signaler ce contenu
+                                    {t('carte.ui.abus.titre')}
                                 </Text>
                             </TouchableOpacity>
                         )}
@@ -2274,7 +2275,7 @@ export default function MapComponent({
                                 }}
                             >
                                 <Text style={[typography.body, { color: '#FFF', fontWeight: 'bold' }]}>
-                                    Supprimer ce signalement
+                                    {t('carte.ui.signalement.supprimerCeSignalement')}
                                 </Text>
                             </TouchableOpacity>
                         )}
@@ -2347,7 +2348,7 @@ export default function MapComponent({
                                             onPress={handleNavigateToPoi}
                                         >
                                             <Text style={[typography.body, { color: '#FFF', fontWeight: 'bold' }]}>
-                                                Y aller
+                                                {t('carte.ui.signalement.yAller')}
                                             </Text>
                                         </TouchableOpacity>
                                     )}
@@ -2371,7 +2372,7 @@ export default function MapComponent({
                 >
                     <View onStartShouldSetResponder={() => true} style={[styles.modalContent, { backgroundColor: colors.bgMain, width: '90%' }]}>
                         {activeAccident && (() => {
-                            const date = formatAccidentDate(activeAccident);
+                            const date = formatAccidentDate(activeAccident, f);
                             const details = ACCIDENT_DETAIL_FIELDS
                                 .filter(field => activeAccident[field.key])
                                 .map(field => `${t(`carte.champAccident.${field.key}`)} : ${activeAccident[field.key]}`);
@@ -2385,7 +2386,7 @@ export default function MapComponent({
                                                 <MaterialCommunityIcons name="alert-octagon" size={18} color="#FFF" />
                                             </View>
                                             <Text style={[typography.h1, { fontSize: 18, lineHeight: 22, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
-                                                Accident à vélo
+                                                {t('carte.ui.popupCarte.accidentVelo')}
                                             </Text>
                                         </View>
                                         <TouchableOpacity onPress={() => setActiveAccident(null)}>
@@ -2401,7 +2402,7 @@ export default function MapComponent({
 
                                     {activeAccident.severity_label && (
                                         <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
-                                            {`Gravité : ${activeAccident.severity_label}`}
+                                            {t('carte.ui.station.gravite', { niveau: activeAccident.severity_label })}
                                         </Text>
                                     )}
 
@@ -2460,7 +2461,7 @@ export default function MapComponent({
                                                 </View>
                                             )}
                                             <Text style={[typography.h1, { fontSize: 18, lineHeight: 22, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
-                                                {activeStation.name || 'Station de vélos'}
+                                                {activeStation.name || t('carte.ui.popupCarte.stationVelos')}
                                             </Text>
                                         </View>
                                         <TouchableOpacity onPress={() => setActiveStation(null)}>
@@ -2470,10 +2471,10 @@ export default function MapComponent({
 
                                     <Text style={[typography.body, { color: colors.textSecondary, marginBottom: 8 }]}>
                                         {isOff
-                                            ? 'Station hors service'
+                                            ? t('carte.ui.popupCarte.stationHorsService')
                                             : bikes == null
-                                                ? 'Disponibilité inconnue'
-                                                : `${bikes} vélo${bikes > 1 ? 's' : ''} disponible${bikes > 1 ? 's' : ''}`}
+                                                ? t('carte.ui.popupCarte.disponibiliteInconnue')
+                                                : t('carte.ui.popupCarte.velosDisponibles', { count: bikes })}
                                     </Text>
 
                                     {counts.length > 0 && (
@@ -2525,33 +2526,33 @@ export default function MapComponent({
 
                                     {isOff && (
                                         <Text style={[typography.body, { fontSize: 13, color: '#b45309', fontWeight: 'bold', marginBottom: 4 }]}>
-                                            Ni retrait ni retour possible.
+                                            {t('carte.ui.popupCarte.niRetraitNiRetour')}
                                         </Text>
                                     )}
                                     {!isOff && activeStation.is_returning === false && (
                                         <Text style={[typography.body, { fontSize: 13, color: '#b45309', fontWeight: 'bold', marginBottom: 4 }]}>
-                                            Retour de vélo impossible.
+                                            {t('carte.ui.popupCarte.retourImpossible')}
                                         </Text>
                                     )}
                                     {!isOff && activeStation.is_returning !== false && activeStation.docks_available === 0 && (
                                         <Text style={[typography.body, { fontSize: 13, color: '#b45309', fontWeight: 'bold', marginBottom: 4 }]}>
-                                            Station pleine : aucun retour possible.
+                                            {t('carte.ui.popupCarte.stationPleine')}
                                         </Text>
                                     )}
 
                                     {activeStation.capacity != null && (
                                         <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
-                                            {`Capacité : ${activeStation.capacity} points d'attache`}
+                                            {t('carte.ui.station.capacite', { n: f.nombre(activeStation.capacity) })}
                                         </Text>
                                     )}
                                     {activeStation.system_name ? (
                                         <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
-                                            {`Réseau : ${activeStation.system_name}`}
+                                            {t('carte.ui.station.reseau', { nom: activeStation.system_name })}
                                         </Text>
                                     ) : null}
                                     {activeStation.stale && (
                                         <Text style={[typography.body, { fontSize: 12, color: colors.textSecondary }]}>
-                                            Dernier relevé disponible, données non rafraîchies.
+                                            {t('carte.ui.popupCarte.donneesNonRafraichies')}
                                         </Text>
                                     )}
 
@@ -2561,7 +2562,7 @@ export default function MapComponent({
                                             onPress={handleNavigateToStation}
                                         >
                                             <Text style={[typography.body, { color: '#FFF', fontWeight: 'bold' }]}>
-                                                Y aller
+                                                {t('carte.ui.signalement.yAller')}
                                             </Text>
                                         </TouchableOpacity>
                                     )}
@@ -2592,7 +2593,7 @@ export default function MapComponent({
                                             <MaterialCommunityIcons name="weather-windy" size={18} color="#FFF" />
                                         </View>
                                         <Text style={[typography.h1, { fontSize: 18, lineHeight: 22, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
-                                            {`AQI ${activeAirStation.aqi} · ${activeAirStation.label}`}
+                                            {t('carte.ui.station.aqi', { indice: activeAirStation.aqi, label: activeAirStation.label })}
                                         </Text>
                                     </View>
                                     <TouchableOpacity onPress={() => setActiveAirStation(null)}>
@@ -2607,12 +2608,12 @@ export default function MapComponent({
                                 ) : null}
 
                                 <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary, marginBottom: 4 }]}>
-                                    Capteur au sol · échelle AQI US
+                                    {t('carte.ui.popupCarte.capteurSol')}
                                 </Text>
 
                                 {activeAirStation.time ? (
                                     <Text style={[typography.body, { fontSize: 13, color: colors.textSecondary }]}>
-                                        {`Relevé : ${activeAirStation.time}`}
+                                        {t('carte.ui.station.releve', { heure: activeAirStation.time })}
                                     </Text>
                                 ) : null}
                             </>

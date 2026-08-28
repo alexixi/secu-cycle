@@ -257,7 +257,11 @@
             "releveMaille": "Relevé de {{heure}} · maille ~{{km}} km",
             "eclairageConnu": "Éclairage connu",
             "eclairageDeduit": "Éclairage déduit",
-            "avertissementAccidents": "Accidents déclarés aux forces de l'ordre : l'absence de point ne signifie pas l'absence de danger."
+            "avertissementAccidents": "Accidents déclarés aux forces de l'ordre : l'absence de point ne signifie pas l'absence de danger.",
+            "fondCarte": "Fond de carte",
+            "traficAutomobile": "Trafic automobile",
+            "accidentsAvertissement": "Accidents déclarés aux forces de l'ordre : l'absence de point ne signifie pas l'absence de danger.",
+            "zoomerPoi": "Zoomez pour faire apparaître les points d'intérêt."
         },
         "popupCarte": {
             "capteurSol": "Capteur au sol · échelle AQI US",
@@ -289,7 +293,9 @@
             "repartition": "{{velos}} vélo(s), {{places}} place(s) libre(s) — {{total}} points d'attache",
             "repartitionIndispo": "{{velos}} vélo(s), {{places}} place(s) libre(s), {{indispo}} indisponible(s) — {{total}} points d'attache",
             "attachesIndisponibles": "{{count}} points d'attache indisponibles.",
-            "gravite": "Gravité :"
+            "gravite": "Gravité :",
+            "voteLaMobile": "👍 {{count}} là",
+            "votePasLaMobile": "👎 {{count}} pas là"
         },
         "erreursCarte": {
             "airIndisponible": "Qualité de l'air momentanément indisponible.",
@@ -309,9 +315,63 @@
             "fantaisisteAide": "Danger inventé ou placé n'importe où",
             "autre": "Autre motif",
             "bloquer": "Bloquer cet auteur",
-            "bloquerAide": "Vous ne verrez plus aucun de ses signalements. Réversible depuis votre profil.",
+            "bloquerAide": "Vous ne verrez plus aucun de ses signalements. Réversible dans les réglages.",
             "delai": "Nous examinons chaque signalement sous 24 heures. Au-delà de deux signalements, le contenu disparaît de la carte en attendant notre décision.",
-            "annuler": "Annuler"
+            "annuler": "Annuler",
+            "motif": {
+                "offensive": {
+                    "label": "Contenu offensant",
+                    "aide": "Insultes, haine, propos déplacés"
+                },
+                "spam": {
+                    "label": "Spam ou publicité",
+                    "aide": "Message sans rapport avec la sécurité à vélo"
+                },
+                "wrong_place": {
+                    "label": "Signalement fantaisiste",
+                    "aide": "Danger inventé ou placé n’importe où"
+                },
+                "other": {
+                    "label": "Autre motif"
+                }
+            },
+            "issue": {
+                "envoiEnCours": "Envoi en cours…",
+                "reported": {
+                    "titre": "Merci",
+                    "corps": "Votre signalement a été transmis. Nous l'examinons sous 24 heures."
+                },
+                "blocked": {
+                    "titre": "Auteur bloqué",
+                    "corps": "Vous ne verrez plus ses signalements. Vous pouvez revenir sur ce blocage dans les réglages."
+                },
+                "error": {
+                    "titre": "Envoi impossible",
+                    "corps": "Votre signalement n'a pas pu être transmis. Vérifiez votre connexion et réessayez."
+                }
+            }
+        },
+        "signalement": {
+            "titre": "Signaler un incident",
+            "question": "Quel type d'incident rencontrez-vous ?",
+            "description": "Description (optionnel)...",
+            "envoyer": "Envoyer le signalement",
+            "confirmer": "Confirmer",
+            "pasLa": "Pas là",
+            "yAller": "Y aller",
+            "supprimer": "Ce signalement sera supprimé.",
+            "supprimerCeSignalement": "Supprimer ce signalement"
+        },
+        "position": {
+            "introuvable": "Position introuvable",
+            "patienter": "Veuillez patienter pendant la recherche de votre position GPS."
+        },
+        "station": {
+            "capacite": "Capacité : {{n}} points d'attache",
+            "reseau": "Réseau : {{nom}}",
+            "releve": "Relevé : {{heure}}",
+            "gravite": "Gravité : {{niveau}}",
+            "aqi": "AQI {{indice}} · {{label}}"
         }
     }
 }

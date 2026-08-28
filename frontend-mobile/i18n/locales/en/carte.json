@@ -238,8 +238,8 @@
             "velosLibreService": "Bike share",
             "stationsVelos": "Bike stations",
             "dernierReleve": "Last available reading.",
-            "accidentologie": "Accidents",
-            "accidentsVelo": "Cycling accidents",
+            "accidentologie": "Accident data",
+            "accidentsVelo": "Bicycle accidents",
             "fondsCarte": "Base maps",
             "calques": "Layers",
             "changerFond": "Change the base map",
@@ -257,7 +257,11 @@
             "releveMaille": "Reading from {{heure}} · ~{{km}} km grid",
             "eclairageConnu": "Lighting on record",
             "eclairageDeduit": "Lighting inferred",
-            "avertissementAccidents": "Crashes reported to the police: the absence of a point does not mean the absence of danger."
+            "avertissementAccidents": "Crashes reported to the police: the absence of a point does not mean the absence of danger.",
+            "fondCarte": "Base map",
+            "traficAutomobile": "Car traffic",
+            "accidentsAvertissement": "Accidents reported to the police: the absence of a point does not mean the absence of danger.",
+            "zoomerPoi": "Zoom in to reveal the points of interest."
         },
         "popupCarte": {
             "capteurSol": "Ground sensor · US AQI scale",
@@ -289,7 +293,9 @@
             "repartition": "{{velos}} bike(s), {{places}} free space(s) — {{total}} docking points",
             "repartitionIndispo": "{{velos}} bike(s), {{places}} free space(s), {{indispo}} unavailable — {{total}} docking points",
             "attachesIndisponibles": "{{count}} docking points unavailable.",
-            "gravite": "Severity:"
+            "gravite": "Severity:",
+            "voteLaMobile": "👍 {{count}} there",
+            "votePasLaMobile": "👎 {{count}} not there"
         },
         "erreursCarte": {
             "airIndisponible": "Air quality temporarily unavailable.",
@@ -309,9 +315,63 @@
             "fantaisisteAide": "An invented hazard, or one dropped anywhere",
             "autre": "Another reason",
             "bloquer": "Block this author",
-            "bloquerAide": "You will no longer see any of their reports. Reversible from your profile.",
+            "bloquerAide": "You will no longer see any of their reports. Reversible from the settings.",
             "delai": "We review every report within 24 hours. Past two reports, the content disappears from the map pending our decision.",
-            "annuler": "Cancel"
+            "annuler": "Cancel",
+            "motif": {
+                "offensive": {
+                    "label": "Offensive content",
+                    "aide": "Insults, hate, inappropriate remarks"
+                },
+                "spam": {
+                    "label": "Spam or advertising",
+                    "aide": "Message unrelated to cycling safety"
+                },
+                "wrong_place": {
+                    "label": "Bogus report",
+                    "aide": "Invented danger, or placed anywhere"
+                },
+                "other": {
+                    "label": "Other reason"
+                }
+            },
+            "issue": {
+                "envoiEnCours": "Sending…",
+                "reported": {
+                    "titre": "Thank you",
+                    "corps": "Your report has been sent. We will review it within 24 hours."
+                },
+                "blocked": {
+                    "titre": "Author blocked",
+                    "corps": "You will no longer see their reports. You can undo this block in the settings."
+                },
+                "error": {
+                    "titre": "Could not send",
+                    "corps": "Your report could not be sent. Check your connection and try again."
+                }
+            }
+        },
+        "signalement": {
+            "titre": "Report an incident",
+            "question": "What kind of incident are you facing?",
+            "description": "Description (optional)...",
+            "envoyer": "Send the report",
+            "confirmer": "Confirm",
+            "pasLa": "Not there",
+            "yAller": "Go there",
+            "supprimer": "This report will be deleted.",
+            "supprimerCeSignalement": "Delete this report"
+        },
+        "position": {
+            "introuvable": "Position not found",
+            "patienter": "Please wait while we look for your GPS position."
+        },
+        "station": {
+            "capacite": "{{n}} docking points",
+            "reseau": "Network: {{nom}}",
+            "releve": "Reading: {{heure}}",
+            "gravite": "Severity: {{niveau}}",
+            "aqi": "AQI {{indice}} · {{label}}"
         }
     }
 }
