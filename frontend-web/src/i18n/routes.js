@@ -17,7 +17,7 @@ export const DEFAULT_LANG = 'fr';
 // réelles pendant sa rédaction, sans qu'un moteur n'indexe des pages à moitié
 // traduites — et de le publier ensuite, quand le contenu est relu.
 export const ENABLED_LANGS = ['fr', 'en'];
-export const PUBLISHED_LANGS = ['fr'];
+export const PUBLISHED_LANGS = ['fr', 'en'];
 
 /** Une langue routée mais pas encore publiée ne doit pas être indexée. */
 export const isPublished = (lang) => PUBLISHED_LANGS.includes(lang);
