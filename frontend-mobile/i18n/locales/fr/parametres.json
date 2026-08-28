@@ -1,0 +1,8 @@
+{
+    "langue": {
+        "titre": "Langue",
+        "auto": "Auto",
+        "indice": "« Auto » suit la langue de votre téléphone.",
+        "a11y": "Langue {{langue}}"
+    }
+}

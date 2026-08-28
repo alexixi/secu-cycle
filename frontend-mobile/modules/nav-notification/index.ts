@@ -10,14 +10,26 @@ export type NavGuidancePayload = {
   progress?: number;
   status?: string | null;
   hasArrived?: boolean;
+  // Libellés composés par la notification elle-même. Le natif retombe sur ses
+  // valeurs françaises par défaut s'ils sont absents.
+  arrivedTitle?: string;
+  rerouteTitle?: string;
+  fallbackTitle?: string;
+  nextPrefix?: string;
+};
+
+export type NavLabels = {
+  channelName?: string;
+  startingInstruction?: string;
+  startingDistanceLabel?: string;
 };
 
 const isAndroid = Platform.OS === 'android';
 
 /** Crée le canal de notification et poste la notification initiale. */
-export async function start(): Promise<void> {
+export async function start(labels: NavLabels = {}): Promise<void> {
   if (!isAndroid) return;
-  await NavNotificationModule.start();
+  await NavNotificationModule.start(labels);
 }
 
 /** Met à jour la notification de guidage en direct. */

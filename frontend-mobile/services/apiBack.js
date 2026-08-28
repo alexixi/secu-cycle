@@ -1,6 +1,7 @@
 import { DeviceEventEmitter } from 'react-native';
 import Constants from 'expo-constants';
 import { getRefreshToken, saveAccessToken } from './tokenStorage';
+import { currentLanguage } from './languagePreference';
 
 let API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -30,7 +31,10 @@ async function refreshAccessToken() {
     try {
         const response = await fetch(`${API_BASE_URL}/users/refresh`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Accept-Language": currentLanguage(),
+            },
             body: JSON.stringify({ refresh_token: refreshToken }),
         });
         if (!response.ok) return null;
@@ -52,12 +56,16 @@ const SESSION_INVALID_CODE = "session_invalid";
 // Repli sur les messages, pour les API pas encore passées à l'en-tête. Cette
 // liste ne survivra pas à la traduction du backend — c'est exactement pourquoi
 // l'en-tête existe — et elle disparaîtra une fois l'API déployée partout.
+// i18n-exempt-start: repli de compatibilité — messages rendus par des versions
+// de l'API antérieures à X-Auth-Error, comparés mais jamais affichés. À retirer
+// une fois l'en-tête déployé partout.
 const SESSION_INVALID_DETAILS = [
     "Invalid token",
     "Invalid token payload",
     "Token révoqué",
     "Compte suspendu.",
 ];
+// i18n-exempt-end
 
 function isSessionInvalid(response, errorData) {
     if (response.headers.get(SESSION_INVALID_HEADER) === SESSION_INVALID_CODE) {
@@ -77,6 +85,16 @@ function isSessionInvalid(response, errorData) {
 export async function apiFetch(endpoint, options = {}, token = null, _retried = false) {
     const headers = {
         "Content-Type": "application/json",
+        // Le backend négocie ?lang= > Accept-Language > fr (backend/i18n/negotiation.py).
+        // On envoie l'en-tête plutôt que le paramètre : il est CORS-safelisted,
+        // donc sans requête préliminaire, et il n'entre pas dans l'URL, donc il
+        // ne fragmente pas les caches. Côté serveur, Vary: Accept-Language est
+        // déjà posé et la locale entre dans les ETags — le 304 reste sûr.
+        //
+        // Contrairement au navigateur, fetch en React Native n'envoie aucun
+        // Accept-Language exploitable : sans cette ligne, messages d'erreur,
+        // météo, badges et instructions de guidage reviennent tous en français.
+        "Accept-Language": currentLanguage(),
         ...options.headers,
     };
 
@@ -100,8 +118,10 @@ export async function apiFetch(endpoint, options = {}, token = null, _retried = 
             }
             console.warn("Token expiré ! Déconnexion forcée.");
             DeviceEventEmitter.emit("force-logout");
+            // i18n-exempt: message d'Error interne, lu par le code et jamais affiché
             throw new Error("Session expirée");
         }
+        // i18n-exempt: repli de message d'Error interne, jamais affiché
         const apiError = new Error(errorData || "Erreur lors de la requête API");
         apiError.status = response.status;
         apiError.statusText = response.statusText;

@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '../../hooks/useTheme';
 
 export function ScreenHeader({ title, onBack }) {
     const { colors } = useTheme();
+    const { t } = useTranslation();
 
     return (
         <View style={[styles.header, { borderBottomColor: colors.borderLight }]}>
@@ -13,7 +15,7 @@ export function ScreenHeader({ title, onBack }) {
                 style={styles.side}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 accessibilityRole="button"
-                accessibilityLabel="Retour"
+                accessibilityLabel={t('a11y.retour')}
             >
                 <Ionicons name="chevron-back" size={28} color={colors.textMain} />
             </TouchableOpacity>

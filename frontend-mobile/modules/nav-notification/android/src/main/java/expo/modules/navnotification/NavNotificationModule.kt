@@ -19,6 +19,28 @@ class NavGuidanceRecord : Record {
   @Field var progress: Double = 0.0
   @Field var status: String? = null
   @Field var hasArrived: Boolean = false
+
+  // Libellés que la notification compose elle-même, fournis traduits par le JS
+  // (services/navigationNotification.js). Les valeurs par défaut sont les textes
+  // français d'origine : un binaire à jour reste compatible avec un bundle qui ne
+  // les enverrait pas encore.
+  //
+  // i18n-exempt-start: replis de compatibilité — un bundle à jour envoie toujours
+  // ces libellés traduits, ces valeurs ne s'affichent que face à un JS antérieur.
+  @Field var arrivedTitle: String = "Vous êtes arrivé !"
+  @Field var rerouteTitle: String = "Recalcul de l'itinéraire…"
+  @Field var fallbackTitle: String = "Navigation"
+  @Field var nextPrefix: String = "Ensuite :"
+  // i18n-exempt-end
+}
+
+/** Libellés fixés à l'ouverture du canal, avant toute mise à jour de guidage. */
+class NavLabelsRecord : Record {
+  // i18n-exempt-start: replis de compatibilité, cf. NavGuidanceRecord
+  @Field var channelName: String = "Navigation"
+  @Field var startingInstruction: String = "Navigation en cours"
+  @Field var startingDistanceLabel: String = "Calcul du guidage…"
+  // i18n-exempt-end
 }
 
 class NavNotificationModule : Module() {
@@ -32,14 +54,21 @@ class NavNotificationModule : Module() {
   private val context: Context
     get() = requireNotNull(appContext.reactContext) { "Contexte React indisponible" }
 
+  // Le nom du canal est posé par start() puis réutilisé par chaque post() :
+  // ensureChannel() est appelé aux deux endroits, et recréer le canal avec un
+  // nom français écraserait celui que l'utilisateur voit dans les réglages
+  // Android. Repli sur le français, comme les champs du record.
+  private var channelName: String = "Navigation"
+
   override fun definition() = ModuleDefinition {
     Name("NavNotification")
 
-    AsyncFunction("start") {
+    AsyncFunction("start") { labels: NavLabelsRecord ->
+      channelName = labels.channelName
       ensureChannel()
       val initial = NavGuidanceRecord().apply {
-        instruction = "Navigation en cours"
-        distanceLabel = "Calcul du guidage…"
+        instruction = labels.startingInstruction
+        distanceLabel = labels.startingDistanceLabel
       }
       post(initial)
     }
@@ -58,7 +87,7 @@ class NavNotificationModule : Module() {
       CHANNEL_ID,
       NotificationManagerCompat.IMPORTANCE_LOW,
     )
-      .setName("Navigation")
+      .setName(channelName)
       .setSound(null, null)
       .setVibrationEnabled(false)
       .setShowBadge(false)
@@ -73,18 +102,18 @@ class NavNotificationModule : Module() {
     val text: String
     when {
       g.hasArrived -> {
-        title = "Vous êtes arrivé !"
+        title = g.arrivedTitle
         text = ""
       }
       g.status == "off_route" -> {
-        title = "Recalcul de l'itinéraire…"
+        title = g.rerouteTitle
         text = ""
       }
       else -> {
-        title = g.instruction?.takeIf { it.isNotBlank() } ?: "Navigation"
+        title = g.instruction?.takeIf { it.isNotBlank() } ?: g.fallbackTitle
         text = listOfNotNull(
           g.distanceLabel?.takeIf { it.isNotBlank() },
-          g.nextInstruction?.takeIf { it.isNotBlank() }?.let { "Ensuite : $it" },
+          g.nextInstruction?.takeIf { it.isNotBlank() }?.let { "${g.nextPrefix} $it" },
         ).joinToString(" • ")
       }
     }
