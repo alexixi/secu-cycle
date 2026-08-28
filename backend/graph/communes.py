@@ -19,7 +19,18 @@ from models.graph_profile import CommuneGeometry
 
 
 class CommuneNotFound(Exception):
-    """Nominatim ne connaît pas cette commune."""
+    """Nominatim ne connaît pas cette commune.
+
+    Porte la clé de traduction et ses paramètres à côté du message. Le
+    géocodage tourne aussi hors requête — chargement d'emprise, journaux — où il
+    n'y a pas de locale à appliquer : le message reste français pour les traces,
+    et c'est le routeur qui rend la clé dans la langue de l'appelant.
+    """
+
+    def __init__(self, message: str, key: str, **params):
+        super().__init__(message)
+        self.key = key
+        self.params = params
 
 
 def _geocode(name: str) -> dict:
@@ -27,10 +38,16 @@ def _geocode(name: str) -> dict:
     try:
         gdf = ox.geocode_to_gdf(name)
     except Exception as exc:
-        raise CommuneNotFound(f"Commune introuvable : « {name} » ({exc}).") from exc
+        raise CommuneNotFound(
+            f"Commune introuvable : « {name} » ({exc}).",
+            "error.commune.not_found_reason", name=name, reason=str(exc),
+        ) from exc
 
     if gdf.empty:
-        raise CommuneNotFound(f"Commune introuvable : « {name} ».")
+        raise CommuneNotFound(
+            f"Commune introuvable : « {name} ».",
+            "error.commune.not_found", name=name,
+        )
 
     return json.loads(json.dumps(mapping(gdf.geometry.iloc[0])))
 

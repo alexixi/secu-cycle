@@ -43,11 +43,12 @@ def list_badges(db: Session = Depends(get_db), current_user=Depends(get_current_
 
 
 @router.get("/user/{user_id}", response_model=List[BadgeObtained])
-def list_user_badges(user_id: int, db: Session = Depends(get_db), _admin=Depends(require_admin)):
+def list_user_badges(user_id: int, db: Session = Depends(get_db), _admin=Depends(require_admin),
+                     locale: str = Depends(get_locale)):
     """Badges débloqués par un utilisateur donné, pour la fiche du dashboard admin."""
     exists = db.execute(text("SELECT 1 FROM users WHERE id = :uid"), {"uid": user_id}).first()
     if exists is None:
-        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+        raise HTTPException(status_code=404, detail=t("error.auth.user_not_found", locale))
 
     # Pas de filtre sur `criteria` ici, contrairement à list_badges : celui-ci écarte les
     # badges non débloquables, alors qu'on répond ici à « qu'a-t-il réellement obtenu ».

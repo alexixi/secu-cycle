@@ -137,5 +137,115 @@
             "name": "200 km ridden",
             "description": "Ride a total of 200 km on completed trips."
         }
+    },
+    "error": {
+        "common": {
+            "no_fields": "No field to update.",
+            "graph_unavailable": "Graph unavailable.",
+            "graph_not_loaded": "Graph not loaded",
+            "sync_running": "A synchronisation is already running.",
+            "bbox_format": "bbox expected in the format lon_min,lat_min,lon_max,lat_max.",
+            "bbox_bounds": "bbox: the minimum bounds exceed the maximum ones."
+        },
+        "auth": {
+            "invalid_token": "Invalid token.",
+            "invalid_token_payload": "Invalid token payload.",
+            "user_not_found": "User not found.",
+            "account_suspended": "Account suspended.",
+            "account_suspended_contact": "Account suspended. Please contact the administrators.",
+            "account_unverified": "Account not verified. Please check your e-mail.",
+            "token_revoked": "Token revoked.",
+            "admin_only": "Administrators only",
+            "invalid_credentials": "Invalid credentials.",
+            "refresh_invalid_or_expired": "Refresh token invalid or expired",
+            "refresh_invalid": "Refresh token invalid",
+            "refresh_revoked": "Refresh token revoked",
+            "code_invalid_or_expired": "Invalid or expired code.",
+            "wrong_old_password": "Current password is incorrect.",
+            "wrong_password": "Incorrect password.",
+            "email_taken": "This e-mail address is already linked to an account.",
+            "email_unchanged": "This address is already the one on your account.",
+            "code_cooldown": "A code has just been sent. Try again in a minute.",
+            "change_request_not_found": "Change request not found."
+        },
+        "user": {
+            "self_demote": "You cannot remove your own administrator rights.",
+            "self_sanction": "You cannot sanction yourself.",
+            "self_delete": "You cannot delete your own account."
+        },
+        "bike": {
+            "not_found": "Bike not found"
+        },
+        "history": {
+            "not_found": "History entry not found"
+        },
+        "report": {
+            "banned": "You are no longer allowed to submit reports.",
+            "not_found": "Report not found.",
+            "self_vote": "You cannot vote on your own report.",
+            "self_flag": "You cannot flag your own report.",
+            "no_author": "This report no longer has an author, there is nobody to block.",
+            "self_block": "You cannot block yourself."
+        },
+        "geo": {
+            "no_address": "No address at this location."
+        },
+        "poi": {
+            "unknown_categories": "Unknown categories: {unknown}. Accepted values: {accepted}."
+        },
+        "route": {
+            "not_found": "Route not found",
+            "computation_failed": "The route could not be computed."
+        },
+        "tag": {
+            "name_taken": "A label with this name already exists.",
+            "not_found": "Label not found."
+        },
+        "task": {
+            "assignee_not_found": "Assigned user not found.",
+            "assignee_not_admin": "A task can only be assigned to an administrator.",
+            "tags_not_found": "One or more labels could not be found.",
+            "not_found": "Task not found."
+        },
+        "recap": {
+            "no_period": "No period can be computed.",
+            "no_recap": "No summary for this user over the period: no completed ride, unsubscribed, unverified, or already sent."
+        },
+        "contact": {
+            "send_failed": "The message could not be sent. Try again later, or write to us directly."
+        },
+        "commune": {
+            "not_found": "Municipality not found: “{name}”.",
+            "not_found_reason": "Municipality not found: “{name}” ({reason})."
+        },
+        "graph": {
+            "profile_not_found": "Profile not found.",
+            "profile_name_taken": "A profile already has this name.",
+            "base_profile_not_found": "Base profile not found (id {id}).",
+            "profile_needs_commune": "A profile must contain at least one municipality: select a base profile or add a municipality.",
+            "rename_active": "The active profile cannot be renamed: activate another one first.",
+            "delete_active": "The active profile cannot be deleted: activate another one first.",
+            "delete_default": "The default profile cannot be deleted: designate another one first.",
+            "delete_data_scope": "This profile bounds the data: deleting it would fall the synchronisations back on the graph extent, which would purge the municipalities outside it. Designate another data extent first.",
+            "import_empty": "This file contains no profile.",
+            "import_duplicate": "The file contains two profiles named “{name}”.",
+            "import_name_taken": "A profile already has this name: “{name}”.",
+            "build_running": "A build is already running.",
+            "not_built": "The graph for this profile has not been built yet.",
+            "reload_running": "A reload is already running.",
+            "build_running_activate": "A build is running: wait for it to finish before activating a profile.",
+            "already_active": "This profile is already active.",
+            "scope_no_commune": "This profile contains no municipality: the synchronisations would have nothing to fetch and would purge the whole database.",
+            "already_data_scope": "This profile already bounds the data."
+        }
+    },
+    "message": {
+        "account_verified": "Account verified.",
+        "verification_code_sent": "If an unverified account exists for this e-mail, a code has been sent.",
+        "reset_code_sent": "If an account exists for this e-mail, a code has been sent.",
+        "password_reset": "Password reset.",
+        "email_change_code_sent": "A confirmation code has been sent to the new address.",
+        "contact_sent": "Message sent.",
+        "recap_test_sent": "Test summary sent to {email}."
     }
 }
