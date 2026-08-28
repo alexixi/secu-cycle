@@ -1,40 +1,29 @@
 import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 
 import { Button } from './ui/Button';
 import { useTheme } from '../hooks/useTheme';
 
+// Les motifs portent l'identifiant transmis à l'API ; leurs libellés vivent dans
+// le catalogue sous la même clé, et sont résolus au rendu.
 const REASONS = [
-    { key: 'offensive', icon: 'warning-outline', label: 'Contenu offensant', hint: 'Insultes, haine, propos déplacés' },
-    { key: 'spam', icon: 'megaphone-outline', label: 'Spam ou publicité', hint: 'Message sans rapport avec la sécurité à vélo' },
-    { key: 'wrong_place', icon: 'location-outline', label: 'Signalement fantaisiste', hint: 'Danger inventé ou placé n’importe où' },
-    { key: 'other', icon: 'ellipsis-horizontal-outline', label: 'Autre motif', hint: null },
+    { key: 'offensive', icon: 'warning-outline', avecAide: true },
+    { key: 'spam', icon: 'megaphone-outline', avecAide: true },
+    { key: 'wrong_place', icon: 'location-outline', avecAide: true },
+    { key: 'other', icon: 'ellipsis-horizontal-outline', avecAide: false },
 ];
 
 const OUTCOMES = {
-    reported: {
-        icon: 'checkmark-circle',
-        tone: 'success',
-        title: 'Merci',
-        body: "Votre signalement a été transmis. Nous l'examinons sous 24 heures.",
-    },
-    blocked: {
-        icon: 'person-remove',
-        tone: 'neutral',
-        title: 'Auteur bloqué',
-        body: "Vous ne verrez plus ses signalements. Vous pouvez revenir sur ce blocage dans les réglages.",
-    },
-    error: {
-        icon: 'alert-circle',
-        tone: 'error',
-        title: 'Envoi impossible',
-        body: "Votre signalement n'a pas pu être transmis. Vérifiez votre connexion et réessayez.",
-    },
+    reported: { icon: 'checkmark-circle', tone: 'success' },
+    blocked: { icon: 'person-remove', tone: 'neutral' },
+    error: { icon: 'alert-circle', tone: 'error' },
 };
 
 export default function ReportAbuseModal({ visible, status, onClose, onReport, onBlock }) {
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
 
     const choose = (action, arg) => {
         Haptics.selectionAsync().catch(() => { });
@@ -70,7 +59,7 @@ export default function ReportAbuseModal({ visible, status, onClose, onReport, o
                         <View style={styles.centered}>
                             <ActivityIndicator size="large" color={colors.primary} />
                             <Text style={[styles.outcomeBody, { color: colors.textSecondary }]}>
-                                Envoi en cours…
+                                {t('carte.ui.abus.issue.envoiEnCours')}
                             </Text>
                         </View>
                     )}
@@ -81,13 +70,13 @@ export default function ReportAbuseModal({ visible, status, onClose, onReport, o
                                 <Ionicons name={outcome.icon} size={40} color={toneColor} />
                             </View>
                             <Text style={[typography.h1, styles.outcomeTitle, { color: colors.textMain }]}>
-                                {outcome.title}
+                                {t(`carte.ui.abus.issue.${status}.titre`)}
                             </Text>
                             <Text style={[styles.outcomeBody, { color: colors.textSecondary }]}>
-                                {outcome.body}
+                                {t(`carte.ui.abus.issue.${status}.corps`)}
                             </Text>
                             <View style={styles.outcomeAction}>
-                                <Button title="Fermer" onPress={onClose} />
+                                <Button title={t('carte.ui.fermer')} onPress={onClose} />
                             </View>
                         </View>
                     )}
@@ -96,19 +85,18 @@ export default function ReportAbuseModal({ visible, status, onClose, onReport, o
                         <>
                             <View style={styles.header}>
                                 <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>
-                                    Signaler ce contenu
+                                    {t('carte.ui.abus.titre')}
                                 </Text>
-                                <TouchableOpacity onPress={onClose} accessibilityLabel="Fermer">
+                                <TouchableOpacity onPress={onClose} accessibilityLabel={t('carte.ui.fermer')}>
                                     <Ionicons name="close" size={26} color={colors.textMain} />
                                 </TouchableOpacity>
                             </View>
 
                             <Text style={[styles.lead, { color: colors.textSecondary }]}>
-                                Nous examinons chaque signalement sous 24 heures. Au-delà de deux
-                                signalements, le contenu disparaît de la carte en attendant notre décision.
+                                {t('carte.ui.abus.delai')}
                             </Text>
 
-                            {REASONS.map(({ key, icon, label, hint }) => (
+                            {REASONS.map(({ key, icon, avecAide }) => (
                                 <TouchableOpacity
                                     key={key}
                                     style={[styles.row, { borderColor: colors.borderLight }]}
@@ -117,8 +105,14 @@ export default function ReportAbuseModal({ visible, status, onClose, onReport, o
                                 >
                                     <Ionicons name={icon} size={22} color={colors.error} />
                                     <View style={styles.rowText}>
-                                        <Text style={[styles.rowLabel, { color: colors.textMain }]}>{label}</Text>
-                                        {hint && <Text style={[styles.rowHint, { color: colors.textSecondary }]}>{hint}</Text>}
+                                        <Text style={[styles.rowLabel, { color: colors.textMain }]}>
+                                            {t(`carte.ui.abus.motif.${key}.label`)}
+                                        </Text>
+                                        {avecAide && (
+                                            <Text style={[styles.rowHint, { color: colors.textSecondary }]}>
+                                                {t(`carte.ui.abus.motif.${key}.aide`)}
+                                            </Text>
+                                        )}
                                     </View>
                                     <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
                                 </TouchableOpacity>
@@ -131,9 +125,9 @@ export default function ReportAbuseModal({ visible, status, onClose, onReport, o
                             >
                                 <Ionicons name="person-remove-outline" size={22} color={colors.textMain} />
                                 <View style={styles.rowText}>
-                                    <Text style={[styles.rowLabel, { color: colors.textMain }]}>Bloquer cet auteur</Text>
+                                    <Text style={[styles.rowLabel, { color: colors.textMain }]}>{t('carte.ui.abus.bloquer')}</Text>
                                     <Text style={[styles.rowHint, { color: colors.textSecondary }]}>
-                                        Vous ne verrez plus aucun de ses signalements. Réversible dans les réglages.
+                                        {t('carte.ui.abus.bloquerAide')}
                                     </Text>
                                 </View>
                             </TouchableOpacity>
