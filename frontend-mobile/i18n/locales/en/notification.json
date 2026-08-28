@@ -1,0 +1,11 @@
+{
+    "guidage": {
+        "canal": "Navigation",
+        "demarrage": "Navigation in progress",
+        "calcul": "Calculating route…",
+        "titreParDefaut": "Navigation",
+        "arrive": "You have arrived!",
+        "recalcul": "Recalculating route…",
+        "ensuite": "Then: {{instruction}}"
+    }
+}

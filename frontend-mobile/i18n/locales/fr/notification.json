@@ -1,0 +1,11 @@
+{
+    "guidage": {
+        "canal": "Navigation",
+        "demarrage": "Navigation en cours",
+        "calcul": "Calcul du guidage…",
+        "titreParDefaut": "Navigation",
+        "arrive": "Vous êtes arrivé !",
+        "recalcul": "Recalcul de l'itinéraire…",
+        "ensuite": "Ensuite : {{instruction}}"
+    }
+}
