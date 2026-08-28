@@ -1109,6 +1109,7 @@ export default function MapComponent({
         onNavigateToPoi({
             lat: activePoi.lat,
             lon: activePoi.lon,
+            // i18n-suffixes: water toilets parking repair
             name: activePoi.name || t(`carte.poi.${activePoi.category}`),
         });
         setActivePoi(null);
@@ -1653,6 +1654,7 @@ export default function MapComponent({
                                 }}>
                                 <Text style={styles.layerEmoji}>{style.icon}</Text>
                                 <Text style={[styles.layerText, typography.body, { color: activeBaseStyle === style.id ? colors.primary : colors.textSecondary, fontWeight: activeBaseStyle === style.id ? 'bold' : 'normal' }]}>
+                                    {/* i18n-suffixes: streets base outdoor hybrid */}
                                     {t(`carte.fond.${style.id}`)}
                                 </Text>
                             </TouchableOpacity>
@@ -1984,6 +1986,7 @@ export default function MapComponent({
                                         <MaterialCommunityIcons name={category.icon} size={18} color="#FFF" />
                                     </View>
                                     <Text style={[styles.layerText, typography.body, { flex: 1, color: colors.textMain }]}>
+                                        {/* i18n-suffixes: water toilets parking repair */}
                                         {t(`carte.poi.${category.id}`)}
                                     </Text>
                                     <Switch
@@ -1996,23 +1999,33 @@ export default function MapComponent({
                                     />
                                 </View>
 
-                                {category.subTypes && enabledPoiCats[category.id] && category.subTypes.map((subType) => (
-                                    <View key={subType.id} style={styles.poiSubOption}>
-                                        <View style={[styles.poiSubDot, { backgroundColor: subType.color }]} />
-                                        <Text style={[typography.body, { flex: 1, fontSize: 14, color: colors.textSecondary }]}>
-                                            {t(`carte.${category.sousCle}.${subType.id}`)}
-                                        </Text>
-                                        <Switch
-                                            value={!!enabledSubTypes[category.id]?.[subType.id]}
-                                            onValueChange={() => {
-                                                Haptics.selectionAsync();
-                                                handleSubTypeToggle(category.id, subType.id);
-                                            }}
-                                            trackColor={{ true: colors.primary }}
-                                            style={{ transform: [{ scale: 0.8 }] }}
-                                        />
-                                    </View>
-                                ))}
+                                {category.subTypes && enabledPoiCats[category.id] && category.subTypes.map((subType) => {
+                                    // Les deux moitiés de la clé sont réunies ici plutôt que dans
+                                    // l'appel : un gabarit à deux trous n'est pas vérifiable, et
+                                    // c'est exactement ce qui a laissé passer « apparence.light ».
+                                    const sousType = `${category.sousCle}.${subType.id}`;
+
+                                    return (
+                                        <View key={subType.id} style={styles.poiSubOption}>
+                                            <View style={[styles.poiSubDot, { backgroundColor: subType.color }]} />
+                                            <Text style={[typography.body, { flex: 1, fontSize: 14, color: colors.textSecondary }]}>
+                                                {/* i18n-suffixes: parking.stands parking.racks parking.shelter parking.other
+                                                    toilettes.free toilettes.paid toilettes.unknown
+                                                    reparation.selfservice reparation.shop */}
+                                                {t(`carte.${sousType}`)}
+                                            </Text>
+                                            <Switch
+                                                value={!!enabledSubTypes[category.id]?.[subType.id]}
+                                                onValueChange={() => {
+                                                    Haptics.selectionAsync();
+                                                    handleSubTypeToggle(category.id, subType.id);
+                                                }}
+                                                trackColor={{ true: colors.primary }}
+                                                style={{ transform: [{ scale: 0.8 }] }}
+                                            />
+                                        </View>
+                                    );
+                                })}
                             </View>
                         ))}
 
@@ -2049,6 +2062,7 @@ export default function MapComponent({
                                     <View key={item.id} style={styles.poiSubOption}>
                                         <View style={[styles.poiSubDot, { backgroundColor: item.color }]} />
                                         <Text style={[typography.body, { flex: 1, fontSize: 14, color: colors.textSecondary }]}>
+                                            {/* i18n-suffixes: mortel hospitalise leger */}
                                             {t(`carte.graviteAccident.${item.id}`)}
                                         </Text>
                                     </View>
@@ -2143,6 +2157,7 @@ export default function MapComponent({
                                         resizeMode="contain"
                                     />
                                     <Text style={[typography.body, { fontSize: 14, fontWeight: selectedReportType === type.id ? 'bold' : 'normal', color: colors.textMain }]}>
+                                        {/* i18n-suffixes: accident travaux danger obstacle */}
                                         {t(`carte.signalement.${type.id}`)}
                                     </Text>
                                 </TouchableOpacity>
@@ -2314,6 +2329,8 @@ export default function MapComponent({
                                     // la donnée elle-même sinon (horaires, capacité).
                                     // i18n-exempt: `brut` est une clé de catalogue produite juste au-dessus
                                     const valeur = typeof brut === 'string' && brut.startsWith('carte.') ? t(brut) : brut;
+                                    /* i18n-suffixes: parking_type toilet_fee repair_kind opening_hours
+                                       fee capacity covered access wheelchair seasonal */
                                     return `${t(`carte.champPoi.${field.key}`)} : ${valeur}`;
                                 });
                             return (
@@ -2324,6 +2341,7 @@ export default function MapComponent({
                                                 <MaterialCommunityIcons name={category?.icon} size={18} color="#FFF" />
                                             </View>
                                             <Text style={[typography.h1, { fontSize: 18, lineHeight: 22, color: colors.textMain, flex: 1 }]} numberOfLines={2}>
+                                                {/* i18n-suffixes: water toilets parking repair */}
                                                 {activePoi.name || (category && t(`carte.poi.${category.id}`))}
                                             </Text>
                                         </View>
@@ -2333,6 +2351,7 @@ export default function MapComponent({
                                     </View>
 
                                     <Text style={[typography.body, { color: colors.textSecondary, marginBottom: details.length ? 8 : 20 }]}>
+                                        {/* i18n-suffixes: water toilets parking repair */}
                                         {category && t(`carte.poi.${category.id}`)}
                                     </Text>
 
@@ -2375,6 +2394,7 @@ export default function MapComponent({
                             const date = formatAccidentDate(activeAccident, f);
                             const details = ACCIDENT_DETAIL_FIELDS
                                 .filter(field => activeAccident[field.key])
+                                // i18n-suffixes: light weather collision road_type intersection
                                 .map(field => `${t(`carte.champAccident.${field.key}`)} : ${activeAccident[field.key]}`);
                             const color = activeAccident.severity >= 10 ? '#7f1d1d'
                                 : activeAccident.severity >= 3 ? '#dc2626' : '#f97316';
@@ -2495,6 +2515,7 @@ export default function MapComponent({
                                                         </Text>
                                                     </View>
                                                     <Text style={[typography.body, { fontSize: 11, color: colors.textSecondary, textAlign: 'center' }]}>
+                                                        {/* i18n-suffixes: bikes_mechanical bikes_electric docks_available bikes_available */}
                                                         {t(`carte.vls.${field.key}`)}
                                                     </Text>
                                                 </View>

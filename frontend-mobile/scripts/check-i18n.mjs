@@ -540,16 +540,78 @@ function verifierParite(lang) {
 // gras dans l'écran de réglages.
 //
 // C'est ici que le namespace unique paie : la clé écrite dans le code est la clé
-// du catalogue, sans domaine à résoudre. Les clés composées sont couvertes par
-// leur préfixe — t(`carte.parking.${id}`) rend « carte.parking.* » utilisé. En
-// échange, on renonce à repérer une feuille morte sous un tel préfixe.
+// du catalogue, sans domaine à résoudre.
+//
+// Restaient les clés composées, longtemps couvertes en bloc par leur préfixe :
+// t(`carte.parking.${id}`) rendait « carte.parking.* » utilisé, et nul ne
+// vérifiait qu'une feuille existait au bout. Le sélecteur de thème y a laissé
+// « parametres.apparence.light » affiché en clair pendant deux versions — le
+// gabarit composait sur les valeurs anglaises du mode, le catalogue ne portait
+// que « clair » et « sombre ». Chaque site d'appel déclare donc maintenant les
+// feuilles qu'il peut produire :
+//
+//     {/* i18n-suffixes: safe fast compromise */}
+//     {t(`itineraire.variant.${route.route_type}`)}
+//
+// La liste est vérifiée feuille par feuille, et vaut aussi déclaration d'usage :
+// une feuille qu'aucune annotation ne nomme ressort comme jamais appelée. Ce
+// qu'aucune liste ne décrit — plusieurs interpolations, ensemble ouvert — passe
+// par « i18n-exempt », qui exige une raison écrite et retombe sur l'ancienne
+// couverture par préfixe.
 
 const APPEL_T = /\bt\(\s*(['"])([\w.]+)\1/g;
 // <Trans i18nKey="..."> : même rôle que t(), pour les phrases qui portent des
 // liens au fil du texte et qu'on ne peut pas découper sans casser l'ordre des
 // mots d'une langue à l'autre.
 const APPEL_TRANS = /\bi18nKey\s*=\s*(?:\{\s*)?(['"])([\w.]+)\1/g;
-const APPEL_T_GABARIT = /\bt\(\s*`([\w.]*)\$\{/g;
+// Le gabarit est capturé ENTIER, pas seulement son préfixe : reconstruire la clé
+// par substitution du trou demande aussi ce qui suit — « motif.${cle}.aide ».
+const APPEL_T_GABARIT = /\bt\(\s*`([^`]*)`/g;
+const INTERPOLATION = /\$\{[^}]*\}/g;
+
+// Déclaration des feuilles atteignables depuis un gabarit. Même grammaire de
+// commentaire que les exemptions, JSX compris.
+const SUFFIXES = new RegExp(OUVERTURE + String.raw`i18n-suffixes\s*:\s*(\S.*)$`);
+
+// Ce qui borne l'annotation : les délimiteurs du commentaire lui-même.
+const NU = /^\s*(?:\/\/|\{\s*\/\*|\/\*)\s*|\s*\*\/\s*\}?\s*$/g;
+const FERMETURE_BLOC = /\*\//;
+
+/**
+ * Suffixes déclarés, par numéro de ligne couverte.
+ *
+ * Comme « i18n-exempt », l'annotation couvre sa propre ligne et la suivante :
+ * l'appel se pose au-dessous, ou dans son sillage immédiat. À une nuance près,
+ * qu'une liste de dix suffixes rend nécessaire : dans un commentaire de bloc, la
+ * déclaration court jusqu'à la fermeture, et c'est de là que part sa portée. La
+ * forme en double barre n'a pas de fin explicite — elle tient donc sur une seule
+ * ligne, sous peine d'avaler le commentaire d'à côté.
+ */
+function suffixesDeclares(lignes) {
+    const parLigne = new Map();
+
+    for (let i = 0; i < lignes.length; i += 1) {
+        const m = lignes[i].match(SUFFIXES);
+        if (!m) continue;
+
+        const bloc = /^\s*\{?\s*\/\*/.test(lignes[i]);
+        const morceaux = [m[1]];
+        let fin = i;
+        while (bloc && !FERMETURE_BLOC.test(lignes[fin]) && fin + 1 < lignes.length) {
+            fin += 1;
+            morceaux.push(lignes[fin]);
+        }
+
+        const liste = morceaux
+            .flatMap((morceau) => morceau.replace(NU, '').split(/[\s,]+/))
+            .filter(Boolean);
+        if (!liste.length) continue;
+        parLigne.set(fin + 1, liste);
+        parLigne.set(fin + 2, liste);
+        i = fin;
+    }
+    return parLigne;
+}
 // Un t(variable) sans préfixe littéral rendrait le contrôle inopérant sans que
 // personne ne s'en aperçoive : on le refuse explicitement plutôt que d'espérer.
 const APPEL_T_OPAQUE = /\bt\(\s*(?![`'"\s)])[A-Za-z_$]/g;
@@ -570,15 +632,17 @@ function verifierCles() {
     }
     const utilisees = new Set();
     const prefixes = [];
+    const indirectes = [];
 
     for (const chemin of tousLesFichiers()) {
         const relatif = chemin.slice(racine.length + 1);
         const src = readFileSync(chemin, 'utf-8');
         const ligneDe = indexLignes(src);
-        const { masque } = masquer(src);
+        const { masque, litteraux } = masquer(src);
         // Une exemption motivée vaut ici aussi : c'est le mécanisme prévu pour
         // les cas légitimes, et le seul qui oblige à écrire la raison.
         const exemptes = lignesExemptes(src.split('\n'));
+        const suffixes = suffixesDeclares(src.split('\n'));
 
         for (const motif of [APPEL_T, APPEL_TRANS]) {
             for (const m of src.matchAll(motif)) {
@@ -588,13 +652,74 @@ function verifierCles() {
                 }
             }
         }
+        const gabaritsAppeles = new Set();
+
         for (const m of src.matchAll(APPEL_T_GABARIT)) {
-            if (!m[1]) {
-                anomalies.push(`${relatif}:${ligneDe(m.index)} — clé composée sans préfixe littéral`);
+            const ligne = ligneDe(m.index);
+            const gabarit = m[1];
+            gabaritsAppeles.add(gabarit);
+            const trous = gabarit.match(INTERPOLATION) ?? [];
+
+            // t(`cle.litterale`) : rien de dynamique, donc rien à déclarer. Sans
+            // ce cas, l'apostrophe en moins suffirait à sortir une clé du champ
+            // du contrôle.
+            if (!trous.length) {
+                utilisees.add(gabarit);
+                if (!cles.has(gabarit)) {
+                    anomalies.push(`${relatif}:${ligne} — clé absente du catalogue : ${gabarit}`);
+                }
                 continue;
             }
-            prefixes.push(m[1]);
+            if (gabarit.startsWith('${')) {
+                anomalies.push(`${relatif}:${ligne} — clé composée sans préfixe littéral`);
+                continue;
+            }
+            // L'exemption passe avant l'annotation : c'est l'issue des gabarits
+            // qu'aucune liste ne décrit, et elle rend sa cécité à la couverture
+            // par préfixe.
+            if (exemptes.has(ligne)) {
+                prefixes.push(gabarit.slice(0, gabarit.indexOf('${')));
+                continue;
+            }
+
+            const declares = suffixes.get(ligne);
+            if (!declares) {
+                anomalies.push(`${relatif}:${ligne} — clé composée non annotée : déclarer les`
+                    + ' feuilles atteignables par « i18n-suffixes: a b c », ou motiver'
+                    + ' l\'exception par « i18n-exempt: <raison> »');
+                continue;
+            }
+            if (trous.length > 1) {
+                anomalies.push(`${relatif}:${ligne} — clé composée à ${trous.length} interpolations :`
+                    + ' une liste de suffixes ne la décrit pas, passer par « i18n-exempt: <raison> »');
+                continue;
+            }
+            for (const suffixe of declares) {
+                const cle = gabarit.replace(INTERPOLATION, suffixe);
+                utilisees.add(cle);
+                if (!cles.has(cle)) {
+                    anomalies.push(`${relatif}:${ligne} — feuille absente du catalogue : ${cle}`
+                        + ` (suffixe « ${suffixe} » déclaré)`);
+                }
+            }
         }
+        // Une clé peut naître ailleurs qu'à l'appel : POI_DETAIL_FIELDS rend
+        // « carte.tarif.free », mapRequestError « compte.email.erreursDemande »
+        // + un suffixe, et t() ne les reçoit que plus loin, par variable. Ces
+        // clés-là ne sont pas vérifiables — mais les taire vaut mieux que de les
+        // déclarer mortes : on relève donc tout ce qui, hors appel, a la forme
+        // d'une clé, pour ne jamais proposer à la suppression ce qu'un détour
+        // produit. Les gabarits passés à t(), eux, ont leur annotation.
+        for (const { texte } of litteraux) {
+            if (cles.has(texte)) { utilisees.add(texte); continue; }
+            if (gabaritsAppeles.has(texte) || !/^[a-z]\w*\./i.test(texte)) continue;
+            // Un gabarit : chaque trou vaut un segment. Un préfixe nu : il couvre
+            // ce qu'un suffixe viendra compléter.
+            indirectes.push(texte.includes('${')
+                ? new RegExp(`^${texte.replace(/[.]/g, '\\.').replace(/\$\{[^}]*\}/g, '[^.]+')}$`)
+                : new RegExp(`^${texte.replace(/[.]/g, '\\.')}\\.`));
+        }
+
         for (const m of masque.matchAll(APPEL_T_OPAQUE)) {
             if (exemptes.has(ligneDe(m.index))) continue;
             anomalies.push(`${relatif}:${ligneDe(m.index)} — t() sur une variable :`
@@ -604,6 +729,7 @@ function verifierCles() {
 
     const couverte = (cle) => {
         if (utilisees.has(cle) || prefixes.some((p) => cle.startsWith(p))) return true;
+        if (indirectes.some((motif) => motif.test(cle))) return true;
         const point = cle.lastIndexOf('_');
         return point !== -1
             && SUFFIXES_PLURIEL.includes(cle.slice(point + 1))
@@ -641,5 +767,7 @@ if (anomalies > 0) {
         + ' une locale figée ou une voix de synthèse figée reste en français au milieu d\'un écran anglais.');
     console.error('Pour un cas légitime — nom propre, attribution de source, repli de compatibilité —'
         + ' poser « // i18n-exempt: <raison> » sur la ligne précédente.');
+    console.error('Pour une clé composée, déclarer les feuilles qu\'elle atteint :'
+        + ' « // i18n-suffixes: a b c ».');
     process.exit(1);
 }

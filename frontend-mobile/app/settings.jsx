@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
@@ -40,12 +40,6 @@ const LANGUAGE_OPTIONS = [
     // i18n-exempt-end
 ];
 
-const THEME_OPTIONS = [
-    { value: 'light', icon: 'sunny' },
-    { value: 'auto', icon: 'settings-outline' },
-    { value: 'dark', icon: 'moon' },
-];
-
 function LinkRow({ icon, label, onPress, colors, isLast, tint }) {
     return (
         <TouchableOpacity
@@ -70,6 +64,17 @@ export default function SettingsPage() {
     const { languageMode, setLanguageMode } = useLocale();
     const { t } = useTranslation();
     const { user, token, updateUser } = useAuth();
+
+    // Les libellés portent la clé en toutes lettres, et non un gabarit composé
+    // sur `option.value` : les valeurs du mode de thème sont anglaises parce
+    // qu'AsyncStorage les persiste telles quelles, alors que les feuilles du
+    // catalogue sont françaises comme partout ailleurs. Composer la clé sur la
+    // valeur affichait « parametres.apparence.light » à l'écran.
+    const themeOptions = useMemo(() => [
+        { value: 'light', icon: 'sunny', label: t('parametres.apparence.clair') },
+        { value: 'auto', icon: 'settings-outline', label: t('parametres.apparence.auto') },
+        { value: 'dark', icon: 'moon', label: t('parametres.apparence.sombre') },
+    ], [t]);
 
     const [notifEnabled, setNotifEnabled] = useState(true);
     const [weatherAlertsEnabled, setWeatherAlerts] = useState(true);
@@ -225,10 +230,7 @@ export default function SettingsPage() {
 
                         <SegmentedSelector
                             value={themeMode}
-                            options={THEME_OPTIONS.map((option) => ({
-                                ...option,
-                                label: t(`parametres.apparence.${option.value}`),
-                            }))}
+                            options={themeOptions}
                             onChange={setThemeMode}
                             accessibilityLabelFor={(option) =>
                                 t('parametres.apparence.a11y', { theme: option.label })}

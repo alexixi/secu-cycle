@@ -93,6 +93,7 @@ export default function ProfilePage() {
         { label: t('compte.profil.statistiques.trajetsTermines'), value: f.nombre(totalTrajets), icon: "bicycle-outline", color: "#3d46f6" },
         { label: t('compte.profil.statistiques.distanceTotale'), value: t('compte.historique.kilometres', { valeur: f.nombre(totalDist, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }), icon: "navigate-outline", color: "#10B981" },
         { label: t('compte.profil.statistiques.tempsTotal'), value: t('compte.profil.tempsTotal', { heures: Math.floor(totalTime / 60), minutes: Math.round(totalTime % 60) }), icon: "time-outline", color: "#F59E0B" },
+        // i18n-suffixes: safe fast compromise
         { label: t('compte.profil.statistiques.typePrefere'), value: prefType ? t(`itineraire.variant.${prefType[0]}`) : t('compte.profil.valeurIndisponible'), icon: "heart-outline", color: "#EC4899" },
     ];
 

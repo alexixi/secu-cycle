@@ -58,6 +58,7 @@ export default function useHazardAlerts(reports, currentPosition, activeRoute, i
 
             announcedRef.current.add(report.id);
             // Le type de signalement partage ses identifiants avec la carte et l'API.
+            // i18n-suffixes: accident travaux danger obstacle
             const label = i18n.t(`carte.signalement.${report.report_type}`);
             Speech.stop();
             Speech.speak(

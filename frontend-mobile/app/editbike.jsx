@@ -124,6 +124,7 @@ export default function EditBikePage() {
                         {name.trim() || t('compte.velos.monVelo')}
                     </Text>
                     <Text style={[styles.previewType, { color: colors.textSecondary }]}>
+                        {/* i18n-suffixes: ville vtt route */}
                         {t(`auth.velo.${selectedType}`)}
                         {isElectric ? t('auth.velo.suffixeElectrique') : ""}
                     </Text>
@@ -171,6 +172,7 @@ export default function EditBikePage() {
                                         { color: isSelected ? '#FFF' : colors.textMain },
                                         isSelected && { fontWeight: 'bold' }
                                     ]}>
+                                        {/* i18n-suffixes: ville vtt route */}
                                         {t(`auth.velo.${type.value}`)}
                                     </Text>
                                 </TouchableOpacity>

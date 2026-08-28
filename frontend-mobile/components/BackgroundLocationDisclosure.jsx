@@ -39,9 +39,11 @@ export default function BackgroundLocationDisclosure({ visible, onAccept, onDecl
                                 <Ionicons name={icon} size={22} color={colors.primary} />
                                 <View style={styles.pointText}>
                                     <Text style={[styles.pointTitle, { color: colors.textMain }]}>
+                                        {/* i18n-suffixes: collecte arrierePlan usage */}
                                         {t(`legal.localisation.points.${cle}.titre`)}
                                     </Text>
                                     <Text style={[styles.pointBody, { color: colors.textSecondary }]}>
+                                        {/* i18n-suffixes: collecte arrierePlan usage */}
                                         {t(`legal.localisation.points.${cle}.texte`)}
                                     </Text>
                                 </View>

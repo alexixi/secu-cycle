@@ -74,6 +74,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                             <View style={{ flex: 1 }}>
                                 <Text style={[styles.bikeName, { color: colors.textMain }]}>{bike.name}</Text>
                                 <Text style={[styles.bikeType, { color: colors.textSecondary }]}>
+                                    {/* i18n-suffixes: ville vtt route */}
                                     {t(`auth.velo.${bike.type}`)}
                                     {bike.is_electric ? t('auth.velo.electriqueSuffixePuce') : ""}
                                 </Text>
@@ -121,6 +122,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                                     { color: isSelected ? "#FFF" : colors.textMain },
                                     isSelected && { fontWeight: "bold" },
                                 ]}>
+                                    {/* i18n-suffixes: ville vtt route */}
                                     {t(`auth.velo.${type.value}`)}
                                 </Text>
                             </TouchableOpacity>
