@@ -470,6 +470,18 @@ la déconnexion silencieusement. L'API pose désormais un en-tête `X-Auth-Error
 session_invalid`, que les clients lisent en priorité ; il doit rester listé dans
 `expose_headers` du `CORSMiddleware`, sans quoi le navigateur le masque.
 
+Depuis la traduction des `detail=`, cette liste de repli ne correspond plus à rien : les
+messages qu'elle contient (« Invalid token », « Token révoqué »…) ne sont plus émis. Elle est
+conservée pour couvrir un retour arrière de l'API, pas parce qu'elle sert. Ne pas la
+« corriger » en y remettant les libellés courants — ce serait recréer le couplage que
+l'en-tête a supprimé.
+
+**Ce qui reste volontairement en français.** Les messages des validateurs Pydantic
+(`schemas/graph_profile.py`, `tag.py`, `task.py`, les intervalles de synchro), remontés par le
+handler 422 : ils sont levés à l'analyse de la requête, avant l'endpoint, là où la locale
+négociée n'est pas atteignable sans variable de contexte globale — et leur seule surface est
+le dashboard d'administration, qui n'est pas traduit.
+
 **Vérifications.**
 
 ```bash
