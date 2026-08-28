@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { formatDistance } from '../utils/format';
+import { useTranslation } from 'react-i18next';
 
 const TURN_ICONS = {
     depart: 'navigation',
@@ -20,6 +21,7 @@ const TURN_ICONS = {
 };
 
 export default function GuidancePanel({ guidanceState, onStop }) {
+    const { t } = useTranslation();
     const insets = useSafeAreaInsets();
 
     useEffect(() => {
@@ -49,9 +51,9 @@ export default function GuidancePanel({ guidanceState, onStop }) {
         return (
             <View style={[styles.arrivedContainer, { top: insets.top + 12 }]}>
                 <MaterialCommunityIcons name="flag-checkered" size={32} color="#fff" />
-                <Text style={styles.arrivedText}>Vous êtes arrivé !</Text>
+                <Text style={styles.arrivedText}>{t('notification.guidage.arrive')}</Text>
                 <TouchableOpacity onPress={onStop} style={styles.stopButton}>
-                    <Text style={styles.stopButtonText}>Terminer</Text>
+                    <Text style={styles.stopButtonText}>{t('commun.terminer')}</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -100,7 +102,7 @@ export default function GuidancePanel({ guidanceState, onStop }) {
                 <View style={styles.nextRow}>
                     <MaterialCommunityIcons name={nextIconName} size={16} color="rgba(255,255,255,0.7)" />
                     <Text style={styles.nextText} numberOfLines={1}>
-                        Ensuite : {nextInstruction.text}
+                        {t('itineraire.guidage.ensuite', { instruction: nextInstruction.text })}
                     </Text>
                 </View>
             )}

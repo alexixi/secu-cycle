@@ -14,6 +14,8 @@ import {
     stopNavigationNotification,
 } from '../services/navigationNotification';
 import { trackEvent } from '../services/analytics';
+import i18n from '../i18n';
+import { bcp47, makeFormatters } from '../utils/datetime';
 
 const UPDATE_INTERVAL_MS = 2000;
 const APPROACH_DISTANCE_M = 200;
@@ -188,21 +190,29 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
 
     function _speak(text) {
         Speech.stop();
-        Speech.speak(text, { language: 'fr-FR', pitch: 1, rate: 1 });
+        // La voix suit la langue de l'application : lire un texte anglais avec une
+        // voix française le rend inintelligible en roulant.
+        Speech.speak(text, { language: bcp47(i18n.language), pitch: 1, rate: 1 });
     }
 
     function _spokenDistance(meters) {
+        // Le séparateur décimal vient d'Intl et non d'un replace(',') : la virgule
+        // française et le point anglais se choisissent seuls.
+        const f = makeFormatters(i18n.language);
         if (meters >= 1000) {
-            const km = (meters / 1000).toFixed(1).replace('.', ',');
-            return `dans ${km} kilomètres`;
+            return i18n.t('itineraire.guidage.parleDansKilometres', {
+                distance: f.nombre(meters / 1000, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+            });
         }
-        return `dans ${Math.round(meters / 10) * 10} mètres`;
+        return i18n.t('itineraire.guidage.parleDansMetres', {
+            distance: f.nombre(Math.round(meters / 10) * 10),
+        });
     }
 
     function _announce(step, instruction, distance, status, hasArrived) {
         if (hasArrived) {
             if (!arrivedSpokenRef.current) {
-                _speak("Vous êtes arrivé à destination");
+                _speak(i18n.t('itineraire.guidage.parleArrive'));
                 arrivedSpokenRef.current = true;
             }
             return;
