@@ -360,6 +360,16 @@ export async function confirmEmailChange(token, code) {
     }
 }
 
+export async function setProfileLanguage(token, language) {
+    // La préférence in-app vit dans AsyncStorage ; la colonne users.language,
+    // elle, sert aux e-mails — dont le récapitulatif, envoyé par une boucle de
+    // fond qui n'a aucune requête d'où lire une préférence.
+    return apiFetch("/users/me", {
+        method: "PATCH",
+        body: JSON.stringify({ language }),
+    }, token);
+}
+
 export async function setRecapEmails(token, enabled) {
     const data = await apiFetch("/users/me", {
         method: "PATCH",

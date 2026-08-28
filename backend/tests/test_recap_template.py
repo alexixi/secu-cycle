@@ -1,13 +1,19 @@
 """Gabarit du récapitulatif d'activité.
 
-`mailer.templates` n'importe que `html.escape` : ces tests le rendent donc sans
-base, sans réseau et sans variable d'environnement — c'est aussi ce qui permet à
-`make mail` de fonctionner à sec.
+`mailer.templates` n'importe que `html.escape` et `i18n`, qui ne fait que lire
+deux fichiers JSON : ces tests le rendent donc sans base, sans réseau et sans
+variable d'environnement — c'est aussi ce qui permet à `make mail` de
+fonctionner à sec.
 
 Deux propriétés se dégradent en silence et méritent d'être verrouillées : la
 présence du lien de désabonnement (son absence transforme un désabonnement en
 signalement de spam) et l'échappement du prénom, premier contenu utilisateur libre
-injecté dans un e-mail du projet.
+injecté dans un e-mail du projet. Toutes deux sont rejouées en anglais : ce sont
+des propriétés du gabarit, pas de la langue, et c'est bien ainsi qu'elles
+resteraient vraies après une retouche de la version française seule.
+
+La traduction elle-même est couverte ailleurs — `test_email_i18n.py` vérifie
+qu'aucune clé de catalogue n'affleure dans un e-mail.
 """
 
 from mailer.templates import (
@@ -46,9 +52,24 @@ def test_le_lien_de_desabonnement_est_dans_les_deux_versions():
     assert LIEN in texte
 
 
+def test_le_lien_de_desabonnement_est_dans_les_deux_versions_en_anglais():
+    _, html, texte = recap_email("monthly", "July 2026", "Alexis", _stats(), LIEN, "en")
+    assert "recaps/unsubscribe" in html
+    assert LIEN in texte
+
+
 def test_le_prenom_est_echappe():
     """Premier contenu utilisateur libre dans un e-mail : il n'est validé qu'en longueur."""
     _, html, _ = recap_email("monthly", "juillet 2026", "<script>alert(1)</script>", _stats(), LIEN)
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
+
+
+def test_le_prenom_est_echappe_en_anglais():
+    """L'échappement est une propriété du gabarit, pas de la langue."""
+    _, html, _ = recap_email(
+        "monthly", "July 2026", "<script>alert(1)</script>", _stats(), LIEN, "en",
+    )
     assert "<script>" not in html
     assert "&lt;script&gt;" in html
 

@@ -6,7 +6,7 @@ from database import get_db
 from dependencies import get_current_user, require_admin
 from i18n import get_locale, t
 from schemas.badge import BadgeProgress, BadgeObtained
-from utils.badges import count_all_criteria
+from utils.badges import count_all_criteria, libelles
 
 router = APIRouter(prefix="/badges", tags=["Badges"])
 
@@ -27,17 +27,8 @@ def list_badges(db: Session = Depends(get_db), current_user=Depends(get_current_
     """), {"uid": current_user.id}).mappings().all()
 
     counts = count_all_criteria(db, badges, current_user.id)
-    # Le `code` est la clé stable ; `name` et `description` restent en base pour
-    # le dashboard admin et comme repli, mais ce qui est servi vient du catalogue,
-    # dans la langue de la requête. Un badge ajouté sans clé garde son texte de base.
-    def libelle(badge, champ):
-        cle = f"badge.{badge['code']}.{champ}"
-        rendu = t(cle, locale)
-        return badge[champ] if rendu == cle else rendu
-
     return [{**badge,
-             "name": libelle(badge, "name"),
-             "description": libelle(badge, "description"),
+             **libelles(badge, locale),
              "progress": counts.get(badge["criteria"], 0)}
             for badge in badges]
 

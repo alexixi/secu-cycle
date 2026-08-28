@@ -32,6 +32,7 @@ from sqlalchemy import text, update
 from sqlalchemy.sql import func
 
 from database import SessionLocal
+from i18n import DEFAULT_LOCALE
 from mailer import MailerError, send_email
 from mailer.templates import recap_email
 from models.recap import (
@@ -47,6 +48,7 @@ from models.recap import (
     RecapSettings,
 )
 from recap import periodes, requetes, stats
+from utils.badges import libelles as libelles_badge
 from utils.unsubscribe import derive_secret, make_token
 
 logger = logging.getLogger(__name__)
@@ -158,11 +160,21 @@ def _cloturer(db, user_id, genre, periode, statut, **champs) -> None:
     db.commit()
 
 
-def _envoyer_un(db, destinataire, genre, libelle, libelle_precedent, periode, badges) -> str:
-    """Traite un destinataire déjà réservé. Renvoie le statut retenu."""
-    user_id = destinataire["id"]
+def _envoyer_un(db, destinataire, genre, debut, debut_precedent, periode, badges) -> str:
+    """Traite un destinataire déjà réservé. Renvoie le statut retenu.
 
-    resume = stats.resume(destinataire, badges, libelle_precedent)
+    Les libellés de période sont calculés ici et non une fois pour le lot :
+    deux destinataires du même lot n'ont pas forcément la même langue, et un
+    « juillet 2026 » calculé en amont partirait tel quel à un anglophone.
+    """
+    user_id = destinataire["id"]
+    locale = destinataire.get("language") or DEFAULT_LOCALE
+
+    libelle = periodes.libelle_periode(genre, debut, locale)
+    libelle_precedent = periodes.libelle_periode_precedente(genre, debut_precedent, locale)
+
+    badges = [{**badge, **libelles_badge(badge, locale)} for badge in badges]
+    resume = stats.resume(destinataire, badges, libelle_precedent, locale)
     if not resume["trajets"]:
         # Ne peut normalement pas arriver — la requête ne renvoie que des
         # utilisateurs actifs — mais un récapitulatif vide est précisément le
@@ -172,7 +184,7 @@ def _envoyer_un(db, destinataire, genre, libelle, libelle_precedent, periode, ba
 
     lien = lien_desabonnement(user_id, destinataire["recap_unsub_version"])
     sujet, html, texte = recap_email(
-        genre, libelle, destinataire.get("first_name"), resume, lien,
+        genre, libelle, destinataire.get("first_name"), resume, lien, locale,
     )
 
     message_id = send_email(
@@ -207,8 +219,6 @@ def traiter_lot(genre: str, debut, fin, debut_precedent, taille=TAILLE_LOT) -> d
     complet a été servi — auquel cas il reste probablement du monde.
     """
     periode = debut.date()
-    libelle = periodes.libelle_periode(genre, debut)
-    libelle_precedent = periodes.libelle_periode_precedente(genre, debut_precedent)
 
     compte = {ENVOYE: 0, IGNORE: 0, ECHOUE: 0}
     echecs_consecutifs = 0
@@ -231,7 +241,7 @@ def traiter_lot(genre: str, debut, fin, debut_precedent, taille=TAILLE_LOT) -> d
 
             try:
                 statut = _envoyer_un(
-                    db, destinataire, genre, libelle, libelle_precedent,
+                    db, destinataire, genre, debut, debut_precedent,
                     periode, badges.get(user_id, []),
                 )
                 compte[statut] = compte.get(statut, 0) + 1

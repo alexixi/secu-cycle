@@ -22,6 +22,8 @@ from datetime import datetime
 
 import pytz
 
+from i18n import DEFAULT_LOCALE, t
+
 FUSEAU = pytz.timezone("Europe/Paris")
 
 MENSUEL = "monthly"
@@ -30,12 +32,6 @@ ANNUEL = "yearly"
 # Jusqu'au 5 du mois inclus, et pas avant 8 h locales.
 DERNIER_JOUR = 5
 HEURE_MINIMALE = 8
-
-MOIS = (
-    "janvier", "février", "mars", "avril", "mai", "juin",
-    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
-)
-
 
 def _minuit_local(annee: int, mois: int) -> datetime:
     """Premier instant d'un mois, en heure de Paris.
@@ -93,20 +89,32 @@ def periode_due(maintenant: datetime):
     )
 
 
-def libelle_periode(genre: str, debut: datetime) -> str:
+def _mois(debut: datetime, locale: str) -> str:
+    """Nom du mois, tiré du catalogue et jamais du module `locale`.
+
+    C'est la raison pour laquelle les mois ne sont pas obtenus par `strftime` :
+    la locale d'un conteneur n'est pas garantie, et un récapitulatif intitulé
+    « July 2026 » chez certains utilisateurs seulement serait un défaut
+    difficile à reproduire. Le catalogue, lui, est du JSON versionné.
+    """
+    return t(f"email.recap.month.{debut.month}", locale)
+
+
+def libelle_periode(genre: str, debut: datetime, locale: str = DEFAULT_LOCALE) -> str:
     """Nom lisible de la période, tel qu'il apparaît dans l'e-mail.
 
-    Les mois sont écrits en dur plutôt que tirés de `locale` : la locale d'un
-    conteneur n'est pas garantie, et un récapitulatif intitulé « July 2026 » chez
-    certains utilisateurs seulement serait un défaut difficile à reproduire.
+    Étiquette nue — « juillet 2026 », « 2026 » — et jamais une locution : la
+    préposition et l'article vivent dans le catalogue, où le français et
+    l'anglais ne les découpent pas de la même façon.
     """
     if genre == ANNUEL:
         return str(debut.year)
-    return f"{MOIS[debut.month - 1]} {debut.year}"
+    return f"{_mois(debut, locale)} {debut.year}"
 
 
-def libelle_periode_precedente(genre: str, debut_precedent: datetime) -> str:
+def libelle_periode_precedente(genre: str, debut_precedent: datetime,
+                               locale: str = DEFAULT_LOCALE) -> str:
     """Nom de la période de comparaison, pour la phrase « plus qu'en juin »."""
     if genre == ANNUEL:
         return str(debut_precedent.year)
-    return MOIS[debut_precedent.month - 1]
+    return _mois(debut_precedent, locale)

@@ -43,7 +43,7 @@ precedente AS (
       AND r.completed_at >= :debut_precedent AND r.completed_at < :debut
     GROUP BY r.user_id
 )
-SELECT u.id, u.email, u.first_name, u.recap_unsub_version,
+SELECT u.id, u.email, u.first_name, u.language, u.recap_unsub_version,
        p.trajets, p.km, p.minutes, p.denivele, p.trajets_avec_denivele,
        p.plus_long_km, p.trajets_surs, p.trajets_pluie,
        COALESCE(pr.km, 0) AS km_precedent
@@ -65,7 +65,7 @@ LIMIT :lot
 """)
 
 _BADGES = text("""
-SELECT ub.user_id, b.name, b.description
+SELECT ub.user_id, b.code, b.name, b.description
 FROM user_badges ub
 JOIN badges b ON b.id = ub.badge_id
 WHERE ub.user_id IN :ids
@@ -119,6 +119,9 @@ def badges_par_utilisateur(db, user_ids, debut, fin) -> dict:
     lignes = db.execute(_BADGES, {"ids": list(user_ids), "debut": debut, "fin": fin})
     for ligne in lignes.mappings():
         groupes.setdefault(ligne["user_id"], []).append({
+            # `code` est la clé de traduction, `name` et `description` le repli
+            # pour un badge que le catalogue ne connaîtrait pas encore.
+            "code": ligne["code"],
             "name": ligne["name"],
             "description": ligne["description"],
         })

@@ -7,9 +7,25 @@ une fonction ici, sans toucher au transport.
 Le HTML reste volontairement rudimentaire (styles en ligne, pas de feuille
 externe, pas de flexbox) : les clients de messagerie ne supportent pas grand
 chose de façon fiable.
+
+**Les mots viennent du catalogue, la mise en forme reste ici.** Chaque builder
+prend une locale ; c'est celle du *profil* du destinataire, jamais celle de la
+requête — un récapitulatif part d'une boucle de fond, sans requête d'où la tirer
+(voir `backend/i18n/__init__.py`). Deux conventions en découlent :
+
+- **Aucune balise ni entité HTML dans le catalogue.** Les espaces insécables y
+  sont de vrais U+00A0, qui rendent aussi bien en HTML qu'en texte brut — c'est
+  ce qui permet à une même clé de servir les deux versions d'un message. Quand
+  une portion doit être mise en avant (`<strong>`, `<a>`), elle est passée en
+  paramètre : la balise reste dans le code.
+- Le module n'importe que `html.escape` et `i18n`, qui ne lit que du JSON :
+  ni base, ni réseau. C'est ce qui fait tourner `preview_emails.py` et les tests
+  à sec.
 """
 
 from html import escape
+
+from i18n import DEFAULT_LOCALE, plural, t
 
 BRAND = "#0078bc"
 BRAND_DARK = "#1e2030"
@@ -19,9 +35,10 @@ BORDER = "#e2e8f0"
 
 LOGO_URL = "https://secu-cycle.fr/pwa-192.png"
 SITE_NAME = "Sécu'Cycle"
+CONTACT_EMAIL = "contact@secu-cycle.fr"
 
 
-def _shell(heading: str, body: str) -> str:
+def _shell(heading: str, body: str, locale: str = DEFAULT_LOCALE) -> str:
     """Enveloppe commune : bandeau avec logo, contenu, pied de page.
 
     Les images sont fréquemment bloquées par défaut : le logo porte donc un
@@ -49,7 +66,7 @@ def _shell(heading: str, body: str) -> str:
     <div style="padding: 16px 24px; border-top: 1px solid {BORDER};
                 background-color: #fafbff; font-size: 12px; color: {TEXT_MUTED};
                 text-align: center;">
-      {SITE_NAME} — itinéraires vélo sécurisés
+      {t("email.common.footer", locale)}
     </div>
   </div>
 </div>"""
@@ -65,92 +82,100 @@ def _code_block(code: str) -> str:
       </div>"""
 
 
-def verification_email(code: str) -> tuple[str, str, str]:
+def _alerte(texte: str) -> str:
+    """Encadré rouge des e-mails qui signalent une action non sollicitée."""
+    return f"""\
+      <div style="padding: 14px; border-radius: 10px; background-color: #fff1f1;
+                  border: 1px solid #ffd5d5;">
+        <p style="margin: 0; font-size: 14px; line-height: 21px; color: #b00020;">
+           {texte}</p>
+      </div>"""
+
+
+def verification_email(code: str, locale: str = DEFAULT_LOCALE) -> tuple[str, str, str]:
     """E-mail de validation de compte contenant le code à 6 chiffres."""
-    subject = "Votre code de vérification Sécu'Cycle"
+    subject = t("email.verification.subject", locale)
+    validite = t("email.common.code_validity", locale)
+    consigne = t("email.verification.hint", locale)
 
     html = _shell(
-        "Bienvenue sur Sécu'Cycle&nbsp;!",
+        t("email.verification.heading", locale),
         f"""\
-      <p style="margin: 0; font-size: 15px; line-height: 22px;">Pour activer votre compte,
-         saisissez le code de vérification suivant&nbsp;:</p>
+      <p style="margin: 0; font-size: 15px; line-height: 22px;">{t("email.verification.intro", locale)}</p>
 {_code_block(code)}
       <p style="margin: 0; font-size: 13px; line-height: 19px; color: {TEXT_MUTED};">
-         Ce code est valable 15&nbsp;minutes. Si vous n'êtes pas à l'origine de cette
-         demande, ignorez cet e-mail.</p>""",
+         {validite} {consigne}</p>""",
+        locale,
     )
 
     text = (
-        "Bienvenue sur Sécu'Cycle !\n\n"
-        f"Votre code de vérification est : {code}\n\n"
-        "Ce code est valable 15 minutes. "
-        "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail."
+        f"{t('email.verification.heading', locale)}\n\n"
+        f"{t('email.verification.text_code', locale, code=code)}\n\n"
+        f"{validite} {consigne}"
     )
 
     return subject, html, text
 
 
-def password_reset_email(code: str) -> tuple[str, str, str]:
+def password_reset_email(code: str, locale: str = DEFAULT_LOCALE) -> tuple[str, str, str]:
     """E-mail de réinitialisation de mot de passe contenant le code à 6 chiffres."""
-    subject = "Réinitialisation de votre mot de passe Sécu'Cycle"
+    subject = t("email.password_reset.subject", locale)
+    validite = t("email.common.code_validity", locale)
+    consigne = t("email.password_reset.hint", locale)
 
     html = _shell(
-        "Réinitialisation de mot de passe",
+        t("email.password_reset.heading", locale),
         f"""\
-      <p style="margin: 0; font-size: 15px; line-height: 22px;">Vous avez demandé à
-         réinitialiser votre mot de passe. Saisissez le code suivant pour en choisir
-         un nouveau&nbsp;:</p>
+      <p style="margin: 0; font-size: 15px; line-height: 22px;">{t("email.password_reset.intro", locale)}</p>
 {_code_block(code)}
       <p style="margin: 0; font-size: 13px; line-height: 19px; color: {TEXT_MUTED};">
-         Ce code est valable 15&nbsp;minutes. Si vous n'êtes pas à l'origine de cette
-         demande, ignorez cet e-mail&nbsp;: votre mot de passe reste inchangé.</p>""",
+         {validite} {consigne}</p>""",
+        locale,
     )
 
     text = (
-        "Réinitialisation de votre mot de passe Sécu'Cycle\n\n"
-        f"Votre code de réinitialisation est : {code}\n\n"
-        "Ce code est valable 15 minutes. "
-        "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : "
-        "votre mot de passe reste inchangé."
+        f"{subject}\n\n"
+        f"{t('email.password_reset.text_code', locale, code=code)}\n\n"
+        f"{validite} {consigne}"
     )
 
     return subject, html, text
 
 
-def email_change_code_email(code: str, new_email: str) -> tuple[str, str, str]:
+def email_change_code_email(code: str, new_email: str,
+                            locale: str = DEFAULT_LOCALE) -> tuple[str, str, str]:
     """E-mail envoyé à la NOUVELLE adresse : code prouvant qu'elle est bien
     contrôlée par le demandeur.
 
     `new_email` est saisi par l'utilisateur : il est échappé avant injection HTML.
     """
-    subject = "Confirmez votre nouvelle adresse Sécu'Cycle"
+    subject = t("email.email_change_code.subject", locale)
+    validite = t("email.common.code_validity", locale)
 
     html = _shell(
-        "Confirmation de votre nouvelle adresse",
+        t("email.email_change_code.heading", locale),
         f"""\
-      <p style="margin: 0; font-size: 15px; line-height: 22px;">Vous avez demandé à utiliser
-         <strong>{escape(new_email)}</strong> comme adresse de connexion à votre compte
-         Sécu'Cycle. Saisissez le code suivant dans l'application pour confirmer&nbsp;:</p>
+      <p style="margin: 0; font-size: 15px; line-height: 22px;">{
+          t("email.email_change_code.intro", locale,
+            email=f"<strong>{escape(new_email)}</strong>")}</p>
 {_code_block(code)}
       <p style="margin: 0; font-size: 13px; line-height: 19px; color: {TEXT_MUTED};">
-         Ce code est valable 15&nbsp;minutes. Si vous n'êtes pas à l'origine de cette
-         demande, ignorez cet e-mail&nbsp;: votre adresse reste inchangée et cette boîte
-         ne sera associée à aucun compte.</p>""",
+         {validite} {t("email.email_change_code.hint", locale)}</p>""",
+        locale,
     )
 
     text = (
-        "Confirmation de votre nouvelle adresse Sécu'Cycle\n\n"
-        f"Vous avez demandé à utiliser {new_email} comme adresse de connexion.\n"
-        f"Votre code de confirmation est : {code}\n\n"
-        "Ce code est valable 15 minutes. "
-        "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : "
-        "votre adresse reste inchangée."
+        f"{t('email.email_change_code.text_title', locale)}\n\n"
+        f"{t('email.email_change_code.text_intro', locale, email=new_email)}\n"
+        f"{t('email.email_change_code.text_code', locale, code=code)}\n\n"
+        f"{validite} {t('email.email_change_code.text_hint', locale)}"
     )
 
     return subject, html, text
 
 
-def email_change_alert_email(new_email: str) -> tuple[str, str, str]:
+def email_change_alert_email(new_email: str,
+                             locale: str = DEFAULT_LOCALE) -> tuple[str, str, str]:
     """E-mail envoyé à l'ANCIENNE adresse : alerte purement informative.
 
     Volontairement sans lien ni action : cet e-mail part vers une adresse dont
@@ -158,50 +183,40 @@ def email_change_alert_email(new_email: str) -> tuple[str, str, str]:
     aucune prise. Il oriente vers le seul recours encore valable pendant la
     fenêtre d'attaque : changer son mot de passe.
     """
-    subject = "Demande de changement d'adresse sur votre compte Sécu'Cycle"
+    subject = t("email.email_change_alert.subject", locale)
+    amorce = t("email.email_change_alert.warning_lead", locale)
+    no_link = t("email.common.no_link", locale)
 
     html = _shell(
-        "Changement d'adresse demandé",
+        t("email.email_change_alert.heading", locale),
         f"""\
-      <p style="margin: 0; font-size: 15px; line-height: 22px;">Une demande de changement
-         de l'adresse de connexion de votre compte Sécu'Cycle vient d'être enregistrée,
-         vers&nbsp;:</p>
+      <p style="margin: 0; font-size: 15px; line-height: 22px;">{
+          t("email.email_change_alert.intro", locale)}</p>
       <div style="margin: 20px 0; padding: 14px; text-align: center;
                   background-color: {BRAND_BG}; border-radius: 10px;">
         <span style="font-size: 16px; font-weight: bold; color: {BRAND};
                      word-break: break-all;">{escape(new_email)}</span>
       </div>
-      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Le changement ne
-         prendra effet qu'une fois un code de confirmation saisi depuis cette nouvelle
-         adresse.</p>
-      <div style="padding: 14px; border-radius: 10px; background-color: #fff1f1;
-                  border: 1px solid #ffd5d5;">
-        <p style="margin: 0; font-size: 14px; line-height: 21px; color: #b00020;">
-           <strong>Si vous n'êtes pas à l'origine de cette demande</strong>, votre mot de
-           passe est probablement compromis&nbsp;: changez-le immédiatement depuis
-           l'application, puis contactez-nous.</p>
-      </div>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">{
+          t("email.email_change_alert.effect", locale)}</p>
+{_alerte(t("email.email_change_alert.warning", locale, lead=f"<strong>{amorce}</strong>"))}
       <p style="margin: 16px 0 0; font-size: 13px; line-height: 19px; color: {TEXT_MUTED};">
-         Cet e-mail est purement informatif&nbsp;: il ne contient volontairement aucun
-         lien.</p>""",
+         {no_link}</p>""",
+        locale,
     )
 
     text = (
-        "Changement d'adresse demandé sur votre compte Sécu'Cycle\n\n"
-        f"Une demande de changement de votre adresse de connexion vers {new_email} "
-        "vient d'être enregistrée.\n\n"
-        "Le changement ne prendra effet qu'une fois un code de confirmation saisi "
-        "depuis cette nouvelle adresse.\n\n"
-        "Si vous n'êtes pas à l'origine de cette demande, votre mot de passe est "
-        "probablement compromis : changez-le immédiatement depuis l'application, "
-        "puis contactez-nous.\n\n"
-        "Cet e-mail est purement informatif : il ne contient volontairement aucun lien."
+        f"{t('email.email_change_alert.text_title', locale)}\n\n"
+        f"{t('email.email_change_alert.text_intro', locale, email=new_email)}\n\n"
+        f"{t('email.email_change_alert.effect', locale)}\n\n"
+        f"{t('email.email_change_alert.warning', locale, lead=amorce)}\n\n"
+        f"{no_link}"
     )
 
     return subject, html, text
 
 
-def account_deleted_email() -> tuple[str, str, str]:
+def account_deleted_email(locale: str = DEFAULT_LOCALE) -> tuple[str, str, str]:
     """E-mail de confirmation envoyé juste après la suppression d'un compte.
 
     Comme `email_change_alert_email`, il ne contient aucun lien d'action : le
@@ -209,45 +224,34 @@ def account_deleted_email() -> tuple[str, str, str]:
     trace à l'utilisateur et à lui donner un recours si la suppression ne vient
     pas de lui.
     """
-    subject = "Votre compte Sécu'Cycle a été supprimé"
+    subject = t("email.account_deleted.subject", locale)
+    amorce = t("email.account_deleted.warning_lead", locale)
+    no_link = t("email.common.no_link", locale)
+    paragraphes = [t(f"email.account_deleted.{cle}", locale)
+                   for cle in ("data", "reports", "final")]
+
+    corps = "\n".join(
+        f"""      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">{p}</p>"""
+        for p in paragraphes
+    )
 
     html = _shell(
-        "Compte supprimé",
+        t("email.account_deleted.heading", locale),
         f"""\
-      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Votre compte
-         Sécu'Cycle vient d'être supprimé, ainsi que les données qui y étaient
-         rattachées&nbsp;: vos informations personnelles, vos adresses, vos vélos, vos
-         itinéraires et leurs tracés, votre historique et vos badges.</p>
-      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Les signalements
-         de dangers que vous aviez créés restent visibles pour les autres cyclistes, mais
-         ils ne sont plus reliés à votre compte.</p>
-      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Cette suppression
-         est définitive&nbsp;: aucune restauration n'est possible. Vous pouvez bien sûr
-         créer un nouveau compte à tout moment.</p>
-      <div style="padding: 14px; border-radius: 10px; background-color: #fff1f1;
-                  border: 1px solid #ffd5d5;">
-        <p style="margin: 0; font-size: 14px; line-height: 21px; color: #b00020;">
-           <strong>Si vous n'êtes pas à l'origine de cette suppression</strong>,
-           écrivez-nous à contact@secu-cycle.fr.</p>
-      </div>
+{corps}
+{_alerte(t("email.account_deleted.warning", locale,
+           lead=f"<strong>{amorce}</strong>", email=CONTACT_EMAIL))}
       <p style="margin: 16px 0 0; font-size: 13px; line-height: 19px; color: {TEXT_MUTED};">
-         Cet e-mail est purement informatif&nbsp;: il ne contient volontairement aucun
-         lien.</p>""",
+         {no_link}</p>""",
+        locale,
     )
 
-    text = (
-        "Votre compte Sécu'Cycle a été supprimé\n\n"
-        "Votre compte vient d'être supprimé, ainsi que les données qui y étaient "
-        "rattachées : vos informations personnelles, vos adresses, vos vélos, vos "
-        "itinéraires et leurs tracés, votre historique et vos badges.\n\n"
-        "Les signalements de dangers que vous aviez créés restent visibles pour les "
-        "autres cyclistes, mais ils ne sont plus reliés à votre compte.\n\n"
-        "Cette suppression est définitive : aucune restauration n'est possible. Vous "
-        "pouvez créer un nouveau compte à tout moment.\n\n"
-        "Si vous n'êtes pas à l'origine de cette suppression, écrivez-nous à "
-        "contact@secu-cycle.fr.\n\n"
-        "Cet e-mail est purement informatif : il ne contient volontairement aucun lien."
-    )
+    text = "\n\n".join([
+        subject,
+        *paragraphes,
+        t("email.account_deleted.warning", locale, lead=amorce, email=CONTACT_EMAIL),
+        no_link,
+    ])
 
     return subject, html, text
 
@@ -260,6 +264,10 @@ def contact_email(
     message: str,
 ) -> tuple[str, str, str]:
     """Message envoyé depuis le formulaire de contact, à destination de l'équipe.
+
+    Le seul gabarit qui ne prend pas de locale, et le seul resté en français :
+    son destinataire est l'équipe, pas un utilisateur — comme le dashboard
+    d'administration, qui n'est pas traduit non plus.
 
     Les champs proviennent d'un visiteur non authentifié : ils sont échappés
     avant d'être injectés dans le corps HTML.
@@ -329,7 +337,7 @@ def _stat_grid(tuiles: list) -> str:
       </table>"""
 
 
-def _badge_list(badges: list) -> str:
+def _badge_list(badges: list, locale: str = DEFAULT_LOCALE) -> str:
     """Badges débloqués pendant la période. Vide si aucun : pas de section creuse."""
     if not badges:
         return ""
@@ -343,7 +351,7 @@ def _badge_list(badges: list) -> str:
         for badge in badges
     )
 
-    titre = "Nouveau badge" if len(badges) == 1 else f"{len(badges)} nouveaux badges"
+    titre = plural(len(badges), "email.recap.badges_one", "email.recap.badges_other", locale)
     return f"""\
       <div style="margin: 20px 0; padding: 16px; border: 1px solid {BORDER};
                   border-radius: 10px;">
@@ -355,7 +363,7 @@ def _badge_list(badges: list) -> str:
       </div>"""
 
 
-def _unsubscribe_footer(lien_desabo: str) -> str:
+def _unsubscribe_footer(lien_desabo: str, locale: str = DEFAULT_LOCALE) -> str:
     """Pied de page portant le lien de désabonnement.
 
     Le lien figure dans le corps *en plus* des en-têtes `List-Unsubscribe` : tous
@@ -365,9 +373,9 @@ def _unsubscribe_footer(lien_desabo: str) -> str:
     return f"""\
       <p style="margin: 24px 0 0; padding-top: 16px; border-top: 1px solid {BORDER};
                 font-size: 12px; line-height: 18px; color: {TEXT_MUTED};">
-         Vous recevez cet e-mail parce que vous avez un compte Sécu'Cycle.
+         {t("email.recap.unsubscribe_reason", locale)}
          <a href="{escape(lien_desabo, quote=True)}" style="color: {TEXT_MUTED};">
-            Ne plus recevoir ces récapitulatifs</a>.</p>"""
+            {t("email.recap.unsubscribe_link", locale)}</a>.</p>"""
 
 
 def recap_email(
@@ -376,11 +384,15 @@ def recap_email(
     prenom: str | None,
     stats: dict,
     lien_desabo: str,
+    locale: str = DEFAULT_LOCALE,
 ) -> tuple[str, str, str]:
     """Récapitulatif d'activité, mensuel ou annuel.
 
     Un seul gabarit pour les deux : seuls le titre et quelques tournures changent,
-    et deux gabarits jumeaux divergeraient à la première retouche.
+    et deux gabarits jumeaux divergeraient à la première retouche. Le sujet et le
+    titre sont quatre clés entières et non un préfixe collé à `libelle_periode` :
+    « Votre mois de juillet 2026 » n'a pas d'équivalent anglais qui garde la même
+    découpe.
 
     Le lien de désabonnement est reçu en paramètre et jamais fabriqué ici : c'est
     ce qui permet à `preview_emails.py` de rendre ce gabarit sans variable
@@ -389,22 +401,20 @@ def recap_email(
     `prenom` vient du profil et n'est validé qu'en longueur : c'est le premier
     contenu utilisateur libre injecté dans un e-mail du projet, d'où l'échappement.
 
-    :param stats: sortie de `recap.stats.resume`.
+    :param stats: sortie de `recap.stats.resume`, déjà rendue dans `locale`.
     """
-    annuel = genre == "yearly"
+    suffixe = "yearly" if genre == "yearly" else "monthly"
 
-    subject = (
-        f"Votre année {libelle_periode} à vélo"
-        if annuel
-        else f"Votre mois de {libelle_periode} à vélo"
-    )
-    titre = f"Votre année {libelle_periode}" if annuel else f"Votre mois de {libelle_periode}"
+    subject = t(f"email.recap.subject_{suffixe}", locale, periode=libelle_periode)
+    titre = t(f"email.recap.title_{suffixe}", locale, periode=libelle_periode)
 
-    salutation = f"Bonjour {escape(prenom)}," if prenom else "Bonjour,"
-    intro = (
-        f"Voici ce que vous avez parcouru en {escape(libelle_periode)}&nbsp;: "
-        f"<strong>{escape(stats['phrase_trajets'])}</strong>."
+    salutation = (
+        t("email.recap.greeting_named", locale, prenom=escape(prenom))
+        if prenom else t("email.recap.greeting", locale)
     )
+    intro = t("email.recap.intro", locale,
+              periode=escape(libelle_periode),
+              trajets=f"<strong>{escape(stats['phrase_trajets'])}</strong>")
 
     complements = []
     if stats.get("comparaison"):
@@ -415,12 +425,13 @@ def recap_email(
     if stats.get("trajet_le_plus_long"):
         complements.append(
             f"""<p style="margin: 0 0 12px; font-size: 14px; line-height: 21px; color: {TEXT_MUTED};"
-               >Votre plus long trajet&nbsp;: {escape(stats["trajet_le_plus_long"])}.</p>"""
+               >{t("email.recap.longest", locale,
+                    distance=escape(stats["trajet_le_plus_long"]))}</p>"""
         )
     if stats.get("trajets_surs"):
         complements.append(
             f"""<p style="margin: 0 0 12px; font-size: 14px; line-height: 21px; color: {TEXT_MUTED};"
-               >Dont {stats["trajets_surs"]} en itinéraire sécurisé.</p>"""
+               >{t("email.recap.safe_routes", locale, count=stats["trajets_surs"])}</p>"""
         )
 
     html = _shell(
@@ -430,40 +441,54 @@ def recap_email(
       <p style="margin: 0 0 4px; font-size: 15px; line-height: 22px;">{intro}</p>
 {_stat_grid(stats["tuiles"])}
 {"".join(complements)}
-{_badge_list(stats["badges"])}
+{_badge_list(stats["badges"], locale)}
       <p style="margin: 16px 0 0; font-size: 13px; line-height: 19px; color: {TEXT_MUTED};">
-         Les durées sont celles estimées au calcul de vos itinéraires.</p>
-{_unsubscribe_footer(lien_desabo)}""",
+         {t("email.recap.estimate_note", locale)}</p>
+{_unsubscribe_footer(lien_desabo, locale)}""",
+        locale,
     )
 
-    lignes = [titre, "", f"{salutation.replace('&nbsp;', ' ')}", "",
-              f"Voici ce que vous avez parcouru en {libelle_periode} : {stats['phrase_trajets']}.", ""]
+    salutation_texte = (
+        t("email.recap.greeting_named", locale, prenom=prenom)
+        if prenom else t("email.recap.greeting", locale)
+    )
+    lignes = [
+        titre, "",
+        salutation_texte, "",
+        t("email.recap.intro", locale,
+          periode=libelle_periode, trajets=stats["phrase_trajets"]),
+        "",
+    ]
     for tuile in stats["tuiles"]:
-        lignes.append(f"- {tuile['libelle']} : {tuile['valeur']}")
+        # L'espace avant le deux-points est une règle française : la ligne
+        # entière vient donc du catalogue, tiret de liste mis à part.
+        lignes.append("- " + t("email.recap.tile_text", locale,
+                               libelle=tuile["libelle"], valeur=tuile["valeur"]))
     if stats.get("comparaison"):
         lignes += ["", stats["comparaison"]]
     if stats.get("trajet_le_plus_long"):
-        lignes.append(f"Votre plus long trajet : {stats['trajet_le_plus_long']}.")
+        lignes.append(t("email.recap.longest", locale,
+                        distance=stats["trajet_le_plus_long"]))
     if stats.get("trajets_surs"):
-        lignes.append(f"Dont {stats['trajets_surs']} en itinéraire sécurisé.")
+        lignes.append(t("email.recap.safe_routes", locale, count=stats["trajets_surs"]))
     if stats["badges"]:
-        lignes += ["", "Badges débloqués :"]
+        lignes += ["", t("email.recap.badges_text_header", locale)]
         lignes += [
             f"- {b['nom']}" + (f" — {b['description']}" if b.get("description") else "")
             for b in stats["badges"]
         ]
     lignes += [
         "",
-        "Les durées sont celles estimées au calcul de vos itinéraires.",
+        t("email.recap.estimate_note", locale),
         "",
-        "Vous recevez cet e-mail parce que vous avez un compte Sécu'Cycle.",
-        f"Pour ne plus recevoir ces récapitulatifs : {lien_desabo}",
+        t("email.recap.unsubscribe_reason", locale),
+        t("email.recap.unsubscribe_text", locale, lien=lien_desabo),
     ]
 
     return subject, html, "\n".join(lignes)
 
 
-def unsubscribe_confirm_page(lien_action: str) -> str:
+def unsubscribe_confirm_page(lien_action: str, locale: str = DEFAULT_LOCALE) -> str:
     """Page demandant confirmation avant de désabonner.
 
     Cette page ne désabonne pas : elle propose un bouton qui, lui, poste.
@@ -472,56 +497,56 @@ def unsubscribe_confirm_page(lien_action: str) -> str:
     antivirus de messagerie et les proxys d'images visitent en `GET` les liens
     qu'ils trouvent dans un message, sans que personne n'ait cliqué. Un `GET` qui
     désabonnerait retirerait donc du service des gens qui n'ont rien demandé.
+
+    La locale est celle du destinataire du lien, pas celle du navigateur : c'est
+    la même que celle de l'e-mail d'où l'on vient.
     """
     return _shell(
-        "Ne plus recevoir les récapitulatifs&nbsp;?",
+        t("email.unsubscribe.confirm_heading", locale),
         f"""\
-      <p style="margin: 0 0 20px; font-size: 15px; line-height: 22px;">Vous ne recevrez
-         plus le récapitulatif mensuel et annuel de vos trajets. Votre compte et vos
-         données restent inchangés.</p>
+      <p style="margin: 0 0 20px; font-size: 15px; line-height: 22px;">{
+          t("email.unsubscribe.confirm_intro", locale)}</p>
       <form method="post" action="{escape(lien_action, quote=True)}" style="margin: 0;">
         <button type="submit"
                 style="display: inline-block; padding: 12px 24px; font-size: 15px;
                        font-weight: bold; color: #ffffff; background-color: {BRAND};
                        border: 0; border-radius: 8px; cursor: pointer;">
-          Confirmer le désabonnement
+          {t("email.unsubscribe.confirm_button", locale)}
         </button>
       </form>
       <p style="margin: 20px 0 0; font-size: 13px; line-height: 19px; color: {TEXT_MUTED};">
-         Vous pourrez les réactiver à tout moment depuis les réglages de
-         l'application.</p>""",
+         {t("email.unsubscribe.confirm_note", locale)}</p>""",
+        locale,
     )
 
 
-def unsubscribe_done_page() -> str:
+def unsubscribe_done_page(locale: str = DEFAULT_LOCALE) -> str:
     """Page affichée une fois le désabonnement enregistré."""
     return _shell(
-        "C'est fait",
+        t("email.unsubscribe.done_heading", locale),
         f"""\
-      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Vous ne recevrez
-         plus de récapitulatif d'activité.</p>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">{
+          t("email.unsubscribe.done_intro", locale)}</p>
       <p style="margin: 0; font-size: 14px; line-height: 21px; color: {TEXT_MUTED};">
-         Les e-mails liés à votre compte — vérification, réinitialisation de mot de
-         passe — continuent d'être envoyés&nbsp;: ils ne relèvent pas de ce réglage.
-         Vous pouvez réactiver les récapitulatifs quand vous le souhaitez depuis les
-         réglages de l'application.</p>""",
+         {t("email.unsubscribe.done_note", locale)}</p>""",
+        locale,
     )
 
 
-def unsubscribe_invalid_page() -> str:
+def unsubscribe_invalid_page(locale: str = DEFAULT_LOCALE) -> str:
     """Page affichée quand le lien est illisible.
 
-    Surtout pas un message de succès&nbsp;: un lien tronqué par un client de
+    Surtout pas un message de succès : un lien tronqué par un client de
     messagerie ferait croire au désabonnement alors que les envois continueraient.
     """
+    lien = (f'<a href="mailto:{CONTACT_EMAIL}" style="color: {BRAND};"'
+            f'>{CONTACT_EMAIL}</a>')
     return _shell(
-        "Ce lien n'est plus valide",
+        t("email.unsubscribe.invalid_heading", locale),
         f"""\
-      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">Nous n'avons pas
-         pu traiter cette demande&nbsp;: le lien est incomplet ou a été remplacé.</p>
+      <p style="margin: 0 0 16px; font-size: 15px; line-height: 22px;">{
+          t("email.unsubscribe.invalid_intro", locale)}</p>
       <p style="margin: 0; font-size: 14px; line-height: 21px; color: {TEXT_MUTED};">
-         Vous pouvez désactiver les récapitulatifs depuis les réglages de
-         l'application, ou nous écrire à
-         <a href="mailto:contact@secu-cycle.fr" style="color: {BRAND};"
-            >contact@secu-cycle.fr</a>.</p>""",
+         {t("email.unsubscribe.invalid_note", locale, email=lien)}</p>""",
+        locale,
     )

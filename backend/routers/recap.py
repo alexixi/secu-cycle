@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from dependencies import require_admin
-from i18n import get_locale, t
+from i18n import DEFAULT_LOCALE, get_locale, t
 from limiter import limiter
 from mailer import send_email
 from mailer.templates import (
@@ -37,6 +37,7 @@ from mailer.templates import (
 from models.recap import RecapSend
 from models.user import User
 from recap import periodes, requetes, runner, stats
+from utils.badges import libelles as libelles_badge
 from schemas.recap import (
     RecapPeriodStatus,
     RecapPreviewRequest,
@@ -68,6 +69,7 @@ def unsubscribe_page(
     u: int = Query(...),
     t: str = Query(...),
     db: Session = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     """Page de confirmation. Ne modifie rien : voir le préambule du module.
 
@@ -75,10 +77,15 @@ def unsubscribe_page(
     un petit nombre d'adresses (Gmail, Outlook), et un désabonnement bloqué par
     un rate-limit se transforme en signalement de spam.
     """
-    if _utilisateur_du_lien(db, u, t) is None:
-        return HTMLResponse(unsubscribe_invalid_page(), status_code=400)
+    utilisateur = _utilisateur_du_lien(db, u, t)
+    if utilisateur is None:
+        # Personne dont lire la préférence : on retombe sur la langue négociée.
+        return HTMLResponse(unsubscribe_invalid_page(locale), status_code=400)
 
-    return HTMLResponse(unsubscribe_confirm_page(f"{runner.api_url()}/recaps/unsubscribe?u={u}&t={t}"))
+    return HTMLResponse(unsubscribe_confirm_page(
+        f"{runner.api_url()}/recaps/unsubscribe?u={u}&t={t}",
+        utilisateur.language or DEFAULT_LOCALE,
+    ))
 
 
 @router.post("/unsubscribe", response_class=HTMLResponse)
@@ -88,6 +95,7 @@ def unsubscribe(
     u: int = Query(...),
     t: str = Query(...),
     db: Session = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     """Désabonne. Sert le formulaire de confirmation comme le clic natif du client.
 
@@ -102,14 +110,14 @@ def unsubscribe(
     utilisateur = _utilisateur_du_lien(db, u, t)
     if utilisateur is None:
         if db.get(User, u) is None:
-            return HTMLResponse(unsubscribe_done_page())
-        return HTMLResponse(unsubscribe_invalid_page(), status_code=400)
+            return HTMLResponse(unsubscribe_done_page(locale))
+        return HTMLResponse(unsubscribe_invalid_page(locale), status_code=400)
 
     # Idempotent : un second clic ne change rien et affiche la même page.
     utilisateur.recap_emails = False
     db.commit()
 
-    return HTMLResponse(unsubscribe_done_page())
+    return HTMLResponse(unsubscribe_done_page(utilisateur.language or DEFAULT_LOCALE))
 
 
 @router.get("/admin/settings", response_model=RecapSettingsRead)
@@ -212,16 +220,24 @@ def _rendre_pour(db: Session, user_id: int, genre: str | None, locale: str):
             detail=t("error.recap.no_recap", locale),
         )
 
+    # La langue est celle du destinataire, jamais celle de l'administrateur : cet
+    # outil sert à relire ce que la personne reçoit, et le dashboard force lang=fr.
+    langue = ligne.get("language") or DEFAULT_LOCALE
+
     badges = requetes.badges_par_utilisateur(db, [user_id], debut, fin).get(user_id, [])
+    badges = [{**badge, **libelles_badge(badge, langue)} for badge in badges]
     resume = stats.resume(
-        ligne, badges, periodes.libelle_periode_precedente(genre_effectif, debut_precedent)
+        ligne, badges,
+        periodes.libelle_periode_precedente(genre_effectif, debut_precedent, langue),
+        langue,
     )
     return recap_email(
         genre_effectif,
-        periodes.libelle_periode(genre_effectif, debut),
+        periodes.libelle_periode(genre_effectif, debut, langue),
         ligne.get("first_name"),
         resume,
         runner.lien_desabonnement(user_id, ligne["recap_unsub_version"]),
+        langue,
     )
 
 

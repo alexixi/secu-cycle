@@ -2,6 +2,7 @@ import { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from "react-router";
 import { useLocalizedPath } from '../i18n/useLang';
 import i18n from '../i18n/index';
+import { setProfileLanguage } from '../services/apiBack';
 
 const AuthContext = createContext();
 
@@ -98,6 +99,24 @@ export const AuthProvider = ({ children }) => {
             window.removeEventListener("force-logout", handleForceLogout);
         };
     }, []);
+
+    // La langue du site vit dans l'URL ; celle des e-mails vit en base. Cet effet
+    // est le seul pont entre les deux : sans lui, quelqu'un qui passe sur /en/
+    // continuerait de recevoir ses récapitulatifs en français, puisqu'ils partent
+    // d'une boucle de fond sans requête d'où lire la langue de la page.
+    //
+    // Au montage suffit : sur le web, changer de langue est une navigation, donc
+    // un rechargement. En échec — hors ligne, session expirée — on ne fait rien :
+    // la préférence n'est pas un réglage assez critique pour perturber l'écran.
+    useEffect(() => {
+        if (!user || !token || !i18n.language) return;
+        if (user.language === i18n.language) return;
+
+        const langue = i18n.language;
+        setProfileLanguage(token, langue)
+            .then(() => updateUser({ ...user, language: langue }))
+            .catch(() => { });
+    }, [user, token]);
 
     return (
         <AuthContext.Provider value={{ user, token, userBikes, historic, loginAuth, logoutAuth, updateUser, updateBikes, updateHistoric }}>
