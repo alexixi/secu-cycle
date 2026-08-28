@@ -7,19 +7,23 @@ import * as Haptics from 'expo-haptics';
 import { SwipeBackScreen } from '../components/SwipeBackScreen';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { useAuth } from '../context/AuthContext';
+import { useFormat } from '../hooks/useFormat';
 import { useTheme } from '../hooks/useTheme';
 import { getMyBlocks, unblockUser } from '../services/apiBack';
-
-const formatDate = (iso) => {
-    if (!iso) return '';
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-};
+import { useTranslation } from 'react-i18next';
 
 export default function BlockedAuthorsPage() {
     const { colors } = useTheme();
+    const { t } = useTranslation();
+    const f = useFormat();
     const { token } = useAuth();
+
+    const formatDate = (iso) => {
+        if (!iso) return '';
+        const date = new Date(iso);
+        if (Number.isNaN(date.getTime())) return '';
+        return f.date(date);
+    };
 
     const [blocks, setBlocks] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -56,18 +60,17 @@ export default function BlockedAuthorsPage() {
                     style={[styles.container, { backgroundColor: colors.bgMain }]}
                     contentContainerStyle={styles.scrollContainer}
                 >
-                    <ScreenHeader title="Auteurs bloqués" onBack={close} />
+                    <ScreenHeader title={t('compte.auteursBloques.titre')} onBack={close} />
 
                     <Text style={[styles.lead, { color: colors.textSecondary }]}>
-                        Vous ne voyez plus les signalements de ces personnes. Les débloquer les
-                        fera réapparaître sur la carte.
+                        {t('compte.auteursBloques.intro')}
                     </Text>
 
                     {isLoading && <ActivityIndicator size="small" color={colors.primary} style={styles.loader} />}
 
                     {!isLoading && error && (
                         <Text style={[styles.empty, { color: colors.error }]}>
-                            La liste n&apos;a pas pu être chargée.
+                            {t('compte.auteursBloques.erreurChargement')}
                         </Text>
                     )}
 
@@ -75,7 +78,7 @@ export default function BlockedAuthorsPage() {
                         <View style={styles.emptyBox}>
                             <Ionicons name="people-outline" size={40} color={colors.textSecondary} />
                             <Text style={[styles.empty, { color: colors.textSecondary }]}>
-                                Vous n&apos;avez bloqué personne.
+                                {t('compte.auteursBloques.aucun')}
                             </Text>
                         </View>
                     )}
@@ -88,18 +91,18 @@ export default function BlockedAuthorsPage() {
                             <Ionicons name="person-outline" size={22} color={colors.textSecondary} />
                             <View style={styles.rowText}>
                                 <Text style={[styles.rowTitle, { color: colors.textMain }]}>
-                                    Auteur bloqué
+                                    {t('compte.auteursBloques.auteur')}
                                 </Text>
                                 <Text style={[styles.rowHint, { color: colors.textSecondary }]}>
-                                    Depuis le {formatDate(block.created_at)}
+                                    {t('compte.auteursBloques.depuisLe', { date: formatDate(block.created_at) })}
                                 </Text>
                             </View>
                             <TouchableOpacity
                                 onPress={() => handleUnblock(block.blocked_id)}
                                 accessibilityRole="button"
-                                accessibilityLabel="Débloquer cet auteur"
+                                accessibilityLabel={t('compte.auteursBloques.debloquerCet')}
                             >
-                                <Text style={[styles.unblock, { color: colors.primary }]}>Débloquer</Text>
+                                <Text style={[styles.unblock, { color: colors.primary }]}>{t('compte.auteursBloques.debloquer')}</Text>
                             </TouchableOpacity>
                         </View>
                     ))}

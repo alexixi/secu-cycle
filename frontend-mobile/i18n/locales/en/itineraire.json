@@ -1,2 +1,7 @@
 {
+    "variant": {
+        "fast": "Fastest",
+        "safe": "Safest",
+        "compromise": "Balanced"
+    }
 }

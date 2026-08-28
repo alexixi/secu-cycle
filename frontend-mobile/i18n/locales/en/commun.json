@@ -1,18 +1,6 @@
 {
     "annuler": "Cancel",
-    "fermer": "Close",
-    "confirmer": "Confirm",
-    "enregistrer": "Save",
     "supprimer": "Delete",
-    "modifier": "Edit",
-    "retour": "Back",
-    "suivant": "Next",
-    "precedent": "Previous",
     "terminer": "Finish",
-    "reessayer": "Try again",
-    "chargement": "Loading…",
-    "oui": "Yes",
-    "non": "No",
-    "erreurReseau": "Could not connect. Check your connection and try again.",
     "erreur": "Error"
 }

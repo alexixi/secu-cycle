@@ -14,29 +14,37 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../hooks/useTheme";
 import { confirmEmailChange, requestEmailChange } from "../services/apiBack";
 import { saveAccessToken, saveRefreshToken } from "../services/tokenStorage";
+import { useTranslation } from "react-i18next";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
+// Ces deux tables rendent une CLÉ de catalogue, jamais un mot : elles vivent
+// hors du composant, où t() n'est pas accessible. C'est aussi ce qui permet au
+// message déjà affiché de suivre un changement de langue, puisqu'il n'est
+// traduit qu'au rendu.
 function mapRequestError(error) {
-    if (error?.status === 401) return "Mot de passe incorrect.";
-    if (error?.status === 409) return "Cette adresse mail est déjà utilisée par un autre compte.";
-    if (error?.status === 429) return "Trop de demandes de changement. Réessayez plus tard.";
-    if (error?.status === 422) return "Adresse mail invalide.";
-    if (!error?.status) return "Connexion impossible. Vérifiez votre connexion internet.";
-    return "Une erreur est survenue lors de l'envoi du code.";
+    const prefixe = "compte.email.erreursDemande";
+    if (error?.status === 401) return `${prefixe}.motDePasseIncorrect`;
+    if (error?.status === 409) return `${prefixe}.emailPris`;
+    if (error?.status === 429) return `${prefixe}.tropDeDemandes`;
+    if (error?.status === 422) return `${prefixe}.emailInvalide`;
+    if (!error?.status) return `${prefixe}.horsLigne`;
+    return `${prefixe}.generique`;
 }
 
 function mapConfirmError(error) {
-    if (error?.status === 400) return "Code invalide ou expiré.";
-    if (error?.status === 409) return "Cette adresse vient d'être utilisée par un autre compte. Essayez-en une autre.";
-    if (error?.status === 429) return "Trop de tentatives. Veuillez réessayer plus tard.";
-    if (!error?.status) return "Connexion impossible. Vérifiez votre connexion internet.";
-    return "Une erreur est survenue lors de la confirmation.";
+    const prefixe = "compte.email.erreursConfirmation";
+    if (error?.status === 400) return `${prefixe}.codeInvalide`;
+    if (error?.status === 409) return `${prefixe}.emailPris`;
+    if (error?.status === 429) return `${prefixe}.tropDeTentatives`;
+    if (!error?.status) return `${prefixe}.horsLigne`;
+    return `${prefixe}.generique`;
 }
 
 export default function EditEmailPage() {
     const router = useRouter();
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
     const { user, token, updateUser } = useAuth();
 
     const currentEmail = user?.email || "";
@@ -103,14 +111,14 @@ export default function EditEmailPage() {
         setIsResending(true);
         try {
             await requestEmailChange(token, newEmail.trim(), password);
-            setResendMessage("Un nouveau code a été envoyé.");
+            setResendMessage(t("compte.email.codeRenvoye"));
             startResendCooldown();
         } catch (err) {
             if (err?.status === 429) {
-                setResendMessage("Trop de demandes. Veuillez réessayer plus tard.");
+                setResendMessage(t("compte.email.tropDeDemandes"));
                 startResendCooldown();
             } else {
-                setResendMessage("Impossible d'envoyer le code pour le moment.");
+                setResendMessage(t("compte.email.envoiImpossible"));
             }
         } finally {
             setIsResending(false);
@@ -162,10 +170,10 @@ export default function EditEmailPage() {
 
     const resendDisabled = isResending || resendCooldown > 0;
     const resendLabel = isResending
-        ? "Envoi..."
+        ? t("compte.email.envoi")
         : resendCooldown > 0
-            ? `Renvoyer le code (${resendCooldown}s)`
-            : "Renvoyer le code";
+            ? t("compte.email.renvoyerCodeDelai", { secondes: resendCooldown })
+            : t("compte.email.renvoyerCode");
 
     return (
         <SwipeBackScreen background={colors.bgMain}>
@@ -178,7 +186,7 @@ export default function EditEmailPage() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <ScreenHeader
-                        title="Modifier mon adresse mail"
+                        title={t("compte.email.titre")}
                         onBack={() => handleBack(close)}
                     />
 
@@ -187,21 +195,20 @@ export default function EditEmailPage() {
                             <>
                                 <View style={[styles.currentCard, { backgroundColor: colors.bgSurface, borderColor: colors.borderLight }]}>
                                     <Text style={[styles.currentLabel, { color: colors.textSecondary }]}>
-                                        Adresse actuelle
+                                        {t("compte.email.adresseActuelle")}
                                     </Text>
                                     <Text style={[styles.currentValue, { color: colors.textMain }]} numberOfLines={1}>
-                                        {currentEmail || "Non renseignée"}
+                                        {currentEmail || t("compte.modales.profil.emailNonRenseigne")}
                                     </Text>
                                 </View>
 
                                 <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                                    Nous enverrons un code à {CODE_LENGTH} chiffres à votre nouvelle
-                                    adresse pour vérifier qu&apos;elle vous appartient.
+                                    {t("compte.email.intro", { longueur: CODE_LENGTH })}
                                 </Text>
 
                                 <View style={styles.inputGroup}>
                                     <Text style={[styles.label, { color: colors.textSecondary }]}>
-                                        Nouvelle adresse mail
+                                        {t("compte.email.nouvelleAdresse")}
                                     </Text>
                                     <EmailInput
                                         email={newEmail}
@@ -214,14 +221,14 @@ export default function EditEmailPage() {
                                     />
                                     {isSameAsCurrent && newEmail.length > 0 && (
                                         <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                            C&apos;est déjà votre adresse actuelle.
+                                            {t("auth.erreurs.emailDejaActuel")}
                                         </Text>
                                     )}
                                 </View>
 
                                 <View style={styles.inputGroup}>
                                     <Text style={[styles.label, { color: colors.textSecondary }]}>
-                                        Votre mot de passe
+                                        {t("auth.champs.votreMotDePasse")}
                                     </Text>
                                     <PasswordInput
                                         password={password}
@@ -231,16 +238,18 @@ export default function EditEmailPage() {
                                         autoComplete="current-password"
                                     />
                                     <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                        Demandé pour confirmer que c&apos;est bien vous.
+                                        {t("compte.email.motDePasseAide")}
                                     </Text>
                                 </View>
 
+                                {/* i18n-exempt-start: `error` porte une clé de catalogue, produite par mapRequestError / mapConfirmError */}
                                 {error && (
-                                    <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+                                    <Text style={[styles.errorText, { color: colors.error }]}>{t(error)}</Text>
                                 )}
+                                {/* i18n-exempt-end */}
 
                                 <Button
-                                    title="Envoyer le code"
+                                    title={t("compte.email.envoyerCode")}
                                     iconName="mail-outline"
                                     onPress={handleRequest}
                                     isLoading={isLoading}
@@ -248,26 +257,25 @@ export default function EditEmailPage() {
                                 />
 
                                 <View style={{ marginTop: 15 }}>
-                                    <OutlineButton title="Annuler" onPress={close} />
+                                    <OutlineButton title={t("commun.annuler")} onPress={close} />
                                 </View>
                             </>
                         ) : (
                             <>
                                 <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                                    Nous avons envoyé un code à {CODE_LENGTH} chiffres à{"\n"}
+                                    {t("compte.email.codeEnvoye", { longueur: CODE_LENGTH })}{"\n"}
                                     <Text style={{ fontWeight: "bold", color: colors.textMain }}>
                                         {newEmail.trim()}
                                     </Text>.
                                 </Text>
 
                                 <Text style={[styles.notice, { color: colors.textSecondary }]}>
-                                    Une alerte a également été envoyée à votre adresse actuelle. Le
-                                    changement ne prendra effet qu&apos;après validation du code.
+                                    {t("compte.email.alerteAncienneAdresse")}
                                 </Text>
 
                                 <View style={styles.inputGroup}>
                                     <Text style={[styles.label, { color: colors.textSecondary }]}>
-                                        Code de confirmation
+                                        {t("compte.email.labelCode")}
                                     </Text>
                                     <CodeInput
                                         value={code}
@@ -276,12 +284,14 @@ export default function EditEmailPage() {
                                     />
                                 </View>
 
+                                {/* i18n-exempt-start: `error` porte une clé de catalogue, produite par mapRequestError / mapConfirmError */}
                                 {error && (
-                                    <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+                                    <Text style={[styles.errorText, { color: colors.error }]}>{t(error)}</Text>
                                 )}
+                                {/* i18n-exempt-end */}
 
                                 <Button
-                                    title="Confirmer le changement"
+                                    title={t("compte.email.confirmer")}
                                     iconName="checkmark-circle-outline"
                                     onPress={handleConfirm}
                                     isLoading={isLoading}
@@ -306,7 +316,7 @@ export default function EditEmailPage() {
 
                                 <TouchableOpacity style={styles.changeAddressLink} onPress={backToEmailStep}>
                                     <Text style={[typography.link, { color: colors.textSecondary }]}>
-                                        Utiliser une autre adresse
+                                        {t("compte.email.autreAdresse")}
                                     </Text>
                                 </TouchableOpacity>
                             </>

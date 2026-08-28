@@ -1,2 +1,139 @@
 {
+    "adresses": {
+        "titreEcran": "Mes adresses",
+        "enregistrer": "Enregistrer les modifications"
+    },
+    "auteursBloques": {
+        "titre": "Auteurs bloqués",
+        "intro": "Vous ne voyez plus les signalements de ces personnes. Les débloquer les fera réapparaître sur la carte.",
+        "erreurChargement": "La liste n'a pas pu être chargée.",
+        "aucun": "Vous n'avez bloqué personne.",
+        "auteur": "Auteur bloqué",
+        "depuisLe": "Depuis le {{date}}",
+        "debloquer": "Débloquer",
+        "debloquerCet": "Débloquer cet auteur"
+    },
+    "email": {
+        "intro": "Nous enverrons un code à {{longueur}} chiffres à votre nouvelle adresse pour vérifier qu'elle vous appartient.",
+        "adresseActuelle": "Adresse actuelle",
+        "nouvelleAdresse": "Nouvelle adresse mail",
+        "envoyerCode": "Envoyer le code",
+        "envoi": "Envoi…",
+        "codeEnvoye": "Nous avons envoyé un code à {{longueur}} chiffres à",
+        "alerteAncienneAdresse": "Une alerte a également été envoyée à votre adresse actuelle. Le changement ne prendra effet qu'après validation du code.",
+        "labelCode": "Code de confirmation",
+        "confirmer": "Confirmer le changement",
+        "autreAdresse": "Utiliser une autre adresse",
+        "renvoyerCode": "Renvoyer le code",
+        "renvoyerCodeDelai": "Renvoyer le code ({{secondes}}s)",
+        "codeRenvoye": "Un nouveau code a été envoyé.",
+        "tropDeDemandes": "Trop de demandes. Veuillez réessayer plus tard.",
+        "envoiImpossible": "Impossible d'envoyer le code pour le moment.",
+        "titre": "Modifier mon adresse mail",
+        "motDePasseAide": "Demandé pour confirmer que c'est bien vous."
+    },
+    "historique": {
+        "titreEcran": "Mon historique",
+        "supprimerToutTitre": "Supprimer tout l'historique",
+        "supprimerToutTexte": "Cette action est irréversible. Voulez-vous continuer ?",
+        "supprimerTout": "Supprimer tout",
+        "aucunTrajet": "Aucun trajet pour le moment",
+        "distance": "Distance",
+        "duree": "Durée",
+        "type": "Type",
+        "effectueLe": "Effectué le {{date}}",
+        "supprimerTrajet": "Supprimer le trajet",
+        "kilometres": "{{valeur}} km",
+        "minutes": "{{valeur}} min"
+    },
+    "modales": {
+        "profil": {
+            "titre": "Modifier mon profil",
+            "naissance": "Date de naissance",
+            "niveauSportif": "Niveau sportif",
+            "emailNonRenseigne": "Non renseignée",
+            "verificationCode": "Changer d'adresse nécessite une vérification par code."
+        },
+        "motDePasse": {
+            "titre": "Modifier le mot de passe",
+            "actuel": "Ancien mot de passe",
+            "actuelIncorrect": "Ancien mot de passe incorrect.",
+            "nouveau": "Nouveau mot de passe",
+            "regle": "Au moins {{min}} caractères.",
+            "tropCourt": "Le mot de passe doit contenir au moins {{min}} caractères.",
+            "confirmation": "Confirmation",
+            "discordants": "Les nouveaux mots de passe ne correspondent pas.",
+            "confirmer": "Confirmer le changement",
+            "erreurModification": "Une erreur est survenue lors de la modification."
+        },
+        "suppressionCompte": {
+            "titre": "Supprimer mon compte",
+            "chapeau": "La suppression est immédiate et définitive : aucune restauration ne sera possible.",
+            "sectionTitre": "Ce qui est supprimé",
+            "ligneCompte": "Votre compte et votre adresse e-mail",
+            "ligneIdentite": "Votre nom, votre date de naissance et votre niveau sportif",
+            "ligneAdresses": "Vos adresses de domicile et de travail",
+            "ligneVelos": "Vos vélos",
+            "ligneTrajets": "Vos itinéraires, leurs tracés et votre historique",
+            "ligneBadges": "Vos badges et vos sessions de connexion",
+            "conserve": "Vos signalements de dangers restent visibles pour les autres cyclistes, mais ils ne sont plus reliés à votre compte.",
+            "confirmezMotDePasse": "Confirmez avec votre mot de passe",
+            "acquittement": "Je comprends que mon compte et mes données seront supprimés sans possibilité de restauration.",
+            "motDePasseIncorrect": "Mot de passe incorrect.",
+            "sectionConserve": "Ce qui est conservé",
+            "erreurSuppression": "Une erreur est survenue lors de la suppression.",
+            "confirmerTitre": "Supprimer définitivement ?",
+            "confirmerTexte": "Votre compte et les données qui y sont rattachées seront effacés. Cette action est irréversible.",
+            "confirmerAction": "Supprimer"
+        },
+        "historique": {
+            "titre": "Détails du trajet"
+        }
+    },
+    "profil": {
+        "h1": "Mon Profil",
+        "adresses": {
+            "h2": "Mes adresses"
+        },
+        "velos": {
+            "h2": "Mes vélos"
+        },
+        "statistiques": {
+            "h2": "Mes statistiques",
+            "trajetsTermines": "Trajets terminés",
+            "distanceTotale": "Distance totale",
+            "tempsTotal": "Temps total",
+            "typePrefere": "Type préféré"
+        },
+        "badges": {
+            "h2": "Mes badges",
+            "debloqueTitre": "Badge débloqué !",
+            "suivant": "Suivant ({{restants}})",
+            "termine": "Super !"
+        },
+        "nonConnecte": "Connectez-vous pour accéder à vos informations personnelles, vos itinéraires favoris et vos vélos.",
+        "domicile": "Domicile :",
+        "travail": "Travail :",
+        "ajouterVeloCourt": "Ajouter",
+        "aucunVelo": "Aucun vélo enregistré",
+        "ajouterUnVelo": "+ Ajouter un vélo",
+        "aucunBadge": "Aucun badge disponible",
+        "voirPlus": "Voir plus",
+        "parametres": "Paramètres",
+        "deconnexion": "Se déconnecter",
+        "valeurIndisponible": "--",
+        "tempsTotal": "{{heures}}h {{minutes}}min"
+    },
+    "velos": {
+        "titreModifier": "Modifier mon vélo",
+        "titreAjouter": "Ajouter un vélo",
+        "monVelo": "Mon vélo",
+        "nomObligatoire": "Le vélo doit avoir un nom.",
+        "erreurSauvegarde": "Impossible de sauvegarder. Veuillez réessayer.",
+        "supprimerTitre": "Supprimer le vélo",
+        "supprimerTexte": "Supprimer « {{nom}} » ?",
+        "erreurSuppression": "Impossible de supprimer le vélo.",
+        "modifier": "Modifier le vélo",
+        "ajouter": "Ajouter le vélo"
+    }
 }
