@@ -10,12 +10,14 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 
-const REPORT_META = {
-    accident: { icon: '🚨', label: 'Accident' },
-    travaux: { icon: '🚧', label: 'Travaux' },
-    danger: { icon: '⚠️', label: 'Danger' },
-    obstacle: { icon: '🪨', label: 'Obstacle' },
+// Icônes seules : les libellés partagent les identifiants de carte.signalement.*
+const REPORT_ICONS = {
+    accident: '🚨',
+    travaux: '🚧',
+    danger: '⚠️',
+    obstacle: '🪨',
 };
 
 export default function HazardAlert({ report, distance, canVote, onVote, onDismiss, bottomOffset = 0 }) {
@@ -26,7 +28,9 @@ export default function HazardAlert({ report, distance, canVote, onVote, onDismi
         denials: report.denials_count ?? 0,
     });
 
-    const meta = REPORT_META[report.report_type] || { icon: '⚠️', label: 'Danger' };
+    const { t } = useTranslation();
+    const type = REPORT_ICONS[report.report_type] ? report.report_type : 'danger';
+    const meta = { icon: REPORT_ICONS[type], label: t(`carte.signalement.${type}`) };
 
     const { width } = useWindowDimensions();
     const translateX = useSharedValue(0);
@@ -78,8 +82,8 @@ export default function HazardAlert({ report, distance, canVote, onVote, onDismi
             <View style={styles.row}>
                 <Text style={styles.icon}>{meta.icon}</Text>
                 <View style={{ flex: 1 }}>
-                    <Text style={styles.title}>{meta.label} à {distance} m</Text>
-                    <Text style={styles.counts}>👍 {counts.confirmations}   👎 {counts.denials}</Text>
+                    <Text style={styles.title}>{t('signalement.alerte.aDistance', { danger: meta.label, distance })}</Text>
+                    <Text style={styles.counts}>{t('signalement.alerte.votes', counts)}</Text>
                 </View>
                 <TouchableOpacity onPress={onDismiss} style={styles.close}>
                     <MaterialCommunityIcons name="close" size={20} color="#fff" />
@@ -87,7 +91,7 @@ export default function HazardAlert({ report, distance, canVote, onVote, onDismi
             </View>
 
             {voted ? (
-                <Text style={styles.thanks}>Merci pour votre retour !</Text>
+                <Text style={styles.thanks}>{t('signalement.alerte.merci')}</Text>
             ) : canVote ? (
                 <View style={styles.actions}>
                     <TouchableOpacity
@@ -96,7 +100,7 @@ export default function HazardAlert({ report, distance, canVote, onVote, onDismi
                         disabled={busy}
                     >
                         {busy ? <ActivityIndicator size="small" color="#fff" /> : (
-                            <Text style={styles.confirmText}>Confirmer</Text>
+                            <Text style={styles.confirmText}>{t('carte.ui.signalement.confirmer')}</Text>
                         )}
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -104,7 +108,7 @@ export default function HazardAlert({ report, distance, canVote, onVote, onDismi
                         onPress={() => handleVote(false)}
                         disabled={busy}
                     >
-                        <Text style={styles.denyText}>Pas là</Text>
+                        <Text style={styles.denyText}>{t('carte.ui.signalement.pasLa')}</Text>
                     </TouchableOpacity>
                 </View>
             ) : null}
