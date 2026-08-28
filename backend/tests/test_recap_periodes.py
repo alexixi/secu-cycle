@@ -111,3 +111,14 @@ def test_libelles():
     _, debut_annuel, _, precedent_annuel = periode_due(datetime(2027, 1, 2, 9, 0))
     assert libelle_periode(ANNUEL, debut_annuel) == "2026"
     assert libelle_periode_precedente(ANNUEL, precedent_annuel) == "2025"
+
+
+def test_libelles_en_anglais():
+    """Le mois vient du catalogue : jamais de la locale du conteneur."""
+    _, debut, _, precedent = periode_due(datetime(2026, 8, 1, 9, 0))
+    assert libelle_periode(MENSUEL, debut, "en") == "July 2026"
+    assert libelle_periode_precedente(MENSUEL, precedent, "en") == "June"
+
+    # Une année n'a pas de mot à traduire : les deux langues l'écrivent pareil.
+    _, debut_annuel, _, _ = periode_due(datetime(2027, 1, 2, 9, 0))
+    assert libelle_periode(ANNUEL, debut_annuel, "en") == "2026"

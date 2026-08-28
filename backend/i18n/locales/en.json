@@ -138,6 +138,115 @@
             "description": "Ride a total of 200 km on completed trips."
         }
     },
+    "email": {
+        "common": {
+            "footer": "Sécu'Cycle — safer cycling routes",
+            "code_validity": "This code is valid for 15 minutes.",
+            "no_link": "This e-mail is purely informational: it deliberately contains no links."
+        },
+        "verification": {
+            "subject": "Your Sécu'Cycle verification code",
+            "heading": "Welcome to Sécu'Cycle!",
+            "intro": "To activate your account, enter the verification code below:",
+            "hint": "If you did not request this, ignore this e-mail.",
+            "text_code": "Your verification code is: {code}"
+        },
+        "password_reset": {
+            "subject": "Reset your Sécu'Cycle password",
+            "heading": "Password reset",
+            "intro": "You asked to reset your password. Enter the code below to choose a new one:",
+            "hint": "If you did not request this, ignore this e-mail: your password remains unchanged.",
+            "text_code": "Your reset code is: {code}"
+        },
+        "email_change_code": {
+            "subject": "Confirm your new Sécu'Cycle address",
+            "heading": "Confirming your new address",
+            "intro": "You asked to use {email} as the sign-in address of your Sécu'Cycle account. Enter the code below in the app to confirm:",
+            "hint": "If you did not request this, ignore this e-mail: your address remains unchanged, and this mailbox will not be linked to any account.",
+            "text_title": "Confirming your new Sécu'Cycle address",
+            "text_intro": "You asked to use {email} as your sign-in address.",
+            "text_code": "Your confirmation code is: {code}",
+            "text_hint": "If you did not request this, ignore this e-mail: your address remains unchanged."
+        },
+        "email_change_alert": {
+            "subject": "Address change requested on your Sécu'Cycle account",
+            "heading": "Address change requested",
+            "intro": "A request to change the sign-in address of your Sécu'Cycle account has just been recorded, to:",
+            "effect": "The change will only take effect once a confirmation code has been entered from that new address.",
+            "warning_lead": "If you did not make this request",
+            "warning": "{lead}, your password is probably compromised: change it immediately from the app, then contact us.",
+            "text_title": "Address change requested on your Sécu'Cycle account",
+            "text_intro": "A request to change your sign-in address to {email} has just been recorded."
+        },
+        "account_deleted": {
+            "subject": "Your Sécu'Cycle account has been deleted",
+            "heading": "Account deleted",
+            "data": "Your Sécu'Cycle account has just been deleted, along with the data attached to it: your personal details, your addresses, your bikes, your routes and their tracks, your history and your badges.",
+            "reports": "The hazard reports you created remain visible to other cyclists, but they are no longer linked to your account.",
+            "final": "This deletion is permanent: no restoration is possible. You can create a new account at any time.",
+            "warning_lead": "If you did not request this deletion",
+            "warning": "{lead}, write to us at {email}."
+        },
+        "recap": {
+            "subject_monthly": "Your {periode} on the bike",
+            "subject_yearly": "Your {periode} on the bike",
+            "title_monthly": "Your {periode}",
+            "title_yearly": "Your {periode}",
+            "greeting": "Hello,",
+            "greeting_named": "Hello {prenom},",
+            "intro": "Here is how far you rode in {periode}: {trajets}.",
+            "trips_one": "{count} ride",
+            "trips_other": "{count} rides",
+            "tile_trips": "Rides",
+            "tile_distance": "Distance",
+            "tile_time": "Estimated time",
+            "tile_elevation": "Elevation gain",
+            "comparison_more": "That is {ecart}% more than in {periode}.",
+            "comparison_less": "That is {ecart}% less than in {periode}.",
+            "comparison_same": "That is about as much as in {periode}.",
+            "longest": "Your longest ride: {distance}.",
+            "safe_routes": "Including {count} on the safest route.",
+            "estimate_note": "Durations are those estimated when your routes were computed.",
+            "badges_one": "New badge",
+            "badges_other": "{count} new badges",
+            "tile_text": "{libelle}: {valeur}",
+            "badges_text_header": "Badges unlocked:",
+            "unsubscribe_reason": "You are receiving this e-mail because you have a Sécu'Cycle account.",
+            "unsubscribe_link": "Stop receiving these summaries",
+            "unsubscribe_text": "To stop receiving these summaries: {lien}",
+            "unit_minutes": "{value} min",
+            "unit_hours": "{value} h",
+            "unit_hours_minutes": "{hours} h {minutes}",
+            "unit_km": "{value} km",
+            "unit_m": "{value} m",
+            "month": {
+                "1": "January",
+                "2": "February",
+                "3": "March",
+                "4": "April",
+                "5": "May",
+                "6": "June",
+                "7": "July",
+                "8": "August",
+                "9": "September",
+                "10": "October",
+                "11": "November",
+                "12": "December"
+            }
+        },
+        "unsubscribe": {
+            "confirm_heading": "Stop receiving the summaries?",
+            "confirm_intro": "You will no longer receive the monthly and yearly summary of your rides. Your account and your data remain unchanged.",
+            "confirm_button": "Confirm unsubscribe",
+            "confirm_note": "You can turn them back on at any time from the app settings.",
+            "done_heading": "Done",
+            "done_intro": "You will no longer receive activity summaries.",
+            "done_note": "E-mails tied to your account — verification, password reset — are still sent: they are not covered by this setting. You can turn the summaries back on whenever you like from the app settings.",
+            "invalid_heading": "This link is no longer valid",
+            "invalid_intro": "We could not process this request: the link is incomplete or has been replaced.",
+            "invalid_note": "You can turn the summaries off from the app settings, or write to us at {email}."
+        }
+    },
     "error": {
         "common": {
             "no_fields": "No field to update.",

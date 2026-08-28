@@ -138,6 +138,115 @@
             "description": "Cumuler 200 km sur vos trajets terminés."
         }
     },
+    "email": {
+        "common": {
+            "footer": "Sécu'Cycle — itinéraires vélo sécurisés",
+            "code_validity": "Ce code est valable 15 minutes.",
+            "no_link": "Cet e-mail est purement informatif : il ne contient volontairement aucun lien."
+        },
+        "verification": {
+            "subject": "Votre code de vérification Sécu'Cycle",
+            "heading": "Bienvenue sur Sécu'Cycle !",
+            "intro": "Pour activer votre compte, saisissez le code de vérification suivant :",
+            "hint": "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.",
+            "text_code": "Votre code de vérification est : {code}"
+        },
+        "password_reset": {
+            "subject": "Réinitialisation de votre mot de passe Sécu'Cycle",
+            "heading": "Réinitialisation de mot de passe",
+            "intro": "Vous avez demandé à réinitialiser votre mot de passe. Saisissez le code suivant pour en choisir un nouveau :",
+            "hint": "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre mot de passe reste inchangé.",
+            "text_code": "Votre code de réinitialisation est : {code}"
+        },
+        "email_change_code": {
+            "subject": "Confirmez votre nouvelle adresse Sécu'Cycle",
+            "heading": "Confirmation de votre nouvelle adresse",
+            "intro": "Vous avez demandé à utiliser {email} comme adresse de connexion à votre compte Sécu'Cycle. Saisissez le code suivant dans l'application pour confirmer :",
+            "hint": "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre adresse reste inchangée et cette boîte ne sera associée à aucun compte.",
+            "text_title": "Confirmation de votre nouvelle adresse Sécu'Cycle",
+            "text_intro": "Vous avez demandé à utiliser {email} comme adresse de connexion.",
+            "text_code": "Votre code de confirmation est : {code}",
+            "text_hint": "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre adresse reste inchangée."
+        },
+        "email_change_alert": {
+            "subject": "Demande de changement d'adresse sur votre compte Sécu'Cycle",
+            "heading": "Changement d'adresse demandé",
+            "intro": "Une demande de changement de l'adresse de connexion de votre compte Sécu'Cycle vient d'être enregistrée, vers :",
+            "effect": "Le changement ne prendra effet qu'une fois un code de confirmation saisi depuis cette nouvelle adresse.",
+            "warning_lead": "Si vous n'êtes pas à l'origine de cette demande",
+            "warning": "{lead}, votre mot de passe est probablement compromis : changez-le immédiatement depuis l'application, puis contactez-nous.",
+            "text_title": "Changement d'adresse demandé sur votre compte Sécu'Cycle",
+            "text_intro": "Une demande de changement de votre adresse de connexion vers {email} vient d'être enregistrée."
+        },
+        "account_deleted": {
+            "subject": "Votre compte Sécu'Cycle a été supprimé",
+            "heading": "Compte supprimé",
+            "data": "Votre compte Sécu'Cycle vient d'être supprimé, ainsi que les données qui y étaient rattachées : vos informations personnelles, vos adresses, vos vélos, vos itinéraires et leurs tracés, votre historique et vos badges.",
+            "reports": "Les signalements de dangers que vous aviez créés restent visibles pour les autres cyclistes, mais ils ne sont plus reliés à votre compte.",
+            "final": "Cette suppression est définitive : aucune restauration n'est possible. Vous pouvez créer un nouveau compte à tout moment.",
+            "warning_lead": "Si vous n'êtes pas à l'origine de cette suppression",
+            "warning": "{lead}, écrivez-nous à {email}."
+        },
+        "recap": {
+            "subject_monthly": "Votre mois de {periode} à vélo",
+            "subject_yearly": "Votre année {periode} à vélo",
+            "title_monthly": "Votre mois de {periode}",
+            "title_yearly": "Votre année {periode}",
+            "greeting": "Bonjour,",
+            "greeting_named": "Bonjour {prenom},",
+            "intro": "Voici ce que vous avez parcouru en {periode} : {trajets}.",
+            "trips_one": "{count} trajet",
+            "trips_other": "{count} trajets",
+            "tile_trips": "Trajets",
+            "tile_distance": "Distance",
+            "tile_time": "Temps estimé",
+            "tile_elevation": "Dénivelé",
+            "comparison_more": "Soit {ecart} % de plus qu'en {periode}.",
+            "comparison_less": "Soit {ecart} % de moins qu'en {periode}.",
+            "comparison_same": "Soit à peu près autant qu'en {periode}.",
+            "longest": "Votre plus long trajet : {distance}.",
+            "safe_routes": "Dont {count} en itinéraire sécurisé.",
+            "estimate_note": "Les durées sont celles estimées au calcul de vos itinéraires.",
+            "badges_one": "Nouveau badge",
+            "badges_other": "{count} nouveaux badges",
+            "tile_text": "{libelle} : {valeur}",
+            "badges_text_header": "Badges débloqués :",
+            "unsubscribe_reason": "Vous recevez cet e-mail parce que vous avez un compte Sécu'Cycle.",
+            "unsubscribe_link": "Ne plus recevoir ces récapitulatifs",
+            "unsubscribe_text": "Pour ne plus recevoir ces récapitulatifs : {lien}",
+            "unit_minutes": "{value} min",
+            "unit_hours": "{value} h",
+            "unit_hours_minutes": "{hours} h {minutes}",
+            "unit_km": "{value} km",
+            "unit_m": "{value} m",
+            "month": {
+                "1": "janvier",
+                "2": "février",
+                "3": "mars",
+                "4": "avril",
+                "5": "mai",
+                "6": "juin",
+                "7": "juillet",
+                "8": "août",
+                "9": "septembre",
+                "10": "octobre",
+                "11": "novembre",
+                "12": "décembre"
+            }
+        },
+        "unsubscribe": {
+            "confirm_heading": "Ne plus recevoir les récapitulatifs ?",
+            "confirm_intro": "Vous ne recevrez plus le récapitulatif mensuel et annuel de vos trajets. Votre compte et vos données restent inchangés.",
+            "confirm_button": "Confirmer le désabonnement",
+            "confirm_note": "Vous pourrez les réactiver à tout moment depuis les réglages de l'application.",
+            "done_heading": "C'est fait",
+            "done_intro": "Vous ne recevrez plus de récapitulatif d'activité.",
+            "done_note": "Les e-mails liés à votre compte — vérification, réinitialisation de mot de passe — continuent d'être envoyés : ils ne relèvent pas de ce réglage. Vous pouvez réactiver les récapitulatifs quand vous le souhaitez depuis les réglages de l'application.",
+            "invalid_heading": "Ce lien n'est plus valide",
+            "invalid_intro": "Nous n'avons pas pu traiter cette demande : le lien est incomplet ou a été remplacé.",
+            "invalid_note": "Vous pouvez désactiver les récapitulatifs depuis les réglages de l'application, ou nous écrire à {email}."
+        }
+    },
     "error": {
         "common": {
             "no_fields": "Aucun champ à mettre à jour.",

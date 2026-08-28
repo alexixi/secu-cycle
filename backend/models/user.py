@@ -35,4 +35,11 @@ class User(Base):
     # passe puis je me désabonne » est un enchaînement banal.
     recap_unsub_version = Column(Integer, nullable=False, server_default="0", default=0)
 
+    # Langue des e-mails, et d'eux seuls. La langue des *réponses* de l'API reste
+    # négociée par requête (`?lang=` puis `Accept-Language`) : un envoi de fond
+    # n'a pas de requête d'où la tirer, c'est la seule raison de cette colonne.
+    # Renseignée à l'inscription depuis la locale négociée, puis mise à jour par
+    # les clients quand l'utilisateur change de langue.
+    language = Column(String(2), nullable=False, default="fr", server_default="fr")
+
     created_at = Column(TIMESTAMP, server_default=func.now())

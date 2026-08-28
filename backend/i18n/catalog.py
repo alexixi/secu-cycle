@@ -78,6 +78,22 @@ def t(key: str, locale: str = DEFAULT_LOCALE, /, **params) -> str:
         return template
 
 
+def t_or(key: str, defaut: str | None, locale: str = DEFAULT_LOCALE, /, **params) -> str:
+    """Rend `key`, ou `defaut` si elle n'existe dans aucun catalogue.
+
+    Pour les libellés qui vivent aussi en base — les badges, dont le catalogue
+    fait autorité et dont la valeur stockée sert de repli aux lignes ajoutées
+    sans clé. Contrairement à `t()`, l'absence n'est pas une anomalie : elle
+    n'est donc pas journalisée, sans quoi un catalogue de badges partiellement
+    rempli produirait deux avertissements par badge à chaque `GET /badges/`.
+    """
+    for candidat in (locale, DEFAULT_LOCALE):
+        template = CATALOGS.get(candidat, {}).get(key)
+        if template is not None:
+            return template.format(**params) if params else template
+    return key if defaut is None else defaut
+
+
 def ordinal(count: int, locale: str = DEFAULT_LOCALE, /) -> str:
     """Rang écrit : « 1ère », « 3ème » / “1st”, “3rd”.
 

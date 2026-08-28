@@ -49,12 +49,16 @@ _DUMMY_PASSWORD_HASH = hash_password("timing-attack-equalizer")
 def _send_verification_code(db: Session, user: User) -> None:
     """Émet un code de vérification et l'envoie par e-mail.
 
+    La langue est celle du profil et non celle de la requête : c'est la règle
+    de tous les e-mails du projet, la seule que le récapitulatif périodique
+    puisse suivre (voir `i18n/__init__.py`).
+
     Les erreurs d'envoi sont loguées mais n'interrompent pas l'appelant :
     l'utilisateur pourra toujours demander un renvoi via /users/resend-verification.
     """
     try:
         code = issue_code(db, user)
-        subject, html, text = verification_email(code)
+        subject, html, text = verification_email(code, user.language)
         mailer.send_email(user.email, subject, html, text)
     except Exception:
         logger.exception("Échec de l'envoi du code de vérification à %s", user.email)
@@ -68,7 +72,7 @@ def _send_reset_code(db: Session, user: User) -> None:
     """
     try:
         code = issue_code(db, user, purpose=PASSWORD_RESET_PURPOSE)
-        subject, html, text = password_reset_email(code)
+        subject, html, text = password_reset_email(code, user.language)
         mailer.send_email(user.email, subject, html, text)
     except Exception:
         logger.exception("Échec de l'envoi du code de réinitialisation à %s", user.email)
@@ -112,7 +116,10 @@ def create_user(request: Request, user: UserCreate, db: Session = Depends(get_db
         birth_date=user.birth_date,
         sport_level=user.sport_level,
         home_address=user.home_address,
-        work_address=user.work_address
+        work_address=user.work_address,
+        # Seul endroit où la négociation HTTP alimente la colonne : le compte
+        # n'existe pas encore, et le code de vérification part dans la foulée.
+        language=locale,
     )
    # print("TYPE PASSWORD:", type(user.password))
    # print("VALUE PASSWORD:", user.password)
@@ -358,10 +365,11 @@ def delete_me(
         raise HTTPException(status_code=401, detail=t("error.auth.wrong_password", locale))
 
     email = current_user.email
+    langue = current_user.language
     _purge_user(db, current_user)
 
     try:
-        subject, html, text = account_deleted_email()
+        subject, html, text = account_deleted_email(langue)
         mailer.send_email(email, subject, html, text)
     except Exception:
         logger.exception("Échec de l'envoi de la confirmation de suppression à %s", email)
@@ -437,7 +445,8 @@ def request_email_change(
     # Les échecs d'envoi sont journalisés sans interrompre : l'utilisateur peut
     # relancer la demande (même contrat que _send_reset_code).
     try:
-        subject, html, text = email_change_code_email(code, new_email)
+        subject, html, text = email_change_code_email(code, new_email,
+                                                      current_user.language)
         mailer.send_email(new_email, subject, html, text)
     except Exception:
         logger.exception(
@@ -445,7 +454,8 @@ def request_email_change(
         )
 
     try:
-        subject, html, text = email_change_alert_email(new_email)
+        subject, html, text = email_change_alert_email(new_email,
+                                                       current_user.language)
         mailer.send_email(old_email, subject, html, text)
     except Exception:
         logger.exception(
