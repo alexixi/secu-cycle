@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 import { areWeatherAlertsEnabled } from './notificationPreference';
+import i18n from '../i18n';
 
 // Alertes météo en notification locale.
 //
@@ -58,8 +59,8 @@ async function ensureChannel() {
     }
     try {
         await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-            name: 'Alertes météo',
-            description: "Averse, grêle, orage ou verglas pendant un trajet.",
+            name: i18n.t('meteo.notification.canalNom'),
+            description: i18n.t('meteo.notification.canalDescription'),
             // HIGH, contrairement au canal de guidage qui est en LOW : celui-ci
             // doit percer alors que le téléphone est en mode navigation.
             importance: Notifications.AndroidImportance.HIGH,
