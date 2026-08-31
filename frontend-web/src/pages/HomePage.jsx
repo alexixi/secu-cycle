@@ -107,14 +107,15 @@ export default function HomePage() {
                         {t('application.texte')}
                     </p>
                     <div className="store-badges">
-                        <a href="#app-section">
-                            <img src="/store/appstore.svg" alt={t('application.appStoreAlt')} className="store-badge" width="127" height="40" />
-                        </a>
-
-                        <a href="#app-section">
-                            <img src="/store/googleplay.svg" alt={t('application.googlePlayAlt')} className="store-badge" width="239" height="71" />
-                        </a>
+                        <img
+                            src="/store/googleplay.svg"
+                            alt={t('application.googlePlayAlt')}
+                            className="store-badge store-badge-indisponible"
+                            width="239"
+                            height="71"
+                        />
                     </div>
+                    <p className="store-bientot">{t('application.bientot')}</p>
                 </aside>
             </div>
             <div id="team-section">

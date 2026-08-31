@@ -152,6 +152,19 @@
     min-width: 20px;
 }
 
+#app-section .store-badges img.store-badge-indisponible {
+    opacity: 0.45;
+    filter: grayscale(1);
+}
+
+#app-section .store-bientot {
+    font-size: 1rem;
+    line-height: 1.5;
+    text-align: center;
+    margin-top: 15px;
+    opacity: 0.75;
+}
+
 #team-section {
     width: 100%;
     background-color: var(--bg-main);
