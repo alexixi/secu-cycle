@@ -6,6 +6,7 @@ import { calculateItineraries, completeRoute } from "../../services/apiBack";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from '../../hooks/useTheme';
 import useGuidance from '../../hooks/useGuidance';
+import { useMaxTime } from '../../hooks/useMaxTime';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from 'expo-router';
@@ -43,7 +44,7 @@ export default function Index() {
     const [routeWeather, setRouteWeather] = useState(null);
     const [selectedItineraire, setSelectedItineraire] = useState(null);
     const [selectedBike, setSelectedBike] = useState('classic');
-    const [maxDuration, setMaxDuration] = useState(null);
+    const maxTime = useMaxTime();
     const [errorPath, setErrorPath] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const [pendingPoiRoute, setPendingPoiRoute] = useState(false);
@@ -246,7 +247,7 @@ export default function Index() {
         completedRouteRef.current = null;
 
         try {
-            const { routes: itineraries, weather } = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint?.name, endPoint?.name);
+            const { routes: itineraries, weather } = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxTime.maxDuration, startPoint?.name, endPoint?.name);
 
             if (itineraries && itineraries.length > 0) {
                 setErrorPath(false);
@@ -277,7 +278,7 @@ export default function Index() {
         } finally {
             setIsLoading(false);
         }
-    }, [startPoint, endPoint, selectedBike, maxDuration, token]);
+    }, [startPoint, endPoint, selectedBike, maxTime.maxDuration, token]);
 
     const handleNavigateToPoi = React.useCallback((poi) => {
         if (!startPoint && !locationGranted) {
@@ -412,8 +413,12 @@ export default function Index() {
                         bikes={bikes}
                         selectedBike={selectedBike}
                         setSelectedBike={setSelectedBike}
-                        maxDuration={maxDuration}
-                        setMaxDuration={setMaxDuration}
+                        maxDuration={maxTime.maxDuration}
+                        arrivalTime={maxTime.arrivalTime}
+                        isPastTime={maxTime.isPastTime}
+                        setDuration={maxTime.setDuration}
+                        setArrival={maxTime.setArrival}
+                        clearMaxTime={maxTime.clear}
                         hasLocationPermission={locationGranted}
                         onRequestLocation={ensureLocationGranted}
                     />
