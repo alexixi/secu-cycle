@@ -46,6 +46,7 @@
         "pontsTitre": "A bridge deck loses heat from both sides and freezes one to two hours before the road on either side of it."
     },
     "securite": {
+        "fermer": "Close",
         "bouton": "Why is this route safer?",
         "titre": "Why this route is safer",
         "cyclableFort": "More than half the route ({{pct}}%) runs on dedicated cycle tracks or lanes, separated from motor traffic.",

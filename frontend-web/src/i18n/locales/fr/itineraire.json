@@ -46,6 +46,7 @@
         "pontsTitre": "Un tablier de pont perd sa chaleur par ses deux faces et gèle une à deux heures avant la chaussée voisine."
     },
     "securite": {
+        "fermer": "Fermer",
         "bouton": "Pourquoi ce trajet est-il sécurisé ?",
         "titre": "Pourquoi ce trajet est sécurisé ?",
         "cyclableFort": "Plus de la moitié du trajet ({{pct}}%) emprunte des pistes ou bandes cyclables dédiées, séparées du trafic motorisé.",

@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
 import './ItinerariesSelect.css';
 
-import { useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { FaArrowTrendUp, FaArrowTrendDown, FaBicycle } from "react-icons/fa6";
 import { PiPathBold } from "react-icons/pi";
-import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdOutlineReportProblem, MdOutlineDarkMode, MdOutlineAir, MdOutlineWaterDrop, MdOutlineAir as MdWind, MdOutlineWarningAmber } from "react-icons/md";
+import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdClose, MdOutlineReportProblem, MdOutlineDarkMode, MdOutlineAir, MdOutlineWaterDrop, MdOutlineAir as MdWind, MdOutlineWarningAmber } from "react-icons/md";
 import { weatherSummary, formatHM } from "../../modules/map/weather";
 
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
@@ -64,28 +65,127 @@ function buildSafetyExplanation(t, id, stats, weather) {
     return points;
 }
 
-function SafetyInfo({ id, stats, weather }) {
+const MARGE_ECRAN = 8;
+const ECART_BOUTON = 6;
+
+function SafetyInfo({ id, stats, weather, open, onToggle, onClose }) {
     const { t } = useTranslation('itineraire');
-    const [open, setOpen] = useState(false);
+    const btnRef = useRef(null);
+    const panelRef = useRef(null);
+    const [pos, setPos] = useState(null);
     const points = buildSafetyExplanation(t, id, stats, weather);
+
+    useLayoutEffect(() => {
+        if (!open) {
+            setPos(null);
+            return;
+        }
+
+        const placer = () => {
+            const bouton = btnRef.current;
+            const panneau = panelRef.current;
+            if (!bouton || !panneau) return;
+
+            const ancre = bouton.getBoundingClientRect();
+            const { width, height } = panneau.getBoundingClientRect();
+
+            const gaucheMax = window.innerWidth - width - MARGE_ECRAN;
+            const left = Math.max(MARGE_ECRAN, Math.min(ancre.left, gaucheMax));
+
+            const dessous = ancre.bottom + ECART_BOUTON;
+            const auDessus = dessous + height > window.innerHeight - MARGE_ECRAN
+                && ancre.top - height - ECART_BOUTON >= MARGE_ECRAN;
+
+            setPos({
+                top: auDessus ? ancre.top - height - ECART_BOUTON : dessous,
+                left,
+                auDessus,
+                fleche: ancre.left + ancre.width / 2 - left,
+            });
+        };
+
+        placer();
+        window.addEventListener('resize', placer);
+        window.addEventListener('scroll', placer, true);
+        return () => {
+            window.removeEventListener('resize', placer);
+            window.removeEventListener('scroll', placer, true);
+        };
+    }, [open, points?.length]);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const surTouche = (e) => {
+            if (e.key !== 'Escape') return;
+            onClose();
+            btnRef.current?.focus();
+        };
+        const surClic = (e) => {
+            if (btnRef.current?.contains(e.target)) return;
+            if (panelRef.current?.contains(e.target)) return;
+            onClose();
+        };
+
+        const vigie = new IntersectionObserver(
+            ([entree]) => { if (!entree.isIntersecting) onClose(); },
+            { threshold: 0 },
+        );
+        if (btnRef.current) vigie.observe(btnRef.current);
+
+        document.addEventListener('keydown', surTouche);
+        document.addEventListener('mousedown', surClic);
+        return () => {
+            vigie.disconnect();
+            document.removeEventListener('keydown', surTouche);
+            document.removeEventListener('mousedown', surClic);
+        };
+    }, [open, onClose]);
+
     if (!points) return null;
 
     return (
         <div className="safety-info-wrapper">
             <button
+                ref={btnRef}
+                type="button"
                 className="safety-info-btn"
-                onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
+                onClick={(e) => { e.stopPropagation(); onToggle(); }}
                 title={t('securite.bouton')}
+                aria-label={t('securite.bouton')}
+                aria-haspopup="dialog"
+                aria-expanded={open}
             >
                 <MdInfoOutline />
             </button>
-            {open && (
-                <div className="safety-info-panel" onClick={e => e.stopPropagation()}>
-                    <p className="safety-info-title">{t('securite.titre')}</p>
+            {open && createPortal(
+                <div
+                    ref={panelRef}
+                    className={`safety-info-panel${pos?.auDessus ? ' is-above' : ''}`}
+                    role="dialog"
+                    aria-label={t('securite.titre')}
+                    onClick={e => e.stopPropagation()}
+                    style={pos
+                        ? { top: pos.top, left: pos.left, '--fleche-x': `${pos.fleche}px` }
+                        : { top: 0, left: 0, visibility: 'hidden' }}
+                >
+                    <div className="safety-info-head">
+                        <p className="safety-info-title">{t('securite.titre')}</p>
+                        <button
+                            type="button"
+                            className="safety-info-close"
+                            onClick={() => { onClose(); btnRef.current?.focus(); }}
+                            title={t('securite.fermer')}
+                            aria-label={t('securite.fermer')}
+                        >
+                            <MdClose />
+                        </button>
+                    </div>
                     <ul>
                         {points.map((p, i) => <li key={i}>{p}</li>)}
                     </ul>
-                </div>
+                </div>,
+                document.body,
             )}
         </div>
     );
@@ -166,6 +266,9 @@ function WeatherAdvice({ weather }) {
 
 export default function ItinerariesSelect({ itineraires, weather, selectedItineraire, setSelectedItineraire }) {
     const { t } = useTranslation('itineraire');
+    const [infoOuverte, setInfoOuverte] = useState(null);
+    const fermerInfo = useCallback(() => setInfoOuverte(null), []);
+    useEffect(() => { setInfoOuverte(null); }, [selectedItineraire]);
     // Le backend renvoie encore le nom de la variante en français (`Rapide`,
     // `Sécurisé`, `Compromis`). L'`id`, lui, est une clé stable : on résout le
     // libellé ici, et on ne retombe sur le nom de l'API que pour une variante
@@ -194,7 +297,14 @@ export default function ItinerariesSelect({ itineraires, weather, selectedItiner
                                 <div className="path-top">
                                     <div className="path-title-row">
                                         <h3>{nomVariante(itineraire)}</h3>
-                                        <SafetyInfo id={itineraire.id} stats={itineraire.infra_stats} weather={weather} />
+                                        <SafetyInfo
+                                            id={itineraire.id}
+                                            stats={itineraire.infra_stats}
+                                            weather={weather}
+                                            open={infoOuverte === itineraire.id}
+                                            onToggle={() => setInfoOuverte(o => (o === itineraire.id ? null : itineraire.id))}
+                                            onClose={fermerInfo}
+                                        />
                                     </div>
                                     <div className='path-info'>
                                         <span className='color-red'><FaArrowTrendUp /> {itineraire.height_difference[0]} m</span>
