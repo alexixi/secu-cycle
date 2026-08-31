@@ -30,9 +30,9 @@
     "application": {
         "apercuAlt": "Preview of the mobile app",
         "h2": "Try our mobile app",
-        "texte": "Download the mobile app for an experience built around real-time navigation.",
-        "appStoreAlt": "Download on the App Store",
-        "googlePlayAlt": "Get it on Google Play"
+        "texte": "Sécu'Cycle is coming to mobile: real-time navigation and safety alerts, right in your pocket.",
+        "googlePlayAlt": "Sécu'Cycle on Google Play, coming soon",
+        "bientot": "Coming soon to Google Play and the App Store. The app is currently in testing ahead of release."
     },
     "equipe": {
         "h2": "The Sécu'Cycle team"
