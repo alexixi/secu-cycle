@@ -6,12 +6,6 @@
     margin-bottom: 2em;
 }
 
-.itineraries-select h2 {
-    margin: 0;
-    font-size: 1.2em;
-    color: var(--text-main);
-}
-
 .path-container {
     width: 100%;
     display: flex;
@@ -39,6 +33,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
 }
 
 .path.path-selected {
@@ -48,8 +43,8 @@
 }
 
 .path h3 {
-    max-width: 50%;
-    margin-right: 10px;
+    min-width: 0;
+    overflow-wrap: anywhere;
     font-size: 1em;
     color: var(--text-main);
     text-align: left;
@@ -82,20 +77,52 @@
 .path-elevation {
     width: 100%;
     height: 45px;
+    margin-top: 10px;
 }
 
 .path-infra-stats {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    cursor: grab;
+}
+
+.path-infra-stats::-webkit-scrollbar {
+    display: none;
+}
+
+.path-infra-stats.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+}
+
+.path-infra-stats[data-scroll="start"] {
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
+
+.path-infra-stats[data-scroll="middle"] {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+.path-infra-stats[data-scroll="end"] {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 15%, black 100%);
 }
 
 .infra-badge {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
+    white-space: nowrap;
     gap: 5px;
     font-size: 0.78em;
     background-color: var(--bg-surface);
@@ -164,10 +191,12 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    min-width: 0;
 }
 
 .safety-info-wrapper {
-    position: relative;
+    display: flex;
+    flex-shrink: 0;
 }
 
 .safety-info-btn {
@@ -186,17 +215,57 @@
     color: var(--primary-hover);
 }
 
+.safety-info-btn:focus,
+.safety-info-close:focus {
+    outline: none;
+}
+
+.safety-info-btn:focus-visible,
+.safety-info-close:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 50%;
+}
+
 .safety-info-panel {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    z-index: 100;
+    position: fixed;
+    z-index: 900;
     background-color: var(--bg-surface);
     border: 1px solid var(--primary);
     border-radius: 10px;
     padding: 12px 14px;
-    width: 260px;
+    width: min(280px, calc(100vw - 24px));
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.safety-info-panel::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: clamp(14px, var(--fleche-x, 16px), calc(100% - 14px));
+    width: 10px;
+    height: 10px;
+    margin-left: -5px;
+    background-color: var(--bg-surface);
+    border-top: 1px solid var(--primary);
+    border-left: 1px solid var(--primary);
+    transform: rotate(45deg);
+}
+
+.safety-info-panel.is-above::after {
+    top: auto;
+    bottom: -6px;
+    border-top: none;
+    border-left: none;
+    border-right: 1px solid var(--primary);
+    border-bottom: 1px solid var(--primary);
+}
+
+.safety-info-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 .safety-info-title {
@@ -204,6 +273,23 @@
     font-size: 0.85em;
     margin: 0 0 8px 0;
     color: var(--primary);
+}
+
+.safety-info-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    line-height: 1;
+    font-size: 1em;
+    color: var(--text-secondary);
+}
+
+.safety-info-close:hover {
+    color: var(--text-main);
 }
 
 .safety-info-panel ul {
