@@ -18,5 +18,46 @@
         "retrait": "Vous pouvez retirer cette autorisation à tout moment dans les réglages de votre téléphone. Détails dans notre <lien>politique de confidentialité</lien>.",
         "autoriser": "Autoriser",
         "continuerSans": "Continuer sans"
+    },
+    "position": {
+        "titre": "Afficher votre position",
+        "points": {
+            "carte": {
+                "titre": "Vous situer sur la carte",
+                "texte": "Le point bleu suit votre position : vous savez d'un coup d'œil où vous êtes et dans quelle direction vous roulez."
+            },
+            "itineraire": {
+                "titre": "Partir d'où vous êtes",
+                "texte": "« Ma position » devient un départ possible, sans avoir à taper une adresse."
+            },
+            "usage": {
+                "titre": "Rien n'est conservé",
+                "texte": "Votre position sert à vous afficher sur la carte et à calculer votre itinéraire. Elle n'est ni conservée, ni utilisée pour de la publicité, ni transmise à des tiers."
+            }
+        },
+        "autoriser": "Autoriser la localisation",
+        "plusTard": "Plus tard",
+        "bloqueeTitre": "Localisation bloquée",
+        "bloqueeTexte": "Autorisez la localisation pour Sécu'Cycle dans les réglages de votre téléphone.",
+        "ouvrirReglages": "Ouvrir les réglages"
+    },
+    "notifications": {
+        "titre": "Suivre le guidage sans regarder l'écran",
+        "points": {
+            "instruction": {
+                "titre": "La prochaine instruction",
+                "texte": "Elle s'affiche dans la barre de notifications, téléphone en poche ou écran éteint."
+            },
+            "discret": {
+                "titre": "Sans vous déranger",
+                "texte": "Ni son ni vibration : la notification reste silencieuse pendant tout le trajet."
+            },
+            "retrait": {
+                "titre": "Modifiable à tout moment",
+                "texte": "Vous pouvez la désactiver depuis les réglages de l'application."
+            }
+        },
+        "autoriser": "Activer les notifications",
+        "plusTard": "Continuer sans"
     }
 }

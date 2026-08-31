@@ -18,5 +18,46 @@
         "retrait": "You can withdraw this permission at any time in your phone settings. Details in our <lien>privacy policy</lien>.",
         "autoriser": "Allow",
         "continuerSans": "Continue without"
+    },
+    "position": {
+        "titre": "Show your location",
+        "points": {
+            "carte": {
+                "titre": "See where you are",
+                "texte": "The blue dot follows your position: you can tell at a glance where you are and which way you are heading."
+            },
+            "itineraire": {
+                "titre": "Start from where you are",
+                "texte": "“My location” becomes a possible starting point, with no address to type."
+            },
+            "usage": {
+                "titre": "Nothing is stored",
+                "texte": "Your location is used to show you on the map and to compute your route. It is not stored, not used for advertising and not shared with third parties."
+            }
+        },
+        "autoriser": "Allow location",
+        "plusTard": "Not now",
+        "bloqueeTitre": "Location blocked",
+        "bloqueeTexte": "Allow location for Sécu'Cycle in your phone settings.",
+        "ouvrirReglages": "Open settings"
+    },
+    "notifications": {
+        "titre": "Follow the guidance without looking at your screen",
+        "points": {
+            "instruction": {
+                "titre": "The next instruction",
+                "texte": "It shows in the notification bar, phone in your pocket or screen off."
+            },
+            "discret": {
+                "titre": "Without disturbing you",
+                "texte": "No sound, no vibration: the notification stays silent for the whole ride."
+            },
+            "retrait": {
+                "titre": "Change it any time",
+                "texte": "You can turn it off from the app settings."
+            }
+        },
+        "autoriser": "Turn on notifications",
+        "plusTard": "Continue without"
     }
 }

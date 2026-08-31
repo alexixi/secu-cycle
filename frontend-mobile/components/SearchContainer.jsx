@@ -12,7 +12,8 @@ export default function SearchContainer({
   onStartSelect, onEndSelect, start, end, onCalculate,
   currentPosition, homeAddress, workAddress,
   bikes = [], selectedBike, setSelectedBike,
-  maxDuration, setMaxDuration
+  maxDuration, setMaxDuration,
+  hasLocationPermission = false, onRequestLocation
 }) {
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
@@ -34,15 +35,15 @@ export default function SearchContainer({
   const isReady = start?.lat && end?.lat;
 
   const quickSuggestions = [
-    currentPosition && {
+    (currentPosition || !hasLocationPermission) && {
       id: 'current',
       icon: '📍',
       label: t('itineraire.recherche.maPosition'),
-      point: {
+      point: currentPosition ? {
         lat: currentPosition.lat,
         lon: currentPosition.lon,
         name: t('itineraire.recherche.maPositionActuelle'),
-      }
+      } : null,
     },
     homeAddress && {
       id: 'home',
@@ -111,6 +112,11 @@ export default function SearchContainer({
     const select = field === 'start' ? onStartSelect : onEndSelect;
 
     if (suggestion.id === 'current') {
+      if (!suggestion.point) {
+        onRequestLocation?.();
+        setFocusedField(null);
+        return;
+      }
       select({ ...suggestion.point, _sourceId: 'current' });
       setFocusedField(null);
       return;

@@ -21,7 +21,7 @@ const UPDATE_INTERVAL_MS = 2000;
 const APPROACH_DISTANCE_M = 200;
 const IMMINENT_DISTANCE_M = 40;
 
-export default function useGuidance(itineraires, selectedItineraire, isNavigating, onStop) {
+export default function useGuidance(itineraires, selectedItineraire, isNavigating, onStop, hasLocationPermission) {
     const [currentPosition, setCurrentPosition] = useState(null);
     const [guidanceState, setGuidanceState] = useState(null);
 
@@ -36,12 +36,12 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
     const pathSentRef = useRef(false);
 
     useEffect(() => {
+        if (!hasLocationPermission) return;
+
         let sub = null;
+        let annule = false;
 
         (async () => {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') return;
-
             sub = await Location.watchPositionAsync(
                 {
                     accuracy: Location.Accuracy.BestForNavigation,
@@ -58,13 +58,20 @@ export default function useGuidance(itineraires, selectedItineraire, isNavigatin
                     lastPositionRef.current = pos;
                 }
             );
+            if (annule) {
+                sub.remove();
+                sub = null;
+                return;
+            }
             locationSubRef.current = sub;
         })();
 
         return () => {
+            annule = true;
             sub?.remove();
+            locationSubRef.current = null;
         };
-    }, []);
+    }, [hasLocationPermission]);
 
     useEffect(() => {
         const subscription = DeviceEventEmitter.addListener(
