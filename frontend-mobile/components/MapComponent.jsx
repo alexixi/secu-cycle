@@ -385,7 +385,8 @@ export default function MapComponent({
     start, end, itineraires, selectedItineraire,
     setSelectedItineraire, currentPosition, isNavigating,
     canReport, onNavigateToPoi, miniMap = false, bottomInset = 0, hideControls = false,
-    cameraPadding = { top: 200, right: 80, bottom: 200, left: 80 }
+    cameraPadding = { top: 200, right: 80, bottom: 200, left: 80 },
+    hasLocationPermission = false, onRequestLocation
 }) {
     const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY;
     if (!MAPTILER_KEY) {
@@ -482,13 +483,13 @@ export default function MapComponent({
     }, [isNavigating]);
 
     useEffect(() => {
+        if (!hasLocationPermission) return;
+
         let headingSubscription;
         let locationSubscription;
+        let annule = false;
 
         (async () => {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') return;
-
             headingSubscription = await Location.watchHeadingAsync((headingObj) => {
                 if (!headingObj?.magHeading) return;
                 if (!isNavigatingRef.current) return;
@@ -536,13 +537,15 @@ export default function MapComponent({
                     }
                 }
             );
+            if (annule) locationSubscription.remove();
         })();
 
         return () => {
+            annule = true;
             if (headingSubscription) headingSubscription.remove();
             if (locationSubscription) locationSubscription.remove();
         };
-    }, []);
+    }, [hasLocationPermission]);
 
     useEffect(() => {
         if (currentPosition && !hasCenteredOnce && cameraRef.current) {
@@ -686,6 +689,11 @@ export default function MapComponent({
     };
 
     const handleRecenter = () => {
+        if (!hasLocationPermission) {
+            onRequestLocation?.();
+            return;
+        }
+
         if (!currentPosition || !cameraRef.current) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert(
@@ -1222,6 +1230,7 @@ export default function MapComponent({
     return (
         <View style={styles.container} onLayout={(e) => setMapHeight(e.nativeEvent.layout.height)}>
             <Map
+                key={hasLocationPermission ? 'carte-avec-position' : 'carte-sans-position'}
                 style={styles.map}
                 mapStyle={mapStyleUrl}
                 logo={false}
@@ -1265,7 +1274,7 @@ export default function MapComponent({
                     </ViewAnnotation>
                 )}
 
-                {!isNavigating && (
+                {!isNavigating && hasLocationPermission && (
                     <NativeUserLocation
                         mode="heading"
                         androidPreferredFramesPerSecond={30}
@@ -1593,7 +1602,7 @@ export default function MapComponent({
                 />
             )}
 
-            {!miniMap && !hideControls && currentPosition && (
+            {!miniMap && !hideControls && (currentPosition || !hasLocationPermission) && (
                 <TouchableOpacity
                     style={[styles.mapButton, styles.recenterButton, androidButtonBg, { bottom: 20 + bottomInset }]}
                     onPress={handleRecenter}
@@ -2083,10 +2092,14 @@ export default function MapComponent({
                 </TouchableOpacity>
             </Modal>
 
-            {canReport && !miniMap && !hideControls && currentPosition && (
+            {canReport && !miniMap && !hideControls && (currentPosition || !hasLocationPermission) && (
                 <TouchableOpacity
                     style={[styles.mapButton, styles.reportButton, androidButtonBg, { bottom: 140 + bottomInset }]}
                     onPress={() => {
+                        if (!hasLocationPermission) {
+                            onRequestLocation?.();
+                            return;
+                        }
                         if (!currentPosition) {
                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
                             Alert.alert(

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text, Alert, BackHandler } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text, Alert, BackHandler, Platform } from 'react-native';
 import MapComponent from '../../components/MapComponent';
 import SearchContainer from '../../components/SearchContainer';
 import { calculateItineraries, completeRoute } from "../../services/apiBack";
@@ -23,6 +23,16 @@ import {
     getBackgroundLocationChoice,
     setBackgroundLocationChoice,
 } from '../../services/locationDisclosure';
+import {
+    areNotificationsEnabled,
+    getNotificationPermissionState,
+    hasShownNotificationPriming,
+    markNotificationPrimingShown,
+    requestNotificationPermission,
+    setNotificationsEnabled,
+} from '../../services/notificationPreference';
+import useLocationPermission, { GRANTED, PRIMING } from '../../hooks/useLocationPermission';
+import { LocationPriming, NotificationPriming } from '../../components/PermissionPriming';
 
 export default function Index() {
     const { t } = useTranslation();
@@ -45,41 +55,125 @@ export default function Index() {
     const completedRouteRef = useRef(null);
     // Divulgation Play : affichée avant la toute première demande de localisation.
     const [showLocationDisclosure, setShowLocationDisclosure] = useState(false);
+    // Pré-demande des notifications, juste avant le premier guidage.
+    const [showNotificationPriming, setShowNotificationPriming] = useState(false);
+    // Vrai tant qu'un « Démarrer » attend qu'une modale se referme : les mêmes
+    // modales servent aussi aux boutons de la carte, qui n'ont rien à reprendre.
+    const attenteDemarrageRef = useRef(false);
 
     const { token, user, bikes } = useAuth();
     const { colors, typography } = useTheme();
+    const {
+        granted: locationGranted,
+        primingVisible: locationPrimingVisible,
+        ensureGranted: ensureLocationGranted,
+        requestNow: requestLocationNow,
+        acceptPriming: acceptLocationPriming,
+        declinePriming: declineLocationPriming,
+    } = useLocationPermission();
 
     const _beginNavigation = () => {
+        attenteDemarrageRef.current = false;
         trackEvent('navigation_started', { bike: selectedBike });
         setIsNavigating(true);
     };
 
-    const handleStartNavigation = async () => {
+    const _consommerAttenteDemarrage = () => {
+        const attendu = attenteDemarrageRef.current;
+        attenteDemarrageRef.current = false;
+        return attendu;
+    };
+
+    const _alerterLocalisationRequise = () => {
+        Alert.alert(
+            t('notification.localisation.permissionRequise'),
+            t('notification.localisation.gpsNecessaire'),
+        );
+    };
+
+    const ensurePrimedNotifications = async () => {
+        if (Platform.OS !== 'android') return true;
+        if (!(await areNotificationsEnabled())) return true;
+
+        const { status, canAskAgain } = await getNotificationPermissionState();
+        if (status === 'granted') return true;
+        if (!canAskAgain) return true;
+        if (await hasShownNotificationPriming()) return true;
+
+        setShowNotificationPriming(true);
+        return false;
+    };
+
+    const resumeStartFlow = async () => {
         if (!selectedItineraire) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             return;
         }
-        // La divulgation doit précéder la demande système : tant qu'aucun choix
-        // n'est enregistré, le guidage attend la réponse.
+
+        attenteDemarrageRef.current = true;
+
         if ((await getBackgroundLocationChoice()) === null) {
             setShowLocationDisclosure(true);
             return;
         }
+        const etatPosition = await ensureLocationGranted();
+        if (etatPosition !== GRANTED) {
+
+            if (etatPosition !== PRIMING) attenteDemarrageRef.current = false;
+            return;
+        }
+        if (!(await ensurePrimedNotifications())) return;
+
         _beginNavigation();
     };
+
+    const handleStartNavigation = () => resumeStartFlow();
 
     const handleAcceptLocation = async () => {
         await setBackgroundLocationChoice(ACCEPTED);
         setShowLocationDisclosure(false);
-        _beginNavigation();
+
+        if (!(await requestLocationNow())) {
+            _consommerAttenteDemarrage();
+            _alerterLocalisationRequise();
+            return;
+        }
+        resumeStartFlow();
     };
 
-    // Refus : le guidage démarre quand même, mais s'arrêtera à l'extinction de
-    // l'écran, faute de relevé en arrière-plan.
     const handleDeclineLocation = async () => {
         await setBackgroundLocationChoice(DECLINED);
         setShowLocationDisclosure(false);
-        _beginNavigation();
+        resumeStartFlow();
+    };
+
+    const handleAcceptPositionPriming = async () => {
+        const accorde = await acceptLocationPriming();
+        const attendu = _consommerAttenteDemarrage();
+        if (!accorde) {
+            if (attendu) _alerterLocalisationRequise();
+            return;
+        }
+        if (attendu) resumeStartFlow();
+    };
+
+    const handleDeclinePositionPriming = () => {
+        declineLocationPriming();
+        _consommerAttenteDemarrage();
+    };
+
+    const handleAcceptNotifications = async () => {
+        setShowNotificationPriming(false);
+        await markNotificationPrimingShown();
+        await requestNotificationPermission();
+        if (_consommerAttenteDemarrage()) resumeStartFlow();
+    };
+
+    const handleDeclineNotifications = async () => {
+        setShowNotificationPriming(false);
+        await markNotificationPrimingShown();
+        await setNotificationsEnabled(false);
+        if (_consommerAttenteDemarrage()) resumeStartFlow();
     };
 
     const handleStopNavigation = () => {
@@ -97,6 +191,7 @@ export default function Index() {
         selectedItineraire,
         isNavigating,
         handleStopNavigation,
+        locationGranted,
     );
 
     useEffect(() => {
@@ -185,6 +280,10 @@ export default function Index() {
     }, [startPoint, endPoint, selectedBike, maxDuration, token]);
 
     const handleNavigateToPoi = React.useCallback((poi) => {
+        if (!startPoint && !locationGranted) {
+            ensureLocationGranted();
+            return;
+        }
         if (!startPoint && !currentPosition) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert(
@@ -198,7 +297,7 @@ export default function Index() {
         }
         setEndPoint({ lat: poi.lat, lon: poi.lon, name: poi.name });
         setPendingPoiRoute(true);
-    }, [startPoint, currentPosition]);
+    }, [startPoint, currentPosition, locationGranted, ensureLocationGranted, t]);
 
     useEffect(() => {
         if (pendingPoiRoute && startPoint && endPoint) {
@@ -288,6 +387,8 @@ export default function Index() {
                 bottomInset={tabClear}
                 hideControls={immersive}
                 cameraPadding={cameraPadding}
+                hasLocationPermission={locationGranted}
+                onRequestLocation={ensureLocationGranted}
             />
 
             {isNavigating && (
@@ -313,6 +414,8 @@ export default function Index() {
                         setSelectedBike={setSelectedBike}
                         maxDuration={maxDuration}
                         setMaxDuration={setMaxDuration}
+                        hasLocationPermission={locationGranted}
+                        onRequestLocation={ensureLocationGranted}
                     />
 
                     {isLoading && (
@@ -404,6 +507,18 @@ export default function Index() {
                 visible={showLocationDisclosure}
                 onAccept={handleAcceptLocation}
                 onDecline={handleDeclineLocation}
+            />
+
+            <LocationPriming
+                visible={locationPrimingVisible}
+                onAccept={handleAcceptPositionPriming}
+                onDecline={handleDeclinePositionPriming}
+            />
+
+            <NotificationPriming
+                visible={showNotificationPriming}
+                onAccept={handleAcceptNotifications}
+                onDecline={handleDeclineNotifications}
             />
 
         </View>

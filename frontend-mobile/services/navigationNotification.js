@@ -1,9 +1,8 @@
 import { Platform } from 'react-native';
-import * as Notifications from 'expo-notifications';
 import i18n from '../i18n';
 import { formatDistance } from '../utils/format';
 import * as NavNotification from '../modules/nav-notification';
-import { areNotificationsEnabled } from './notificationPreference';
+import { areNotificationsEnabled, getNotificationPermission } from './notificationPreference';
 
 let isActive = false;
 let lastSignature = null;
@@ -13,8 +12,7 @@ export async function startNavigationNotification() {
     if (!(await areNotificationsEnabled())) return;
 
     try {
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status !== 'granted') return;
+        if ((await getNotificationPermission()) !== 'granted') return;
 
         isActive = true;
         lastSignature = null;
