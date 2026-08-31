@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Platform, TouchableOpacity, Text, ScrollView, TextInput, LayoutAnimation, UIManager, Keyboard } from 'react-native';
 import AdressInput from './ui/AdressInput';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,18 +7,49 @@ import { withAlpha } from '../constants/theme';
 import * as Haptics from 'expo-haptics';
 import { searchAddressAutocomplete } from '../services/geocodingService';
 import { Trans, useTranslation } from 'react-i18next';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useFormat } from '../hooks/useFormat';
+import { bcp47 } from '../utils/datetime';
 
 export default function SearchContainer({
   onStartSelect, onEndSelect, start, end, onCalculate,
   currentPosition, homeAddress, workAddress,
   bikes = [], selectedBike, setSelectedBike,
-  maxDuration, setMaxDuration,
+  maxDuration, arrivalTime, isPastTime, setDuration, setArrival, clearMaxTime,
   hasLocationPermission = false, onRequestLocation
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors, typography } = useTheme();
+  const f = useFormat();
   const [focusedField, setFocusedField] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const defaultArrivalRef = useRef(null);
+
+  const hasConstraint = maxDuration != null || arrivalTime != null;
+
+  const openTimePicker = () => {
+    Haptics.selectionAsync().catch(() => { });
+    Keyboard.dismiss();
+    defaultArrivalRef.current = new Date(Date.now() + 30 * 60000);
+    setShowTimePicker(prev => !prev);
+  };
+
+  const onChangeTime = (event, selectedDate) => {
+    if (Platform.OS === 'android') setShowTimePicker(false);
+    if (event.type === 'dismissed') return;
+    if (selectedDate) setArrival(selectedDate);
+  };
+
+  const onChangeDuration = (text) => {
+    const digits = text.replace(/[^0-9]/g, '');
+    setDuration(digits === '' ? null : Number(digits));
+  };
+
+  const clearConstraints = () => {
+    Haptics.selectionAsync().catch(() => { });
+    clearMaxTime();
+  };
 
   const toggleExpand = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
@@ -263,15 +294,75 @@ export default function SearchContainer({
               </ScrollView>
             )}
 
-            <Text style={[styles.settingLabel, { color: colors.textSecondary, marginTop: 15 }]}>{t('itineraire.recherche.heureArriveeMax')}</Text>
-            <TextInput
-              style={[styles.timeInput, { borderColor: colors.borderStrong, color: colors.textMain, backgroundColor: withAlpha(colors.bgSurface, 0.95) }]}
-              placeholder={t('itineraire.recherche.heurePlaceholder')}
-              placeholderTextColor={colors.textSecondary}
-              value={maxDuration}
-              onChangeText={setMaxDuration}
-              keyboardType="numbers-and-punctuation"
-            />
+            <View style={styles.constraintsHeader}>
+              <Text style={[styles.settingLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
+                {t('itineraire.recherche.contraintes')}
+              </Text>
+              {hasConstraint && (
+                <TouchableOpacity
+                  onPress={clearConstraints}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('itineraire.recherche.effacerContraintes')}
+                >
+                  <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={styles.constraintsRow}>
+              <View style={styles.constraintField}>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('itineraire.recherche.heureMax')}</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.constraintInput,
+                    { borderColor: isPastTime ? colors.error : colors.borderStrong, backgroundColor: withAlpha(colors.bgSurface, 0.95) }
+                  ]}
+                  onPress={openTimePicker}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('itineraire.recherche.heureMax')}
+                >
+                  <Text style={{ color: arrivalTime ? colors.textMain : colors.textSecondary, fontSize: 15 }}>
+                    {arrivalTime ? f.heure(arrivalTime) : t('itineraire.recherche.choisirHeure')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.constraintField}>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('itineraire.recherche.dureeMax')}</Text>
+                <View style={[
+                  styles.constraintInput,
+                  styles.durationBox,
+                  { borderColor: colors.borderStrong, backgroundColor: withAlpha(colors.bgSurface, 0.95) }
+                ]}>
+                  <TextInput
+                    style={[styles.durationInput, { color: colors.textMain }]}
+                    value={maxDuration != null ? String(maxDuration) : ''}
+                    onChangeText={onChangeDuration}
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    accessibilityLabel={t('itineraire.recherche.dureeMax')}
+                  />
+                  <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{t('itineraire.recherche.dureeMaxUnite')}</Text>
+                </View>
+              </View>
+            </View>
+
+            {isPastTime && (
+              <Text style={[styles.constraintError, { color: colors.error }]}>
+                {t('itineraire.recherche.heurePassee')}
+              </Text>
+            )}
+
+            {showTimePicker && (
+              <DateTimePicker
+                value={arrivalTime ?? defaultArrivalRef.current ?? new Date()}
+                mode="time"
+                display={Platform.OS === 'ios' ? 'spinner' : 'clock'}
+                locale={bcp47(i18n.language)}
+                onChange={onChangeTime}
+              />
+            )}
           </View>
         )}
 
@@ -421,13 +512,45 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  timeInput: {
+  constraintsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 15,
+    marginBottom: 8,
+  },
+  constraintsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  constraintField: {
+    flex: 1,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  constraintInput: {
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 15,
     paddingVertical: 10,
+    minHeight: 42,
+    justifyContent: 'center',
+  },
+  durationBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  durationInput: {
+    flex: 1,
     fontSize: 15,
-    width: '50%',
+    padding: 0,
+  },
+  constraintError: {
+    fontSize: 12,
+    marginTop: 6,
   },
   expandButtonAbsolute: {
     position: 'absolute',
