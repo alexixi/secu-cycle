@@ -11,7 +11,7 @@ import IconButton from "../components/ui/IconButton";
 import IconCard from '../components/ui/IconCard';
 
 import EditAddressModal from "../components/layout/modals/EditAddressModal";
-import EditProfileModal from "../components/layout/modals/EditProfileModal";
+import SettingsModal from "../components/layout/modals/SettingsModal";
 import SuppressBikeModal from "../components/layout/modals/SuppressBikeModal";
 import AddBikeModal from "../components/layout/modals/AddBikeModal"
 import EditBikeModal from "../components/layout/modals/EditBikeModal"
@@ -32,7 +32,7 @@ import IconBikeVTT from '../assets/bikes/vtt.svg?react';
 import IconBikeVTT_Electric from '../assets/bikes/vtt-electric.svg?react';
 import IconBikeRoute from '../assets/bikes/route.svg?react';
 import { AiFillPlusCircle } from "react-icons/ai";
-import { FaHome, FaUserEdit, FaMedal } from "react-icons/fa";
+import { FaHome, FaCog, FaMedal } from "react-icons/fa";
 
 const BADGE_ICONS = {
   first_route: MdDirectionsBike,
@@ -51,7 +51,7 @@ export default function ProfilePage() {
   const { user, updateUser, token, userBikes, updateBikes, historic, updateHistoric } = useAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isModalOpenInfo, setIsModalOpenInfo] = useState(false);
+  const [isModalOpenSettings, setIsModalOpenSettings] = useState(false);
   const [isModalOpenAddress, setIsModalOpenAddress] = useState(false);
   const [isModalOpenSuppress, setIsModalOpenSuppress] = useState(false);
   const [isModalOpenEditBike, setIsModalOpenEditBike] = useState(false);
@@ -166,10 +166,11 @@ export default function ProfilePage() {
 
       updateUser({ ...user, ...updated });
 
-      setIsModalOpenInfo(false);
       setHasError(false);
+      return true;
     } catch (error) {
       setHasError(true);
+      return false;
     }
   };
 
@@ -274,7 +275,7 @@ export default function ProfilePage() {
           ) : (
             <h1>{t('profil.h1')}</h1>
           )}
-          <IconButton className="button-modification" onClick={() => setIsModalOpenInfo(true)}>{t('profil.modifierCompte')} < FaUserEdit size={30} /></IconButton>
+          <IconButton className="button-modification" onClick={() => setIsModalOpenSettings(true)}>{t('profil.parametres')} < FaCog size={30} /></IconButton>
         </div>
 
         <div className="content">
@@ -482,10 +483,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <EditProfileModal
-        isOpen={isModalOpenInfo}
+      <SettingsModal
+        isOpen={isModalOpenSettings}
         hasError={hasError}
-        onClose={() => setIsModalOpenInfo(false) || setHasError(false)}
+        onClose={() => setIsModalOpenSettings(false) || setHasError(false)}
         onConfirm={handleSubmitInfo}
         userData={{ firstName, lastName, email, birthDate, level }}
       />

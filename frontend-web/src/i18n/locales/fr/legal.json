@@ -228,7 +228,7 @@
         "site": {
             "h2": "2. Depuis ce site",
             "e1": "Connectez-vous, puis ouvrez votre <profil>page de profil</profil> ;",
-            "e2": "Tout en bas, dans <b>Supprimer mon compte</b>, cliquez sur <b>Supprimer</b> ;",
+            "e2": "Ouvrez les <b>Paramètres</b>, puis cliquez sur <b>Supprimer mon compte</b> ;",
             "e3": "Confirmez avec votre mot de passe et cochez la case d'avertissement.",
             "motDePasse": "Votre mot de passe vous est redemandé dans les deux cas : un téléphone laissé déverrouillé ou une session oubliée ne suffit pas à effacer un compte."
         },

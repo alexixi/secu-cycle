@@ -228,7 +228,7 @@
         "site": {
             "h2": "2. From this website",
             "e1": "Log in, then open your <profil>profile page</profil>;",
-            "e2": "At the very bottom, under <b>Delete my account</b>, click <b>Delete</b>;",
+            "e2": "Open <b>Settings</b>, then click <b>Delete my account</b>;",
             "e3": "Confirm with your password and tick the warning box.",
             "motDePasse": "Your password is requested in both cases: an unlocked phone or a forgotten session is not enough to erase an account."
         },
