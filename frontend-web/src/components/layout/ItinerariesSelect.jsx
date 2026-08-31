@@ -7,6 +7,7 @@ import { FaArrowTrendUp, FaArrowTrendDown, FaBicycle } from "react-icons/fa6";
 import { PiPathBold } from "react-icons/pi";
 import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdClose, MdOutlineReportProblem, MdOutlineDarkMode, MdOutlineAir, MdOutlineWaterDrop, MdOutlineAir as MdWind, MdOutlineWarningAmber } from "react-icons/md";
 import { weatherSummary, formatHM } from "../../modules/map/weather";
+import useScrollFade from "../../hooks/useScrollFade";
 
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
@@ -193,12 +194,29 @@ function SafetyInfo({ id, stats, weather, open, onToggle, onClose }) {
 
 function InfraStats({ stats, lightingAware, weather, route }) {
     const { t } = useTranslation('itineraire');
-    if (!stats) return null;
+    const { ref, scrollState, checkScroll, scrollProps } = useScrollFade();
     const summary = weatherSummary(weather);
     const headwind = route?.pct_headwind;
     const windEffect = route?.wind_effect_min;
+
+    const badgesConditionnels = [
+        stats?.accidents_count > 0,
+        stats?.air_aware,
+        summary?.headwind_notable && headwind != null,
+        summary?.ice_bridges?.count > 0,
+    ].join();
+    useEffect(() => { checkScroll(); }, [checkScroll, badgesConditionnels]);
+
+    if (!stats) return null;
+
     return (
-        <div className="path-infra-stats">
+        <div
+            ref={ref}
+            className="path-infra-stats"
+            data-scroll={scrollState}
+            tabIndex={0}
+            {...scrollProps}
+        >
             <span className="infra-badge badge-green">
                 <FaBicycle /> {t('badges.pisteCyclable', { pct: stats.pct_cyclable })}
             </span>
