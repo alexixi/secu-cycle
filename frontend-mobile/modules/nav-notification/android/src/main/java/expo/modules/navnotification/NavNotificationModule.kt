@@ -1,10 +1,13 @@
 package expo.modules.navnotification
 
+import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.records.Field
@@ -49,6 +52,9 @@ class NavNotificationModule : Module() {
     private const val NOTIFICATION_ID = 42_100
     private const val ACCENT_COLOR = 0xFF646CFF.toInt()
     private const val PROGRESS_MAX = 1000
+
+    /** Android 16 (Baklava) : première version à promouvoir les notifications. */
+    private const val LIVE_UPDATE_SDK = 36
   }
 
   private val context: Context
@@ -81,11 +87,31 @@ class NavNotificationModule : Module() {
     AsyncFunction("stop") {
       NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
     }
+
+    // Diagnostic : la promotion échoue en silence côté système, et l'utilisateur
+    // peut la refuser application par application. Sans ce retour, une chip
+    // absente est indiscernable d'une chip cassée.
+    AsyncFunction("getChipStatus") {
+      mapOf(
+        "supported" to supportsLiveUpdate(),
+        "allowed" to canPostPromoted(),
+      )
+    }
+  }
+
+  @ChecksSdkIntAtLeast(api = LIVE_UPDATE_SDK)
+  private fun supportsLiveUpdate(): Boolean = Build.VERSION.SDK_INT >= LIVE_UPDATE_SDK
+
+  private fun canPostPromoted(): Boolean {
+    if (Build.VERSION.SDK_INT < LIVE_UPDATE_SDK) return false
+    val manager = context.getSystemService(NotificationManager::class.java) ?: return false
+    return manager.canPostPromotedNotifications()
   }
 
   private fun ensureChannel() {
     val channel = NotificationChannelCompat.Builder(
       CHANNEL_ID,
+      // IMPORTANCE_LOW convient à la promotion ; seul IMPORTANCE_MIN la refuse.
       NotificationManagerCompat.IMPORTANCE_LOW,
     )
       .setName(channelName)
@@ -121,24 +147,24 @@ class NavNotificationModule : Module() {
 
     val progress = (g.progress.coerceIn(0.0, 1.0) * PROGRESS_MAX).toInt()
 
+    // Un titre non vide et setOngoing sont deux des conditions de promotion :
+    // les retirer suffirait à faire disparaître la chip.
     val builder = NotificationCompat.Builder(context, CHANNEL_ID)
       .setSmallIcon(iconFor(g))
       .setContentTitle(title)
       .setContentText(text)
       .setColor(ACCENT_COLOR)
-      .setColorized(true)
       .setOngoing(true)
       .setOnlyAlertOnce(true)
       .setSound(null)
       .setPriority(NotificationCompat.PRIORITY_LOW)
       .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
-      .setProgress(PROGRESS_MAX, progress, false)
 
-    if (text.isNotEmpty()) {
-      builder.setStyle(NotificationCompat.BigTextStyle().bigText(text))
+    if (supportsLiveUpdate()) {
+      applyLiveUpdate(builder, g, progress)
+    } else {
+      applyClassic(builder, text, progress)
     }
-
-    applyStatusBarChip(builder, g)
 
     try {
       NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, builder.build())
@@ -147,22 +173,54 @@ class NavNotificationModule : Module() {
     }
   }
 
-  private fun applyStatusBarChip(builder: NotificationCompat.Builder, g: NavGuidanceRecord) {
-    if (Build.VERSION.SDK_INT < 36) return
-    val shortText = g.distanceLabel?.takeIf { it.isNotBlank() }
-      ?: g.instruction?.takeIf { it.isNotBlank() }
-      ?: return
-    try {
-      builder.javaClass
-        .getMethod("setShortCriticalText", CharSequence::class.java)
-        .invoke(builder, shortText)
-    } catch (_: Throwable) {
+  /**
+   * Android 16 : demande la promotion en Live Update. La notification remonte
+   * alors en chip dans la barre de statut et en carte sur l'écran verrouillé.
+   *
+   * setColorized() est volontairement absent : une notification colorisée est
+   * disqualifiée de la promotion, et l'appeler ici suffirait à tout annuler.
+   */
+  private fun applyLiveUpdate(
+    builder: NotificationCompat.Builder,
+    g: NavGuidanceRecord,
+    progress: Int,
+  ) {
+    builder.setRequestPromotedOngoing(true)
+
+    // Le texte de la chip, réduit à quelques caractères par le système : la
+    // distance restante d'abord, l'instruction seulement à défaut. Le paramètre
+    // est nullable, une absence des deux laisse simplement la chip sans légende.
+    builder.setShortCriticalText(
+      g.distanceLabel?.takeIf { it.isNotBlank() }
+        ?: g.instruction?.takeIf { it.isNotBlank() },
+    )
+
+    val style = NotificationCompat.ProgressStyle()
+      // Un segment unique couvrant tout le trajet : le découpage par manœuvre
+      // demanderait les longueurs de chaque étape, que le JS n'envoie pas.
+      .setProgressSegments(
+        listOf(NotificationCompat.ProgressStyle.Segment(PROGRESS_MAX).setColor(ACCENT_COLOR)),
+      )
+      // La flèche de manœuvre glisse le long de la barre au fil du trajet.
+      .setProgressTrackerIcon(IconCompat.createWithResource(context, iconFor(g)))
+
+    if (g.status == "off_route") {
+      style.setProgressIndeterminate(true)
+    } else {
+      style.setProgress(progress)
     }
-    try {
-      builder.javaClass
-        .getMethod("requestPromotedOngoing", Boolean::class.javaPrimitiveType)
-        .invoke(builder, true)
-    } catch (_: Throwable) {
+
+    builder.setStyle(style)
+  }
+
+  /** Android 15 et antérieur : notification enrichie, sans chip possible. */
+  private fun applyClassic(builder: NotificationCompat.Builder, text: String, progress: Int) {
+    builder
+      .setColorized(true)
+      .setProgress(PROGRESS_MAX, progress, false)
+
+    if (text.isNotEmpty()) {
+      builder.setStyle(NotificationCompat.BigTextStyle().bigText(text))
     }
   }
 
