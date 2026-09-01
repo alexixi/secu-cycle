@@ -1,2 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Rend l'application éligible aux Live Updates d'Android 16 : sans elle, la
+      notification de guidage reste une notification ordinaire et la chip de la
+      barre de statut n'apparaît jamais. Permission de niveau normal, accordée à
+      l'installation — elle ne déclenche aucune demande à l'utilisateur.
+    -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 </manifest>

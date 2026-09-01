@@ -23,6 +23,8 @@ export async function startNavigationNotification() {
             startingInstruction: i18n.t('notification.guidage.demarrage'),
             startingDistanceLabel: i18n.t('notification.guidage.calcul'),
         });
+
+        await _logChipStatus();
     } catch (e) {
         console.warn('Notification de navigation indisponible :', e);
     }
@@ -65,6 +67,24 @@ export async function stopNavigationNotification() {
         await NavNotification.stop();
     } catch {
 
+    }
+}
+
+// Android refuse la promotion en Live Update sans lever la moindre erreur : ce
+// contrôle est le seul moyen de distinguer une chip absente d'une chip cassée.
+async function _logChipStatus() {
+    try {
+        const { supported, allowed } = await NavNotification.getChipStatus();
+        if (!supported) {
+            // i18n-exempt: journal de développement, jamais affiché à l'utilisateur
+            console.info(`Chip de navigation indisponible : Android ${Platform.Version}, 16 minimum.`);
+        } else if (!allowed) {
+            // i18n-exempt: journal de développement, jamais affiché à l'utilisateur
+            console.warn('Chip de navigation refusée : notifications promues désactivées dans les réglages Android.');
+        }
+    } catch {
+        // Binaire natif antérieur à getChipStatus : la notification fonctionne,
+        // seul le diagnostic manque.
     }
 }
 
