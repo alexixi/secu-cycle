@@ -92,6 +92,7 @@ export default {
         // préférence choisie dans l'application — iOS lit l'Info.plist avant que
         // le moindre code JS ne tourne. Sans conséquence : elles n'apparaissent
         // qu'à l'installation et au premier octroi de permission.
+        defaultLanguage: "fr",
         locales: {
             fr: "./i18n/locales/native/fr.json",
             en: "./i18n/locales/native/en.json"
