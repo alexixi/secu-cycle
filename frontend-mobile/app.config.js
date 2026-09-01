@@ -85,7 +85,8 @@ export default {
             ],
             "expo-localization",
             "@react-native-community/datetimepicker",
-            "@maplibre/maplibre-react-native"
+            "@maplibre/maplibre-react-native",
+            "./plugins/withAndroidLint.js"
         ],
         // Chaînes lues par le système d'exploitation : nom de l'application et
         // descriptions de permission. Elles suivent la langue du TÉLÉPHONE, pas la
