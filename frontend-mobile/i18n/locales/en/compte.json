@@ -1,0 +1,154 @@
+{
+    "adresses": {
+        "titreEcran": "My addresses",
+        "enregistrer": "Save changes"
+    },
+    "auteursBloques": {
+        "titre": "Blocked authors",
+        "intro": "You no longer see reports from these people. Unblocking them will bring their reports back on the map.",
+        "erreurChargement": "The list could not be loaded.",
+        "aucun": "You have not blocked anyone.",
+        "auteur": "Blocked author",
+        "depuisLe": "Since {{date}}",
+        "debloquer": "Unblock",
+        "debloquerCet": "Unblock this author"
+    },
+    "email": {
+        "intro": "We will send a {{longueur}}-digit code to your new address to check that it belongs to you.",
+        "adresseActuelle": "Current address",
+        "nouvelleAdresse": "New email address",
+        "envoyerCode": "Send the code",
+        "envoi": "Sending…",
+        "codeEnvoye": "We sent a {{longueur}}-digit code to",
+        "alerteAncienneAdresse": "We have also sent an alert to your current address. The change will only take effect once the code is confirmed.",
+        "labelCode": "Confirmation code",
+        "confirmer": "Confirm the change",
+        "autreAdresse": "Use a different address",
+        "renvoyerCode": "Resend the code",
+        "renvoyerCodeDelai": "Resend the code ({{secondes}}s)",
+        "codeRenvoye": "A new code has been sent.",
+        "tropDeDemandes": "Too many requests. Please try again later.",
+        "envoiImpossible": "The code could not be sent right now.",
+        "titre": "Change my email address",
+        "motDePasseAide": "Asked to confirm it is really you.",
+        "erreursDemande": {
+            "motDePasseIncorrect": "Incorrect password.",
+            "emailPris": "This email address is already used by another account.",
+            "tropDeDemandes": "Too many change requests. Please try again later.",
+            "emailInvalide": "Invalid email address.",
+            "horsLigne": "Connection failed. Please check your internet connection.",
+            "generique": "Something went wrong while sending the code."
+        },
+        "erreursConfirmation": {
+            "codeInvalide": "Invalid or expired code.",
+            "emailPris": "This address has just been taken by another account. Please try a different one.",
+            "tropDeTentatives": "Too many attempts. Please try again later.",
+            "horsLigne": "Connection failed. Please check your internet connection.",
+            "generique": "Something went wrong while confirming the change."
+        }
+    },
+    "historique": {
+        "titreEcran": "My history",
+        "supprimerToutTitre": "Delete all history",
+        "supprimerToutTexte": "This cannot be undone. Do you want to continue?",
+        "supprimerTout": "Delete all",
+        "aucunTrajet": "No trips yet",
+        "distance": "Distance",
+        "duree": "Duration",
+        "type": "Type",
+        "effectueLe": "Completed on {{date}}",
+        "supprimerTrajet": "Delete this trip",
+        "kilometres": "{{valeur}} km",
+        "minutes": "{{valeur}} min"
+    },
+    "modales": {
+        "profil": {
+            "titre": "Edit my profile",
+            "naissance": "Date of birth",
+            "niveauSportif": "Fitness level",
+            "emailNonRenseigne": "Not provided",
+            "verificationCode": "Changing your address requires verification by code."
+        },
+        "motDePasse": {
+            "titre": "Change password",
+            "actuel": "Old password",
+            "actuelIncorrect": "That is not your current password.",
+            "nouveau": "New password",
+            "regle": "At least {{min}} characters.",
+            "tropCourt": "The password must be at least {{min}} characters long.",
+            "confirmation": "Confirmation",
+            "discordants": "The new passwords do not match.",
+            "confirmer": "Confirm the change",
+            "erreurModification": "Something went wrong while updating your password."
+        },
+        "suppressionCompte": {
+            "titre": "Delete my account",
+            "chapeau": "Deletion is immediate and permanent: nothing can be restored.",
+            "sectionTitre": "What is deleted",
+            "ligneCompte": "Your account and your email address",
+            "ligneIdentite": "Your name, date of birth and fitness level",
+            "ligneAdresses": "Your home and work addresses",
+            "ligneVelos": "Your bikes",
+            "ligneTrajets": "Your routes, their tracks and your history",
+            "ligneBadges": "Your badges and your sign-in sessions",
+            "conserve": "Your hazard reports stay visible to other cyclists, but they are no longer linked to your account.",
+            "confirmezMotDePasse": "Confirm with your password",
+            "motDePasseIncorrect": "Incorrect password.",
+            "sectionConserve": "What is kept",
+            "erreurSuppression": "Something went wrong while deleting your account.",
+            "confirmerTitre": "Delete permanently?",
+            "confirmerTexte": "Your account and the data attached to it will be erased. This cannot be undone.",
+            "confirmerAction": "Delete"
+        },
+        "historique": {
+            "titre": "Ride details"
+        }
+    },
+    "profil": {
+        "h1": "My profile",
+        "adresses": {
+            "h2": "My addresses"
+        },
+        "velos": {
+            "h2": "My bikes"
+        },
+        "statistiques": {
+            "h2": "My statistics",
+            "trajetsTermines": "Rides completed",
+            "distanceTotale": "Total distance",
+            "tempsTotal": "Total time",
+            "typePrefere": "Preferred type"
+        },
+        "badges": {
+            "h2": "My badges",
+            "debloqueTitre": "Badge unlocked!",
+            "suivant": "Next ({{restants}})",
+            "termine": "Great!",
+            "debloque": "Unlocked"
+        },
+        "nonConnecte": "Log in to access your personal information, favourite routes and bikes.",
+        "domicile": "Home:",
+        "travail": "Work:",
+        "ajouterVeloCourt": "Add",
+        "aucunVelo": "No bike saved",
+        "ajouterUnVelo": "+ Add a bike",
+        "aucunBadge": "No badge available",
+        "voirPlus": "See more",
+        "parametres": "Settings",
+        "deconnexion": "Log out",
+        "valeurIndisponible": "--",
+        "tempsTotal": "{{heures}}h {{minutes}}min"
+    },
+    "velos": {
+        "titreModifier": "Edit my bike",
+        "titreAjouter": "Add a bike",
+        "monVelo": "My bike",
+        "nomObligatoire": "The bike must have a name.",
+        "erreurSauvegarde": "Could not save. Please try again.",
+        "supprimerTitre": "Delete bike",
+        "supprimerTexte": "Delete “{{nom}}”?",
+        "erreurSuppression": "The bike could not be deleted.",
+        "modifier": "Save bike",
+        "ajouter": "Add bike"
+    }
+}

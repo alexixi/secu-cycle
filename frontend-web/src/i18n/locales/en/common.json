@@ -1,0 +1,51 @@
+{
+    "nav": {
+        "home": "Home",
+        "itineraire": "Route",
+        "itineraires": "Routes",
+        "carteHub": "Maps by city",
+        "faq": "FAQ",
+        "donnees": "Data sources",
+        "mentionsLegales": "Legal notice",
+        "confidentialite": "Privacy policy",
+        "conditions": "Terms of use",
+        "contact": "Contact",
+        "profil": "Profile"
+    },
+    "compte": {
+        "connexion": "Log in",
+        "seConnecter": "Log in",
+        "seDeconnecter": "Log out",
+        "creerCompte": "Create an account",
+        "monProfil": "My profile",
+        "sessionExpiree": "Your session expired for security reasons. Please sign in again."
+    },
+    "a11y": {
+        "menuProfil": "Profile menu",
+        "ouvrirMenu": "Open menu",
+        "fermerMenu": "Close menu",
+        "liensLegaux": "Legal links",
+        "filAriane": "Breadcrumb"
+    },
+    "chargement": "Loading page…",
+    "erreur404": {
+        "titrePage": "Page not found | Sécu'Cycle",
+        "metaDescription": "The page you are looking for does not exist.",
+        "h1": "Page not found (404)",
+        "introuvable": "The page you are looking for does not exist.",
+        "verifier": "Please check the URL, or go back to the home page.",
+        "retour": "Back to home"
+    },
+    "adresses": {
+        "domicile": "🏠 Home",
+        "travail": "💼 Work",
+        "adresseInvalide": "Invalid address. Please pick one from the list.",
+        "adresseHorsZone": "This address is outside the area Sécu-Cycle covers.",
+        "aucunResultat": "No results found"
+    },
+    "theme": {
+        "clair": "Light",
+        "auto": "Auto",
+        "sombre": "Dark"
+    }
+}

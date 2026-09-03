@@ -1,5 +1,5 @@
 # Sécu'Cycle
-[Sécu'Cycle](https://secu-cycle.fr/) est une application web et mobile qui calcule des itinéraires cyclables sécurisés, en tenant compte de la qualité des infrastructures et des accidents corporels recensés. 
+[Sécu'Cycle](https://secu-cycle.fr/) est une application web et mobile qui calcule des itinéraires cyclables sécurisés, en tenant compte de la qualité des infrastructures et des accidents corporels recensés.
 
 
 ### Prérequis
@@ -97,10 +97,12 @@ ressource), utile par exemple pour reconstruire le frontend sans nouveau commit.
 
 - **Migrations Alembic** : elles s'appliquent **au démarrage du conteneur API** (le conteneur exécute `alembic
   upgrade head` avant de servir). Un nouveau déploiement suffit donc à migrer le schéma ; aucune commande manuelle.
-- **Prérendu SEO (react-snap)** et **contenus bakés** : le HTML statique du frontend (ex. contenu par défaut
-  `DEFAULT_*` et balisage JSON-LD) est régénéré **au build de l'image**. Les contenus éditables depuis le dashboard
-  admin et stockés en base (cases de la page d'accueil, **FAQ**) sont servis en direct pour les visiteurs, mais ne
-  deviennent visibles pour les crawlers qu'au **prochain build/redéploiement Coolify**.
+- **Prérendu SEO (react-snap)** et **contenus bakés** : le HTML statique du frontend, balisage JSON-LD compris,
+  est régénéré **au build de l'image**. Aucun contenu éditorial public ne transite plus par la base : les cases
+  de la page d'accueil et la FAQ vivent dans le catalogue de traduction du site
+  (`frontend-web/src/i18n/locales/<langue>/`). Le pré-rendu ne joignant pas l'API, c'était le seul moyen que ce
+  que lisent les moteurs soit ce que voit le visiteur — et que ces textes existent en anglais. Les modifier
+  demande une pull request et un redéploiement, ce qui est le prix assumé de cette garantie.
 - **API à 1 worker** : en production l'API tourne avec un seul worker uvicorn, car chaque worker charge sa propre
   copie du graphe. Le coût mémoire suit la taille du `.graphml`, à raison d'environ **1,5 Gio par 100 Mo de
   fichier** : Bordeaux seul (105 Mo) tient dans ~1,8 Gio, Bordeaux + Tournai (126 Mo) dans ~2,1 Gio. Le VPS
@@ -430,7 +432,8 @@ répercutée, ainsi que dans les mentions légales.
 
 ### Internationalisation (français, anglais)
 
-Chantier en cours. Le français reste la langue par défaut ; l'anglais s'ajoute à côté, sans
+L'API, le site, l'application mobile et les e-mails transactionnels sont traduits ; seul
+le dashboard d'administration reste en français. Le français demeure la langue par défaut ; l'anglais s'ajoute à côté, sans
 qu'aucune URL française existante ne change — les 56 pages `/carte/<ville>/<thème>` sont
 indexées, et le préfixe `/fr` aurait cassé cette indexation.
 
@@ -468,6 +471,74 @@ la déconnexion silencieusement. L'API pose désormais un en-tête `X-Auth-Error
 session_invalid`, que les clients lisent en priorité ; il doit rester listé dans
 `expose_headers` du `CORSMiddleware`, sans quoi le navigateur le masque.
 
+Depuis la traduction des `detail=`, cette liste de repli ne correspond plus à rien : les
+messages qu'elle contient (« Invalid token », « Token révoqué »…) ne sont plus émis. Elle est
+conservée pour couvrir un retour arrière de l'API, pas parce qu'elle sert. Ne pas la
+« corriger » en y remettant les libellés courants — ce serait recréer le couplage que
+l'en-tête a supprimé.
+
+**Ce qui reste volontairement en français.** Les messages des validateurs Pydantic
+(`schemas/graph_profile.py`, `tag.py`, `task.py`, les intervalles de synchro), remontés par le
+handler 422 : ils sont levés à l'analyse de la requête, avant l'endpoint, là où la locale
+négociée n'est pas atteignable sans variable de contexte globale — et leur seule surface est
+le dashboard d'administration, qui n'est pas traduit.
+
+**Côté mobile.** La langue ne vient pas de l'URL comme sur le web — il n'y en a pas. Elle vient
+d'une préférence à trois états (`auto`, `fr`, `en`) rangée dans AsyncStorage, « auto » suivant
+la langue du téléphone via `expo-localization`. Le sélecteur est dans les réglages, à côté de
+celui du thème et calqué dessus.
+
+Quatre points qui ne se devinent pas :
+
+- **`i18next` est initialisé de façon synchrone**, sur la langue du téléphone, au chargement du
+  module. C'est ce qui garantit que `t()` ne rend jamais une clé brute, même appelé par un
+  service au démarrage. La préférence explicite est relue ensuite, derrière le splash maintenu
+  par `LocaleProvider` — sans quoi l'écran clignoterait d'une langue à l'autre au lancement.
+- **`apiFetch` pose `Accept-Language`.** Contrairement au navigateur, `fetch` en React Native
+  n'en envoie aucun d'exploitable : sans cette ligne, les messages d'erreur, la météo, les
+  badges et les instructions de guidage reviennent en français quelle que soit la langue
+  choisie. C'est le maillon entre les deux moitiés du dispositif.
+- **La synthèse vocale suit la langue** (`Speech.speak(..., { language: bcp47(i18n.language) })`,
+  guidage et alertes météo). Une voix française lisant de l'anglais est inintelligible en
+  roulant — c'est plus gênant qu'un libellé non traduit.
+- **Une table de libellés au niveau module est figée à la langue du chargement du bundle.**
+  Toutes ont donc été réduites à leurs identifiants — ceux de l'API — les mots étant résolus au
+  rendu : ``t(`carte.parking.${type}`)``. Un `grep stands` traverse le mobile, le web et l'API.
+
+Restent en français, faute de pouvoir faire autrement : le nom de l'application et les
+demandes de permission, traduits par la clé `locales` d'`app.config.js` mais **d'après la langue
+du système**, pas la préférence in-app — iOS lit l'Info.plist avant que le moindre code JS ne
+tourne. Ces textes n'apparaissent qu'à l'installation et au premier octroi de permission.
+
+**Côté e-mails.** Ils sont la seule exception à « la langue est négociée par requête », et
+elle est structurelle : le récapitulatif périodique part d'une boucle de fond
+(`recap/runner.py`), sans requête d'où lire un `Accept-Language`. Une colonne
+`users.language` porte donc la préférence, et **elle seule fait autorité pour les e-mails**
+— jamais pour les réponses de l'API, qui restent négociées. Elle est renseignée à
+l'inscription depuis la locale de la requête, puis corrigée par les deux fronts quand
+l'utilisateur change de langue (`PATCH /users/me`).
+
+Quatre points qui ne se devinent pas :
+
+- **Les gabarits ne portent aucune balise ni entité HTML dans le catalogue.** Les espaces
+  insécables y sont de vrais U+00A0 — ils rendent aussi bien en HTML qu'en texte brut, ce
+  qui permet à une même clé de servir les deux versions d'un message plutôt qu'à deux clés
+  jumelles de diverger. Ce qui doit être mis en avant (`<strong>`, un lien) est passé en
+  paramètre : la balise reste dans le code.
+- **Les libellés de période sont calculés par destinataire, pas par lot.** Deux personnes
+  du même lot n'ont pas forcément la même langue ; un « juillet 2026 » calculé en amont
+  partait tel quel à un anglophone.
+- **Le formulaire de contact reste en français.** Son destinataire est l'équipe, pas un
+  utilisateur — même raison que le dashboard d'administration.
+- **Les pages de désabonnement suivent le profil du lien, pas le navigateur.** Elles
+  prolongent l'e-mail dont on vient de cliquer le lien ; la locale négociée ne sert que
+  lorsque le jeton est illisible, cas où il n'y a personne dont lire la préférence.
+
+`make mail` rend tous les gabarits dans les deux langues, l'une sous l'autre : c'est la
+seule façon de relire une traduction d'e-mail. `tests/test_email_i18n.py` couvre le mode
+de défaillance qui compte — `t()` ne lève jamais, une clé absente produit un e-mail
+contenant « email.recap.intro » en toutes lettres, **et il part quand même**.
+
 **Vérifications.**
 
 ```bash
@@ -476,7 +547,17 @@ make test         # suite de tests du backend (fonctions pures : ni base, ni gra
 ```
 
 `make check-i18n` est le filet minimal : l'internationalisation échoue *silencieusement*, une
-clé absente est servie telle quelle sans exception ni code d'erreur.
+clé absente est servie telle quelle sans exception ni code d'erreur. Il enchaîne les trois
+plateformes, et le workflow `i18n.yml` les rejoue en CI, où ils bloquent la fusion.
+
+Le contrôle mobile (`frontend-mobile/scripts/check-i18n.mjs`) ajoute au contrôle web ce que
+React Native impose : le texte d'un `<Text>` s'écrit souvent sur sa propre ligne, les deux
+premiers arguments d'`Alert.alert` sont invisibles pour une heuristique d'attribut, et une
+locale figée se cache aussi dans `Speech.speak`. En position visible, **tout** littéral est
+suspect quelle que soit sa langue : c'est ce qui attrape « Destination » ou « Auto », que
+l'heuristique française laisse passer par construction. Pour un cas légitime — nom propre,
+attribution de source, repli de compatibilité — poser `// i18n-exempt: <raison>` ; la raison
+est obligatoire, c'est elle qui distingue une exemption d'un contournement.
 
 ### Sécurité : limitation du débit (rate-limiting)
 L'API limite déjà le débit des tentatives de connexion (`5/minute` par IP via `slowapi`).

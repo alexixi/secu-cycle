@@ -9,6 +9,8 @@ seule la variante réellement parcourue est complétée.
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from i18n import DEFAULT_LOCALE, t_or
+
 COUNTERS = {
     "routes_completed": (
         "SELECT count(*) FROM routes "
@@ -29,6 +31,23 @@ COUNTERS = {
 }
 
 BADGE_FIELDS = "id, code, name, description, criteria, icon, goal_value"
+
+
+def libelles(badge, locale: str = DEFAULT_LOCALE) -> dict:
+    """Nom et description d'un badge, dans la langue demandée.
+
+    Le `code` est la clé stable ; `name` et `description` restent en base pour
+    le dashboard admin et comme repli, mais ce qui est servi vient du catalogue.
+    Un badge ajouté sans clé garde donc son texte de base.
+
+    Appelé aussi bien par `GET /badges/` que par le récapitulatif : sans ce
+    point commun, le même badge n'aurait pas le même nom dans l'application et
+    dans l'e-mail.
+    """
+    return {
+        champ: t_or(f"badge.{badge['code']}.{champ}", badge.get(champ), locale)
+        for champ in ("name", "description")
+    }
 
 
 def count_criteria(db: Session, criteria: str, user_id: int) -> float:

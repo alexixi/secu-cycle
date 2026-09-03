@@ -1,0 +1,328 @@
+{
+    "mentions": {
+        "titrePage": "Sécu'Cycle | Mentions légales",
+        "metaDescription": "Mentions légales du site et de l'application Sécu'Cycle : éditeur, directeur de la publication et hébergeur.",
+        "h1": "Mentions légales",
+        "maj": "Dernière mise à jour : 28 juillet 2026",
+        "lcen": "Conformément à l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN), les présentes mentions légales identifient les personnes responsables du site <b>secu-cycle.fr</b> et de l'application mobile <b>Sécu'Cycle</b>, ainsi que leur hébergeur.",
+        "editeurs": {
+            "h2": "Éditeurs du site et de l'application",
+            "projet": "Sécu'Cycle est un projet étudiant réalisé dans le cadre d'un Projet de Fin d'Année (PFA) par des élèves ingénieurs de l'<b>ENSEIRB-MATMECA</b> (Bordeaux INP), 1 avenue du Docteur Albert Schweitzer, 33400 Talence, France. Il ne s'agit pas d'une société commerciale immatriculée au Registre du Commerce et des Sociétés.",
+            "conjointement": "Le site et l'application sont édités conjointement par :",
+            "contact": "Contact : <mail>contact@secu-cycle.fr</mail>"
+        },
+        "directeur": {
+            "h2": "Directeur de la publication",
+            "texte": "Le directeur de la publication est <b>Alexis Gaudray Bouju</b>, joignable à l'adresse <mail>contact@secu-cycle.fr</mail>."
+        },
+        "hebergeur": {
+            "h2": "Hébergeur",
+            "intro": "Le site et l'API de Sécu'Cycle sont hébergés par :",
+            "telephone": "Téléphone : 0970 808 911"
+        },
+        "propriete": {
+            "h2": "Propriété intellectuelle",
+            "marque": "La marque « Sécu'Cycle », le logo, les textes et l'interface du site et de l'application sont la propriété de leurs éditeurs. Toute reproduction ou représentation, totale ou partielle, sans autorisation préalable, est interdite.",
+            "sources": "Les données cartographiques, d'accidentologie et de mobilité proviennent de sources tierces, restent la propriété de leurs producteurs et sont exploitées dans le respect de leurs licences respectives :",
+            "osm": "© les contributeurs <osm>OpenStreetMap</osm>, sous licence <odbl>ODbL</odbl> — réseau routier, aménagements cyclables, revêtement, éclairage et points d'intérêt.",
+            "ign": "<ign>IGN</ign> (RGE ALTI), ONISR (fichiers BAAC, via le jeu « Accidents de vélo »), <ban>Base Adresse Nationale</ban>, et les portails open data de Bordeaux Métropole, de l'Eurométropole de Strasbourg, de Rennes Métropole et de Nantes Métropole (trafic en temps réel et éclairage public), sous <lo>Licence Ouverte</lo>.",
+            "statbel": "<statbel>Statbel</statbel> — accidents de la circulation géolocalisés, sous licence <ccby>CC BY 4.0</ccby>.",
+            "cams": "Generated using Copernicus Atmosphere Monitoring Service information 2026 : les données de qualité de l'air issues du <cams>CAMS</cams> sont modifiées par Sécu'Cycle et obtenues par l'intermédiaire d'Open-Meteo. Ni la Commission européenne ni l'ECMWF ne sont responsables de l'usage qui en est fait.",
+            "waqi": "<waqi>World Air Quality Index Project</waqi> — mesures des stations de surveillance au sol.",
+            "gbfs": "Flux GBFS des neuf systèmes de vélos en libre-service intégrés, chacun sous l'attribution de son opérateur.",
+            "maptiler": "Fonds de carte et géocodage hors de France : <maptiler>MapTiler</maptiler>, service commercial.",
+            "detail": "Le détail de chaque source, son usage exact et son producteur sont listés sur notre page <donnees>sources des données</donnees>."
+        },
+        "donneesEtCgu": {
+            "h2": "Données personnelles et conditions d'utilisation",
+            "texte": "Le traitement de vos données personnelles est décrit dans notre <confidentialite>politique de confidentialité</confidentialite>. L'utilisation du service est régie par nos <conditions>conditions générales d'utilisation</conditions>."
+        }
+    },
+    "cgu": {
+        "titrePage": "Sécu'Cycle | Conditions générales d'utilisation",
+        "metaDescription": "Conditions générales d'utilisation du site et de l'application Sécu'Cycle : accès au service, obligations, avertissement de sécurité et responsabilité.",
+        "h1": "Conditions générales d'utilisation",
+        "maj": "Dernière mise à jour : 28 juillet 2026",
+        "objet": {
+            "h2": "1. Objet",
+            "texte": "Les présentes conditions générales d'utilisation (« CGU ») définissent les modalités d'accès et d'utilisation du site <b>secu-cycle.fr</b> et de l'application mobile <b>Sécu'Cycle</b> (ci-après « le Service »). En créant un compte ou en utilisant le Service, vous acceptez sans réserve les présentes CGU."
+        },
+        "description": {
+            "h2": "2. Description du Service",
+            "texte": "Sécu'Cycle est un service <b>gratuit</b> qui aide les cyclistes à trouver des itinéraires adaptés à la sécurité, à naviguer en temps réel et à signaler des dangers. Le Service repose sur des données ouvertes (OpenStreetMap, IGN, Base Adresse Nationale, registres officiels d'accidentologie, trafic en temps réel des portails open data métropolitains, qualité de l'air Copernicus), dont la liste complète figure sur la page <donnees>sources des données</donnees>, et propose des itinéraires à titre indicatif."
+        },
+        "acces": {
+            "h2": "3. Accès et compte",
+            "texte": "Certaines fonctionnalités nécessitent la création d'un compte. Vous vous engagez à fournir des informations exactes et à préserver la confidentialité de vos identifiants. Le Service est réservé aux personnes âgées d'au moins <b>15 ans</b> ; les personnes plus jeunes doivent obtenir l'accord de leurs représentants légaux."
+        },
+        "obligations": {
+            "h2": "4. Obligations de l'utilisateur",
+            "licite": "Utiliser le Service de manière licite et conforme à sa destination ;",
+            "integrite": "Ne pas tenter de porter atteinte au fonctionnement, à la sécurité ou à l'intégrité du Service ;",
+            "signalements": "Effectuer des signalements de bonne foi et véridiques ;",
+            "tiers": "Respecter les droits des tiers et la réglementation applicable."
+        },
+        "securite": {
+            "h2": "5. Avertissement de sécurité",
+            "aide": "Le guidage proposé par Sécu'Cycle est une <b>aide à la navigation</b> et ne saurait se substituer à votre vigilance. Vous restez seul responsable de votre conduite.",
+            "codeRoute": "Vous devez à tout moment <b>respecter le Code de la route</b>, adapter votre comportement aux conditions réelles de circulation et <b>ne pas manipuler votre téléphone en roulant</b>. Les itinéraires et informations fournis sont indicatifs et leur exactitude ou leur sécurité ne sont pas garanties."
+        },
+        "propriete": {
+            "h2": "6. Propriété intellectuelle",
+            "texte": "Le Service, sa marque, son logo et son interface sont protégés. Les données cartographiques et de mobilité restent la propriété de leurs fournisseurs respectifs et sont utilisées conformément à leurs licences (notamment la licence ODbL d'OpenStreetMap). Aucune licence ou cession n'est accordée au-delà de l'usage personnel du Service."
+        },
+        "responsabilite": {
+            "h2": "7. Responsabilité",
+            "texte": "Le Service est fourni « en l'état », dans le cadre d'un projet étudiant, sans garantie de disponibilité, d'exactitude ou d'adéquation à un usage particulier. Dans les limites permises par la loi, les éditeurs ne peuvent être tenus responsables des dommages résultant de l'utilisation ou de l'impossibilité d'utiliser le Service, ni d'une décision prise sur la base d'un itinéraire proposé."
+        },
+        "donnees": {
+            "h2": "8. Données personnelles",
+            "texte": "Le traitement de vos données personnelles est décrit dans notre <confidentialite>politique de confidentialité</confidentialite>, qui fait partie intégrante des présentes CGU."
+        },
+        "modification": {
+            "h2": "9. Modification et résiliation",
+            "texte": "Les éditeurs peuvent faire évoluer le Service et les présentes CGU. Vous pouvez cesser d'utiliser le Service et <suppression>supprimer votre compte</suppression> à tout moment, depuis l'application comme depuis le site. En cas de manquement aux CGU, l'accès au Service peut être suspendu ou résilié."
+        },
+        "droit": {
+            "h2": "10. Droit applicable et litiges",
+            "texte": "Les présentes CGU sont soumises au <b>droit français</b>. En cas de litige, une solution amiable sera recherchée en priorité en nous contactant à <mail>contact@secu-cycle.fr</mail>. À défaut, le consommateur peut recourir gratuitement à un médiateur de la consommation ou à la plateforme européenne de règlement en ligne des litiges : <odr>ec.europa.eu/consumers/odr</odr>. Les tribunaux français sont compétents."
+        },
+        "contact": {
+            "h2": "11. Contact",
+            "texte": "Pour toute question relative aux présentes CGU : <mail>contact@secu-cycle.fr</mail>. Les informations relatives à l'éditeur et à l'hébergeur figurent dans les <mentions>mentions légales</mentions>."
+        }
+    },
+    "confidentialite": {
+        "titrePage": "Sécu'Cycle | Politique de confidentialité",
+        "metaDescription": "Politique de confidentialité de Sécu'Cycle : données collectées, finalités, durée de conservation et vos droits (RGPD) sur le site et l'app mobile.",
+        "h1": "Politique de confidentialité",
+        "maj": "Dernière mise à jour : 26 août 2026",
+        "chapo": "La présente politique explique quelles données personnelles sont traitées lorsque vous utilisez le site <b>secu-cycle.fr</b> et l'application mobile<b> Sécu'Cycle</b>, dans quel but, sur quelle base légale, pendant combien de temps et quels sont vos droits. Elle est rédigée conformément au Règlement général sur la protection des données (RGPD, articles 12 à 14) et à la loi Informatique et Libertés.",
+        "responsables": {
+            "h2": "1. Responsables du traitement",
+            "conjointe": "Le traitement de vos données est placé sous la responsabilité conjointe de <b>Alexis Gaudray Bouju</b> et <b>Matheline Chevalier</b>, éditeurs du projet étudiant Sécu'Cycle (ENSEIRB-MATMECA). Aucun délégué à la protection des données (DPO) n'a été désigné, le projet n'y étant pas soumis.",
+            "exercer": "Pour toute question ou pour exercer vos droits : <mail>contact@secu-cycle.fr</mail>. Les informations d'identification complètes figurent dans les <mentions>mentions légales</mentions>."
+        },
+        "donnees": {
+            "h2": "2. Données que nous traitons",
+            "compte": {
+                "h3": "2.1. Données de compte",
+                "intro": "Lors de la création d'un compte et de l'utilisation du service, nous traitons :",
+                "email": "Adresse e-mail et mot de passe (le mot de passe est stocké de façon sécurisée sous forme de <b>hachage Argon2</b>, jamais en clair) ;",
+                "identite": "Prénom, nom et date de naissance ;",
+                "sport": "Niveau sportif déclaré ;",
+                "adresses": "Adresses de domicile et de travail (si vous les renseignez) ;",
+                "velos": "Vos vélos (nom, type, assistance électrique)."
+            },
+            "localisation": {
+                "h3": "2.2. Données de localisation et d'itinéraire",
+                "points": "Points de départ et d'arrivée lors du calcul d'un itinéraire ;",
+                "trace": "Le tracé (géométrie) des itinéraires calculés et leur historique ;",
+                "signalements": "La position précise (coordonnées GPS) associée aux signalements de dangers que vous créez ;",
+                "navigation": "Pendant la navigation guidée, votre position est transmise en temps réel au serveur pour recaler le guidage.",
+                "encart": "<b>Important :</b> votre position transmise en direct pendant la navigation n'est <b>pas conservée</b>. Elle est traitée à la volée en mémoire pour vous guider, puis n'est pas enregistrée dans notre base de données. Seuls le tracé des itinéraires calculés et les points de signalement sont conservés."
+            },
+            "usage": {
+                "h3": "2.3. Données d'usage (statistiques de fréquentation)",
+                "intro": "Nous mesurons l'audience à l'aide d'outils respectueux de la vie privée :",
+                "umami": "<b>Site web :</b> <umami>Umami</umami>, auto-hébergé sur nos serveurs, <b>sans cookie ni traceur</b> et sans collecte de données permettant de vous identifier. Aucun bandeau de consentement n'est donc requis.",
+                "aptabase": "<b>Application mobile :</b> <aptabase>Aptabase</aptabase> (région d'hébergement Union européenne), qui enregistre des événements d'usage anonymes (ouverture d'écran, démarrage d'une navigation, etc.) <b>sans e-mail, sans nom et sans coordonnées GPS</b>.",
+                "stockageLocal": "Le site utilise uniquement le stockage local du navigateur à des fins techniques (mémorisation du thème clair/sombre et de votre session), et non à des fins de suivi publicitaire."
+            }
+        },
+        "permissions": {
+            "h2": "3. Permissions demandées par l'application mobile",
+            "intro": "L'application ne demande que les permissions strictement nécessaires à son fonctionnement. Chacune vous est demandée par votre téléphone et peut être refusée ou révoquée à tout moment dans les réglages du système.",
+            "colPermission": "Permission",
+            "colFinalite": "Finalité",
+            "premierPlan": "<b>Localisation — premier plan</b> (précise)",
+            "premierPlanFin": "Vous géolocaliser et assurer le guidage vélo en temps réel lorsque l'application est ouverte.",
+            "arrierePlan": "<b>Localisation — arrière-plan</b> (précise)",
+            "arrierePlanFin": "Poursuivre le guidage lorsque l'écran est éteint ou que le téléphone est dans votre poche. Utilisée uniquement pour la navigation, jamais à des fins publicitaires ou statistiques.",
+            "notifications": "<b>Notifications</b>",
+            "notificationsFin": "Afficher la notification persistante « Guidage en cours » signalant que la navigation reste active en arrière-plan.",
+            "micro": "<b>Microphone</b> (iOS)",
+            "microFin": "Nécessaire à la <b>synthèse vocale</b> des instructions de navigation. <b>Aucun son n'est enregistré ni transmis.</b>",
+            "vibration": "<b>Vibration / retour haptique</b>",
+            "vibrationFin": "Retours tactiles de l'interface (confirmation d'actions).",
+            "internet": "<b>Accès à Internet</b>",
+            "internetFin": "Communication avec notre serveur, chargement des cartes et envoi des statistiques anonymes.",
+            "encart": "La <b>localisation en arrière-plan</b> est au cœur de la fonction de navigation de Sécu'Cycle. Elle est activée uniquement pendant un guidage, avec votre consentement explicite, et n'est jamais utilisée pour de la publicité ou du suivi."
+        },
+        "finalites": {
+            "h2": "4. Finalités et bases légales",
+            "compteDt": "Gestion de votre compte et fourniture du service",
+            "compteDd": "Base légale : exécution du contrat (nos conditions d'utilisation).",
+            "navigationDt": "Calcul d'itinéraires et navigation géolocalisée",
+            "navigationDd": "Base légale : exécution du contrat et votre consentement, matérialisé par l'autorisation de localisation accordée au système d'exploitation.",
+            "signalementsDt": "Signalements de dangers",
+            "signalementsDd": "Base légale : intérêt légitime (améliorer la sécurité des cyclistes).",
+            "audienceDt": "Mesure d'audience anonyme",
+            "audienceDd": "Base légale : intérêt légitime (outils sans cookie ni traceur, sans données identifiantes).",
+            "recapDt": "Récapitulatif périodique de votre activité",
+            "recapDd": "Base légale : intérêt légitime (vous restituer vos propres statistiques d'utilisation). Vous pouvez vous y opposer à tout moment, en un clic depuis l'e-mail lui-même ou depuis les réglages de votre compte, sans que cela affecte les e-mails nécessaires au fonctionnement du service.",
+            "securiteDt": "Sécurité du service et journaux techniques",
+            "securiteDd": "Base légale : intérêt légitime et respect de nos obligations légales."
+        },
+        "destinataires": {
+            "h2": "5. Destinataires et sous-traitants",
+            "intro": "Vos données ne sont ni vendues, ni louées, ni utilisées à des fins publicitaires. Aucun identifiant publicitaire n'est collecté. Nous faisons appel aux prestataires suivants, strictement pour faire fonctionner le service :",
+            "ionos": "<b>IONOS</b> (Union européenne) — hébergement du site et de l'API ;",
+            "maptiler": "<b>MapTiler</b> — fourniture des fonds de carte (les coordonnées d'affichage de la carte transitent par ce service) ;",
+            "ban": "<b>Base Adresse Nationale</b> (adresse.data.gouv.fr, service public de l'État français) — autocomplétion des adresses que vous saisissez ;",
+            "aptabase": "<b>Aptabase</b> (région Union européenne) — statistiques anonymes de l'application ;",
+            "umami": "<b>Umami</b> — statistiques anonymes du site, auto-hébergé par nos soins.",
+            "resend": "<b>Resend</b> — acheminement de nos e-mails (vérification de compte, réinitialisation de mot de passe, récapitulatifs d'activité) ; votre adresse e-mail lui est transmise pour cet unique usage."
+        },
+        "transferts": {
+            "h2": "6. Transferts hors Union européenne",
+            "texte": "L'hébergement et les statistiques sont réalisés au sein de l'Union européenne. Le service cartographique <b>MapTiler</b> est établi en <b>Suisse</b>, pays reconnu comme offrant un niveau de protection adéquat par décision de la Commission européenne. Aucun autre transfert de données hors de l'Espace économique européen n'est réalisé."
+        },
+        "conservation": {
+            "h2": "7. Durées de conservation",
+            "compte": "<b>Compte et données associées</b> : conservés tant que votre compte est actif, puis supprimés à la suppression de votre compte ;",
+            "historique": "<b>Historique et itinéraires</b> : conservés jusqu'à leur suppression par vos soins ou jusqu'à la suppression de votre compte ;",
+            "recaps": "<b>Journal d'envoi des récapitulatifs</b> : la trace des récapitulatifs qui vous ont été envoyés est conservée tant que votre compte existe, et supprimée avec lui.",
+            "signalements": "<b>Signalements de dangers</b> : conservés pour la sécurité des cyclistes, dissociés de votre compte en cas de suppression de celui-ci ;",
+            "journaux": "<b>Journaux techniques</b> : 12 mois maximum ;",
+            "statistiques": "<b>Statistiques d'audience</b> : agrégées et anonymes."
+        },
+        "droits": {
+            "h2": "8. Vos droits",
+            "liste": "Conformément au RGPD, vous disposez des droits d'<b>accès</b>, de <b>rectification</b>, d'<b>effacement</b>, de <b>limitation</b>, d'<b>opposition</b>, de <b>portabilité</b> de vos données, ainsi que du droit de <b>retirer votre consentement</b> à tout moment (notamment en révoquant l'autorisation de localisation dans les réglages de votre téléphone).",
+            "suppression": "Vous pouvez <b>supprimer votre compte vous-même</b>, sans nous contacter, depuis l'application mobile comme depuis ce site : la marche à suivre et le détail de ce qui est effacé figurent sur la page <suppression>Supprimer mon compte</suppression>. Votre historique de trajets peut également être supprimé seul, depuis votre profil.",
+            "autres": "Pour les autres droits, ou si vous n'avez plus accès à votre compte, écrivez-nous à <mail>contact@secu-cycle.fr</mail>.",
+            "cnil": "Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de la CNIL : Commission Nationale de l'Informatique et des Libertés, 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07 — <cnil>www.cnil.fr</cnil>."
+        },
+        "mineurs": {
+            "h2": "9. Mineurs",
+            "texte": "Le service est réservé aux personnes âgées d'au moins <b>15 ans</b>, âge du consentement numérique en France. Les personnes plus jeunes doivent obtenir l'accord de leurs représentants légaux avant toute utilisation."
+        },
+        "automatisee": {
+            "h2": "10. Décision automatisée",
+            "texte": "Le calcul d'itinéraires repose sur des algorithmes, mais ne constitue pas une décision automatisée produisant des effets juridiques ou vous affectant de manière significative au sens de l'article 22 du RGPD. Aucun profilage à finalité publicitaire n'est réalisé."
+        },
+        "securite": {
+            "h2": "11. Sécurité",
+            "texte": "Les mots de passe sont hachés (Argon2), les échanges avec le serveur sont chiffrés (HTTPS) et les jetons d'authentification sont stockés dans le coffre sécurisé du système d'exploitation de votre téléphone."
+        },
+        "modification": {
+            "h2": "12. Modification de la présente politique",
+            "texte": "Cette politique peut être mise à jour pour refléter les évolutions du service ou de la réglementation. La date de dernière mise à jour figure en haut de page."
+        }
+    },
+    "suppression": {
+        "titrePage": "Sécu'Cycle | Supprimer mon compte",
+        "metaDescription": "Comment supprimer votre compte Sécu'Cycle depuis l'application mobile ou le site, quelles données sont effacées et lesquelles sont conservées.",
+        "h1": "Supprimer mon compte",
+        "maj": "Dernière mise à jour : 24 août 2026",
+        "chapo": "Vous pouvez supprimer votre compte Sécu'Cycle à tout moment, sans avoir à nous contacter, depuis l'application mobile comme depuis ce site. Cette page décrit la marche à suivre, ce qui est effacé et ce qui subsiste.",
+        "encart": "<b>La suppression est immédiate et définitive.</b> Il n'existe ni délai de rétractation, ni sauvegarde de secours permettant de restaurer un compte supprimé. Vous pourrez en revanche créer un nouveau compte quand vous le souhaitez.",
+        "mobile": {
+            "h2": "1. Depuis l'application mobile",
+            "e1": "Ouvrez l'application Sécu'Cycle et connectez-vous ;",
+            "e2": "Rendez-vous dans l'onglet <b>Profil</b>, puis ouvrez les <b>Paramètres</b> ;",
+            "e3": "Dans la section <b>Zone de danger</b>, appuyez sur <b>Supprimer mon compte</b> ;",
+            "e4": "Confirmez avec votre mot de passe, puis validez l'avertissement."
+        },
+        "site": {
+            "h2": "2. Depuis ce site",
+            "e1": "Connectez-vous, puis ouvrez votre <profil>page de profil</profil> ;",
+            "e2": "Ouvrez les <b>Paramètres</b>, puis cliquez sur <b>Supprimer mon compte</b> ;",
+            "e3": "Confirmez avec votre mot de passe et cochez la case d'avertissement.",
+            "motDePasse": "Votre mot de passe vous est redemandé dans les deux cas : un téléphone laissé déverrouillé ou une session oubliée ne suffit pas à effacer un compte."
+        },
+        "supprimees": {
+            "h2": "3. Données supprimées",
+            "intro": "Sont effacées de nos serveurs, immédiatement et sans conservation :",
+            "colDonnee": "Donnée",
+            "colDetail": "Détail",
+            "compteNom": "Compte et identifiants",
+            "compteDetail": "Adresse e-mail, mot de passe, sessions de connexion ouvertes sur tous vos appareils",
+            "identiteNom": "Informations personnelles",
+            "identiteDetail": "Prénom, nom, date de naissance, niveau sportif",
+            "adressesNom": "Adresses",
+            "adressesDetail": "Adresse de domicile et adresse de travail",
+            "velosNom": "Vélos",
+            "velosDetail": "Nom, type et assistance électrique de chacun de vos vélos",
+            "itinerairesNom": "Itinéraires et historique",
+            "itinerairesDetail": "Points de départ et d'arrivée, tracés calculés, historique de vos trajets",
+            "badgesNom": "Badges",
+            "badgesDetail": "Badges obtenus et progression associée",
+            "email": "Un e-mail de confirmation vous est envoyé à l'adresse du compte juste après la suppression. C'est le dernier message que vous recevrez de notre part."
+        },
+        "conservees": {
+            "h2": "4. Données conservées",
+            "colDonnee": "Donnée",
+            "colPourquoi": "Pourquoi",
+            "signalementsNom": "Signalements de dangers",
+            "signalementsDetail": "Ils restent visibles pour les autres cyclistes, mais leur lien avec votre compte est supprimé : plus rien ne permet de vous les rattacher. Cette conservation répond à un intérêt légitime, la sécurité des cyclistes.",
+            "journauxNom": "Journaux techniques",
+            "journauxDetail": "Les journaux du serveur (horodatage, adresse IP, requête) sont conservés 12 mois au maximum, à des fins de sécurité et de diagnostic.",
+            "statistiquesNom": "Statistiques d'audience",
+            "statistiquesDetail": "Elles sont anonymes et agrégées dès l'origine : elles ne contiennent aucune donnée permettant de vous identifier, et ne peuvent donc pas être rattachées à un compte pour en être retirées."
+        },
+        "acces": {
+            "h2": "5. Si vous n'avez plus accès à votre compte",
+            "texte": "Mot de passe perdu ? Commencez par le réinitialiser depuis l'écran de connexion, puis suivez la procédure ci-dessus. Si vous n'accédez plus à l'adresse e-mail rattachée au compte, écrivez-nous à <mail>contact@secu-cycle.fr</mail> depuis n'importe quelle adresse : nous vous demanderons de quoi vérifier que le compte est bien le vôtre, puis nous procéderons à la suppression. Nous répondons sous un mois au plus, conformément au RGPD."
+        },
+        "autresDroits": {
+            "h2": "6. Vos autres droits",
+            "texte": "La suppression du compte n'est qu'un des droits que vous tenez du RGPD. L'accès, la rectification, la limitation, l'opposition et la portabilité de vos données sont détaillés dans notre <confidentialite>politique de confidentialité</confidentialite>. Pour toute autre demande, la <contact>page de contact</contact> est à votre disposition."
+        }
+    },
+    "contact": {
+        "titrePage": "Sécu'Cycle | Contact",
+        "metaDescription": "Contacter l'équipe Sécu'Cycle : support, questions et exercice de vos droits sur vos données personnelles.",
+        "h1": "Contact",
+        "chapo": "Une question, un retour, un bug à signaler ou une demande concernant vos données ? Nous lisons tous les messages et vous répondons avec plaisir.",
+        "formulaire": {
+            "h2": "Nous écrire",
+            "intro": "Remplissez le formulaire ci-dessous : votre message nous parvient directement et nous vous répondons à l'adresse que vous indiquez.",
+            "prenom": "Prénom",
+            "nom": "Nom",
+            "email": "Adresse mail",
+            "emailPlaceholder": "Pour que nous puissions vous répondre",
+            "sujet": "Sujet",
+            "sujetPlaceholder": "Choisissez l'objet de votre demande…",
+            "message": "Votre message",
+            "messagePlaceholder": "Décrivez votre demande…",
+            "envoyer": "Envoyer",
+            "envoiEnCours": "Envoi en cours…",
+            "succes": "Merci ! Votre message a bien été envoyé, nous vous répondrons par e-mail.",
+            "erreurLimite": "Vous avez envoyé trop de messages. Réessayez dans une heure ou écrivez-nous directement.",
+            "erreurEnvoi": "L'envoi a échoué. Réessayez plus tard ou écrivez-nous directement à contact@secu-cycle.fr."
+        },
+        "validation": {
+            "prenom": "Indiquez votre prénom.",
+            "nom": "Indiquez votre nom.",
+            "email": "Indiquez une adresse e-mail valide.",
+            "sujet": "Choisissez l'objet de votre demande.",
+            "message": "Le message doit faire au moins 10 caractères."
+        },
+        "sujets": {
+            "support": "Support et bugs",
+            "suggestions": "Suggestions",
+            "rgpd": "Données personnelles (RGPD)",
+            "signalement": "Signalement",
+            "autre": "Autre"
+        },
+        "mailDirect": "Vous préférez votre propre messagerie ? Écrivez-nous à : <mail>contact@secu-cycle.fr</mail>",
+        "objets": {
+            "h2": "Objet de votre demande",
+            "intro": "Le menu déroulant « Sujet » nous permet d'orienter votre message vers la bonne personne. Voici à quoi correspond chaque objet :",
+            "support": "<b>Support et bugs</b> — un problème technique, une erreur, un comportement inattendu du site ou de l'application.",
+            "suggestions": "<b>Suggestions</b> — une idée, un retour d'expérience ou une amélioration à proposer.",
+            "rgpd": "<b>Données personnelles (RGPD)</b> — pour exercer vos droits d'accès, de rectification, d'effacement, de limitation, d'opposition ou de portabilité. Les modalités sont détaillées dans notre <confidentialite>politique de confidentialité</confidentialite>. Pour <suppression>supprimer votre compte</suppression>, nul besoin de nous écrire : vous pouvez le faire vous-même, en quelques secondes.",
+            "signalement": "<b>Signalement</b> — pour nous signaler un contenu ou un usage problématique."
+        },
+        "delai": {
+            "h2": "Délai de réponse",
+            "texte": "Sécu'Cycle étant un projet étudiant mené bénévolement, nous ne pouvons pas garantir de délai de réponse. Nous faisons néanmoins de notre mieux pour répondre dans les meilleurs délais."
+        },
+        "infosLegales": {
+            "h2": "Informations légales",
+            "texte": "Pour en savoir plus, consultez nos <mentions>mentions légales</mentions>, notre <confidentialite>politique de confidentialité</confidentialite> et nos <conditions>conditions générales d'utilisation</conditions>."
+        }
+    }
+}

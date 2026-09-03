@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "../ui/Button";
 import { useTheme } from "../../hooks/useTheme";
@@ -7,12 +8,19 @@ export default function StepFooter({
     onNext,
     onSkip,
     isLoading,
-    nextTitle = "Continuer",
+    nextTitle,
     nextIcon = "arrow-forward-outline",
     nextDisabled = false,
-    skipTitle = "Passer cette étape",
+    skipTitle,
 }) {
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
+
+    // Les libellés par défaut sont résolus au rendu et non dans la signature :
+    // une valeur par défaut est évaluée à chaque appel, mais t() doit être lu
+    // dans le corps du composant pour que le changement de langue le re-rende.
+    const libelleSuivant = nextTitle ?? t('auth.onboarding.continuer');
+    const libellePasser = skipTitle ?? t('auth.onboarding.passerEtape');
 
     return (
         <View style={styles.footer}>
@@ -20,12 +28,12 @@ export default function StepFooter({
                 onPress={onNext}
                 isLoading={isLoading}
                 disabled={nextDisabled}
-                title={nextTitle}
+                title={libelleSuivant}
                 iconName={nextIcon}
             />
             {onSkip && (
                 <TouchableOpacity style={styles.skipButton} onPress={onSkip} disabled={isLoading}>
-                    <Text style={[typography.link, styles.skipText, { color: colors.textSecondary }]}>{skipTitle}</Text>
+                    <Text style={[typography.link, styles.skipText, { color: colors.textSecondary }]}>{libellePasser}</Text>
                 </TouchableOpacity>
             )}
         </View>

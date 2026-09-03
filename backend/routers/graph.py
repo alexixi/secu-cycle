@@ -15,6 +15,7 @@ from graph.communes import CommuneNotFound
 from graph.config import MAX_SNAP_DISTANCE_M
 from graph.graph_manager import load_graph_with_ign, profile_paths
 from graph.route_cache import route_cache
+from i18n import get_locale, t
 from traffic import service as traffic_service
 from bikeshare import service as bikeshare_service
 from weather import service as weather_service
@@ -87,14 +88,14 @@ def _to_read(db: Session, profile: GraphProfile, active_name: str | None) -> Gra
     )
 
 
-def _get_profile(db: Session, profile_id: int) -> GraphProfile:
+def _get_profile(db: Session, profile_id: int, locale: str) -> GraphProfile:
     profile = db.get(GraphProfile, profile_id)
     if profile is None:
-        raise HTTPException(status_code=404, detail="Profil introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.graph.profile_not_found", locale))
     return profile
 
 
-async def _validate_communes(db: Session, names) -> None:
+async def _validate_communes(db: Session, names, locale: str) -> None:
     """Rejette les communes que Nominatim ne connaît pas.
 
     Mieux vaut refuser tout de suite qu'échouer après plusieurs minutes de
@@ -103,7 +104,8 @@ async def _validate_communes(db: Session, names) -> None:
     try:
         await asyncio.to_thread(communes_service.validate, db, names)
     except CommuneNotFound as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        # L'exception porte sa clé : le message français reste pour les traces.
+        raise HTTPException(status_code=400, detail=t(exc.key, locale, **exc.params))
 
 
 # --- Couverture (public) ---
@@ -114,6 +116,7 @@ def get_coverage(
     request: Request,
     lat: float = Query(..., ge=-90, le=90),
     lon: float = Query(..., ge=-180, le=180),
+    locale: str = Depends(get_locale),
 ):
     """Ce point est-il desservi par le graphe chargé ?
 
@@ -122,11 +125,11 @@ def get_coverage(
     """
     G = getattr(request.app.state, "G", None)
     if G is None:
-        raise HTTPException(status_code=503, detail="Graphe indisponible.")
+        raise HTTPException(status_code=503, detail=t("error.common.graph_unavailable", locale))
 
     distance = routing.snap_distance_m(G, lat, lon)
     if distance is None:
-        raise HTTPException(status_code=503, detail="Graphe indisponible.")
+        raise HTTPException(status_code=503, detail=t("error.common.graph_unavailable", locale))
 
     return {
         "covered": distance <= MAX_SNAP_DISTANCE_M,
@@ -172,6 +175,7 @@ async def create_profile(
     request: Request,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Crée un profil, éventuellement en composant des profils existants.
 
@@ -183,14 +187,14 @@ async def create_profile(
     """
     existing = db.query(GraphProfile).filter(GraphProfile.name == data.name).first()
     if existing is not None:
-        raise HTTPException(status_code=400, detail="Un profil porte déjà ce nom.")
+        raise HTTPException(status_code=400, detail=t("error.graph.profile_name_taken", locale))
 
     inherited = []
     for profile_id in data.base_profile_ids:
         base = db.get(GraphProfile, profile_id)
         if base is None:
             raise HTTPException(
-                status_code=404, detail=f"Profil de base introuvable (id {profile_id})."
+                status_code=404, detail=t("error.graph.base_profile_not_found", locale, id=profile_id)
             )
         inherited.extend(base.communes or [])
 
@@ -198,11 +202,10 @@ async def create_profile(
     if not communes:
         raise HTTPException(
             status_code=400,
-            detail="Un profil doit contenir au moins une commune : "
-                   "sélectionnez un profil de base ou ajoutez une commune.",
+            detail=t("error.graph.profile_needs_commune", locale),
         )
 
-    await _validate_communes(db, data.communes)
+    await _validate_communes(db, data.communes, locale)
 
     profile = GraphProfile(
         name=data.name, communes=communes, is_default=False,
@@ -222,11 +225,12 @@ async def update_profile(
     request: Request,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
-    profile = _get_profile(db, profile_id)
+    profile = _get_profile(db, profile_id, locale)
     update_data = updates.model_dump(exclude_unset=True)
     if not update_data:
-        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+        raise HTTPException(status_code=400, detail=t("error.common.no_fields", locale))
 
     new_communes = update_data.get("communes")
     if new_communes is not None:
@@ -236,11 +240,11 @@ async def update_profile(
     new_name = update_data.get("name")
     if new_name is not None and new_name != profile.name:
         if db.query(GraphProfile).filter(GraphProfile.name == new_name).first() is not None:
-            raise HTTPException(status_code=400, detail="Un profil porte déjà ce nom.")
+            raise HTTPException(status_code=400, detail=t("error.graph.profile_name_taken", locale))
         if profile.name == _active_name(request):
             raise HTTPException(
                 status_code=409,
-                detail="Impossible de renommer le profil actif : activez-en un autre d'abord.",
+                detail=t("error.graph.rename_active", locale),
             )
         _rename_files(profile.name, new_name)
 
@@ -284,25 +288,24 @@ def delete_profile(
     request: Request,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
-    profile = _get_profile(db, profile_id)
+    profile = _get_profile(db, profile_id, locale)
 
     if profile.name == _active_name(request):
         raise HTTPException(
             status_code=409,
-            detail="Impossible de supprimer le profil actif : activez-en un autre d'abord.",
+            detail=t("error.graph.delete_active", locale),
         )
     if profile.is_default:
         raise HTTPException(
             status_code=409,
-            detail="Impossible de supprimer le profil par défaut : désignez-en un autre d'abord.",
+            detail=t("error.graph.delete_default", locale),
         )
     if profile.is_data_scope:
         raise HTTPException(
             status_code=409,
-            detail="Ce profil délimite les données : le supprimer ferait retomber les "
-                   "synchros sur l'emprise du graphe, qui purgerait les communes hors "
-                   "de celle-ci. Désignez une autre emprise de données d'abord.",
+            detail=t("error.graph.delete_data_scope", locale),
         )
 
     paths = profile_paths(profile.name)
@@ -319,9 +322,10 @@ async def get_profile_extent(
     profile_id: int,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Emprise du profil : les contours de ses communes, en GeoJSON."""
-    profile = _get_profile(db, profile_id)
+    profile = _get_profile(db, profile_id, locale)
     geojson = await asyncio.to_thread(
         communes_service.extent, db, list(profile.communes or [])
     )
@@ -335,6 +339,7 @@ def export_profiles(
     profile_id: int | None = Query(None, description="Profil à exporter ; tous si absent"),
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Emprises et horaires d'éclairage, dans un fichier d'échange JSON.
 
@@ -348,7 +353,7 @@ def export_profiles(
     if profile_id is None:
         profiles = db.query(GraphProfile).order_by(GraphProfile.name).all()
     else:
-        profiles = [_get_profile(db, profile_id)]
+        profiles = [_get_profile(db, profile_id, locale)]
 
     communes = list(dict.fromkeys(
         commune for profile in profiles for commune in (profile.communes or [])
@@ -373,6 +378,7 @@ def import_profiles(
     request: Request,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Crée les profils d'un fichier d'échange, **sans géocoder** leurs communes.
 
@@ -387,21 +393,21 @@ def import_profiles(
     changer en douce le profil chargé au démarrage.
     """
     if not bundle.profiles:
-        raise HTTPException(status_code=400, detail="Ce fichier ne contient aucun profil.")
+        raise HTTPException(status_code=400, detail=t("error.graph.import_empty", locale))
 
     seen = set()
     for item in bundle.profiles:
         if item.name in seen:
             raise HTTPException(
                 status_code=400,
-                detail=f"Le fichier contient deux profils nommés « {item.name} ».",
+                detail=t("error.graph.import_duplicate", locale, name=item.name),
             )
         seen.add(item.name)
 
     taken = db.query(GraphProfile).filter(GraphProfile.name.in_(list(seen))).first()
     if taken is not None:
         raise HTTPException(
-            status_code=400, detail=f"Un profil porte déjà ce nom : « {taken.name} »."
+            status_code=400, detail=t("error.graph.import_name_taken", locale, name=taken.name)
         )
 
     created = []
@@ -519,12 +525,13 @@ async def build_profile(
     wipe_ign: bool = Query(False, description="Purger aussi le cache d'altitudes IGN"),
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Régénère le graphe d'un profil, en tâche de fond (plusieurs minutes)."""
-    profile = _get_profile(db, profile_id)
+    profile = _get_profile(db, profile_id, locale)
 
     if builder.is_running(db):
-        raise HTTPException(status_code=409, detail="Une génération est déjà en cours.")
+        raise HTTPException(status_code=409, detail=t("error.graph.build_running", locale))
 
     run = builder.create_run(db, profile)
 
@@ -556,6 +563,7 @@ async def activate_profile(
     request: Request,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Recharge l'API sur ce profil, sans redémarrage.
 
@@ -563,23 +571,23 @@ async def activate_profile(
     l'emprise) : l'ancien graphe est libéré *avant* de charger le nouveau, pour
     ne pas tenir deux graphes en mémoire à la fois.
     """
-    profile = _get_profile(db, profile_id)
+    profile = _get_profile(db, profile_id, locale)
     app = request.app
 
     if not builder.graph_stats(profile.name)["exists"]:
         raise HTTPException(
             status_code=409,
-            detail="Le graphe de ce profil n'a pas encore été généré.",
+            detail=t("error.graph.not_built", locale),
         )
     if getattr(app.state, "graph_loading", False):
-        raise HTTPException(status_code=409, detail="Un rechargement est déjà en cours.")
+        raise HTTPException(status_code=409, detail=t("error.graph.reload_running", locale))
     if builder.is_running(db):
         raise HTTPException(
             status_code=409,
-            detail="Une génération est en cours : attendez sa fin avant d'activer un profil.",
+            detail=t("error.graph.build_running_activate", locale),
         )
     if profile.name == _active_name(request):
-        raise HTTPException(status_code=409, detail="Ce profil est déjà actif.")
+        raise HTTPException(status_code=409, detail=t("error.graph.already_active", locale))
 
     # Le prochain démarrage doit repartir sur ce profil.
     db.query(GraphProfile).filter(GraphProfile.id != profile.id).update({"is_default": False})
@@ -599,6 +607,7 @@ def set_data_scope(
     request: Request,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Fait de ce profil l'emprise des synchronisations de données.
 
@@ -617,18 +626,17 @@ def set_data_scope(
     et lampadaires — et que les pages thématiques correspondantes se vident.
     C'est au dashboard de prévenir avant d'appeler cet endpoint.
     """
-    profile = _get_profile(db, profile_id)
+    profile = _get_profile(db, profile_id, locale)
 
     if not profile.communes:
         raise HTTPException(
             status_code=409,
-            detail="Ce profil ne contient aucune commune : les synchros n'auraient "
-                   "rien à récupérer et purgeraient toute la base.",
+            detail=t("error.graph.scope_no_commune", locale),
         )
     if profile.is_data_scope:
         raise HTTPException(
             status_code=409,
-            detail="Ce profil délimite déjà les données.",
+            detail=t("error.graph.already_data_scope", locale),
         )
 
     db.query(GraphProfile).filter(GraphProfile.id != profile.id).update(

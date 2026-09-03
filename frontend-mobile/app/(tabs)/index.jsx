@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text, Alert, BackHandler } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, TouchableOpacity, Text, Alert, BackHandler, Platform } from 'react-native';
 import MapComponent from '../../components/MapComponent';
 import SearchContainer from '../../components/SearchContainer';
 import { calculateItineraries, completeRoute } from "../../services/apiBack";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from '../../hooks/useTheme';
 import useGuidance from '../../hooks/useGuidance';
+import { useMaxTime } from '../../hooks/useMaxTime';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from 'expo-router';
@@ -16,14 +17,26 @@ import BadgeUnlockedModal from '../../components/BadgeUnlockedModal';
 import * as Haptics from 'expo-haptics';
 import { trackEvent } from '../../services/analytics';
 import BackgroundLocationDisclosure from '../../components/BackgroundLocationDisclosure';
+import { useTranslation } from 'react-i18next';
 import {
     ACCEPTED,
     DECLINED,
     getBackgroundLocationChoice,
     setBackgroundLocationChoice,
 } from '../../services/locationDisclosure';
+import {
+    areNotificationsEnabled,
+    getNotificationPermissionState,
+    hasShownNotificationPriming,
+    markNotificationPrimingShown,
+    requestNotificationPermission,
+    setNotificationsEnabled,
+} from '../../services/notificationPreference';
+import useLocationPermission, { GRANTED, PRIMING } from '../../hooks/useLocationPermission';
+import { LocationPriming, NotificationPriming } from '../../components/PermissionPriming';
 
 export default function Index() {
+    const { t } = useTranslation();
     const [startPoint, setStartPoint] = useState(null);
     const [endPoint, setEndPoint] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +44,7 @@ export default function Index() {
     const [routeWeather, setRouteWeather] = useState(null);
     const [selectedItineraire, setSelectedItineraire] = useState(null);
     const [selectedBike, setSelectedBike] = useState('classic');
-    const [maxDuration, setMaxDuration] = useState(null);
+    const maxTime = useMaxTime();
     const [errorPath, setErrorPath] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const [pendingPoiRoute, setPendingPoiRoute] = useState(false);
@@ -43,41 +56,125 @@ export default function Index() {
     const completedRouteRef = useRef(null);
     // Divulgation Play : affichée avant la toute première demande de localisation.
     const [showLocationDisclosure, setShowLocationDisclosure] = useState(false);
+    // Pré-demande des notifications, juste avant le premier guidage.
+    const [showNotificationPriming, setShowNotificationPriming] = useState(false);
+    // Vrai tant qu'un « Démarrer » attend qu'une modale se referme : les mêmes
+    // modales servent aussi aux boutons de la carte, qui n'ont rien à reprendre.
+    const attenteDemarrageRef = useRef(false);
 
     const { token, user, bikes } = useAuth();
     const { colors, typography } = useTheme();
+    const {
+        granted: locationGranted,
+        primingVisible: locationPrimingVisible,
+        ensureGranted: ensureLocationGranted,
+        requestNow: requestLocationNow,
+        acceptPriming: acceptLocationPriming,
+        declinePriming: declineLocationPriming,
+    } = useLocationPermission();
 
     const _beginNavigation = () => {
+        attenteDemarrageRef.current = false;
         trackEvent('navigation_started', { bike: selectedBike });
         setIsNavigating(true);
     };
 
-    const handleStartNavigation = async () => {
+    const _consommerAttenteDemarrage = () => {
+        const attendu = attenteDemarrageRef.current;
+        attenteDemarrageRef.current = false;
+        return attendu;
+    };
+
+    const _alerterLocalisationRequise = () => {
+        Alert.alert(
+            t('notification.localisation.permissionRequise'),
+            t('notification.localisation.gpsNecessaire'),
+        );
+    };
+
+    const ensurePrimedNotifications = async () => {
+        if (Platform.OS !== 'android') return true;
+        if (!(await areNotificationsEnabled())) return true;
+
+        const { status, canAskAgain } = await getNotificationPermissionState();
+        if (status === 'granted') return true;
+        if (!canAskAgain) return true;
+        if (await hasShownNotificationPriming()) return true;
+
+        setShowNotificationPriming(true);
+        return false;
+    };
+
+    const resumeStartFlow = async () => {
         if (!selectedItineraire) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             return;
         }
-        // La divulgation doit précéder la demande système : tant qu'aucun choix
-        // n'est enregistré, le guidage attend la réponse.
+
+        attenteDemarrageRef.current = true;
+
         if ((await getBackgroundLocationChoice()) === null) {
             setShowLocationDisclosure(true);
             return;
         }
+        const etatPosition = await ensureLocationGranted();
+        if (etatPosition !== GRANTED) {
+
+            if (etatPosition !== PRIMING) attenteDemarrageRef.current = false;
+            return;
+        }
+        if (!(await ensurePrimedNotifications())) return;
+
         _beginNavigation();
     };
+
+    const handleStartNavigation = () => resumeStartFlow();
 
     const handleAcceptLocation = async () => {
         await setBackgroundLocationChoice(ACCEPTED);
         setShowLocationDisclosure(false);
-        _beginNavigation();
+
+        if (!(await requestLocationNow())) {
+            _consommerAttenteDemarrage();
+            _alerterLocalisationRequise();
+            return;
+        }
+        resumeStartFlow();
     };
 
-    // Refus : le guidage démarre quand même, mais s'arrêtera à l'extinction de
-    // l'écran, faute de relevé en arrière-plan.
     const handleDeclineLocation = async () => {
         await setBackgroundLocationChoice(DECLINED);
         setShowLocationDisclosure(false);
-        _beginNavigation();
+        resumeStartFlow();
+    };
+
+    const handleAcceptPositionPriming = async () => {
+        const accorde = await acceptLocationPriming();
+        const attendu = _consommerAttenteDemarrage();
+        if (!accorde) {
+            if (attendu) _alerterLocalisationRequise();
+            return;
+        }
+        if (attendu) resumeStartFlow();
+    };
+
+    const handleDeclinePositionPriming = () => {
+        declineLocationPriming();
+        _consommerAttenteDemarrage();
+    };
+
+    const handleAcceptNotifications = async () => {
+        setShowNotificationPriming(false);
+        await markNotificationPrimingShown();
+        await requestNotificationPermission();
+        if (_consommerAttenteDemarrage()) resumeStartFlow();
+    };
+
+    const handleDeclineNotifications = async () => {
+        setShowNotificationPriming(false);
+        await markNotificationPrimingShown();
+        await setNotificationsEnabled(false);
+        if (_consommerAttenteDemarrage()) resumeStartFlow();
     };
 
     const handleStopNavigation = () => {
@@ -95,6 +192,7 @@ export default function Index() {
         selectedItineraire,
         isNavigating,
         handleStopNavigation,
+        locationGranted,
     );
 
     useEffect(() => {
@@ -149,7 +247,7 @@ export default function Index() {
         completedRouteRef.current = null;
 
         try {
-            const { routes: itineraries, weather } = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxDuration, startPoint?.name, endPoint?.name);
+            const { routes: itineraries, weather } = await calculateItineraries(token, startPoint, endPoint, selectedBike, maxTime.maxDuration, startPoint?.name, endPoint?.name);
 
             if (itineraries && itineraries.length > 0) {
                 setErrorPath(false);
@@ -169,8 +267,10 @@ export default function Index() {
             if (error.code === "OUT_OF_ZONE") {
                 trackEvent('address_out_of_zone', { city: startPoint?.city || endPoint?.city || "inconnue" });
                 Alert.alert(
-                    "Hors zone couverte",
-                    error.detailMessage || "Cette adresse est en dehors de la zone couverte par Sécu-Cycle.",
+                    t('itineraire.recherche.horsZoneTitre'),
+                    // Le message de l'API prime : il est déjà traduit et plus précis
+                    // que notre repli, qui sert face à un backend antérieur.
+                    error.detailMessage || t('itineraire.recherche.horsZoneTexte'),
                 );
             } else {
                 trackEvent('route_calculation_failed', { bike: selectedBike });
@@ -178,14 +278,18 @@ export default function Index() {
         } finally {
             setIsLoading(false);
         }
-    }, [startPoint, endPoint, selectedBike, maxDuration, token]);
+    }, [startPoint, endPoint, selectedBike, maxTime.maxDuration, token]);
 
     const handleNavigateToPoi = React.useCallback((poi) => {
+        if (!startPoint && !locationGranted) {
+            ensureLocationGranted();
+            return;
+        }
         if (!startPoint && !currentPosition) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert(
-                "Position introuvable",
-                "Veuillez patienter pendant la recherche de votre position GPS.",
+                t('carte.ui.position.introuvable'),
+                t('carte.ui.position.patienter'),
             );
             return;
         }
@@ -194,7 +298,7 @@ export default function Index() {
         }
         setEndPoint({ lat: poi.lat, lon: poi.lon, name: poi.name });
         setPendingPoiRoute(true);
-    }, [startPoint, currentPosition]);
+    }, [startPoint, currentPosition, locationGranted, ensureLocationGranted, t]);
 
     useEffect(() => {
         if (pendingPoiRoute && startPoint && endPoint) {
@@ -284,6 +388,8 @@ export default function Index() {
                 bottomInset={tabClear}
                 hideControls={immersive}
                 cameraPadding={cameraPadding}
+                hasLocationPermission={locationGranted}
+                onRequestLocation={ensureLocationGranted}
             />
 
             {isNavigating && (
@@ -307,8 +413,14 @@ export default function Index() {
                         bikes={bikes}
                         selectedBike={selectedBike}
                         setSelectedBike={setSelectedBike}
-                        maxDuration={maxDuration}
-                        setMaxDuration={setMaxDuration}
+                        maxDuration={maxTime.maxDuration}
+                        arrivalTime={maxTime.arrivalTime}
+                        isPastTime={maxTime.isPastTime}
+                        setDuration={maxTime.setDuration}
+                        setArrival={maxTime.setArrival}
+                        clearMaxTime={maxTime.clear}
+                        hasLocationPermission={locationGranted}
+                        onRequestLocation={ensureLocationGranted}
                     />
 
                     {isLoading && (
@@ -340,7 +452,7 @@ export default function Index() {
                     }}
                 >
                     <MaterialCommunityIcons name="close" size={20} color={colors.textMain} />
-                    <Text style={[styles.emergencyStopText, { color: colors.textMain }]}>Arrêter</Text>
+                    <Text style={[styles.emergencyStopText, { color: colors.textMain }]}>{t('itineraire.recherche.arreter')}</Text>
                 </TouchableOpacity>
             )}
 
@@ -353,7 +465,7 @@ export default function Index() {
                     }}
                     activeOpacity={0.85} >
                     <MaterialCommunityIcons name="navigation" size={20} color="#fff" />
-                    <Text style={styles.startButtonText}>Démarrer</Text>
+                    <Text style={styles.startButtonText}>{t('itineraire.recherche.demarrer')}</Text>
                 </TouchableOpacity>
             )}
 
@@ -370,7 +482,7 @@ export default function Index() {
                         }}
                         disabled={!selectedItineraire}
                         accessibilityRole="button"
-                        accessibilityLabel="Détails de l'itinéraire"
+                        accessibilityLabel={t('itineraire.recherche.details')}
                     >
                         <MaterialCommunityIcons name="information-variant" size={24} color={colors.textMain} />
                     </TouchableOpacity>
@@ -382,7 +494,7 @@ export default function Index() {
                         ]}
                         onPress={handleCloseResults}
                         accessibilityRole="button"
-                        accessibilityLabel="Fermer les itinéraires"
+                        accessibilityLabel={t('itineraire.recherche.fermerItineraires')}
                     >
                         <Ionicons name="close" size={24} color={colors.textMain} />
                     </TouchableOpacity>
@@ -400,6 +512,18 @@ export default function Index() {
                 visible={showLocationDisclosure}
                 onAccept={handleAcceptLocation}
                 onDecline={handleDeclineLocation}
+            />
+
+            <LocationPriming
+                visible={locationPrimingVisible}
+                onAccept={handleAcceptPositionPriming}
+                onDecline={handleDeclinePositionPriming}
+            />
+
+            <NotificationPriming
+                visible={showNotificationPriming}
+                onAccept={handleAcceptNotifications}
+                onDecline={handleDeclineNotifications}
             />
 
         </View>

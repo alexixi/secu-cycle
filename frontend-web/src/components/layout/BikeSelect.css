@@ -14,6 +14,12 @@
     margin: 5px 0;
     padding-bottom: 12px;
     overflow-x: auto;
+    cursor: grab;
+}
+
+.bike-select.is-dragging {
+    cursor: grabbing;
+    user-select: none;
 }
 
 .bike-select[data-scroll="start"] {

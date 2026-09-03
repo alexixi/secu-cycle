@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Annonce un badge fraîchement débloqué. Plusieurs badges peuvent être gagnés d'un coup :
@@ -9,6 +10,7 @@ import * as Haptics from 'expo-haptics';
  */
 export default function BadgeUnlockedModal({ badge, remaining = 0, onNext, colors }) {
     const screenHeight = Dimensions.get('window').height;
+    const { t } = useTranslation();
     const slideAnim = useRef(new Animated.Value(screenHeight)).current;
     const scaleAnim = useRef(new Animated.Value(0.6)).current;
 
@@ -57,7 +59,7 @@ export default function BadgeUnlockedModal({ badge, remaining = 0, onNext, color
                         <Ionicons name={badge.icon || 'trophy'} size={64} color={colors.primary} />
                     </Animated.View>
 
-                    <Text style={[styles.congrats, { color: colors.primary }]}>Badge débloqué !</Text>
+                    <Text style={[styles.congrats, { color: colors.primary }]}>{t('compte.profil.badges.debloqueTitre')}</Text>
                     <Text style={[styles.name, { color: colors.textMain }]}>{badge.name}</Text>
                     <Text style={[styles.description, { color: colors.textSecondary }]}>{badge.description}</Text>
 
@@ -69,7 +71,9 @@ export default function BadgeUnlockedModal({ badge, remaining = 0, onNext, color
                         }}
                     >
                         <Text style={styles.buttonText}>
-                            {remaining > 0 ? `Suivant (${remaining})` : 'Super !'}
+                            {remaining > 0
+                                ? t('compte.profil.badges.suivant', { restants: remaining })
+                                : t('compte.profil.badges.termine')}
                         </Text>
                         <Ionicons name={remaining > 0 ? 'arrow-forward' : 'checkmark'} size={20} color="#fff" />
                     </TouchableOpacity>

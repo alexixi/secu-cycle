@@ -1,0 +1,228 @@
+{
+    "fond": {
+        "base": "Basic",
+        "streets": "Rues",
+        "outdoor": "Outdoor",
+        "hybrid": "Satellite"
+    },
+    "parking": {
+        "stands": "Arceaux",
+        "racks": "Râteliers, pince-roues",
+        "shelter": "Abris et consignes",
+        "other": "Autres, non précisé"
+    },
+    "toilettes": {
+        "free": "Gratuites",
+        "paid": "Payantes",
+        "unknown": "Non précisé"
+    },
+    "reparation": {
+        "selfservice": "Libre-service",
+        "shop": "Atelier / magasin"
+    },
+    "poi": {
+        "water": "Points d'eau",
+        "toilets": "Toilettes",
+        "parking": "Parkings vélo",
+        "repair": "Réparation"
+    },
+    "champPoi": {
+        "parking_type": "Aménagement",
+        "toilet_fee": "Tarif",
+        "repair_kind": "Type",
+        "opening_hours": "Horaires",
+        "fee": "Payant",
+        "capacity": "Capacité",
+        "covered": "Couvert",
+        "access": "Accès",
+        "wheelchair": "Accessible PMR",
+        "seasonal": "Saisonnier"
+    },
+    "champAccident": {
+        "light": "Luminosité",
+        "weather": "Météo",
+        "collision": "Type de collision",
+        "road_type": "Type de voie",
+        "intersection": "Intersection"
+    },
+    "tarif": {
+        "free": "Gratuit",
+        "paid": "Payant",
+        "unknown": "Non précisé"
+    },
+    "vls": {
+        "bikes_mechanical": "Mécaniques",
+        "bikes_electric": "Électriques",
+        "docks_available": "Places libres",
+        "bikes_available": "Vélos"
+    },
+    "graviteAccident": {
+        "mortel": "Accident mortel",
+        "hospitalise": "Blessé hospitalisé",
+        "leger": "Blessé léger"
+    },
+    "signalement": {
+        "accident": "Accident",
+        "travaux": "Travaux",
+        "danger": "Danger",
+        "obstacle": "Obstacle"
+    },
+    "ui": {
+        "fermer": "Fermer",
+        "carte": {
+            "oui": "Oui",
+            "non": "Non"
+        },
+        "meteo": {
+            "titre": "Météo",
+            "sourcesAria": "Sources et méthode",
+            "precipitations": "Précipitations",
+            "vent": "Vent",
+            "vigilance": "Vigilance",
+            "rienASignaler": "Rien à signaler.",
+            "aPrevoir": "À prévoir",
+            "prochainesHeures": "Prochaines heures",
+            "dernierReleveDispo": "Dernier relevé disponible ({{heure}})",
+            "releveDe": "Relevé de {{heure}}",
+            "echelle": "échelle : {{mm}} mm / {{minutes}} min",
+            "ventDe": " de {{cardinal}}",
+            "rafales": "Rafales jusqu'à {{vitesse}} km/h",
+            "pluiePersistante": "Il pleut, et ça devrait durer.",
+            "accalmieDansVers": "Accalmie dans ~{{minutes}} min (vers {{heure}}).",
+            "accalmieDans": "Accalmie dans ~{{minutes}} min.",
+            "accalmieVers": "Accalmie annoncée vers {{heure}}.",
+            "accalmie": "Accalmie annoncée.",
+            "pluieDans": "Pluie dans ~{{minutes}} min.",
+            "pluieProchainesHeures": "Pluie annoncée dans les prochaines heures.",
+            "departConseille": "Partez vers {{heure}} (dans {{minutes}} min) : l'averse sera passée.",
+            "cumulPeriode": "Cumul sur la période : {{mm}} mm",
+            "nowcastExpire": "Prévision au quart d'heure expirée : le dernier relevé est trop ancien pour dire quoi que ce soit des deux prochaines heures.",
+            "nowcastHorsZone": "Pas de prévision au quart d'heure sur cette zone — hors couverture des modèles à fine maille. Seules les probabilités horaires sont fiables ici.",
+            "ressenti": "Ressenti {{degres}} °C",
+            "indisponible": "Météo momentanément indisponible.",
+            "vitesseVent": "{{vitesse}} km/h",
+            "alerteVers": " vers {{heure}}",
+            "alerteSource": " · {{source}}"
+        },
+        "eclairage": {
+            "h2": "Éclairage public",
+            "ruesEclairees": "<b>Rues éclairées</b> : les rues marquées comme éclairées sur OpenStreetMap. Toutes les routes n'ont pas nécessairement cette information, c'est pour ça que nous déduisons l'éclairage de certaines routes avec la présence de lampadaires ou la proximité immédiate d'une rue éclairée.",
+            "sourcesZone": "Sources sur cette zone",
+            "chargement": "Chargement…",
+            "aucunLampadaire": "Aucun lampadaire synchronisé sur cette zone.",
+            "lampadairesMobile": "Les lampadaires eux-mêmes (OpenStreetMap et jeux open data des métropoles) ne sont pas affichés sur mobile : ils sont trop nombreux pour la mémoire du téléphone. Ils servent en revanche à déduire les rues éclairées ci-dessus, et restent visibles sur la version web.",
+            "avertissementMobile": "Une rue non surlignée n'est pas forcément non éclairée : le plus souvent, c'est la donnée qui manque. Peu de villes françaises ont un jeu open data de lampadaires, et OpenStreetMap n'est pas complet partout, surtout dans les zones rurales.",
+            "sourcePoints": "• {{attribution}}",
+            "sourcePointsCompte": "• {{attribution}} — {{n}} points"
+        },
+        "meteoModal": {
+            "h2": "Météo",
+            "releve": "Le relevé est pris en un point au centre de l'agglomération, et le bandeau porte le niveau de vigilance le plus élevé du moment. C'est un niveau régional : une cellule orageuse fait 5 à 15 km, nous n'échantillonnons qu'un point. D'où « Risque d'orage », jamais « Orage sur votre trajet ».",
+            "avertissement": "On parle donc de risque d'orage, jamais d'orage sur votre trajet. La météo ne modifie pas le tracé calculé : elle vous informe, elle ne vous fait pas faire un détour sur une prévision de cette résolution.",
+            "pluie30": "Pluie dans les 30 minutes",
+            "pluie30Texte": "La prévision au pas de 15 minutes vient des modèles à fine maille AROME (Météo-France) et ICON-D2 (DWD). Hors de leur couverture, elle n'est pas affichée du tout plutôt que d'être interpolée en silence depuis l'horaire.",
+            "sources": "Sources",
+            "sourcesTexte": "Prévisions : Open-Meteo (DWD ICON-D2, Météo-France AROME, NOAA GFS).",
+            "ventPonts": "Le vent ajuste la durée affichée de l'itinéraire, jamais le tracé retenu. Sous 3 °C, les ponts d'au moins 30 m sont signalés : un tablier perd sa chaleur par ses deux faces et gèle une à deux heures avant la chaussée voisine.",
+            "ventPontsTitre": "Vent et ponts"
+        },
+        "airModal": {
+            "h2": "Qualité de l'air",
+            "cellulesTexte": "L'indice affiché est l'indice européen de qualité de l'air (EAQI), calculé par le service européen Copernicus (CAMS). Chaque cellule colorée couvre environ {{resolution}} km de côté : c'est un niveau régional",
+            "cellulesAvertissement": "À cette résolution, deux rues voisines partagent le même indice. Pour le calcul d'itinéraire, quand l'air régional se dégrade, l'algorithme s'appuie sur un indicateur d'exposition déduit du réseau routier pour privilégier les rues les plus à l'écart de la circulation.",
+            "pastilles": "Capteurs au sol (pastilles)",
+            "pastillesTexte": "Les pastilles sont des stations de mesure réelles. Un modèle comme CAMS peut être en retard sur un événement soudain et local ; une station, elle, mesure l'air sans latence. Quand une station proche relève un pic, l'itinéraire en tient compte même si les cellules restent calmes.",
+            "sources": "Sources",
+            "sourcesTexte": "Cellules : CAMS ENSEMBLE, redistribuées par Open-Meteo (prévision jusqu'à 24 h). Pastilles : World Air Quality Index Project (waqi.info)."
+        },
+        "controles": {
+            "infoAir": "Informations sur la qualité de l'air",
+            "infoEclairage": "Informations sur l'éclairage",
+            "eclairagePublic": "Éclairage public",
+            "pointsInteret": "Points d'intérêt",
+            "stationsVelos": "Stations de vélos",
+            "accidentologie": "Accidentologie",
+            "accidentsVelo": "Accidents à vélo",
+            "calques": "Calques",
+            "fondCarte": "Fond de carte",
+            "traficAutomobile": "Trafic automobile",
+            "accidentsAvertissement": "Accidents déclarés aux forces de l'ordre : l'absence de point ne signifie pas l'absence de danger.",
+            "zoomerPoi": "Zoomez pour faire apparaître les points d'intérêt."
+        },
+        "popupCarte": {
+            "capteurSol": "Capteur au sol · échelle AQI US",
+            "niRetraitNiRetour": "Ni retrait ni retour possible.",
+            "retourImpossible": "Retour de vélo impossible.",
+            "stationPleine": "Station pleine : aucun retour possible.",
+            "donneesNonRafraichies": "Dernier relevé disponible, données non rafraîchies.",
+            "accidentVelo": "Accident à vélo",
+            "stationVelos": "Station de vélos",
+            "stationHorsService": "Station hors service",
+            "disponibiliteInconnue": "Disponibilité inconnue",
+            "velosDisponibles_one": "{{count}} vélo disponible",
+            "velosDisponibles_other": "{{count}} vélos disponibles",
+            "voteLaMobile": "👍 {{count}} là",
+            "votePasLaMobile": "👎 {{count}} pas là"
+        },
+        "abus": {
+            "titre": "Signaler ce contenu",
+            "bloquer": "Bloquer cet auteur",
+            "bloquerAide": "Vous ne verrez plus aucun de ses signalements. Réversible dans les réglages.",
+            "delai": "Nous examinons chaque signalement sous 24 heures. Au-delà de deux signalements, le contenu disparaît de la carte en attendant notre décision.",
+            "motif": {
+                "offensive": {
+                    "label": "Contenu offensant",
+                    "aide": "Insultes, haine, propos déplacés"
+                },
+                "spam": {
+                    "label": "Spam ou publicité",
+                    "aide": "Message sans rapport avec la sécurité à vélo"
+                },
+                "wrong_place": {
+                    "label": "Signalement fantaisiste",
+                    "aide": "Danger inventé ou placé n’importe où"
+                },
+                "other": {
+                    "label": "Autre motif"
+                }
+            },
+            "issue": {
+                "envoiEnCours": "Envoi en cours…",
+                "reported": {
+                    "titre": "Merci",
+                    "corps": "Votre signalement a été transmis. Nous l'examinons sous 24 heures."
+                },
+                "blocked": {
+                    "titre": "Auteur bloqué",
+                    "corps": "Vous ne verrez plus ses signalements. Vous pouvez revenir sur ce blocage dans les réglages."
+                },
+                "error": {
+                    "titre": "Envoi impossible",
+                    "corps": "Votre signalement n'a pas pu être transmis. Vérifiez votre connexion et réessayez."
+                }
+            }
+        },
+        "signalement": {
+            "titre": "Signaler un incident",
+            "question": "Quel type d'incident rencontrez-vous ?",
+            "description": "Description (optionnel)...",
+            "envoyer": "Envoyer le signalement",
+            "confirmer": "Confirmer",
+            "pasLa": "Pas là",
+            "yAller": "Y aller",
+            "supprimerCeSignalement": "Supprimer ce signalement"
+        },
+        "position": {
+            "introuvable": "Position introuvable",
+            "patienter": "Veuillez patienter pendant la recherche de votre position GPS."
+        },
+        "station": {
+            "capacite": "Capacité : {{n}} points d'attache",
+            "reseau": "Réseau : {{nom}}",
+            "releve": "Relevé : {{heure}}",
+            "gravite": "Gravité : {{niveau}}",
+            "aqi": "AQI {{indice}} · {{label}}",
+            "indiceAir": "Indice {{indice}} · {{label}}"
+        }
+    }
+}

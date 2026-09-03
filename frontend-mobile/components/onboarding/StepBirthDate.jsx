@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 import StepFooter from "./StepFooter";
+import { useFormat } from "../../hooks/useFormat";
 import { useTheme } from "../../hooks/useTheme";
+import { bcp47 } from "../../utils/datetime";
 
 const MIN_AGE = 15;
 
@@ -19,6 +22,8 @@ const computeAge = (date) => {
 
 export default function StepBirthDate({ birthDate, setBirthDate, hasValue, setHasValue, onNext, onSkip, isLoading }) {
     const { colors, typography } = useTheme();
+    const { t, i18n } = useTranslation();
+    const f = useFormat();
     const [showPicker, setShowPicker] = useState(false);
 
     const tooYoung = hasValue && computeAge(birthDate) < MIN_AGE;
@@ -38,19 +43,19 @@ export default function StepBirthDate({ birthDate, setBirthDate, hasValue, setHa
 
     return (
         <View style={styles.formContainer}>
-            <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Votre date de naissance</Text>
+            <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>{t('auth.onboarding.naissance.h2')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Cette information est facultative.
+                {t('auth.onboarding.facultatif')}
             </Text>
 
             <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Date de naissance</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.onboarding.naissance.label')}</Text>
                 <TouchableOpacity
                     style={[styles.input, { backgroundColor: colors.bgSurface, borderColor: colors.borderStrong, justifyContent: "center" }]}
                     onPress={() => setShowPicker(true)}
                 >
                     <Text style={{ color: hasValue ? colors.textMain : colors.textSecondary, fontSize: 16 }}>
-                        {hasValue ? birthDate.toLocaleDateString("fr-FR") : "Sélectionner une date"}
+                        {hasValue ? f.dateSeule(birthDate) : t('auth.onboarding.naissance.selectionnerDate')}
                     </Text>
                 </TouchableOpacity>
 
@@ -59,6 +64,7 @@ export default function StepBirthDate({ birthDate, setBirthDate, hasValue, setHa
                         value={birthDate}
                         mode="date"
                         display="spinner"
+                        locale={bcp47(i18n.language)}
                         maximumDate={new Date()}
                         onChange={onChange}
                     />
@@ -66,7 +72,7 @@ export default function StepBirthDate({ birthDate, setBirthDate, hasValue, setHa
 
                 {tooYoung && (
                     <Text style={[styles.errorText, { color: colors.error }]}>
-                        Vous devez avoir au moins {MIN_AGE} ans pour utiliser l&apos;application.
+                        {t('auth.onboarding.naissance.ageMinimum', { min: MIN_AGE })}
                     </Text>
                 )}
             </View>

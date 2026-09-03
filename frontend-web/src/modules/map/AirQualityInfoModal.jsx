@@ -1,27 +1,32 @@
+import { Trans, useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import Button from "../../components/ui/Button";
 import "../../components/ui/PopUp.css";
 import "./AirQualityInfoModal.css";
 
 const EAQI_LEGEND = [
-    { band: "good", label: "Bon", range: "0–20", color: "#50f0e6" },
-    { band: "fair", label: "Moyen", range: "20–40", color: "#50ccaa" },
-    { band: "moderate", label: "Dégradé", range: "40–60", color: "#f0e641" },
-    { band: "poor", label: "Mauvais", range: "60–80", color: "#ff5050" },
-    { band: "very_poor", label: "Très mauvais", range: "80–100", color: "#960032" },
-    { band: "extreme", label: "Extrêmement mauvais", range: "> 100", color: "#7d2181" },
+    { band: "good", range: "0–20", color: "#50f0e6" },
+    { band: "fair", range: "20–40", color: "#50ccaa" },
+    { band: "moderate", range: "40–60", color: "#f0e641" },
+    { band: "poor", range: "60–80", color: "#ff5050" },
+    { band: "very_poor", range: "80–100", color: "#960032" },
+    { band: "extreme", range: "> 100", color: "#7d2181" },
 ];
 
 const US_AQI_LEGEND = [
-    { band: "good", label: "Bon", range: "0–50", color: "#00e400" },
-    { band: "moderate", label: "Moyen", range: "51–100", color: "#ffff00" },
-    { band: "usg", label: "Mauvais pour sensibles", range: "101–150", color: "#ff7e00" },
-    { band: "unhealthy", label: "Mauvais", range: "151–200", color: "#ff0000" },
-    { band: "very_unhealthy", label: "Très mauvais", range: "201–300", color: "#8f3f97" },
-    { band: "hazardous", label: "Dangereux", range: "> 300", color: "#7e0023" },
+    { band: "good", range: "0–50", color: "#00e400" },
+    { band: "moderate", range: "51–100", color: "#ffff00" },
+    { band: "usg", range: "101–150", color: "#ff7e00" },
+    { band: "unhealthy", range: "151–200", color: "#ff0000" },
+    { band: "very_unhealthy", range: "201–300", color: "#8f3f97" },
+    { band: "hazardous", range: "> 300", color: "#7e0023" },
 ];
 
 export default function AirQualityInfoModal({ isOpen, onClose, resolutionKm = 11 }) {
+    const { t } = useTranslation('carte');
+    const T = ({ k, ...params }) => (
+        <Trans t={t} i18nKey={k} components={{ b: <strong /> }} values={params} />
+    );
     useEffect(() => {
         if (!isOpen) return;
 
@@ -48,50 +53,36 @@ export default function AirQualityInfoModal({ isOpen, onClose, resolutionKm = 11
     return (
         <div className="modal-overlay">
             <div className="modal-content air-info-modal">
-                <h2>Qualité de l'air</h2>
+                <h2>{t('ui.airModal.h2')}</h2>
 
                 <div className="air-info-columns">
                     <div className="air-info-col">
-                        <h3 className="air-info-sources-title">Cellules — indice européen (CAMS)</h3>
-                        <p>
-                            Indice européen (<strong>EAQI</strong>) du service Copernicus (<strong>CAMS</strong>).
-                            Chaque cellule ≈ <strong>{resolutionKm} km</strong> : un niveau régional, pas une mesure de rue.
-                        </p>
+                        <h3 className="air-info-sources-title">{t('ui.airModal.cellules')}</h3>
+                        <p><T k="ui.airModal.cellulesTexte" resolution={resolutionKm} /></p>
 
                         <ul className="air-info-legend">
                             {EAQI_LEGEND.map((b) => (
                                 <li key={b.band}>
                                     <span className="air-legend-swatch" style={{ backgroundColor: b.color }} />
-                                    <span className="air-legend-label">{b.label}</span>
+                                    <span className="air-legend-label">{t(`ui.airModal.eaqi.${b.band}`)}</span>
                                     <span className="air-legend-range">{b.range}</span>
                                 </li>
                             ))}
                         </ul>
 
-                        <p className="air-info-warn">
-                            Deux rues voisines ont donc le même indice. Pour l'itinéraire, on privilégie les rues
-                            <strong> à l'écart du trafic</strong> (déduit du réseau routier), pas la cellule.
-                            Air bon = critère inactif.
-                        </p>
+                        <p className="air-info-warn"><T k="ui.airModal.cellulesAvertissement" /></p>
                     </div>
 
                     <div className="air-info-col">
-                        <h3 className="air-info-sources-title">Pastilles — capteurs au sol</h3>
-                        <p>
-                            Les <strong>pastilles</strong> sont des <strong>stations réelles</strong>. Un modèle
-                            peut être en retard sur un feu récent ; une station le <strong>mesure</strong> sans
-                            latence. Un pic proche pèse alors sur l'itinéraire.
-                        </p>
-                        <p className="air-info-warn">
-                            Deux échelles : cellules en EAQI (européen), pastilles en <strong>AQI US</strong> —
-                            échelle native des capteurs, non convertie.
-                        </p>
+                        <h3 className="air-info-sources-title">{t('ui.airModal.pastilles')}</h3>
+                        <p><T k="ui.airModal.pastillesTexte" /></p>
+                        <p className="air-info-warn"><T k="ui.airModal.pastillesAvertissement" /></p>
 
                         <ul className="air-info-legend">
                             {US_AQI_LEGEND.map((b) => (
                                 <li key={b.band}>
                                     <span className="air-legend-swatch" style={{ backgroundColor: b.color }} />
-                                    <span className="air-legend-label">{b.label}</span>
+                                    <span className="air-legend-label">{t(`ui.airModal.us.${b.band}`)}</span>
                                     <span className="air-legend-range">{b.range}</span>
                                 </li>
                             ))}
@@ -99,14 +90,11 @@ export default function AirQualityInfoModal({ isOpen, onClose, resolutionKm = 11
                     </div>
                 </div>
 
-                <h3 className="air-info-sources-title">Sources</h3>
-                <p>
-                    Cellules : <strong>CAMS ENSEMBLE</strong> / <strong>Open-Meteo</strong>. Pastilles :
-                    <strong> World Air Quality Index</strong> (waqi.info).
-                </p>
+                <h3 className="air-info-sources-title">{t('ui.airModal.sources')}</h3>
+                <p><T k="ui.airModal.sourcesTexte" /></p>
 
                 <div className="modal-actions">
-                    <Button type="button" onClick={onClose}>Fermer</Button>
+                    <Button type="button" onClick={onClose}>{t('ui.fermer')}</Button>
                 </div>
             </div>
         </div>

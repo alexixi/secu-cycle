@@ -4,14 +4,18 @@ import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Alert } from 'rea
 import { Button, DangerButton, OutlineButton } from '../components/ui/Button';
 import HistoricModal from '../components/HistoricModal';
 import { useAuth } from '../context/AuthContext';
+import { useFormat } from '../hooks/useFormat';
 import { useTheme } from '../hooks/useTheme';
 import { getUserHistoric, deleteHistoricEntry, deleteAllHistoric } from '../services/apiBack';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SwipeBackScreen } from '../components/SwipeBackScreen';
+import { useTranslation } from 'react-i18next';
 
 export default function HistoricPage() {
 
     const { colors } = useTheme();
+    const { t } = useTranslation();
+    const f = useFormat();
 
     const { user, token, historic, updateHistoric } = useAuth();
 
@@ -33,12 +37,12 @@ export default function HistoricPage() {
 
     const handleDeleteAllHistoric = () => {
         Alert.alert(
-            "Supprimer tout l'historique",
-            "Cette action est irréversible. Voulez-vous continuer ?",
+            t('compte.historique.supprimerToutTitre'),
+            t('compte.historique.supprimerToutTexte'),
             [
-                { text: "Annuler", style: "cancel" },
+                { text: t('commun.annuler'), style: "cancel" },
                 {
-                    text: "Supprimer tout",
+                    text: t('compte.historique.supprimerTout'),
                     style: "destructive",
                     onPress: async () => {
                         try {
@@ -78,12 +82,12 @@ export default function HistoricPage() {
             contentContainerStyle={styles.scrollContent}
         >
             <View style={styles.headerWrap}>
-                <ScreenHeader title="Mon historique" onBack={close} />
+                <ScreenHeader title={t('compte.historique.titreEcran')} onBack={close} />
             </View>
             <View style={styles.container}>
                 <View style={styles.buttonsContainer}>
                     <DangerButton
-                        title="Supprimer tout l'historique"
+                        title={t('compte.historique.supprimerToutTitre')}
                         iconName="trash-outline"
                         onPress={handleDeleteAllHistoric}
                         style={{ marginTop: 10 }}
@@ -99,7 +103,7 @@ export default function HistoricPage() {
                             >
                                 <View style={styles.historyTextContainer}>
                                     <Text style={[styles.historyDate, { color: colors.textSecondary }]}>
-                                        {new Date(item.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                        {f.dateCourte(item.created_at)}
                                     </Text>
 
                                     <Text style={[styles.historyRoute, { color: colors.textMain }]} numberOfLines={1}>
@@ -113,10 +117,10 @@ export default function HistoricPage() {
                                 <View style={styles.historyRight}>
                                     <View style={{ alignItems: 'flex-end' }}>
                                         <Text style={[styles.historyValue, { color: colors.textMain }]}>
-                                            {item.route.distance_km.toFixed(1)} km
+                                            {t('compte.historique.kilometres', { valeur: f.nombre(item.route.distance_km, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) })}
                                         </Text>
                                         <Text style={[styles.historyDuration, { color: colors.textSecondary }]}>
-                                            {Math.round(item.route.duration_min)} min
+                                            {t('compte.historique.minutes', { valeur: f.nombre(Math.round(item.route.duration_min)) })}
                                         </Text>
                                     </View>
                                     <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
@@ -126,7 +130,7 @@ export default function HistoricPage() {
                     ) : (
                         <View style={styles.emptyContainer}>
                             <Ionicons name="bicycle" size={40} color={colors.borderStrong} />
-                            <Text style={{ color: colors.textSecondary, marginTop: 10 }}>Aucun trajet pour le moment</Text>
+                            <Text style={{ color: colors.textSecondary, marginTop: 10 }}>{t('compte.historique.aucunTrajet')}</Text>
                         </View>
                     )}
                 </View>

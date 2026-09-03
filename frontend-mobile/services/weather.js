@@ -7,6 +7,8 @@
 // la table d'icônes près : MaterialCommunityIcons couvre bien mieux la météo que
 // le jeu Material du web, on ne s'en prive pas.
 
+import i18n from '../i18n';
+
 export const WEATHER_ALERT_COLORS = {
     none: '#94a3b8',
     watch: '#facc15',
@@ -235,15 +237,19 @@ export function rainBanner(zone) {
 
     if (hint.wet_now) {
         if (hint.dry_in_min == null) {
-            return { kind: 'persistent', text: 'Il pleut, et ça devrait durer.' };
+            return { kind: 'persistent', text: i18n.t('carte.ui.meteo.pluiePersistante') };
         }
         const at = formatHM(hint.dry_from);
         return {
             kind: 'clearing',
             minutes: hint.dry_in_min,
             text: precise
-                ? `Accalmie dans ~${roughMinutes(hint.dry_in_min)} min${at ? ` (vers ${at})` : ''}.`
-                : `Accalmie annoncée${at ? ` vers ${at}` : ''}.`,
+                ? (at
+                    ? i18n.t('carte.ui.meteo.accalmieDansVers', { minutes: roughMinutes(hint.dry_in_min), heure: at })
+                    : i18n.t('carte.ui.meteo.accalmieDans', { minutes: roughMinutes(hint.dry_in_min) }))
+                : (at
+                    ? i18n.t('carte.ui.meteo.accalmieVers', { heure: at })
+                    : i18n.t('carte.ui.meteo.accalmie')),
         };
     }
 
@@ -252,8 +258,8 @@ export function rainBanner(zone) {
         kind: 'onset',
         minutes: hint.worsens_in_min,
         text: precise
-            ? `Pluie dans ~${roughMinutes(hint.worsens_in_min)} min.`
-            : 'Pluie annoncée dans les prochaines heures.',
+            ? i18n.t('carte.ui.meteo.pluieDans', { minutes: roughMinutes(hint.worsens_in_min) })
+            : i18n.t('carte.ui.meteo.pluieProchainesHeures'),
     };
 }
 
@@ -268,6 +274,6 @@ export function departureSuggestion(zone) {
     return {
         delayMin: hint.dry_in_min,
         at,
-        text: `Partez vers ${at} (dans ${hint.dry_in_min} min) : l'averse sera passée.`,
+        text: i18n.t('carte.ui.meteo.departConseille', { heure: at, minutes: hint.dry_in_min }),
     };
 }

@@ -1,1 +1,438 @@
-{}
+{
+    "weather": {
+        "condition": {
+            "clear": "Ciel dégagé",
+            "mainly_clear": "Peu nuageux",
+            "partly_cloudy": "Partiellement nuageux",
+            "overcast": "Couvert",
+            "fog": "Brouillard",
+            "rime_fog": "Brouillard givrant",
+            "drizzle_light": "Bruine faible",
+            "drizzle": "Bruine",
+            "drizzle_dense": "Bruine dense",
+            "freezing_drizzle_light": "Bruine verglaçante",
+            "freezing_drizzle": "Bruine verglaçante dense",
+            "rain_slight": "Pluie faible",
+            "rain": "Pluie",
+            "rain_heavy": "Fortes pluies",
+            "freezing_rain_light": "Pluie verglaçante",
+            "freezing_rain": "Pluie verglaçante forte",
+            "snow_slight": "Neige faible",
+            "snow": "Neige",
+            "snow_heavy": "Fortes chutes de neige",
+            "snow_grains": "Grésil",
+            "showers_slight": "Averses",
+            "showers": "Averses modérées",
+            "showers_violent": "Averses violentes",
+            "snow_showers_slight": "Averses de neige",
+            "snow_showers": "Fortes averses de neige",
+            "thunderstorm": "Orage",
+            "thunderstorm_hail": "Orage avec grêle",
+            "thunderstorm_hail_heavy": "Orage violent avec grêle",
+            "unknown": "Conditions inconnues"
+        },
+        "alert": {
+            "none": "Rien à signaler",
+            "watch": "Vigilance",
+            "warning": "Conditions difficiles",
+            "severe": "Danger"
+        },
+        "hazard": {
+            "hail": "Risque de grêle",
+            "thunderstorm": "Risque d'orage",
+            "gust": "Rafales",
+            "ice": "Risque de verglas",
+            "freezing": "Températures négatives",
+            "cold": "Froid",
+            "heavy_rain": "Fortes pluies",
+            "rain": "Pluie",
+            "snow": "Neige",
+            "fog": "Visibilité réduite"
+        },
+        "equipment": {
+            "rain_jacket": "Imperméable",
+            "mudguards": "Garde-boue",
+            "gloves": "Gants",
+            "warm_layer": "Couche chaude",
+            "lights": "Éclairage",
+            "windbreaker": "Coupe-vent"
+        },
+        "reason": {
+            "rain_now": "{mm} mm en cours",
+            "rain_soon": "{mm} mm attendus dans les {hours} h",
+            "rain_probability": "{percent} % de risque de pluie",
+            "wet_road": "Chaussée mouillée",
+            "felt_temperature": "{degrees} °C ressentis",
+            "gusts": "Rafales à {speed} km/h",
+            "wind": "Vent à {speed} km/h",
+            "fog": "Brouillard",
+            "night": "Trajet de nuit"
+        },
+        "cardinal": {
+            "N": "N",
+            "NNE": "NNE",
+            "NE": "NE",
+            "ENE": "ENE",
+            "E": "E",
+            "ESE": "ESE",
+            "SE": "SE",
+            "SSE": "SSE",
+            "S": "S",
+            "SSW": "SSO",
+            "SW": "SO",
+            "WSW": "OSO",
+            "W": "O",
+            "WNW": "ONO",
+            "NW": "NO",
+            "NNW": "NNO"
+        }
+    },
+    "air": {
+        "band": {
+            "good": "Bon",
+            "fair": "Moyen",
+            "moderate": "Dégradé",
+            "poor": "Mauvais",
+            "very_poor": "Très mauvais",
+            "extreme": "Extrêmement mauvais"
+        },
+        "us_band": {
+            "good": "Bon",
+            "moderate": "Moyen",
+            "usg": "Mauvais pour sensibles",
+            "unhealthy": "Mauvais",
+            "very_unhealthy": "Très mauvais",
+            "hazardous": "Dangereux"
+        },
+        "pollutant": {
+            "european_aqi_pm2_5": "Particules fines (PM2.5)",
+            "european_aqi_pm10": "Particules (PM10)",
+            "european_aqi_nitrogen_dioxide": "Dioxyde d'azote (NO₂)",
+            "european_aqi_ozone": "Ozone (O₃)",
+            "european_aqi_sulphur_dioxide": "Dioxyde de soufre (SO₂)"
+        }
+    },
+    "badge": {
+        "first_route": {
+            "name": "Premier itinéraire",
+            "description": "Terminer votre premier trajet."
+        },
+        "routes_10": {
+            "name": "10 itinéraires",
+            "description": "Terminer 10 trajets."
+        },
+        "rain_rider": {
+            "name": "Rouleur sous la pluie",
+            "description": "Terminer 5 trajets partis sous la pluie."
+        },
+        "safe_routes_10": {
+            "name": "10 itinéraires sécurisés",
+            "description": "Terminer 10 trajets en suivant l'itinéraire sécurisé."
+        },
+        "distance_50": {
+            "name": "50 km parcourus",
+            "description": "Cumuler 50 km sur vos trajets terminés."
+        },
+        "distance_200": {
+            "name": "200 km parcourus",
+            "description": "Cumuler 200 km sur vos trajets terminés."
+        }
+    },
+    "email": {
+        "common": {
+            "footer": "Sécu'Cycle — itinéraires vélo sécurisés",
+            "code_validity": "Ce code est valable 15 minutes.",
+            "no_link": "Cet e-mail est purement informatif : il ne contient volontairement aucun lien."
+        },
+        "verification": {
+            "subject": "Votre code de vérification Sécu'Cycle",
+            "heading": "Bienvenue sur Sécu'Cycle !",
+            "intro": "Pour activer votre compte, saisissez le code de vérification suivant :",
+            "hint": "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.",
+            "text_code": "Votre code de vérification est : {code}"
+        },
+        "password_reset": {
+            "subject": "Réinitialisation de votre mot de passe Sécu'Cycle",
+            "heading": "Réinitialisation de mot de passe",
+            "intro": "Vous avez demandé à réinitialiser votre mot de passe. Saisissez le code suivant pour en choisir un nouveau :",
+            "hint": "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre mot de passe reste inchangé.",
+            "text_code": "Votre code de réinitialisation est : {code}"
+        },
+        "email_change_code": {
+            "subject": "Confirmez votre nouvelle adresse Sécu'Cycle",
+            "heading": "Confirmation de votre nouvelle adresse",
+            "intro": "Vous avez demandé à utiliser {email} comme adresse de connexion à votre compte Sécu'Cycle. Saisissez le code suivant dans l'application pour confirmer :",
+            "hint": "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre adresse reste inchangée et cette boîte ne sera associée à aucun compte.",
+            "text_title": "Confirmation de votre nouvelle adresse Sécu'Cycle",
+            "text_intro": "Vous avez demandé à utiliser {email} comme adresse de connexion.",
+            "text_code": "Votre code de confirmation est : {code}",
+            "text_hint": "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : votre adresse reste inchangée."
+        },
+        "email_change_alert": {
+            "subject": "Demande de changement d'adresse sur votre compte Sécu'Cycle",
+            "heading": "Changement d'adresse demandé",
+            "intro": "Une demande de changement de l'adresse de connexion de votre compte Sécu'Cycle vient d'être enregistrée, vers :",
+            "effect": "Le changement ne prendra effet qu'une fois un code de confirmation saisi depuis cette nouvelle adresse.",
+            "warning_lead": "Si vous n'êtes pas à l'origine de cette demande",
+            "warning": "{lead}, votre mot de passe est probablement compromis : changez-le immédiatement depuis l'application, puis contactez-nous.",
+            "text_title": "Changement d'adresse demandé sur votre compte Sécu'Cycle",
+            "text_intro": "Une demande de changement de votre adresse de connexion vers {email} vient d'être enregistrée."
+        },
+        "account_deleted": {
+            "subject": "Votre compte Sécu'Cycle a été supprimé",
+            "heading": "Compte supprimé",
+            "data": "Votre compte Sécu'Cycle vient d'être supprimé, ainsi que les données qui y étaient rattachées : vos informations personnelles, vos adresses, vos vélos, vos itinéraires et leurs tracés, votre historique et vos badges.",
+            "reports": "Les signalements de dangers que vous aviez créés restent visibles pour les autres cyclistes, mais ils ne sont plus reliés à votre compte.",
+            "final": "Cette suppression est définitive : aucune restauration n'est possible. Vous pouvez créer un nouveau compte à tout moment.",
+            "warning_lead": "Si vous n'êtes pas à l'origine de cette suppression",
+            "warning": "{lead}, écrivez-nous à {email}."
+        },
+        "recap": {
+            "subject_monthly": "Votre mois de {periode} à vélo",
+            "subject_yearly": "Votre année {periode} à vélo",
+            "title_monthly": "Votre mois de {periode}",
+            "title_yearly": "Votre année {periode}",
+            "greeting": "Bonjour,",
+            "greeting_named": "Bonjour {prenom},",
+            "intro": "Voici ce que vous avez parcouru en {periode} : {trajets}.",
+            "trips_one": "{count} trajet",
+            "trips_other": "{count} trajets",
+            "tile_trips": "Trajets",
+            "tile_distance": "Distance",
+            "tile_time": "Temps estimé",
+            "tile_elevation": "Dénivelé",
+            "comparison_more": "Soit {ecart} % de plus qu'en {periode}.",
+            "comparison_less": "Soit {ecart} % de moins qu'en {periode}.",
+            "comparison_same": "Soit à peu près autant qu'en {periode}.",
+            "longest": "Votre plus long trajet : {distance}.",
+            "safe_routes": "Dont {count} en itinéraire sécurisé.",
+            "estimate_note": "Les durées sont celles estimées au calcul de vos itinéraires.",
+            "badges_one": "Nouveau badge",
+            "badges_other": "{count} nouveaux badges",
+            "tile_text": "{libelle} : {valeur}",
+            "badges_text_header": "Badges débloqués :",
+            "unsubscribe_reason": "Vous recevez cet e-mail parce que vous avez un compte Sécu'Cycle.",
+            "unsubscribe_link": "Ne plus recevoir ces récapitulatifs",
+            "unsubscribe_text": "Pour ne plus recevoir ces récapitulatifs : {lien}",
+            "unit_minutes": "{value} min",
+            "unit_hours": "{value} h",
+            "unit_hours_minutes": "{hours} h {minutes}",
+            "unit_km": "{value} km",
+            "unit_m": "{value} m",
+            "month": {
+                "1": "janvier",
+                "2": "février",
+                "3": "mars",
+                "4": "avril",
+                "5": "mai",
+                "6": "juin",
+                "7": "juillet",
+                "8": "août",
+                "9": "septembre",
+                "10": "octobre",
+                "11": "novembre",
+                "12": "décembre"
+            }
+        },
+        "unsubscribe": {
+            "confirm_heading": "Ne plus recevoir les récapitulatifs ?",
+            "confirm_intro": "Vous ne recevrez plus le récapitulatif mensuel et annuel de vos trajets. Votre compte et vos données restent inchangés.",
+            "confirm_button": "Confirmer le désabonnement",
+            "confirm_note": "Vous pourrez les réactiver à tout moment depuis les réglages de l'application.",
+            "done_heading": "C'est fait",
+            "done_intro": "Vous ne recevrez plus de récapitulatif d'activité.",
+            "done_note": "Les e-mails liés à votre compte — vérification, réinitialisation de mot de passe — continuent d'être envoyés : ils ne relèvent pas de ce réglage. Vous pouvez réactiver les récapitulatifs quand vous le souhaitez depuis les réglages de l'application.",
+            "invalid_heading": "Ce lien n'est plus valide",
+            "invalid_intro": "Nous n'avons pas pu traiter cette demande : le lien est incomplet ou a été remplacé.",
+            "invalid_note": "Vous pouvez désactiver les récapitulatifs depuis les réglages de l'application, ou nous écrire à {email}."
+        }
+    },
+    "error": {
+        "common": {
+            "no_fields": "Aucun champ à mettre à jour.",
+            "graph_unavailable": "Graphe indisponible.",
+            "graph_not_loaded": "Graphe non chargé",
+            "sync_running": "Une synchronisation est déjà en cours.",
+            "bbox_format": "bbox attendu au format lon_min,lat_min,lon_max,lat_max.",
+            "bbox_bounds": "bbox : les bornes min dépassent les max."
+        },
+        "auth": {
+            "invalid_token": "Jeton invalide.",
+            "invalid_token_payload": "Contenu de jeton invalide.",
+            "user_not_found": "Utilisateur introuvable.",
+            "account_suspended": "Compte suspendu.",
+            "account_suspended_contact": "Compte suspendu. Contactez l'administration.",
+            "account_unverified": "Compte non vérifié. Vérifiez votre e-mail.",
+            "token_revoked": "Jeton révoqué.",
+            "admin_only": "Accès réservé aux administrateurs",
+            "invalid_credentials": "Identifiants invalides.",
+            "refresh_invalid_or_expired": "Refresh token invalide ou expiré",
+            "refresh_invalid": "Refresh token invalide",
+            "refresh_revoked": "Refresh token révoqué",
+            "code_invalid_or_expired": "Code invalide ou expiré.",
+            "wrong_old_password": "Ancien mot de passe incorrect.",
+            "wrong_password": "Mot de passe incorrect.",
+            "email_taken": "Cette adresse e-mail est déjà associée à un compte.",
+            "email_unchanged": "Cette adresse est déjà celle de votre compte.",
+            "code_cooldown": "Un code vient d'être envoyé. Réessayez dans une minute.",
+            "change_request_not_found": "Demande de changement introuvable."
+        },
+        "user": {
+            "self_demote": "Vous ne pouvez pas retirer vos propres droits d'administrateur.",
+            "self_sanction": "Vous ne pouvez pas vous sanctionner vous-même.",
+            "self_delete": "Vous ne pouvez pas supprimer votre propre compte."
+        },
+        "bike": {
+            "not_found": "Vélo introuvable"
+        },
+        "history": {
+            "not_found": "Entrée d'historique introuvable"
+        },
+        "report": {
+            "banned": "Vous n'êtes plus autorisé à déposer des signalements.",
+            "not_found": "Signalement introuvable.",
+            "self_vote": "Vous ne pouvez pas voter sur votre propre signalement.",
+            "self_flag": "Vous ne pouvez pas dénoncer votre propre signalement.",
+            "no_author": "Ce signalement n'a plus d'auteur, il n'y a personne à bloquer.",
+            "self_block": "Vous ne pouvez pas vous bloquer vous-même."
+        },
+        "geo": {
+            "no_address": "Aucune adresse à cet endroit."
+        },
+        "poi": {
+            "unknown_categories": "Catégories inconnues : {unknown}. Valeurs acceptées : {accepted}."
+        },
+        "route": {
+            "not_found": "Route introuvable",
+            "computation_failed": "Erreur lors du calcul de l'itinéraire.",
+            "snap_failed": "Impossible d'accrocher le départ ou l'arrivée au réseau cyclable.",
+            "out_of_zone_start": "Le départ est en dehors de la zone couverte par Sécu-Cycle.",
+            "out_of_zone_end": "L'arrivée est en dehors de la zone couverte par Sécu-Cycle.",
+            "no_route": "Aucun itinéraire trouvé entre le départ et l'arrivée.",
+            "unexpected": "Le calcul d'itinéraire a échoué.",
+            "failed": "Calcul échoué."
+        },
+        "tag": {
+            "name_taken": "Une étiquette portant ce nom existe déjà.",
+            "not_found": "Étiquette introuvable."
+        },
+        "task": {
+            "assignee_not_found": "Utilisateur assigné introuvable.",
+            "assignee_not_admin": "Une tâche ne peut être assignée qu'à un administrateur.",
+            "tags_not_found": "Une ou plusieurs étiquettes sont introuvables.",
+            "not_found": "Tâche introuvable."
+        },
+        "recap": {
+            "no_period": "Aucune période calculable.",
+            "no_recap": "Aucun récapitulatif pour cet utilisateur sur la période : pas de trajet terminé, désabonné, non vérifié, ou déjà envoyé."
+        },
+        "contact": {
+            "send_failed": "L'envoi du message a échoué. Réessayez plus tard ou écrivez-nous directement."
+        },
+        "commune": {
+            "not_found": "Commune introuvable : « {name} ».",
+            "not_found_reason": "Commune introuvable : « {name} » ({reason})."
+        },
+        "graph": {
+            "profile_not_found": "Profil introuvable.",
+            "profile_name_taken": "Un profil porte déjà ce nom.",
+            "base_profile_not_found": "Profil de base introuvable (id {id}).",
+            "profile_needs_commune": "Un profil doit contenir au moins une commune : sélectionnez un profil de base ou ajoutez une commune.",
+            "rename_active": "Impossible de renommer le profil actif : activez-en un autre d'abord.",
+            "delete_active": "Impossible de supprimer le profil actif : activez-en un autre d'abord.",
+            "delete_default": "Impossible de supprimer le profil par défaut : désignez-en un autre d'abord.",
+            "delete_data_scope": "Ce profil délimite les données : le supprimer ferait retomber les synchros sur l'emprise du graphe, qui purgerait les communes hors de celle-ci. Désignez une autre emprise de données d'abord.",
+            "import_empty": "Ce fichier ne contient aucun profil.",
+            "import_duplicate": "Le fichier contient deux profils nommés « {name} ».",
+            "import_name_taken": "Un profil porte déjà ce nom : « {name} ».",
+            "build_running": "Une génération est déjà en cours.",
+            "not_built": "Le graphe de ce profil n'a pas encore été généré.",
+            "reload_running": "Un rechargement est déjà en cours.",
+            "build_running_activate": "Une génération est en cours : attendez sa fin avant d'activer un profil.",
+            "already_active": "Ce profil est déjà actif.",
+            "scope_no_commune": "Ce profil ne contient aucune commune : les synchros n'auraient rien à récupérer et purgeraient toute la base.",
+            "already_data_scope": "Ce profil délimite déjà les données."
+        }
+    },
+    "message": {
+        "account_verified": "Compte vérifié.",
+        "verification_code_sent": "Si un compte non vérifié existe pour cet e-mail, un code a été envoyé.",
+        "reset_code_sent": "Si un compte existe pour cet e-mail, un code a été envoyé.",
+        "password_reset": "Mot de passe réinitialisé.",
+        "email_change_code_sent": "Un code de confirmation a été envoyé à la nouvelle adresse.",
+        "contact_sent": "Message envoyé.",
+        "recap_test_sent": "Récapitulatif de test envoyé à {email}."
+    },
+    "ordinal": {
+        "one": "{count}ère",
+        "two": "{count}ème",
+        "few": "{count}ème",
+        "other": "{count}ème"
+    },
+    "guidance": {
+        "distance": {
+            "now": "maintenant",
+            "meters": "dans {distance} m",
+            "kilometers": "dans {distance} km"
+        },
+        "turn": {
+            "depart": {
+                "plain": "Partez",
+                "street": "Partez sur {street}"
+            },
+            "continue": {
+                "plain": "Continuez tout droit",
+                "street": "Continuez tout droit sur {street}"
+            },
+            "slight_right": {
+                "plain": "Gardez la droite",
+                "street": "Gardez la droite sur {street}"
+            },
+            "turn_right": {
+                "plain": "Tournez à droite",
+                "street": "Tournez à droite sur {street}"
+            },
+            "sharp_right": {
+                "plain": "Virage serré à droite",
+                "street": "Virage serré à droite sur {street}"
+            },
+            "u_turn": {
+                "plain": "Faites demi-tour",
+                "street": "Faites demi-tour sur {street}"
+            },
+            "sharp_left": {
+                "plain": "Virage serré à gauche",
+                "street": "Virage serré à gauche sur {street}"
+            },
+            "turn_left": {
+                "plain": "Tournez à gauche",
+                "street": "Tournez à gauche sur {street}"
+            },
+            "slight_left": {
+                "plain": "Gardez la gauche",
+                "street": "Gardez la gauche sur {street}"
+            },
+            "fallback": {
+                "plain": "Continuez",
+                "street": "Continuez sur {street}"
+            }
+        },
+        "roundabout": {
+            "exit": "Au rond-point, prenez la {ordinal} sortie",
+            "exit_street": "Au rond-point, prenez la {ordinal} sortie sur {street}",
+            "generic": "Au rond-point, prenez la sortie",
+            "generic_street": "Au rond-point, prenez la sortie sur {street}"
+        },
+        "arrival": {
+            "near": "L'arrivée est proche",
+            "reached": "Vous êtes arrivé à destination"
+        }
+    },
+    "route": {
+        "variant": {
+            "fast": "Rapide",
+            "safe": "Sécurisé",
+            "compromise": "Compromis"
+        }
+    }
+}

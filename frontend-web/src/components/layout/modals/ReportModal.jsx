@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import Button from "../../ui/Button";
 import { MdOutlineReportProblem } from "react-icons/md";
@@ -9,15 +10,19 @@ import accidentIcon from "../../../assets/reports/accident.png";
 import travauxIcon from "../../../assets/reports/travaux.png";
 import dangerIcon from "../../../assets/reports/danger.png";
 import obstacleIcon from "../../../assets/reports/obstacle.png";
+import { carteLabel } from "../../../i18n/carteLabels";
 
+// Les libellés vivent dans le domaine « carte », partagés avec les marqueurs de
+// MapComponent : un même type ne doit pas se nommer autrement selon l'endroit.
 const REPORT_TYPES = [
-    { value: "accident", label: "Accident", icon: accidentIcon },
-    { value: "travaux", label: "Travaux", icon: travauxIcon },
-    { value: "danger", label: "Danger", icon: dangerIcon },
-    { value: "obstacle", label: "Obstacle", icon: obstacleIcon },
+    { value: "accident", icon: accidentIcon },
+    { value: "travaux", icon: travauxIcon },
+    { value: "danger", icon: dangerIcon },
+    { value: "obstacle", icon: obstacleIcon },
 ];
 
 export default function ReportModal({ isOpen, onClose, onConfirm, coords }) {
+    const { t } = useTranslation('itineraire');
     const [reportType, setReportType] = useState("danger");
     const [description, setDescription] = useState("");
 
@@ -61,42 +66,42 @@ export default function ReportModal({ isOpen, onClose, onConfirm, coords }) {
     return (
         <div className="modal-overlay">
             <div className="modal-content form-container">
-                <h2>Signaler un danger</h2>
+                <h2>{t('signalement.titre')}</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="input-container">
                         <div className="input-group">
-                            <label>Type de signalement</label>
+                            <label>{t('signalement.type')}</label>
                             <div className="report-type-grid">
-                                {REPORT_TYPES.map(t => (
+                                {REPORT_TYPES.map(type => (
                                     <button
                                         type="button"
-                                        key={t.value}
-                                        className={`report-type-card${reportType === t.value ? " selected" : ""}`}
-                                        onClick={() => setReportType(t.value)}
-                                        aria-pressed={reportType === t.value}
+                                        key={type.value}
+                                        className={`report-type-card${reportType === type.value ? " selected" : ""}`}
+                                        onClick={() => setReportType(type.value)}
+                                        aria-pressed={reportType === type.value}
                                     >
-                                        <img src={t.icon} alt="" className="report-type-icon" />
-                                        <span>{t.label}</span>
+                                        <img src={type.icon} alt="" className="report-type-icon" />
+                                        <span>{carteLabel('signalement', type.value)}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
                         <div className="input-group">
-                            <label>Description (optionnel)</label>
+                            <label>{t('signalement.description')}</label>
                             <textarea
                                 className="input"
                                 rows={3}
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Décrivez le problème..."
+                                placeholder={t('signalement.descriptionPlaceholder')}
                                 style={{ resize: "vertical" }}
                             />
                         </div>
                     </div>
                     <div className="modal-actions">
-                        <Button type="button" className="btn-cancel" onClick={onClose}>Annuler</Button>
+                        <Button type="button" className="btn-cancel" onClick={onClose}>{t('signalement.annuler')}</Button>
                         <Button type="submit" className="btn-add">
-                            Signaler <MdOutlineReportProblem size={15} />
+                            {t('signalement.envoyer')} <MdOutlineReportProblem size={15} />
                         </Button>
                     </div>
                 </form>

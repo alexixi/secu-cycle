@@ -15,5 +15,10 @@ android {
 }
 
 dependencies {
-  implementation "androidx.core:core-ktx:1.16.0"
+  // 1.17.0 est la première version où NotificationCompat expose les Live Updates
+  // d'Android 16 : ProgressStyle, setRequestPromotedOngoing et
+  // setShortCriticalText. En dessous, la chip de la barre de statut est hors de
+  // portée. Gradle résolvant vers la version la plus haute, ce numéro devient
+  // celui de toute l'application, pas seulement du module.
+  implementation "androidx.core:core-ktx:1.17.0"
 }

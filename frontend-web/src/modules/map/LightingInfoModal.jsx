@@ -1,9 +1,12 @@
+import { Trans, useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import Button from "../../components/ui/Button";
 import "../../components/ui/PopUp.css";
 import "./LightingInfoModal.css";
 
 export default function LightingInfoModal({ isOpen, onClose, sources }) {
+    const { t, i18n } = useTranslation('carte');
+    const T = ({ k }) => <Trans t={t} i18nKey={k} components={{ b: <strong /> }} />;
     useEffect(() => {
         if (!isOpen) return;
 
@@ -30,50 +33,35 @@ export default function LightingInfoModal({ isOpen, onClose, sources }) {
     return (
         <div className="modal-overlay">
             <div className="modal-content lighting-info-modal">
-                <h2>Éclairage public</h2>
+                <h2>{t('ui.eclairage.h2')}</h2>
 
-                <p>
-                    <strong>Lampadaires</strong> : les lampadaires renseignés par OpenStreetMap,
-                    ou synchronisés depuis des jeux de données open data des métropoles.
-                    Un lampadaire = un halo lumineux sur la carte.
-                </p>
+                <p><T k="ui.eclairage.lampadaires" /></p>
 
-                <p>
-                    <strong>Rues éclairées</strong> : les rues marquées comme éclairées sur OpenStreetMap.
-                    Toutes les routes n'ont pas nécessairement cette information, c'est pour ça que nous déduisons
-                    l'éclairage de certaines routes avec la présence de lampadaires ou la proximité immédiate d'une rue éclairée.
-                </p>
+                <p><T k="ui.eclairage.ruesEclairees" /></p>
 
-                <p className="lighting-info-warn">
-                    Une zone sans halo n'est pas forcément non éclairée : le plus souvent, c'est la
-                    donnée qui manque. Peu de villes françaises ont un jeu open data de lampadaires,
-                    et OpenStreetMap n'est pas complet partout, surtout dans les zones rurales.
-                </p>
+                <p className="lighting-info-warn">{t('ui.eclairage.avertissement')}</p>
 
-                <p className="lighting-info-sources-title">Sources sur cette zone</p>
+                <p className="lighting-info-sources-title">{t('ui.eclairage.sourcesZone')}</p>
 
                 {sources === null ? (
-                    <p>Chargement…</p>
+                    <p>{t('ui.eclairage.chargement')}</p>
                 ) : sources.length === 0 ? (
-                    <p>Aucun lampadaire synchronisé sur cette zone.</p>
+                    <p>{t('ui.eclairage.aucunLampadaire')}</p>
                 ) : (
                     <ul className="lighting-info-sources">
                         {sources.map((s) => (
                             <li key={s.source}>
                                 {s.attribution}
-                                {s.count ? ` — ${s.count.toLocaleString("fr-FR")} points` : ""}
+                                {s.count ? ` — ${t('ui.eclairage.points', { n: s.count.toLocaleString(i18n.language) })}` : ""}
                             </li>
                         ))}
                     </ul>
                 )}
 
-                <p>
-                    OpenStreetMap couvre l'ensemble de la zone ; les jeux open data métropolitains
-                    n'existent que sur certaines villes et viennent alors densifier la couverture.
-                </p>
+                <p>{t('ui.eclairage.couverture')}</p>
 
                 <div className="modal-actions">
-                    <Button type="button" onClick={onClose}>Fermer</Button>
+                    <Button type="button" onClick={onClose}>{t('ui.fermer')}</Button>
                 </div>
             </div>
         </div>

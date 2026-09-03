@@ -5,6 +5,7 @@ from database import get_db
 from models.bike import Bike
 from schemas.bike import BikeCreate, BikeRead, BikeUpdate
 from dependencies import get_current_user
+from i18n import get_locale, t
 
 router = APIRouter(prefix="/bikes", tags=["Bikes"])
 
@@ -28,18 +29,20 @@ def get_user_bikes(db: Session = Depends(get_db), current_user=Depends(get_curre
 
 
 @router.get("/{bike_id}", response_model=BikeRead)
-def get_bike(bike_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def get_bike(bike_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),
+             locale: str = Depends(get_locale)):
     bike = db.query(Bike).filter(Bike.id == bike_id, Bike.user_id == current_user.id).first()
     if not bike:
-        raise HTTPException(status_code=404, detail="Vélo introuvable")
+        raise HTTPException(status_code=404, detail=t("error.bike.not_found", locale))
     return bike
 
 
 @router.patch("/{bike_id}", response_model=BikeRead)
-def update_bike(bike_id: int, updates: BikeUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def update_bike(bike_id: int, updates: BikeUpdate, db: Session = Depends(get_db),
+                current_user=Depends(get_current_user), locale: str = Depends(get_locale)):
     bike = db.query(Bike).filter(Bike.id == bike_id, Bike.user_id == current_user.id).first()
     if not bike:
-        raise HTTPException(status_code=404, detail="Vélo introuvable")
+        raise HTTPException(status_code=404, detail=t("error.bike.not_found", locale))
     update_data = updates.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(bike, field, value)
@@ -49,9 +52,10 @@ def update_bike(bike_id: int, updates: BikeUpdate, db: Session = Depends(get_db)
 
 
 @router.delete("/{bike_id}", status_code=204)
-def delete_bike(bike_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def delete_bike(bike_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),
+                locale: str = Depends(get_locale)):
     bike = db.query(Bike).filter(Bike.id == bike_id, Bike.user_id == current_user.id).first()
     if not bike:
-        raise HTTPException(status_code=404, detail="Vélo introuvable")
+        raise HTTPException(status_code=404, detail=t("error.bike.not_found", locale))
     db.delete(bike)
     db.commit()

@@ -1,0 +1,146 @@
+{
+    "sources": {
+        "openstreetmap": {
+            "detail": "via Overpass",
+            "usage": "Graphe routier, aménagements cyclables, itinéraires cyclables balisés (véloroutes, RAVeL, réseaux express vélo), revêtement, éclairage, sens de circulation et points d'intérêt"
+        },
+        "ign_rge_alti": {
+            "detail": "Géoplateforme",
+            "usage": "Altitude de chaque nœud du graphe, dont se déduit la pente des tronçons"
+        },
+        "points_lumineux": {
+            "detail": "Bordeaux Métropole",
+            "usage": "Densification de l'éclairage public là où OpenStreetMap est lacunaire"
+        },
+        "luminaires_declairage_public": {
+            "detail": "Nantes Métropole",
+            "usage": "Densification de l'éclairage public"
+        },
+        "accidents_de_velo": {
+            "detail": "dérivé des BAAC de l'ONISR, publié par Koumoul",
+            "usage": "Malus d'accidentologie sur les tronçons, France"
+        },
+        "geolocalisation_des_accidents_de": {
+            "detail": "Statbel",
+            "usage": "Malus d'accidentologie sur les tronçons, Belgique"
+        },
+        "base_adresse_nationale": {
+            "usage": "Autocomplétion et géocodage des adresses françaises"
+        },
+        "trafic_temps_reel": {
+            "detail": "Bordeaux Métropole",
+            "usage": "État de circulation des axes routiers"
+        },
+        "trafic_temps_reel_sirac": {
+            "detail": "Eurométropole de Strasbourg",
+            "usage": "État de circulation des axes routiers"
+        },
+        "etat_du_trafic_en_temps_reel": {
+            "detail": "Rennes Métropole",
+            "usage": "État de circulation des axes routiers"
+        },
+        "fluidite_des_axes_routiers": {
+            "detail": "Nantes Métropole",
+            "usage": "État de circulation des axes routiers"
+        },
+        "gbfs": {
+            "detail": "neuf systèmes de vélos en libre-service",
+            "usage": "Disponibilité des stations et des vélos en temps réel"
+        },
+        "cams": {
+            "detail": "Copernicus, redistribué par Open-Meteo",
+            "usage": "Indice européen de qualité de l'air le long du trajet"
+        },
+        "world_air_quality_index": {
+            "usage": "Mesures des stations de surveillance au sol, en complément du CAMS"
+        },
+        "open_meteo": {
+            "detail": "modèles ICON-D2 (DWD) et AROME (Météo-France)",
+            "usage": "Conditions météo, prévision de pluie au pas de 15 minutes, vent, et alertes dérivées de seuils (orage, grêle, verglas, rafales)"
+        },
+        "vigilance_meteo_france": {
+            "detail": "via le miroir Opendatasoft",
+            "usage": "Vigilance météorologique officielle par département (orages, vent, neige-verglas, canicule…) en France"
+        },
+        "meteoalarm": {
+            "detail": "EUMETNET, relayant l'IRM",
+            "usage": "Avertissements météorologiques officiels par province en Belgique"
+        },
+        "maptiler": {
+            "usage": "Fonds de carte et géocodage hors de France"
+        }
+    },
+    "titrePage": "Sécu'Cycle | Sources des données",
+    "metaDescription": "Les données ouvertes qui font tourner Sécu'Cycle : OpenStreetMap, IGN, accidentologie BAAC et Statbel, trafic temps réel, GBFS, qualité de l'air.",
+    "jsonLd": {
+        "nom": "Sources des données — Sécu'Cycle",
+        "description": "Inventaire des jeux de données ouvertes réutilisés par Sécu'Cycle pour calculer des itinéraires vélo sécurisés : usage, licence et producteur de chacun."
+    },
+    "h1": "Sources des données",
+    "maj": "Dernière mise à jour : 28 juillet 2026",
+    "chapo": "Sécu'Cycle calcule des itinéraires vélo optimisés pour la sécurité plutôt que pour la seule distance. Le service construit un graphe routier à partir d'OpenStreetMap, puis attribue à chaque tronçon un score de sécurité sur 10 qui croise plusieurs jeux de données ouverts. Cette page recense l'intégralité de ces sources, leur usage exact, leur licence et leur producteur.",
+    "tableau": {
+        "h2": "Tableau récapitulatif",
+        "colSource": "Source",
+        "colUsage": "Usage dans Sécu'Cycle",
+        "colLicence": "Licence",
+        "colProducteur": "Producteur"
+    },
+    "reseau": {
+        "h2": "Réseau routier et aménagements cyclables",
+        "texte": "Le type d'aménagement cyclable, la hiérarchie de la voie, le revêtement, l'éclairage public et le sens de circulation sont extraits d'<osm>OpenStreetMap</osm> au moyen de l'API Overpass. Ce sont ces attributs qui forment la note d'infrastructure d'un tronçon, avant application des malus.",
+        "poi": "La même source alimente les points d'intérêt affichés sur la carte : points d'eau et fontaines, toilettes publiques, stationnements vélo, ateliers de réparation et stations de gonflage."
+    },
+    "eclairage": {
+        "h2": "Éclairage public",
+        "texte": "Les lampadaires cartographiés dans OpenStreetMap couvrent l'ensemble de la zone desservie, mais de façon inégale. Sur deux métropoles, ils sont densifiés par le jeu open data du gestionnaire : les <bordeaux>points lumineux de Bordeaux Métropole</bordeaux> et les <nantes>luminaires d'éclairage public de Nantes Métropole</nantes>."
+    },
+    "denivele": {
+        "h2": "Dénivelé",
+        "texte": "Les altitudes sont interrogées sur chaque nœud du graphe auprès du service de calcul altimétrique de la <ign>Géoplateforme de l'IGN</ign> (ressource RGE ALTI). La pente d'un tronçon est calculée par différence entre ses extrémités, puis pondérée selon le profil du cycliste et l'assistance électrique éventuelle de son vélo."
+    },
+    "accidents": {
+        "h2": "Accidentologie",
+        "registres": "Deux registres nationaux sont mobilisés de part et d'autre de la frontière. En France, le jeu <baac>« Accidents de vélo »</baac>, dérivé des fichiers BAAC de l'ONISR. En Belgique, les <statbel>accidents de la circulation géolocalisés 2017-2024</statbel> publiés par Statbel, dont les coordonnées en Lambert 72 sont reprojetées en WGS84 à l'ingestion.",
+        "calcul": "Chaque accident est rattaché aux tronçons du graphe situés dans un rayon de 25 mètres, puis pondéré par une décroissance exponentielle de demi-vie 5 ans. Le malus obtenu est normalisé par la longueur du tronçon, compressé logarithmiquement et plafonné à 1,5 point sur 10.",
+        "plafond": "Ce plafond est délibéré : ces bases ne comportent aucun dénominateur d'exposition, si bien qu'un axe cyclable très fréquenté cumule mécaniquement des accidents sans être plus dangereux au kilomètre parcouru. Le malus est en outre strictement soustractif — un tronçon sans accident recensé conserve sa note d'infrastructure, pour ne pas avantager les zones que les données couvrent mal.",
+        "limite": "<b>Limite assumée.</b> Ces deux registres ne recensent que les accidents corporels déclarés aux forces de l'ordre. Les chutes sans tiers y sont très largement sous-représentées, et le géocodage est plus lacunaire hors agglomération. Le signal est donc structurellement plus fiable en ville, et un tronçon sans accident recensé n'est pas un tronçon sûr."
+    },
+    "trafic": {
+        "h2": "Trafic en temps réel",
+        "texte": "L'état de circulation des axes est collecté toutes les cinq minutes auprès des portails open data de quatre métropoles : Bordeaux Métropole, l'Eurométropole de Strasbourg, Rennes Métropole et Nantes Métropole. Une source n'est interrogée que si son emprise croise celle des données que nous synchronisons. Là où le calcul d'itinéraire est disponible, un axe embouteillé y devient plus coûteux, sans jamais être interdit ; ailleurs, la couche reste consultable sur la carte thématique de la ville."
+    },
+    "bikeshare": {
+        "h2": "Vélos en libre-service",
+        "texte": "La disponibilité des stations est collectée au format <gbfs>GBFS</gbfs> auprès de neuf systèmes français et belges, par auto-découverte des flux. Cette couche est informative : elle ne pèse pas sur le calcul d'itinéraire."
+    },
+    "air": {
+        "h2": "Qualité de l'air",
+        "texte": "L'indice européen de qualité de l'air (EAQI) est issu du <cams>CAMS</cams> (Copernicus Atmosphere Monitoring Service), redistribué par Open-Meteo, et échantillonné le long du trajet sur une maille d'environ 11 kilomètres. Il est complété par les mesures des stations de surveillance au sol du <waqi>World Air Quality Index</waqi>, publiées sur l'échelle AQI américaine — distincte de l'indice européen, et affichée comme telle."
+    },
+    "adresses": {
+        "h2": "Adresses, géocodage et fonds de carte",
+        "texte": "L'autocomplétion et le géocodage des adresses françaises reposent sur la <ban>Base Adresse Nationale</ban>. Hors de France, en Belgique notamment, ils sont assurés par <maptiler>MapTiler</maptiler>, qui fournit également les tuiles cartographiques du fond de carte. MapTiler est un service commercial : c'est la seule source de cette page qui ne relève pas de l'open data, même si ses fonds de carte sont eux-mêmes construits sur les données d'OpenStreetMap."
+    },
+    "attributions": {
+        "h2": "Attributions",
+        "osm": "© les contributeurs <osm>OpenStreetMap</osm>, sous licence <odbl>ODbL</odbl>.",
+        "lo": "IGN, ONISR, Base Adresse Nationale, Bordeaux Métropole, Eurométropole de Strasbourg, Rennes Métropole et Nantes Métropole, sous <lo>Licence Ouverte</lo>.",
+        "statbel": "Statbel, sous licence <ccby>CC BY 4.0</ccby>.",
+        "cams": "Generated using Copernicus Atmosphere Monitoring Service information 2026. Les données CAMS sont modifiées par Sécu'Cycle (échantillonnage le long du trajet) et obtenues par l'intermédiaire d'Open-Meteo. Ni la Commission européenne ni l'ECMWF ne sont responsables de l'usage qui en est fait.",
+        "waqi": "World Air Quality Index Project (waqi.info).",
+        "maptiler": "Fonds de carte © MapTiler © les contributeurs OpenStreetMap."
+    },
+    "reutiliser": {
+        "h2": "Réutiliser nos données",
+        "texte": "Sécu'Cycle expose une API publique. Les jeux réutilisés restent la propriété de leurs producteurs et sont soumis à leurs licences respectives, rappelées ci-dessus : toute réutilisation en cascade doit les respecter, en particulier la clause de partage à l'identique de l'ODbL. Pour toute question, écrivez-nous à <mail>contact@secu-cycle.fr</mail>.",
+        "voirAussi": "Voir aussi nos <mentions>mentions légales</mentions> et notre <faq>foire aux questions</faq>."
+    },
+    "licence": {
+        "fluxOuvertsParSysteme": "Flux ouverts, attribution par système",
+        "copernicus": "Copernicus — attribution requise",
+        "attributionRequise": "Attribution requise",
+        "eumetnetIrm": "Attribution EUMETNET et IRM requise",
+        "commercial": "Service commercial — hors open data"
+    }
+}

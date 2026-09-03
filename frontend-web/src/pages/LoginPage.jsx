@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import Meta from "../components/Meta";
 import LinkButton from "../components/ui/LinkButton";
 import Button from "../components/ui/Button";
@@ -10,10 +11,13 @@ import { useAuth } from "../context/AuthContext";
 import { trackEvent } from "../services/analytics";
 import { LuLogIn } from "react-icons/lu";
 import { FaPersonCirclePlus } from "react-icons/fa6";
+import { useLocalizedPath } from '../i18n/useLang';
 import "../components/ui/Input.css"
 import "../components/ui/Form.css"
 
 export default function Login() {
+    const { t } = useTranslation('auth');
+    const path = useLocalizedPath();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
@@ -43,10 +47,10 @@ export default function Login() {
             const response_historic = await getUserHistoric(response_login.access_token);
             updateHistoric(response_historic);
             trackEvent("logged_in");
-            navigate("/profil");
+            navigate(path("profil"));
         } catch (error) {
             if (error?.status === 403) {
-                navigate("/signin", { state: { email, password, verify: true } });
+                navigate(path("signin"), { state: { email, password, verify: true } });
                 return;
             }
             console.error("Login error:", error);
@@ -57,22 +61,23 @@ export default function Login() {
 
     return (
         <>
-            <Meta title="Connexion | Sécu'Cycle" description="Connectez-vous à votre compte Sécu'Cycle pour accéder à vos vélos et vos adresses enregistrées." noindex />
+            <Meta title={t('connexion.titrePage')} description={t('connexion.metaDescription')} noindex />
             <div className="page-form-container">
                 {errorMessage && (
                     <div className="info-box">
                         <p>{errorMessage}</p>
+                        {/* i18n-exempt: « OK » est identique dans les deux langues */}
                         <button className="button" onClick={() => setErrorMessage("")}>OK</button>
                     </div>
                 )}
                 <div className="form-container">
                     <form className="form" onSubmit={handleSubmit}>
-                        <h2>Connexion</h2>
+                        <h2>{t('connexion.h2')}</h2>
 
                         <div className="input-container">
 
                             <div className={"input-group" + (hasError || emailError ? " input-error" : "")}>
-                                <label htmlFor="email">Adresse mail</label>
+                                <label htmlFor="email">{t('champs.email')}</label>
                                 <input
                                     className="input"
                                     type="email"
@@ -92,18 +97,18 @@ export default function Login() {
                                             setEmailError(false);
                                         }
                                     }}
-                                    placeholder="exemple@gmail.com"
+                                    placeholder={t('champs.emailPlaceholder')}
                                     required
                                 />
                                 {emailError && (
                                     <div className="error-text">
-                                        Adresse mail invalide.
+                                        {t('erreurs.emailInvalide')}
                                     </div>
                                 )}
                             </div>
 
                             <div className={"input-group" + (hasError ? " input-error" : "")}>
-                                <label htmlFor="password">Mot de passe</label>
+                                <label htmlFor="password">{t('champs.motDePasse')}</label>
                                 <PasswordInput
                                     value={password}
                                     onChange={(e) => {
@@ -114,23 +119,23 @@ export default function Login() {
                             </div>
                             {hasError && (
                                 <div className="error-text">
-                                    Adresse mail ou mot de passe incorrect.<br /> Veuillez réessayer.
+                                    {t('connexion.identifiantsIncorrects')}<br /> {t('connexion.reessayer')}
                                 </div>
                             )}
                             <Link
-                                to="/forgot-password"
+                                to={path("forgotPassword")}
                                 state={{ email }}
                                 className="forgot-password-link"
                             >
-                                Mot de passe oublié ?
+                                {t('connexion.motDePasseOublie')}
                             </Link>
                         </div>
 
-                        <Button type="submit" id="login-button" disabled={!email || !password || hasError}> Se connecter <LuLogIn /></Button>
+                        <Button type="submit" id="login-button" disabled={!email || !password || hasError}> {t('connexion.seConnecter')} <LuLogIn /></Button>
 
-                        <div className="separator">ou</div>
+                        <div className="separator">{t('connexion.ou')}</div>
 
-                        <LinkButton to={"/signin"}><FaPersonCirclePlus /> Créer un compte</LinkButton>
+                        <LinkButton to={path("signin")}><FaPersonCirclePlus /> {t('connexion.creerCompte')}</LinkButton>
                     </form>
                 </div>
             </div>

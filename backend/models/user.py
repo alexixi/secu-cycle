@@ -25,4 +25,21 @@ class User(Base):
     ban_reason = Column(Text, nullable=True)
     token_version = Column(Integer, nullable=False, server_default="0", default=0)
 
+    # Réception du récapitulatif périodique d'activité. Activé par défaut : c'est
+    # le résumé de ses propres trajets, pas de la prospection, et il se coupe en
+    # un clic depuis l'e-mail comme depuis les réglages.
+    recap_emails = Column(Boolean, nullable=False, default=True, server_default="true")
+    # Révoque d'un coup tous les liens de désabonnement déjà envoyés. Distinct de
+    # `token_version`, qui est incrémenté au changement de mot de passe : un lien
+    # de désabonnement doit survivre à ce changement — « je change mon mot de
+    # passe puis je me désabonne » est un enchaînement banal.
+    recap_unsub_version = Column(Integer, nullable=False, server_default="0", default=0)
+
+    # Langue des e-mails, et d'eux seuls. La langue des *réponses* de l'API reste
+    # négociée par requête (`?lang=` puis `Accept-Language`) : un envoi de fond
+    # n'a pas de requête d'où la tirer, c'est la seule raison de cette colonne.
+    # Renseignée à l'inscription depuis la locale négociée, puis mise à jour par
+    # les clients quand l'utilisateur change de langue.
+    language = Column(String(2), nullable=False, default="fr", server_default="fr")
+
     created_at = Column(TIMESTAMP, server_default=func.now())

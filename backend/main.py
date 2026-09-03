@@ -10,6 +10,7 @@ from models.street_lamp_sync import StreetLampSyncRun
 from accidents import runner as accident_runner
 from pois import runner as poi_runner
 from lighting import runner as lighting_runner
+from recap import runner as recap_runner
 from routers import accident
 from routers import user
 from routers import route
@@ -23,16 +24,13 @@ from routers import traffic
 from routers import air_quality
 from routers import bikeshare
 from routers import weather
-from routers import home_case
-from routers import faq
 from routers import task
 from routers import tag
 from routers import graph as graph_router
 from routers import geo
 from routers import contact
 from routers import badge
-from seed_home_cases import seed_home_cases
-from seed_faqs import seed_faqs
+from routers import recap as recap_router
 from seed_badges import seed_badges
 from graph import builder as graph_builder
 from graph.graph_manager import load_graph_with_ign, load_graph_profile
@@ -191,6 +189,45 @@ def poi_sync_is_due() -> bool:
         db.close()
 
 
+RECAP_CHECK_INTERVAL = 300
+
+
+async def periodic_recap():
+    """Envoie les récapitulatifs périodiques, par lots.
+
+    Même forme que les synchronisations ci-dessus : la boucle bat vite et
+    l'échéance se lit en base (`recap_settings.enabled` et la fenêtre d'envoi
+    calculée par `recap.periodes`). Le réglage est relu à chaque tour, jamais mis
+    en cache : couper une campagne en cours doit prendre effet tout de suite.
+
+    Un seul lot par tour, puis on rend la main. L'API n'a qu'un worker et doit
+    continuer à calculer des itinéraires pendant l'envoi : mieux vaut étaler une
+    campagne sur deux heures que bloquer le service douze minutes. Tout ce qui
+    est bloquant — le SQL comme les appels à Resend — part dans un thread.
+    """
+    while True:
+        await asyncio.sleep(RECAP_CHECK_INTERVAL)
+        try:
+            due = await asyncio.to_thread(recap_runner.campagne_due)
+            if due is None:
+                continue
+
+            genre, debut, fin, debut_precedent = due
+            bilan = await asyncio.to_thread(
+                recap_runner.traiter_lot, genre, debut, fin, debut_precedent
+            )
+            if bilan["sent"] or bilan["failed"]:
+                print(
+                    f"[Background Task] Récapitulatifs : {bilan['sent']} envoyé(s), "
+                    f"{bilan['skipped']} ignoré(s), {bilan['failed']} en échec.",
+                    flush=True,
+                )
+        except Exception as exc:
+            # Comme pour les autres boucles : une erreur ne doit pas l'interrompre,
+            # le tour suivant réessaiera.
+            print(f"[Background Task] Échec de l'envoi des récapitulatifs : {exc}", flush=True)
+
+
 async def periodic_poi_sync():
     """
     Boucle infinie qui s'exécute en arrière-plan.
@@ -284,8 +321,6 @@ async def periodic_lighting_sync(app: FastAPI):
             print(f"[Background Task] Échec de la synchro éclairage : {exc}", flush=True)
 
 
-seed_home_cases()
-seed_faqs()
 seed_badges()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -366,6 +401,14 @@ async def lifespan(app: FastAPI):
     if stale_lighting:
         print(f"{stale_lighting} synchro(s) d'éclairage interrompue(s) marquée(s) en échec.", flush=True)
 
+    stale_recaps = await asyncio.to_thread(recap_runner.fail_stale_sends)
+    if stale_recaps:
+        print(
+            f"{stale_recaps} récapitulatif(s) d'issue inconnue après un arrêt du serveur. "
+            "Ils ne seront pas renvoyés automatiquement.",
+            flush=True,
+        )
+
     traffic_task = asyncio.create_task(periodic_traffic_update(app))
     air_quality_task = asyncio.create_task(periodic_air_quality_update(app))
     weather_task = asyncio.create_task(periodic_weather_update(app))
@@ -374,6 +417,7 @@ async def lifespan(app: FastAPI):
     poi_task = asyncio.create_task(periodic_poi_sync())
     accident_task = asyncio.create_task(periodic_accident_sync(app))
     lighting_task = asyncio.create_task(periodic_lighting_sync(app))
+    recap_task = asyncio.create_task(periodic_recap())
 
     yield
 
@@ -387,8 +431,9 @@ async def lifespan(app: FastAPI):
     poi_task.cancel()
     accident_task.cancel()
     lighting_task.cancel()
+    recap_task.cancel()
     for task in (traffic_task, air_quality_task, weather_task, vigilance_task,
-                 bikeshare_task, poi_task, accident_task, lighting_task):
+                 bikeshare_task, poi_task, accident_task, lighting_task, recap_task):
         try:
             await task
         except asyncio.CancelledError:
@@ -430,14 +475,13 @@ app.include_router(traffic.router)
 app.include_router(air_quality.router)
 app.include_router(weather.router)
 app.include_router(bikeshare.router)
-app.include_router(home_case.router)
-app.include_router(faq.router)
 app.include_router(task.router)
 app.include_router(tag.router)
 app.include_router(graph_router.router)
 app.include_router(geo.router)
 app.include_router(contact.router)
 app.include_router(badge.router)
+app.include_router(recap_router.router)
 
 origins_str = os.getenv("CORS_ORIGINS", "")
 if origins_str:

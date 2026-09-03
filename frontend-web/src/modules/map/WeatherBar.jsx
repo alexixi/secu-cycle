@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { MdNavigation, MdInfoOutline } from "react-icons/md";
 import { WEATHER_ALERT_COLORS, weatherIcon, freshSteps } from "./weather";
@@ -5,6 +6,7 @@ import WeatherDetail from "./WeatherDetail";
 import "./WeatherBar.css";
 
 export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, onOpenInfo }) {
+    const { t } = useTranslation('carte');
     const [open, setOpen] = useState(false);
     const rootRef = useRef(null);
 
@@ -43,11 +45,12 @@ export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, 
     const title = [
         summary.label,
         wind?.speed != null
-            ? `vent ${Math.round(wind.speed)} km/h${wind.cardinal ? ` de ${wind.cardinal}` : ''}`
-                + (gusty ? `, rafales ${Math.round(wind.gusts)}` : '')
+            ? t('ui.meteo.ventTitre', { vitesse: Math.round(wind.speed) })
+                + (wind.cardinal ? t('ui.meteo.ventDirection', { cardinal: wind.cardinal }) : '')
+                + (gusty ? t('ui.meteo.rafalesTitre', { vitesse: Math.round(wind.gusts) }) : '')
             : null,
-        stale && updatedAt ? `dernier relevé ${updatedAt}` : null,
-        open ? 'Cliquer pour replier' : 'Cliquer pour le détail',
+        stale && updatedAt ? t('ui.meteo.dernierReleveTitre', { heure: updatedAt }) : null,
+        t(open ? 'ui.meteo.replier' : 'ui.meteo.detail'),
     ].filter(Boolean).join(' · ');
 
     return (
@@ -78,7 +81,7 @@ export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, 
                                 />
                             )}
                             {Math.round(wind.speed)} km/h
-                            {gusty ? ` · rafales ${Math.round(wind.gusts)}` : ''}
+                            {gusty ? t('ui.meteo.rafalesTitre', { vitesse: Math.round(wind.gusts) }) : ''}
                         </span>
                     )}
                 </span>
@@ -101,13 +104,13 @@ export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, 
                 <div>
                     <div className="weather-bar-detail" inert={!open}>
                         <div className="weather-bar-detail-head">
-                            <span>Météo</span>
+                            <span>{t('ui.meteo.titre')}</span>
                             <button
                                 type="button"
                                 className="weather-bar-info-btn"
                                 onClick={onOpenInfo}
-                                title="D'où viennent ces données et comment les lire"
-                                aria-label="Sources et méthode"
+                                title={t('ui.meteo.sourcesTitre')}
+                                aria-label={t('ui.meteo.sourcesAria')}
                             >
                                 <MdInfoOutline />
                             </button>
@@ -124,7 +127,7 @@ export default function WeatherBar({ zone, stale, ageMin, now, updatedAt, rain, 
 
                         {updatedAt && (
                             <p className="weather-bar-updated">
-                                {stale ? `Dernier relevé disponible (${updatedAt})` : `Relevé de ${updatedAt}`}
+                                {t(stale ? 'ui.meteo.dernierReleveDispo' : 'ui.meteo.releveDe', { heure: updatedAt })}
                             </p>
                         )}
                     </div>

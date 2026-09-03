@@ -14,19 +14,21 @@ import { ScreenHeader } from "../components/ui/ScreenHeader";
 import { SwipeBackScreen } from "../components/SwipeBackScreen";
 
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 
 const SUPPRIME = [
-    "Votre compte et votre adresse e-mail",
-    "Votre nom, votre date de naissance et votre niveau sportif",
-    "Vos adresses de domicile et de travail",
-    "Vos vélos",
-    "Vos itinéraires, leurs tracés et votre historique",
-    "Vos badges et vos sessions de connexion",
+    "ligneCompte",
+    "ligneIdentite",
+    "ligneAdresses",
+    "ligneVelos",
+    "ligneTrajets",
+    "ligneBadges",
 ];
 
 export default function DeleteAccountPage() {
     const router = useRouter();
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const { token, logoutAuth } = useAuth();
 
     const [password, setPassword] = useState("");
@@ -46,8 +48,8 @@ export default function DeleteAccountPage() {
             router.replace('/login');
         } catch (err) {
             setError(err?.status === 401
-                ? "Mot de passe incorrect."
-                : "Une erreur est survenue lors de la suppression.");
+                ? t('compte.modales.suppressionCompte.motDePasseIncorrect')
+                : t('compte.modales.suppressionCompte.erreurSuppression'));
             setPasswordError(err?.status === 401);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
             setIsLoading(false);
@@ -56,11 +58,11 @@ export default function DeleteAccountPage() {
 
     const handleConfirm = () => {
         Alert.alert(
-            "Supprimer définitivement ?",
-            "Votre compte et les données qui y sont rattachées seront effacés. Cette action est irréversible.",
+            t('compte.modales.suppressionCompte.confirmerTitre'),
+            t('compte.modales.suppressionCompte.confirmerTexte'),
             [
-                { text: "Annuler", style: "cancel" },
-                { text: "Supprimer", style: "destructive", onPress: supprimer },
+                { text: t('commun.annuler'), style: "cancel" },
+                { text: t('compte.modales.suppressionCompte.confirmerAction'), style: "destructive", onPress: supprimer },
             ],
         );
     };
@@ -75,46 +77,48 @@ export default function DeleteAccountPage() {
                     extraScrollHeight={160}
                     keyboardShouldPersistTaps="handled"
                 >
-                    <ScreenHeader title="Supprimer mon compte" onBack={close} />
+                    <ScreenHeader title={t('compte.modales.suppressionCompte.titre')} onBack={close} />
 
                     <View style={styles.formContainer}>
 
                         <View style={[styles.warningBox, { backgroundColor: colors.errorBg, borderColor: colors.error }]}>
                             <Ionicons name="warning-outline" size={22} color={colors.error} />
                             <Text style={[styles.warningText, { color: colors.error }]}>
-                                La suppression est immédiate et définitive : aucune restauration
-                                ne sera possible.
+                                {t('compte.modales.suppressionCompte.chapeau')}
                             </Text>
                         </View>
 
                         <View style={styles.block}>
                             <Text style={[styles.blockTitle, { color: colors.textMain }]}>
-                                Ce qui est supprimé
+                                {t('compte.modales.suppressionCompte.sectionTitre')}
                             </Text>
                             {SUPPRIME.map((ligne) => (
                                 <View key={ligne} style={styles.bulletRow}>
                                     <Ionicons name="close-circle-outline" size={18} color={colors.error} />
-                                    <Text style={[styles.bulletText, { color: colors.textSecondary }]}>{ligne}</Text>
+                                    <Text style={[styles.bulletText, { color: colors.textSecondary }]}>
+                                        {/* i18n-suffixes: ligneCompte ligneIdentite
+                                            ligneAdresses ligneVelos ligneTrajets ligneBadges */}
+                                        {t(`compte.modales.suppressionCompte.${ligne}`)}
+                                    </Text>
                                 </View>
                             ))}
                         </View>
 
                         <View style={styles.block}>
                             <Text style={[styles.blockTitle, { color: colors.textMain }]}>
-                                Ce qui est conservé
+                                {t('compte.modales.suppressionCompte.sectionConserve')}
                             </Text>
                             <View style={styles.bulletRow}>
                                 <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
                                 <Text style={[styles.bulletText, { color: colors.textSecondary }]}>
-                                    Vos signalements de dangers restent visibles pour les autres
-                                    cyclistes, mais ils ne sont plus reliés à votre compte.
+                                    {t('compte.modales.suppressionCompte.conserve')}
                                 </Text>
                             </View>
                         </View>
 
                         <View style={styles.inputGroup}>
                             <Text style={[styles.label, { color: colors.textSecondary }]}>
-                                Confirmez avec votre mot de passe
+                                {t('compte.modales.suppressionCompte.confirmezMotDePasse')}
                             </Text>
                             <PasswordInput
                                 password={password}
@@ -131,7 +135,7 @@ export default function DeleteAccountPage() {
 
                         <View style={styles.buttonWrapper}>
                             <DangerButton
-                                title="Supprimer mon compte"
+                                title={t('compte.modales.suppressionCompte.titre')}
                                 iconName="trash-outline"
                                 onPress={handleConfirm}
                                 isLoading={isLoading}

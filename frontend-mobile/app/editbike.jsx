@@ -11,10 +11,12 @@ import { useTheme } from "../hooks/useTheme";
 import { addBike, editBike, suppressBike } from "../services/apiBack";
 import { ScreenHeader } from "../components/ui/ScreenHeader";
 import { SwipeBackScreen } from "../components/SwipeBackScreen";
+import { useTranslation } from 'react-i18next';
 
 export default function EditBikePage() {
     const router = useRouter();
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const { token, bikes, updateBikes } = useAuth();
 
     const { bikeId, bikeName, bikeType, bikeElectric } = useLocalSearchParams();
@@ -26,10 +28,11 @@ export default function EditBikePage() {
     const [isElectric, setIsElectric] = useState(bikeElectric === 'true');
     const [isLoading, setIsLoading] = useState(false);
 
+    // Valeur et icône seulement : les mots viennent du catalogue au rendu.
     const BIKE_TYPES = [
-        { value: "ville", label: "Ville", icon: "bicycle" },
-        { value: "vtt", label: "VTT", icon: "bike" },
-        { value: "route", label: "Route", icon: "bike-fast" },
+        { value: "ville", icon: "bicycle" },
+        { value: "vtt", icon: "bike" },
+        { value: "route", icon: "bike-fast" },
     ];
 
     const getIcon = (type, electric) => {
@@ -43,7 +46,7 @@ export default function EditBikePage() {
         if (!name.trim()) {
             setNameError(true);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
-            Alert.alert("Nom requis", "Veuillez donner un nom à votre vélo.");
+            Alert.alert(t('auth.velo.nomRequisTitre'), t('auth.velo.nomRequisTexte'));
             return;
         }
         setNameError(false);
@@ -59,7 +62,7 @@ export default function EditBikePage() {
             router.back();
         } catch (error) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
-            Alert.alert("Erreur", "Impossible de sauvegarder. Veuillez réessayer.");
+            Alert.alert(t('commun.erreur'), t('compte.velos.erreurSauvegarde'));
         } finally {
             setIsLoading(false);
         }
@@ -67,12 +70,12 @@ export default function EditBikePage() {
 
     const handleDelete = async () => {
         Alert.alert(
-            "Supprimer le vélo",
-            `Supprimer "${name}" ?`,
+            t('compte.velos.supprimerTitre'),
+            t('compte.velos.supprimerTexte', { nom: name }),
             [
-                { text: "Annuler", style: "cancel" },
+                { text: t('commun.annuler'), style: "cancel" },
                 {
-                    text: "Supprimer",
+                    text: t('commun.supprimer'),
                     style: "destructive",
                     onPress: async () => {
                         try {
@@ -81,7 +84,7 @@ export default function EditBikePage() {
                             router.back();
                         } catch (error) {
                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
-                            Alert.alert("Erreur", "Impossible de supprimer le vélo.");
+                            Alert.alert(t('commun.erreur'), t('compte.velos.erreurSuppression'));
                         }
                     }
                 }
@@ -97,7 +100,7 @@ export default function EditBikePage() {
             contentContainerStyle={styles.scrollContainer}
         >
             <ScreenHeader
-                title={isEditing ? "Modifier mon vélo" : "Ajouter un vélo"}
+                title={isEditing ? t('compte.velos.titreModifier') : t('compte.velos.titreAjouter')}
                 onBack={close}
             />
 
@@ -118,33 +121,34 @@ export default function EditBikePage() {
                         />
                     )}
                     <Text style={[styles.previewName, { color: colors.textMain }]}>
-                        {name.trim() || "Mon vélo"}
+                        {name.trim() || t('compte.velos.monVelo')}
                     </Text>
                     <Text style={[styles.previewType, { color: colors.textSecondary }]}>
-                        {BIKE_TYPES.find(t => t.value === selectedType)?.label}
-                        {isElectric ? " électrique" : ""}
+                        {/* i18n-suffixes: ville vtt route */}
+                        {t(`auth.velo.${selectedType}`)}
+                        {isElectric ? t('auth.velo.suffixeElectrique') : ""}
                     </Text>
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Nom du vélo</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.velo.nom')}</Text>
                     <TextInput
                         style={[styles.input, { backgroundColor: colors.bgSurface, color: colors.textMain, borderColor: colors.borderStrong }]}
                         value={name}
                         onChangeText={setName}
-                        placeholder="ex: Vélo de ville rouge"
+                        placeholder={t('auth.velo.nomPlaceholder')}
                         placeholderTextColor={colors.textSecondary}
                         maxLength={30}
                     />
                     {nameError && (
                         <Text style={{ color: colors.error, marginTop: 4 }}>
-                            Le vélo doit avoir un nom.
+                            {t('compte.velos.nomObligatoire')}
                         </Text>
                     )}
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Type de vélo</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.velo.typeVelo')}</Text>
                     <View style={styles.typeContainer}>
                         {BIKE_TYPES.map((type) => {
                             const isSelected = selectedType === type.value;
@@ -168,7 +172,8 @@ export default function EditBikePage() {
                                         { color: isSelected ? '#FFF' : colors.textMain },
                                         isSelected && { fontWeight: 'bold' }
                                     ]}>
-                                        {type.label}
+                                        {/* i18n-suffixes: ville vtt route */}
+                                        {t(`auth.velo.${type.value}`)}
                                     </Text>
                                 </TouchableOpacity>
                             );
@@ -177,7 +182,7 @@ export default function EditBikePage() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Assistance électrique</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.velo.assistance')}</Text>
                     <TouchableOpacity
                         style={[
                             styles.electricToggle,
@@ -196,7 +201,7 @@ export default function EditBikePage() {
                             { color: isElectric ? colors.primary : colors.textMain },
                             isElectric && { fontWeight: 'bold' }
                         ]}>
-                            {isElectric ? "Vélo électrique" : "Pas d'assistance électrique"}
+                            {isElectric ? t('auth.velo.veloElectrique') : t('auth.velo.sansAssistance')}
                         </Text>
                         <Ionicons
                             name={isElectric ? "checkmark-circle" : "ellipse-outline"}
@@ -209,18 +214,18 @@ export default function EditBikePage() {
 
                 <View style={styles.buttonWrapper}>
                     <Button
-                        title={isEditing ? "Modifier le vélo" : "Ajouter le vélo"}
+                        title={isEditing ? t('compte.velos.modifier') : t('compte.velos.ajouter')}
                         iconName="checkmark-circle-outline"
                         onPress={handleSave}
                         isLoading={isLoading}
                     />
                     <OutlineButton
-                        title="Annuler"
+                        title={t('commun.annuler')}
                         onPress={close}
                     />
                     {isEditing && (
                         <DangerButton
-                            title="Supprimer le vélo"
+                            title={t('compte.velos.supprimerTitre')}
                             iconName="trash-outline"
                             onPress={handleDelete}
                             style={{ marginTop: 15 }}

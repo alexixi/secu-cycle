@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Map, { Source, Layer, Popup, NavigationControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { FaLayerGroup } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../context/ThemeContext';
 import { trackEvent } from '../../services/analytics';
+import { carteLabel, legendLabel, themeLabel } from '../../i18n/carteLabels';
 import {
     getPois, getAccidents, getStreetlights, getLitRoads, getBikeshareStations, getTraffic,
 } from '../../services/apiBack';
@@ -16,8 +18,8 @@ import {
     LIGHTING_HEATMAP_PAINT, LIT_ROADS_GLOW_PAINT, LIT_ROADS_LINE_PAINT,
     ACCIDENT_HEAT_LAYER_ID, ACCIDENT_POINT_LAYER_ID, ACCIDENT_SWITCH_ZOOM,
     ACCIDENT_HEAT_PAINT, ACCIDENT_POINT_PAINT, ACCIDENT_DETAIL_FIELDS, formatAccidentDate,
-    TRAFFIC_LAYER_ID, TRAFFIC_HITBOX_LAYER_ID, TRAFFIC_COLORS, TRAFFIC_LABELS,
-    TRAFFIC_CYCLIST_HINT, TRAFFIC_LINE_PAINT,
+    TRAFFIC_LAYER_ID, TRAFFIC_HITBOX_LAYER_ID, TRAFFIC_COLORS, trafficLabel,
+    trafficCyclistHint, TRAFFIC_LINE_PAINT,
     BIKESHARE_ICON_LAYER_ID, BIKESHARE_HITBOX_LAYER_ID, BIKESHARE_BADGE_LAYER_ID,
     BIKESHARE_HAS_BADGE, BIKESHARE_HITBOX_PAINT, BIKESHARE_ICON_LAYOUT, BIKESHARE_ICON_PAINT,
     BIKESHARE_BADGE_LAYOUT, BIKESHARE_BADGE_PAINT, BIKESHARE_COLORS, BIKESHARE_LOGOS,
@@ -116,6 +118,7 @@ const INTERACTIVE_LAYERS = {
 };
 
 export default function ThematicMap({ city, theme, onData }) {
+    const { t } = useTranslation('carte');
     const mapRef = useRef();
     const imagesRef = useRef({});
     const fondsRef = useRef(null);
@@ -253,7 +256,7 @@ export default function ThematicMap({ city, theme, onData }) {
     if (prerender) {
         return (
             <div className="thematic-map thematic-map--placeholder">
-                <p>Carte interactive {city.prep} — {theme.label.toLowerCase()}.</p>
+                <p>{t('ui.carte.placeholderPrerendu', { prep: city.prep, ville: city.name, theme: themeLabel(theme).toLowerCase() })}</p>
             </div>
         );
     }
@@ -400,7 +403,7 @@ export default function ThematicMap({ city, theme, onData }) {
                                 onClick={() => handleStyleChange(style.id)}
                             >
                                 <span aria-hidden="true">{style.icon}</span>
-                                {style.label}
+                                {carteLabel('fond', style.id)}
                             </button>
                         ))}
                     </div>
@@ -411,8 +414,8 @@ export default function ThematicMap({ city, theme, onData }) {
                     className="thematic-map-fonds-toggle"
                     aria-expanded={menuFonds}
                     aria-haspopup="true"
-                    aria-label="Changer le fond de carte"
-                    title="Changer le fond de carte"
+                    aria-label={t('ui.carte.changerFond')}
+                    title={t('ui.carte.changerFond')}
                     onClick={() => setMenuFonds(ouvert => !ouvert)}
                 >
                     <FaLayerGroup size={16} aria-hidden="true" />
@@ -422,25 +425,25 @@ export default function ThematicMap({ city, theme, onData }) {
             {legende.length > 0 && (
                 <div className="thematic-map-legend">
                     {legende.map(item => (
-                        <span key={item.label} className="thematic-legend-item">
+                        <span key={item.key} className="thematic-legend-item">
                             <span className="thematic-legend-dot" style={{ backgroundColor: item.color }} />
-                            {item.label}
+                            {legendLabel(theme.slug, item.key)}
                         </span>
                     ))}
                 </div>
             )}
 
             {!collection && !erreur && (
-                <div className="thematic-map-overlay" role="status">Chargement des données…</div>
+                <div className="thematic-map-overlay" role="status">{t('ui.carte.chargementDonnees')}</div>
             )}
             {erreur && (
                 <div className="thematic-map-overlay thematic-map-overlay--error" role="alert">
-                    Les données ne sont pas disponibles pour le moment. Le fond de carte reste consultable.
+                    {t('ui.erreursCarte.donneesIndisponibles')}
                 </div>
             )}
             {collection && featureCount === 0 && !erreur && (
                 <div className="thematic-map-overlay" role="status">
-                    Aucune donnée sur cette emprise pour le moment.
+                    {t('ui.carte.aucuneDonnee')}
                 </div>
             )}
         </div>
@@ -448,6 +451,9 @@ export default function ThematicMap({ city, theme, onData }) {
 }
 
 function ThematicPopup({ active }) {
+    // Composant de premier niveau : il appelle le hook lui-même plutôt que de
+    // recevoir `t` en prop depuis ThematicMap.
+    const { t } = useTranslation('carte');
     const p = active.properties;
 
     if (active.kind === 'poi') {
@@ -461,13 +467,13 @@ function ThematicPopup({ active }) {
                     style={{ backgroundColor: poiAccentColor(p, category?.color || '#6b7280') }}
                 >
                     <img className="thematic-popup-icon" src={poiIconSrc(p)} alt="" />
-                    <span>{p.name || category?.label || 'Point d’intérêt'}</span>
+                    <span>{p.name || carteLabel('poi', p.category) || t('ui.carte.pointInteret')}</span>
                 </div>
                 <div className="thematic-popup-body">
-                    {details.length === 0 && <p>Aucun détail supplémentaire renseigné.</p>}
+                    {details.length === 0 && <p>{t('ui.carte.aucunDetail')}</p>}
                     {details.map(field => (
                         <p key={field.key}>
-                            {field.label} : <strong>{(field.format || formatPoiTag)(p[field.key])}</strong>
+                            {carteLabel('champPoi', field.key)} : <strong>{(field.format || formatPoiTag)(p[field.key])}</strong>
                         </p>
                     ))}
                 </div>
@@ -481,12 +487,12 @@ function ThematicPopup({ active }) {
         return (
             <>
                 <div className="thematic-popup-header" style={{ backgroundColor: '#dc2626' }}>
-                    <span>{p.severity_label ? `Accident — ${p.severity_label}` : 'Accident'}</span>
+                    <span>{p.severity_label ? t('ui.carte.accidentAvecGravite', { gravite: p.severity_label }) : t('ui.carte.accident')}</span>
                 </div>
                 <div className="thematic-popup-body">
-                    {date && <p>Date : <strong>{date}</strong></p>}
+                    {date && <p>{t('ui.carte.date')} : <strong>{date}</strong></p>}
                     {details.map(field => (
-                        <p key={field.key}>{field.label} : <strong>{p[field.key]}</strong></p>
+                        <p key={field.key}>{carteLabel('champAccident', field.key)} : <strong>{p[field.key]}</strong></p>
                     ))}
                 </div>
             </>
@@ -500,11 +506,11 @@ function ThematicPopup({ active }) {
                     className="thematic-popup-header"
                     style={{ backgroundColor: TRAFFIC_COLORS[p.level] || TRAFFIC_COLORS.gray }}
                 >
-                    <span>{TRAFFIC_LABELS[p.level] || 'État inconnu'}</span>
+                    <span>{trafficLabel(p.level)}</span>
                 </div>
                 <div className="thematic-popup-body">
-                    {p.commune && <p>Commune : <strong>{p.commune}</strong></p>}
-                    {TRAFFIC_CYCLIST_HINT[p.level] && <p>{TRAFFIC_CYCLIST_HINT[p.level]}</p>}
+                    {p.commune && <p>{t('ui.carte.commune')} : <strong>{p.commune}</strong></p>}
+                    {trafficCyclistHint(p.level) && <p>{trafficCyclistHint(p.level)}</p>}
                 </div>
             </>
         );
@@ -525,20 +531,20 @@ function ThematicPopup({ active }) {
                 {BIKESHARE_LOGOS[p.system] && (
                     <img className="thematic-popup-icon" src={BIKESHARE_LOGOS[p.system]} alt="" />
                 )}
-                <span>{p.name || 'Station'}</span>
+                <span>{p.name || t('ui.carte.station')}</span>
             </div>
             <div className="thematic-popup-body">
-                {off && <p>Station hors service.</p>}
+                {off && <p>{t('ui.carte.stationHorsService')}</p>}
                 {!off && bikes != null && (
-                    <p>Vélos disponibles : <strong>{bikes}</strong>
+                    <p>{t('ui.carte.velosDisponibles')} : <strong>{bikes}</strong>
                         {typeof p.bikes_electric === 'number' && p.bikes_electric > 0
-                            && <> dont <strong>{p.bikes_electric}</strong> électriques</>}
+                            && <> {t('ui.carte.dontElectriques', { n: p.bikes_electric })}</>}
                     </p>
                 )}
                 {typeof p.docks_available === 'number' && (
-                    <p>Places libres : <strong>{p.docks_available}</strong></p>
+                    <p>{t('ui.carte.placesLibres')} : <strong>{p.docks_available}</strong></p>
                 )}
-                {p.system_name && <p>Réseau : <strong>{p.system_name}</strong></p>}
+                {p.system_name && <p>{t('ui.carte.reseau')} : <strong>{p.system_name}</strong></p>}
                 {freshness && <p className="thematic-popup-note">{freshness}</p>}
             </div>
         </>

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'r
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { WEATHER_ALERT_COLORS, weatherIcon } from '../services/weather';
+import { useTranslation } from 'react-i18next';
 
 const SEVERITY = { severe: 3, warning: 2, watch: 1, none: 0 };
 
@@ -21,6 +22,7 @@ const SEVERITY = { severe: 3, warning: 2, watch: 1, none: 0 };
  */
 export default function WeatherPill({ zone, stale, rain, onPress, buttonStyle, frost }) {
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
     const { width } = useWindowDimensions();
     const summary = zone?.summary;
     if (!summary) return null;
@@ -36,13 +38,18 @@ export default function WeatherPill({ zone, stale, rain, onPress, buttonStyle, f
         ? { text: worst.label, level: worst.level }
         : (rain ? { text: rain.text, level: 'watch' } : null);
 
+    // Libellé lu par le lecteur d'écran : assemblé pièce par pièce, chaque
+    // fragment portant sa propre clé pour rester traduisible séparément.
     const spokenWind = wind?.speed != null
-        ? `, vent ${Math.round(wind.speed)} km/h${wind.cardinal ? ` de ${wind.cardinal}` : ''}`
+        ? t('meteo.pill.a11yVent', { vitesse: Math.round(wind.speed) })
+            + (wind.cardinal ? t('meteo.pill.a11yVentDirection', { cardinal: wind.cardinal }) : '')
         : '';
-    const label = `Météo : ${summary.label}`
-        + (summary.temperature != null ? `, ${Math.round(summary.temperature)} degrés` : '')
+    const label = t('meteo.pill.a11yMeteo', { condition: summary.label })
+        + (summary.temperature != null
+            ? t('meteo.pill.a11yTemperature', { degres: Math.round(summary.temperature) })
+            : '')
         + spokenWind
-        + (event ? `. ${event.text}` : '');
+        + (event ? t('meteo.pill.a11yEvenement', { evenement: event.text }) : '');
 
     const surface = { backgroundColor: colors.bgSurface };
 

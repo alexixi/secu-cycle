@@ -1,0 +1,228 @@
+{
+    "fond": {
+        "base": "Basic",
+        "streets": "Streets",
+        "outdoor": "Outdoor",
+        "hybrid": "Satellite"
+    },
+    "parking": {
+        "stands": "Stands",
+        "racks": "Racks, wheel benders",
+        "shelter": "Shelters and lockers",
+        "other": "Other, unspecified"
+    },
+    "toilettes": {
+        "free": "Free",
+        "paid": "Paid",
+        "unknown": "Unspecified"
+    },
+    "reparation": {
+        "selfservice": "Self-service",
+        "shop": "Workshop / shop"
+    },
+    "poi": {
+        "water": "Drinking water",
+        "toilets": "Toilets",
+        "parking": "Bike parking",
+        "repair": "Repair"
+    },
+    "champPoi": {
+        "parking_type": "Facility",
+        "toilet_fee": "Fee",
+        "repair_kind": "Type",
+        "opening_hours": "Opening hours",
+        "fee": "Paid",
+        "capacity": "Capacity",
+        "covered": "Covered",
+        "access": "Access",
+        "wheelchair": "Wheelchair accessible",
+        "seasonal": "Seasonal"
+    },
+    "champAccident": {
+        "light": "Light conditions",
+        "weather": "Weather",
+        "collision": "Collision type",
+        "road_type": "Road type",
+        "intersection": "Junction"
+    },
+    "tarif": {
+        "free": "Free",
+        "paid": "Paid",
+        "unknown": "Unspecified"
+    },
+    "vls": {
+        "bikes_mechanical": "Mechanical",
+        "bikes_electric": "Electric",
+        "docks_available": "Free docks",
+        "bikes_available": "Bikes"
+    },
+    "graviteAccident": {
+        "mortel": "Fatal accident",
+        "hospitalise": "Hospitalised injury",
+        "leger": "Slight injury"
+    },
+    "signalement": {
+        "accident": "Crash",
+        "travaux": "Roadworks",
+        "danger": "Hazard",
+        "obstacle": "Obstacle"
+    },
+    "ui": {
+        "fermer": "Close",
+        "carte": {
+            "oui": "Yes",
+            "non": "No"
+        },
+        "meteo": {
+            "titre": "Weather",
+            "sourcesAria": "Sources and method",
+            "precipitations": "Precipitation",
+            "vent": "Wind",
+            "vigilance": "Warnings",
+            "rienASignaler": "Nothing to report.",
+            "aPrevoir": "Coming up",
+            "prochainesHeures": "Next few hours",
+            "dernierReleveDispo": "Last available reading ({{heure}})",
+            "releveDe": "Reading from {{heure}}",
+            "echelle": "scale: {{mm}} mm / {{minutes}} min",
+            "ventDe": " from the {{cardinal}}",
+            "rafales": "Gusts up to {{vitesse}} km/h",
+            "pluiePersistante": "It is raining, and it is set to last.",
+            "accalmieDansVers": "Dry spell in ~{{minutes}} min (around {{heure}}).",
+            "accalmieDans": "Dry spell in ~{{minutes}} min.",
+            "accalmieVers": "A dry spell is forecast around {{heure}}.",
+            "accalmie": "A dry spell is forecast.",
+            "pluieDans": "Rain in ~{{minutes}} min.",
+            "pluieProchainesHeures": "Rain is forecast in the next few hours.",
+            "departConseille": "Leave around {{heure}} ({{minutes}} min from now): the shower will have passed.",
+            "cumulPeriode": "Total over the period: {{mm}} mm",
+            "nowcastExpire": "The 15-minute forecast has expired: the latest reading is too old to say anything about the next two hours.",
+            "nowcastHorsZone": "No 15-minute forecast for this area — it falls outside the fine-mesh models. Only the hourly probabilities are reliable here.",
+            "ressenti": "Feels like {{degres}} °C",
+            "indisponible": "Weather temporarily unavailable.",
+            "vitesseVent": "{{vitesse}} km/h",
+            "alerteVers": " around {{heure}}",
+            "alerteSource": " · {{source}}"
+        },
+        "eclairage": {
+            "h2": "Street lighting",
+            "ruesEclairees": "<b>Lit streets</b>: streets tagged as lit in OpenStreetMap. Not every road carries that information, which is why we infer lighting for some roads from nearby street lights or from an adjacent lit street.",
+            "sourcesZone": "Sources for this area",
+            "chargement": "Loading…",
+            "aucunLampadaire": "No street lights synced for this area.",
+            "lampadairesMobile": "The street lamps themselves (OpenStreetMap and open data from metropolitan areas) are not shown on mobile: there are too many of them for the phone’s memory. They are still used to infer the lit streets above, and remain visible on the web version.",
+            "avertissementMobile": "A street that is not highlighted is not necessarily unlit: most of the time, the data is simply missing. Few French cities publish an open dataset of street lamps, and OpenStreetMap is not complete everywhere, especially in rural areas.",
+            "sourcePoints": "• {{attribution}}",
+            "sourcePointsCompte": "• {{attribution}} — {{n}} points"
+        },
+        "meteoModal": {
+            "h2": "Weather",
+            "releve": "The reading is taken at a single point in the centre of the urban area, and the banner carries the highest alert level of the moment. It is a regional level: a storm cell is 5 to 15 km across and we only sample one point. Hence “Storm risk”, never “Storm on your route”.",
+            "avertissement": "So we speak of a storm risk, never of a storm on your route. The weather does not change the calculated route: it informs you, it does not send you on a detour based on a forecast of this resolution.",
+            "pluie30": "Rain in the next 30 minutes",
+            "pluie30Texte": "The 15-minute forecast comes from the fine-mesh models AROME (Météo-France) and ICON-D2 (DWD). Outside their coverage it is not shown at all, rather than being silently interpolated from the hourly forecast.",
+            "sources": "Sources",
+            "sourcesTexte": "Forecasts: Open-Meteo (DWD ICON-D2, Météo-France AROME, NOAA GFS).",
+            "ventPonts": "Wind adjusts the displayed duration of the route, never the route itself. Below 3 °C, bridges of at least 30 m are flagged: a deck loses heat from both faces and freezes one to two hours before the nearby roadway.",
+            "ventPontsTitre": "Wind and bridges"
+        },
+        "airModal": {
+            "h2": "Air quality",
+            "cellulesTexte": "The index shown is the European Air Quality Index (EAQI), computed by the European Copernicus service (CAMS). Each coloured cell covers about {{resolution}} km across: this is a regional level",
+            "cellulesAvertissement": "At this resolution, two neighbouring streets share the same index. For route calculation, when regional air quality worsens, the algorithm relies on an exposure indicator inferred from the road network to favour the streets furthest from traffic.",
+            "pastilles": "Ground sensors (dots)",
+            "pastillesTexte": "The dots are real measuring stations. A model such as CAMS can lag behind a sudden, local event; a station measures the air with no delay. When a nearby station records a peak, the route takes it into account even if the cells stay calm.",
+            "sources": "Sources",
+            "sourcesTexte": "Cells: CAMS ENSEMBLE, redistributed by Open-Meteo (forecast up to 24 h). Dots: World Air Quality Index Project (waqi.info)."
+        },
+        "controles": {
+            "infoAir": "About air quality",
+            "infoEclairage": "About street lighting",
+            "eclairagePublic": "Street lighting",
+            "pointsInteret": "Points of interest",
+            "stationsVelos": "Bike stations",
+            "accidentologie": "Accident data",
+            "accidentsVelo": "Bicycle accidents",
+            "calques": "Layers",
+            "fondCarte": "Base map",
+            "traficAutomobile": "Car traffic",
+            "accidentsAvertissement": "Accidents reported to the police: the absence of a point does not mean the absence of danger.",
+            "zoomerPoi": "Zoom in to reveal the points of interest."
+        },
+        "popupCarte": {
+            "capteurSol": "Ground sensor · US AQI scale",
+            "niRetraitNiRetour": "Neither pick-up nor drop-off possible.",
+            "retourImpossible": "Bike drop-off not possible.",
+            "stationPleine": "Station full: no drop-off possible.",
+            "donneesNonRafraichies": "Last available reading, data not refreshed.",
+            "accidentVelo": "Cycling accident",
+            "stationVelos": "Bike station",
+            "stationHorsService": "Station out of service",
+            "disponibiliteInconnue": "Availability unknown",
+            "velosDisponibles_one": "{{count}} bike available",
+            "velosDisponibles_other": "{{count}} bikes available",
+            "voteLaMobile": "👍 {{count}} there",
+            "votePasLaMobile": "👎 {{count}} not there"
+        },
+        "abus": {
+            "titre": "Report this content",
+            "bloquer": "Block this author",
+            "bloquerAide": "You will no longer see any of their reports. Reversible from the settings.",
+            "delai": "We review every report within 24 hours. Past two reports, the content disappears from the map pending our decision.",
+            "motif": {
+                "offensive": {
+                    "label": "Offensive content",
+                    "aide": "Insults, hate, inappropriate remarks"
+                },
+                "spam": {
+                    "label": "Spam or advertising",
+                    "aide": "Message unrelated to cycling safety"
+                },
+                "wrong_place": {
+                    "label": "Bogus report",
+                    "aide": "Invented danger, or placed anywhere"
+                },
+                "other": {
+                    "label": "Other reason"
+                }
+            },
+            "issue": {
+                "envoiEnCours": "Sending…",
+                "reported": {
+                    "titre": "Thank you",
+                    "corps": "Your report has been sent. We will review it within 24 hours."
+                },
+                "blocked": {
+                    "titre": "Author blocked",
+                    "corps": "You will no longer see their reports. You can undo this block in the settings."
+                },
+                "error": {
+                    "titre": "Could not send",
+                    "corps": "Your report could not be sent. Check your connection and try again."
+                }
+            }
+        },
+        "signalement": {
+            "titre": "Report an incident",
+            "question": "What kind of incident are you facing?",
+            "description": "Description (optional)...",
+            "envoyer": "Send the report",
+            "confirmer": "Confirm",
+            "pasLa": "Not there",
+            "yAller": "Go there",
+            "supprimerCeSignalement": "Delete this report"
+        },
+        "position": {
+            "introuvable": "Position not found",
+            "patienter": "Please wait while we look for your GPS position."
+        },
+        "station": {
+            "capacite": "{{n}} docking points",
+            "reseau": "Network: {{nom}}",
+            "releve": "Reading: {{heure}}",
+            "gravite": "Severity: {{niveau}}",
+            "aqi": "AQI {{indice}} · {{label}}",
+            "indiceAir": "Index {{indice}} · {{label}}"
+        }
+    }
+}

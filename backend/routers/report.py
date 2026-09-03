@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 from typing import List
 from datetime import datetime
 from database import get_db
+from i18n import get_locale, t
 from models.report import Report
 from models.report_abuse import ReportAbuse
 from models.report_vote import ReportVote
@@ -40,11 +41,12 @@ def create_report(
     report: ReportCreate,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
+    locale: str = Depends(get_locale),
 ):
     if current_user.reports_blocked:
         raise HTTPException(
             status_code=403,
-            detail="Vous n'êtes plus autorisé à déposer des signalements.",
+            detail=t("error.report.banned", locale),
         )
     db_report = Report(
         user_id=current_user.id,
@@ -167,11 +169,12 @@ def set_report_verified(
     payload: ReportVerifyUpdate,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Marque un signalement comme vérifié (toujours actif) ou retire ce statut."""
     report = db.query(Report).filter(Report.id == report_id).first()
     if not report:
-        raise HTTPException(status_code=404, detail="Signalement introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.report.not_found", locale))
 
     report.is_verified = payload.is_verified
     db.commit()
@@ -214,6 +217,7 @@ def vote_report(
     vote: ReportVoteCreate,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
+    locale: str = Depends(get_locale),
 ):
     """Confirme (« Là ») ou infirme (« Pas là ») un signalement.
 
@@ -222,11 +226,11 @@ def vote_report(
     """
     report = db.query(Report).filter(Report.id == report_id).first()
     if not report:
-        raise HTTPException(status_code=404, detail="Signalement introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.report.not_found", locale))
     if report.user_id == current_user.id:
         raise HTTPException(
             status_code=403,
-            detail="Vous ne pouvez pas voter sur votre propre signalement.",
+            detail=t("error.report.self_vote", locale),
         )
 
     existing = (
@@ -268,6 +272,7 @@ def report_abuse(
     data: ReportAbuseCreate,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
+    locale: str = Depends(get_locale),
 ):
     """Dénonce un signalement pour contenu répréhensible.
 
@@ -277,12 +282,12 @@ def report_abuse(
     """
     report = db.query(Report).filter(Report.id == report_id).first()
     if report is None:
-        raise HTTPException(status_code=404, detail="Signalement introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.report.not_found", locale))
 
     if report.user_id == current_user.id:
         raise HTTPException(
             status_code=400,
-            detail="Vous ne pouvez pas dénoncer votre propre signalement.",
+            detail=t("error.report.self_flag", locale),
         )
 
     existing = (
@@ -314,6 +319,7 @@ def block_report_author(
     report_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
+    locale: str = Depends(get_locale),
 ):
     """Masque tous les signalements de l'auteur de ce signalement, pour l'appelant.
 
@@ -322,15 +328,15 @@ def block_report_author(
     """
     report = db.query(Report).filter(Report.id == report_id).first()
     if report is None:
-        raise HTTPException(status_code=404, detail="Signalement introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.report.not_found", locale))
 
     if report.user_id is None:
         raise HTTPException(
             status_code=400,
-            detail="Ce signalement n'a plus d'auteur, il n'y a personne à bloquer.",
+            detail=t("error.report.no_author", locale),
         )
     if report.user_id == current_user.id:
-        raise HTTPException(status_code=400, detail="Vous ne pouvez pas vous bloquer vous-même.")
+        raise HTTPException(status_code=400, detail=t("error.report.self_block", locale))
 
     already = (
         db.query(UserBlock)
@@ -343,13 +349,14 @@ def block_report_author(
 
 
 @router.delete("/{report_id}", status_code=204)
-def delete_report(report_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def delete_report(report_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),
+                  locale: str = Depends(get_locale)):
     query = db.query(Report).filter(Report.id == report_id)
     if not is_user_admin(current_user):
         query = query.filter(Report.user_id == current_user.id)
     report = query.first()
     if not report:
-        raise HTTPException(status_code=404, detail="Signalement introuvable.")
+        raise HTTPException(status_code=404, detail=t("error.report.not_found", locale))
     db.delete(report)
     db.commit()
     route_cache.invalidate()

@@ -12,12 +12,14 @@ import { ScreenHeader } from "../components/ui/ScreenHeader";
 import { SwipeBackScreen } from "../components/SwipeBackScreen";
 
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 
 const MIN_PASSWORD_LENGTH = 10;
 
 export default function ChangePasswordPage() {
     const router = useRouter();
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const { token } = useAuth();
 
     const [oldPassword, setOldPassword] = useState("");
@@ -30,13 +32,13 @@ export default function ChangePasswordPage() {
 
     const handleConfirm = async () => {
         if (newPassword.length < MIN_PASSWORD_LENGTH) {
-            setError(`Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`);
+            setError(t('compte.modales.motDePasse.tropCourt', { min: MIN_PASSWORD_LENGTH }));
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            setError("Les nouveaux mots de passe ne correspondent pas.");
+            setError(t('compte.modales.motDePasse.discordants'));
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
             return;
         }
@@ -49,8 +51,8 @@ export default function ChangePasswordPage() {
             router.back();
         } catch (err) {
             setError(err?.status === 401
-                ? "Ancien mot de passe incorrect."
-                : "Une erreur est survenue lors de la modification.");
+                ? t('compte.modales.motDePasse.actuelIncorrect')
+                : t('compte.modales.motDePasse.erreurModification'));
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { })
         } finally {
             setIsLoading(false);
@@ -64,12 +66,12 @@ export default function ChangePasswordPage() {
             style={[styles.container, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContainer}
         >
-            <ScreenHeader title="Modifier le mot de passe" onBack={close} />
+            <ScreenHeader title={t('compte.modales.motDePasse.titre')} onBack={close} />
 
             <View style={styles.formContainer}>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Ancien mot de passe</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('compte.modales.motDePasse.actuel')}</Text>
                     <PasswordInput
                         password={oldPassword}
                         setPassword={setOldPassword}
@@ -79,7 +81,7 @@ export default function ChangePasswordPage() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Nouveau mot de passe</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('compte.modales.motDePasse.nouveau')}</Text>
                     <PasswordInput
                         password={newPassword}
                         setPassword={setNewPassword}
@@ -87,11 +89,11 @@ export default function ChangePasswordPage() {
                         setHasError={setPasswordError}
                         autoComplete="new-password"
                     />
-                    <Text style={[styles.helpText, { color: colors.textSecondary }]}>Au moins {MIN_PASSWORD_LENGTH} caractères.</Text>
+                    <Text style={[styles.helpText, { color: colors.textSecondary }]}>{t('compte.modales.motDePasse.regle', { min: MIN_PASSWORD_LENGTH })}</Text>
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Confirmation</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('compte.modales.motDePasse.confirmation')}</Text>
                     <PasswordInput
                         password={confirmPassword}
                         setPassword={setConfirmPassword}
@@ -107,7 +109,7 @@ export default function ChangePasswordPage() {
 
                 <View style={styles.buttonWrapper}>
                     <Button
-                        title="Confirmer le changement"
+                        title={t('compte.modales.motDePasse.confirmer')}
                         onPress={handleConfirm}
                         isLoading={isLoading}
                         disabled={!oldPassword || !newPassword || newPassword !== confirmPassword || newPassword.length < MIN_PASSWORD_LENGTH}

@@ -8,6 +8,13 @@ function clearSession() {
     STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
 }
 
+const API_LANG = "fr";
+
+function withLang(url) {
+    const path = url.toString();
+    return `${path}${path.includes("?") ? "&" : "?"}lang=${API_LANG}`;
+}
+
 function getApiBaseUrl() {
     const url = import.meta.env.VITE_API_BASE_URL;
     if (!url) {
@@ -20,7 +27,7 @@ async function refreshAccessToken() {
     const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) return null;
     try {
-        const response = await fetch(`${getApiBaseUrl()}/users/refresh`, {
+        const response = await fetch(`${getApiBaseUrl()}${withLang("/users/refresh")}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ refresh_token: refreshToken }),
@@ -47,7 +54,7 @@ export async function apiFetch(url, options = {}, token = null, _retried = false
         headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${getApiBaseUrl()}${url}`, { ...options, headers });
+    const response = await fetch(`${getApiBaseUrl()}${withLang(url)}`, { ...options, headers });
 
     if (!response.ok) {
         const errorData = await response.text();
@@ -122,66 +129,6 @@ export async function setReportVerified(token, reportId, isVerified) {
     return apiFetch(`/reports/${reportId}/verify`, {
         method: "PATCH",
         body: JSON.stringify({ is_verified: isVerified }),
-    }, token);
-}
-
-// --- Cases de la page d'accueil ---
-
-export async function getHomeCases(token) {
-    return apiFetch("/home-cases/", { method: "GET" }, token);
-}
-
-export async function createHomeCase(token, body) {
-    return apiFetch("/home-cases/", {
-        method: "POST",
-        body: JSON.stringify(body),
-    }, token);
-}
-
-export async function updateHomeCase(token, caseId, updates) {
-    return apiFetch(`/home-cases/${caseId}`, {
-        method: "PATCH",
-        body: JSON.stringify(updates),
-    }, token);
-}
-
-export async function deleteHomeCase(token, caseId) {
-    return apiFetch(`/home-cases/${caseId}`, { method: "DELETE" }, token);
-}
-
-export async function reorderHomeCases(token, ids) {
-    return apiFetch("/home-cases/reorder", {
-        method: "PUT",
-        body: JSON.stringify({ ids }),
-    }, token);
-}
-
-export async function getFaqs(token) {
-    return apiFetch("/faqs/admin", { method: "GET" }, token);
-}
-
-export async function createFaq(token, body) {
-    return apiFetch("/faqs/", {
-        method: "POST",
-        body: JSON.stringify(body),
-    }, token);
-}
-
-export async function updateFaq(token, faqId, updates) {
-    return apiFetch(`/faqs/${faqId}`, {
-        method: "PATCH",
-        body: JSON.stringify(updates),
-    }, token);
-}
-
-export async function deleteFaq(token, faqId) {
-    return apiFetch(`/faqs/${faqId}`, { method: "DELETE" }, token);
-}
-
-export async function reorderFaqs(token, ids) {
-    return apiFetch("/faqs/reorder", {
-        method: "PUT",
-        body: JSON.stringify({ ids }),
     }, token);
 }
 

@@ -1,0 +1,44 @@
+{
+    "titrePage": "Sécu'Cycle | FAQ",
+    "metaDescription": "Sécu'Cycle frequently asked questions: safer bike routes, how it works, areas covered, mobile app, data sources and user accounts.",
+    "h1": "Frequently asked questions",
+    "intro": "Here are the answers to the questions we get most often about Sécu'Cycle, the safer bike routing service. Another question? Write to us at <mail>contact@secu-cycle.fr</mail>.",
+    "questions": {
+        "quoi": {
+            "question": "What is Sécu'Cycle?",
+            "reponse": "Sécu'Cycle is a free service — a website and a mobile app — that helps cyclists find safer routes. Rather than offering the shortest trip, Sécu'Cycle works out a route that puts safety first, based on your profile, your preferences and your equipment. It was originally built by six students at ENSEIRB-MATMECA (Bordeaux INP) as their final-year project, with an initial focus on the Bordeaux metropolitan area. Development has continued since, to keep growing the project."
+        },
+        "calcul": {
+            "question": "How is a safer route calculated?",
+            "reponse": "Sécu'Cycle relies on a road graph built from OpenStreetMap, enriched with IGN elevation data, official road crash records, street lighting, real-time road traffic and air quality. Every segment is given a safety score out of 10 that accounts for cycling infrastructure, road type, surface, lighting, gradient, motor traffic and crashes recorded nearby. The route we suggest is the one that minimises this overall safety cost, not merely the distance. How much weight each criterion carries is adjusted to your profile and your equipment."
+        },
+        "gratuit": {
+            "question": "Is Sécu'Cycle free?",
+            "reponse": "Yes. Both the website and the mobile app are entirely free and ad-free. Sécu'Cycle is a non-profit student project."
+        },
+        "villes": {
+            "question": "Which cities does Sécu'Cycle cover?",
+            "reponse": "Route planning covers Bordeaux Métropole and southern Bordeaux, along with Tournai, Mouscron and the surrounding municipalities, in the cross-border area between France and Belgium. These are the areas where we refined the data using our own knowledge of the ground. Outside them no route can be computed: the road network used for the calculation is held in memory, which limits how far it can extend. The <carte>thematic maps</carte>, by contrast, cover a far wider territory: that data lives in a database rather than in memory, so there is no reason for the two footprints to match. They are available for <bordeaux>Bordeaux</bordeaux>, <rennes>Rennes</rennes>, <nantes>Nantes</nantes>, <paris>Paris</paris>, <lyon>Lyon</lyon>, <lille>Lille</lille>, <strasbourg>Strasbourg</strasbourg>, <tournai>Tournai</tournai> and <bruxelles>Brussels</bruxelles>, and cover — depending on the city — bike parking, drinking water, public toilets, repair stations, bike-share docks, road crashes, street lighting and road traffic. A city can therefore have its maps without a <itineraire>route</itineraire> being computable there."
+        },
+        "compte": {
+            "question": "Do I need an account to use Sécu'Cycle?",
+            "reponse": "You can plan a route without an account. Creating a free account lets you save your profile and your equipment, set favourite addresses, keep a history of your trips, and tailor your routes further."
+        },
+        "application": {
+            "question": "Is there a mobile app?",
+            "reponse": "Yes, a Sécu'Cycle mobile app is available alongside the website. It plans routes just as the website does, and can also start guided navigation so you can follow your route in real time. For now the app is only available on Android."
+        },
+        "donnees": {
+            "question": "Where does the data come from?",
+            "reponse": "Sécu'Cycle combines around fifteen datasets, almost all of them open: OpenStreetMap (ODbL) for the road network, cycling infrastructure, surface and lighting; IGN for elevation; the “Accidents de vélo” dataset derived from the ONISR BAAC files in France and Statbel data in Belgium for road crashes; the open data portals of Bordeaux Métropole, Eurométropole de Strasbourg, Rennes Métropole and Nantes Métropole for real-time traffic; GBFS feeds from nine bike-share systems; the European air quality index from the Copernicus service (CAMS), supplemented by the World Air Quality Index; the Base Adresse Nationale for French addresses; and MapTiler for base maps and geocoding outside France. Every source, what we use it for, its licence and its producer are listed on the data sources page: <donnees>secu-cycle.fr/en/data-sources</donnees>"
+        },
+        "accidents": {
+            "question": "How reliable is the crash data?",
+            "reponse": "It comes from official registers: the ONISR BAAC files in France, and Statbel's geolocated data in Belgium. These registers only record injury crashes reported to the police, however: falls not involving another party are heavily under-represented, and geocoding is patchier outside built-up areas. We account for this in the calculation: the crash penalty is capped at 1.5 points out of 10 and is strictly subtractive, so a segment with no recorded crash keeps its infrastructure score, and an area poorly covered by the data is never favoured. A segment with no recorded crash is not necessarily a safe one."
+        },
+        "signalement": {
+            "question": "How do I report a problem or a hazard on a route?",
+            "reponse": "You can report a hazard or a problem directly from the mobile app. These reports help improve the quality of the routes we suggest. For anything else, get in touch at contact@secu-cycle.fr."
+        }
+    }
+}

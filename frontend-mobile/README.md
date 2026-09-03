@@ -38,3 +38,43 @@ si `version` n'a pas été bumpée. Sur `dev`, il ne publie rien et se contente 
 preview ne sont **jamais** rebuildés automatiquement, il faut lancer `eas build -p android --profile preview`
 quand un test sur téléphone est nécessaire. Voir la section « Mises à jour de l'application mobile » du
 [README racine](../README.md#mises-à-jour-de-lapplication-mobile-ota).
+
+## Internationalisation
+
+L'application est disponible en français et en anglais. Le sélecteur est dans **Paramètres →
+Langue**, à trois positions : « Auto » suit la langue du téléphone, les deux autres la forcent.
+
+Les catalogues vivent dans `i18n/locales/{fr,en}/`, un fichier par domaine, réunis en un
+**namespace unique** par `i18n/catalogues.js` : la clé écrite dans le code est donc exactement
+la clé du catalogue, ce qui la rend vérifiable statiquement.
+
+```jsx
+const { t } = useTranslation();
+<Text>{t('parametres.langue.titre')}</Text>
+<Text>{t('compte.historique.minutes', { valeur: 12 })}</Text>
+```
+
+Trois règles :
+
+- **Dans un composant, toujours `useTranslation()`** — jamais `i18n.t` ni `i18n.language`. Le
+  React Compiler est actif : une lecture hors du flux React peut ne pas être rejouée au
+  changement de langue. `i18n.t` reste la bonne solution **hors** React (`services/`).
+- **Pas de libellé dans une table au niveau module** : elle serait figée à la langue du
+  chargement du bundle. Garder l'identifiant, traduire au rendu.
+- **Les dates et les nombres passent par `useFormat()`** (ou `makeFormatters()` hors React), pas
+  par `toLocaleDateString('fr-FR')` — et jamais par un `.replace('.', ',')`.
+
+Avant de pousser :
+
+```sh
+node scripts/check-i18n.mjs   # ou `make check-i18n` à la racine, pour les trois plateformes
+```
+
+Il vérifie la parité fr/en, l'existence des clés appelées, et l'absence de texte français en
+dur. Pour un cas légitime — nom propre, attribution de source, repli de compatibilité — poser
+`// i18n-exempt: <raison>` sur la ligne précédente, ou encadrer par
+`// i18n-exempt-start: <raison>` … `// i18n-exempt-end`. La raison est obligatoire.
+
+> ⚠️ Le nom de l'application et les demandes de permission viennent de la clé `locales` d'
+> `app.config.js` et suivent la **langue du système**, pas la préférence choisie dans
+> l'application : iOS lit l'Info.plist avant tout code JS.

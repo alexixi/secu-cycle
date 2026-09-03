@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceEventEmitter } from 'react-native';
 import { useRouter } from 'expo-router';
+import { syncProfileLanguage } from '../services/profileLanguage';
 import { saveAccessToken, getAccessToken, saveRefreshToken, clearTokens } from '../services/tokenStorage';
 
 const AuthContext = createContext();
@@ -55,6 +56,14 @@ export const AuthProvider = ({ children }) => {
     const updateUser = async (userData) => {
         setUser(userData);
         await AsyncStorage.setItem('user', JSON.stringify(userData));
+
+        // Premier moment où l'on connaît la langue du compte : celle-ci peut
+        // dater d'une inscription faite dans l'autre langue, ou sur le web. Sans
+        // ce rattrapage ici, se connecter depuis une app réglée en anglais à un
+        // compte créé en français laisserait les e-mails en français jusqu'au
+        // prochain démarrage. Aucun appel réseau si le profil est déjà aligné.
+        const langue = await syncProfileLanguage();
+        if (langue) setUser((actuel) => ({ ...actuel, language: langue }));
     }
 
     const updateBikes = async (bikesData) => {

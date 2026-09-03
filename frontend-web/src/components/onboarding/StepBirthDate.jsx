@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import StepFooter from "./StepFooter";
 import "../ui/Input.css";
 import "../ui/Form.css";
@@ -18,6 +19,7 @@ const computeAge = (dateStr) => {
 };
 
 export default function StepBirthDate({ birthDate, setBirthDate, onNext, onSkip, isLoading }) {
+    const { t } = useTranslation('auth');
     const age = birthDate ? computeAge(birthDate) : null;
     const tooYoung = age !== null && age < MIN_AGE;
 
@@ -25,11 +27,11 @@ export default function StepBirthDate({ birthDate, setBirthDate, onNext, onSkip,
 
     return (
         <div className="form onboarding-form">
-            <h2>Votre date de naissance</h2>
-            <p className="onboarding-subtitle">Cette information est facultative.</p>
+            <h2>{t('onboarding.naissance.h2')}</h2>
+            <p className="onboarding-subtitle">{t('onboarding.facultatif')}</p>
 
             <div className={`input-group ${tooYoung ? "input-error" : ""}`}>
-                <label htmlFor="birthdate">Date de naissance</label>
+                <label htmlFor="birthdate">{t('onboarding.naissance.label')}</label>
                 <input
                     className="input"
                     type="date"
@@ -41,7 +43,7 @@ export default function StepBirthDate({ birthDate, setBirthDate, onNext, onSkip,
                 />
                 {tooYoung && (
                     <div className="error-text">
-                        Vous devez avoir au moins {MIN_AGE} ans pour utiliser l&apos;application.
+                        {t('onboarding.naissance.ageMinimum', { min: MIN_AGE })}
                     </div>
                 )}
             </div>

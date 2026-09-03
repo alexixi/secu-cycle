@@ -27,6 +27,7 @@ from datetime import datetime, timezone
 
 from air_quality import config, providers
 from graph.extent import contains, graph_zones
+from i18n import DEFAULT_LOCALE, t
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,6 @@ class _State:
         self.stale = False
         self.aqi_mean = None
         self.band = None
-        self.label = None
         self.dominant = None
         self.forecast = []
         self.intensity = 0.0
@@ -57,7 +57,9 @@ class _State:
         # moyenne, conservée pour les clients qui ne lisent pas `zones`.
         self.zones = []
 
-    def as_dict(self):
+    def as_dict(self, locale=DEFAULT_LOCALE):
+        bande = lambda cle: t(f"air.band.{cle}", locale) if cle else None
+        polluant = lambda cle: t(f"air.pollutant.{cle}", locale) if cle else None
         return {
             "available": self.available,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
@@ -68,26 +70,35 @@ class _State:
             "summary": {
                 "aqi": self.aqi_mean,
                 "band": self.band,
-                "label": self.label,
-                "dominant": self.dominant,
+                "label": bande(self.band),
+                "dominant": polluant(self.dominant),
             },
-            "forecast": list(self.forecast),
+            "forecast": [{**e, "label": bande(e["band"])} for e in self.forecast],
             "zones": [
                 {
                     "bbox": list(zone["bbox"]),
                     "summary": {
                         "aqi": zone["aqi"],
                         "band": zone["band"],
-                        "label": zone["label"],
-                        "dominant": zone["dominant"],
+                        "label": bande(zone["band"]),
+                        "dominant": polluant(zone["dominant"]),
                     },
-                    "forecast": list(zone["forecast"]),
+                    "forecast": [{**e, "label": bande(e["band"])} for e in zone["forecast"]],
                 }
                 for zone in self.zones
             ],
-            "geojson": {"type": "FeatureCollection", "features": self.features},
+            "geojson": {"type": "FeatureCollection", "features": [
+                {**f, "properties": {**f["properties"],
+                                     "label": bande(f["properties"]["band"]),
+                                     "dominant": polluant(f["properties"]["dominant"])}}
+                for f in self.features
+            ]},
             # Capteurs sol WAQI : calque distinct, échelle AQI US, mesures réelles.
-            "stations": {"type": "FeatureCollection", "features": self.stations},
+            "stations": {"type": "FeatureCollection", "features": [
+                {**f, "properties": {**f["properties"],
+                                     "label": t(f"air.us_band.{f['properties']['us_band']}", locale)}}
+                for f in self.stations
+            ]},
             "stations_attribution": config.ATTRIBUTION_WAQI,
         }
 
@@ -96,9 +107,9 @@ _state = _State()
 _intensity_key = None
 
 
-def snapshot() -> dict:
-    """Instantané courant. Lecture pure, aucun appel réseau."""
-    return _state.as_dict()
+def snapshot(locale: str = DEFAULT_LOCALE) -> dict:
+    """Instantané courant, rendu dans `locale`. Lecture pure, aucun appel réseau."""
+    return _state.as_dict(locale)
 
 
 def _mesh(zones, step) -> tuple[list[tuple[float, float]], list[int]]:
@@ -171,16 +182,16 @@ def grid_points(zones) -> tuple[list[tuple[float, float]], list[int], float]:
 def _dominant(current: dict) -> str | None:
     """Polluant dominant : sous-indice EAQI le plus élevé (le max fait l'indice)."""
     best = None
-    for key, label in config.POLLUTANT_SUBINDICES.items():
+    for key in config.POLLUTANT_SUBINDICES:
         value = current.get(key)
         if value is None:
             continue
         if best is None or value > best[0]:
-            best = (value, label)
+            best = (value, key)
     return best[1] if best else None
 
 
-def _cell_feature(lat, lon, step, aqi, band, label, dominant) -> dict:
+def _cell_feature(lat, lon, step, aqi, band, dominant) -> dict:
     """Polygon d'un pas de maille centré sur le point : la maille, visible, qui dit
     d'elle-même que ce n'est pas de la donnée rue.
 
@@ -200,7 +211,6 @@ def _cell_feature(lat, lon, step, aqi, band, label, dominant) -> dict:
         "properties": {
             "aqi": aqi,
             "band": band,
-            "label": label,
             "dominant": dominant,
         },
     }
@@ -208,14 +218,13 @@ def _cell_feature(lat, lon, step, aqi, band, label, dominant) -> dict:
 
 def _station_feature(s: dict) -> dict:
     """Point GeoJSON d'une station WAQI : la pastille cliquable, mesure réelle."""
-    key, label, color = config.us_band_for(s["aqi"])
+    key, color = config.us_band_for(s["aqi"])
     return {
         "type": "Feature",
         "geometry": {"type": "Point", "coordinates": [s["lon"], s["lat"]]},
         "properties": {
             "aqi": s["aqi"],
             "us_band": key,
-            "label": label,
             "color": color,
             "name": s["name"],
             "time": s["time"],
@@ -233,8 +242,7 @@ def _forecast(entry: dict) -> list[dict]:
         aqi = values[i]
         if aqi is None:
             continue
-        band, label = config.band_for(aqi)
-        out.append({"time": times[i], "aqi": aqi, "band": band, "label": label})
+        out.append({"time": times[i], "aqi": aqi, "band": config.band_for(aqi)})
     return out
 
 
@@ -292,9 +300,8 @@ def _apply_cams(zones, points, zone_index, step, raw_result):
         aqi = current.get("european_aqi")
         if aqi is None:
             continue
-        band, label = config.band_for(aqi)
         features.append(
-            _cell_feature(lat, lon, step, aqi, band, label, _dominant(current))
+            _cell_feature(lat, lon, step, aqi, config.band_for(aqi), _dominant(current))
         )
         aqis_by_zone[index].append(aqi)
 
@@ -306,14 +313,13 @@ def _apply_cams(zones, points, zone_index, step, raw_result):
     for index, zone in enumerate(zones):
         aqis = aqis_by_zone[index]
         mean = sum(aqis) / len(aqis) if aqis else None
-        band, label = config.band_for(mean) if mean is not None else (None, None)
+        band = config.band_for(mean) if mean is not None else None
         central = _central_entry(points, raw_result, members_by_zone[index])
         intensity = config.intensity_for(mean)
         zone_states.append({
             "bbox": zone,
             "aqi": round(mean) if mean is not None else None,
             "band": band,
-            "label": label,
             "dominant": _dominant((central or {}).get("current") or {}),
             "forecast": _forecast(central) if central else [],
             "intensity": intensity,
@@ -321,7 +327,7 @@ def _apply_cams(zones, points, zone_index, step, raw_result):
         intensities.append(intensity)
 
     aqi_mean = sum(all_aqis) / len(all_aqis)
-    band, label = config.band_for(aqi_mean)
+    band = config.band_for(aqi_mean)
     main = zone_states[0] if zone_states else {}
 
     _state.features = features
@@ -329,7 +335,6 @@ def _apply_cams(zones, points, zone_index, step, raw_result):
     _state.zones = zone_states
     _state.aqi_mean = round(aqi_mean)
     _state.band = band
-    _state.label = label
     # Résumé global : l'indice est bien la moyenne de la maille, mais le polluant
     # dominant et la prévision sont ceux de la zone principale — entrelacer les
     # prévisions de deux villes éloignées ne voudrait rien dire.

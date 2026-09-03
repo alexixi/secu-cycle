@@ -1,142 +1,82 @@
 import { Link } from "react-router";
+import { Trans, useTranslation } from "react-i18next";
 import Meta from "../components/Meta";
 import "./legal.css";
+import { useLocalizedPath } from '../i18n/useLang';
 
-const SUPPRIME = [
-    ["Compte et identifiants", "Adresse e-mail, mot de passe, sessions de connexion ouvertes sur tous vos appareils"],
-    ["Informations personnelles", "Prénom, nom, date de naissance, niveau sportif"],
-    ["Adresses", "Adresse de domicile et adresse de travail"],
-    ["Vélos", "Nom, type et assistance électrique de chacun de vos vélos"],
-    ["Itinéraires et historique", "Points de départ et d'arrivée, tracés calculés, historique de vos trajets"],
-    ["Badges", "Badges obtenus et progression associée"],
-];
-
-const CONSERVE = [
-    [
-        "Signalements de dangers",
-        "Ils restent visibles pour les autres cyclistes, mais leur lien avec votre compte est supprimé : plus rien ne permet de vous les rattacher. Cette conservation répond à un intérêt légitime, la sécurité des cyclistes.",
-    ],
-    [
-        "Journaux techniques",
-        "Les journaux du serveur (horodatage, adresse IP, requête) sont conservés 12 mois au maximum, à des fins de sécurité et de diagnostic.",
-    ],
-    [
-        "Statistiques d'audience",
-        "Elles sont anonymes et agrégées dès l'origine : elles ne contiennent aucune donnée permettant de vous identifier, et ne peuvent donc pas être rattachées à un compte pour en être retirées.",
-    ],
-];
+// Lignes des deux tableaux : seules les clés vivent ici, les libellés sont au
+// catalogue sous <clé>Nom et <clé>Detail.
+const SUPPRIME = ["compte", "identite", "adresses", "velos", "itineraires", "badges"];
+const CONSERVE = ["signalements", "journaux", "statistiques"];
 
 export default function SuppressionComptePage() {
+    const { t } = useTranslation('legal');
+    const path = useLocalizedPath();
+
+    const composants = {
+        b: <strong />,
+        mail: <a href="mailto:contact@secu-cycle.fr" />,
+        profil: <Link to={path("profil")} />,
+        confidentialite: <Link to={path("confidentialite")} />,
+        contact: <Link to={path("contact")} />,
+    };
+    const T = ({ k }) => <Trans t={t} i18nKey={k} components={composants} />;
+
+    const Tableau = ({ section, cles, colonnes }) => (
+        <div className="legal-table-wrapper">
+            <table className="legal-table">
+                <thead>
+                    <tr>{colonnes.map(c => <th key={c}>{t(`suppression.${section}.${c}`)}</th>)}</tr>
+                </thead>
+                <tbody>
+                    {cles.map(cle => (
+                        <tr key={cle}>
+                            <td><strong>{t(`suppression.${section}.${cle}Nom`)}</strong></td>
+                            <td>{t(`suppression.${section}.${cle}Detail`)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+
     return (
         <>
-            <Meta
-                title="Sécu'Cycle | Supprimer mon compte"
-                description="Comment supprimer votre compte Sécu'Cycle depuis l'application mobile ou le site, quelles données sont effacées et lesquelles sont conservées."
-            />
+            <Meta title={t('suppression.titrePage')} description={t('suppression.metaDescription')} />
             <div className="legal-page">
                 <article className="legal-content">
-                    <h1>Supprimer mon compte</h1>
-                    <p className="legal-updated">Dernière mise à jour : 24 août 2026</p>
-
-                    <p>
-                        Vous pouvez supprimer votre compte Sécu'Cycle à tout moment, sans avoir à nous
-                        contacter, depuis l'application mobile comme depuis ce site. Cette page décrit la
-                        marche à suivre, ce qui est effacé et ce qui subsiste.
-                    </p>
+                    <h1>{t('suppression.h1')}</h1>
+                    <p className="legal-updated">{t('suppression.maj')}</p>
+                    <p><T k="suppression.chapo" /></p>
 
                     <div className="legal-callout">
-                        <p>
-                            <strong>La suppression est immédiate et définitive.</strong> Il n'existe ni délai
-                            de rétractation, ni sauvegarde de secours permettant de restaurer un compte
-                            supprimé. Vous pourrez en revanche créer un nouveau compte quand vous le
-                            souhaitez.
-                        </p>
+                        <p><T k="suppression.encart" /></p>
                     </div>
 
-                    <h2>1. Depuis l'application mobile</h2>
+                    <h2>{t('suppression.mobile.h2')}</h2>
                     <ol>
-                        <li>Ouvrez l'application Sécu'Cycle et connectez-vous&nbsp;;</li>
-                        <li>Rendez-vous dans l'onglet <strong>Profil</strong>, puis ouvrez les <strong>Paramètres</strong>&nbsp;;</li>
-                        <li>Dans la section <strong>Zone de danger</strong>, appuyez sur <strong>Supprimer mon compte</strong>&nbsp;;</li>
-                        <li>Confirmez avec votre mot de passe, puis validez l'avertissement.</li>
+                        {["e1", "e2", "e3", "e4"].map(e => <li key={e}><T k={`suppression.mobile.${e}`} /></li>)}
                     </ol>
 
-                    <h2>2. Depuis ce site</h2>
+                    <h2>{t('suppression.site.h2')}</h2>
                     <ol>
-                        <li>Connectez-vous, puis ouvrez votre <Link to="/profil">page de profil</Link>&nbsp;;</li>
-                        <li>Tout en bas, dans <strong>Supprimer mon compte</strong>, cliquez sur <strong>Supprimer</strong>&nbsp;;</li>
-                        <li>Confirmez avec votre mot de passe et cochez la case d'avertissement.</li>
+                        {["e1", "e2", "e3"].map(e => <li key={e}><T k={`suppression.site.${e}`} /></li>)}
                     </ol>
+                    <p><T k="suppression.site.motDePasse" /></p>
 
-                    <p>
-                        Votre mot de passe vous est redemandé dans les deux cas&nbsp;: un téléphone laissé
-                        déverrouillé ou une session oubliée ne suffit pas à effacer un compte.
-                    </p>
+                    <h2>{t('suppression.supprimees.h2')}</h2>
+                    <p><T k="suppression.supprimees.intro" /></p>
+                    <Tableau section="supprimees" cles={SUPPRIME} colonnes={["colDonnee", "colDetail"]} />
+                    <p><T k="suppression.supprimees.email" /></p>
 
-                    <h2>3. Données supprimées</h2>
-                    <p>Sont effacées de nos serveurs, immédiatement et sans conservation&nbsp;:</p>
-                    <div className="legal-table-wrapper">
-                        <table className="legal-table">
-                            <thead>
-                                <tr>
-                                    <th>Donnée</th>
-                                    <th>Détail</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {SUPPRIME.map(([nom, detail]) => (
-                                    <tr key={nom}>
-                                        <td><strong>{nom}</strong></td>
-                                        <td>{detail}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <p>
-                        Un e-mail de confirmation vous est envoyé à l'adresse du compte juste après la
-                        suppression. C'est le dernier message que vous recevrez de notre part.
-                    </p>
+                    <h2>{t('suppression.conservees.h2')}</h2>
+                    <Tableau section="conservees" cles={CONSERVE} colonnes={["colDonnee", "colPourquoi"]} />
 
-                    <h2>4. Données conservées</h2>
-                    <div className="legal-table-wrapper">
-                        <table className="legal-table">
-                            <thead>
-                                <tr>
-                                    <th>Donnée</th>
-                                    <th>Pourquoi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {CONSERVE.map(([nom, detail]) => (
-                                    <tr key={nom}>
-                                        <td><strong>{nom}</strong></td>
-                                        <td>{detail}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <h2>{t('suppression.acces.h2')}</h2>
+                    <p><T k="suppression.acces.texte" /></p>
 
-                    <h2>5. Si vous n'avez plus accès à votre compte</h2>
-                    <p>
-                        Mot de passe perdu&nbsp;? Commencez par le réinitialiser depuis l'écran de
-                        connexion, puis suivez la procédure ci-dessus. Si vous n'accédez plus à l'adresse
-                        e-mail rattachée au compte, écrivez-nous à{" "}
-                        <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a> depuis n'importe
-                        quelle adresse&nbsp;: nous vous demanderons de quoi vérifier que le compte est bien
-                        le vôtre, puis nous procéderons à la suppression. Nous répondons sous un mois au
-                        plus, conformément au RGPD.
-                    </p>
-
-                    <h2>6. Vos autres droits</h2>
-                    <p>
-                        La suppression du compte n'est qu'un des droits que vous tenez du RGPD. L'accès, la
-                        rectification, la limitation, l'opposition et la portabilité de vos données sont
-                        détaillés dans notre{" "}
-                        <Link to="/confidentialite">politique de confidentialité</Link>. Pour toute autre
-                        demande, la <Link to="/contact">page de contact</Link> est à votre disposition.
-                    </p>
+                    <h2>{t('suppression.autresDroits.h2')}</h2>
+                    <p><T k="suppression.autresDroits.texte" /></p>
                 </article>
             </div>
         </>

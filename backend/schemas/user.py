@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from datetime import date, datetime
-from typing import Optional
+from typing import Literal, Optional
 
 PASSWORD_MAX = 128
 
@@ -23,6 +23,10 @@ class UserRead(UserBase):
     is_banned: bool = False
     reports_blocked: bool = False
     ban_reason: Optional[str] = None
+    recap_emails: bool = True
+    # Exposée pour que les clients sachent quand pousser une correction : la
+    # préférence de l'application fait foi, la colonne suit.
+    language: str = "fr"
     created_at: datetime
 
     class Config:
@@ -39,6 +43,15 @@ class UserUpdate(BaseModel):
     sport_level: Optional[str] = Field(default=None, max_length=50)
     home_address: Optional[str] = Field(default=None, max_length=500)
     work_address: Optional[str] = Field(default=None, max_length=500)
+    # Réception du récapitulatif périodique. Absent de `UserAdminUpdate` à
+    # dessein : réactiver ce réglage pour quelqu'un d'autre n'est pas une
+    # fonctionnalité d'administration.
+    recap_emails: Optional[bool] = None
+    # Langue des e-mails. `Literal` plutôt qu'une chaîne libre : la valeur finit
+    # en clé de catalogue, et une locale inconnue produirait des e-mails
+    # silencieusement repliés en français. Absente de `UserAdminUpdate` pour la
+    # même raison que `recap_emails`.
+    language: Optional[Literal["fr", "en"]] = None
 
 class UserAdminUpdate(BaseModel):
     first_name: Optional[str] = Field(default=None, max_length=100)

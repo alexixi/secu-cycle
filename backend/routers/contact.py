@@ -3,9 +3,10 @@
 import logging
 import os
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 import mailer
+from i18n import get_locale, t
 from limiter import limiter
 from mailer.templates import contact_email
 from schemas.contact import ContactMessage
@@ -19,7 +20,7 @@ DEFAULT_CONTACT_EMAIL = "contact@secu-cycle.fr"
 
 @router.post("/")
 @limiter.limit("3/hour")
-def send_contact_message(request: Request, data: ContactMessage):
+def send_contact_message(request: Request, data: ContactMessage, locale: str = Depends(get_locale)):
     """Envoie le message à l'équipe, avec l'adresse du visiteur en `reply_to`."""
     subject, html, text = contact_email(
         first_name=data.first_name.strip(),
@@ -38,7 +39,7 @@ def send_contact_message(request: Request, data: ContactMessage):
         logger.exception("Échec de l'envoi du message de contact de %s", data.email)
         raise HTTPException(
             status_code=502,
-            detail="L'envoi du message a échoué. Réessayez plus tard ou écrivez-nous directement.",
+            detail=t("error.contact.send_failed", locale),
         )
 
-    return {"detail": "Message envoyé."}
+    return {"detail": t("message.contact_sent", locale)}

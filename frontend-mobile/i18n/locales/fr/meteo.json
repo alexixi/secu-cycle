@@ -1,0 +1,24 @@
+{
+    "alerte": {
+        "prevuVers": "Prévu vers {{heure}}.",
+        "enCours": "En cours sur votre secteur.",
+        "source": " ({{source}})",
+        "parlePrevu": "Attention. {{alerte}} prévu vers {{heure}}.",
+        "parleEnCours": "Attention. {{alerte}} sur votre secteur.",
+        "averseImminente": "Averse imminente",
+        "pluieApproche": "Pluie en approche",
+        "parleAverseImminente": "Attention, averse imminente.",
+        "parlePluieDans": "Pluie prévue dans environ {{minutes}} minutes."
+    },
+    "pill": {
+        "a11yMeteo": "Météo : {{condition}}",
+        "a11yTemperature": ", {{degres}} degrés",
+        "a11yVent": ", vent {{vitesse}} km/h",
+        "a11yVentDirection": " de {{cardinal}}",
+        "a11yEvenement": ". {{evenement}}"
+    },
+    "notification": {
+        "canalNom": "Alertes météo",
+        "canalDescription": "Averse, grêle, orage ou verglas pendant un trajet."
+    }
+}

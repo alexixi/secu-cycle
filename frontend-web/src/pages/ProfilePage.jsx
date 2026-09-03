@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import "./ProfilePage.css"
 
 import { useEffect, useState } from "react";
@@ -10,7 +11,7 @@ import IconButton from "../components/ui/IconButton";
 import IconCard from '../components/ui/IconCard';
 
 import EditAddressModal from "../components/layout/modals/EditAddressModal";
-import EditProfileModal from "../components/layout/modals/EditProfileModal";
+import SettingsModal from "../components/layout/modals/SettingsModal";
 import SuppressBikeModal from "../components/layout/modals/SuppressBikeModal";
 import AddBikeModal from "../components/layout/modals/AddBikeModal"
 import EditBikeModal from "../components/layout/modals/EditBikeModal"
@@ -31,7 +32,7 @@ import IconBikeVTT from '../assets/bikes/vtt.svg?react';
 import IconBikeVTT_Electric from '../assets/bikes/vtt-electric.svg?react';
 import IconBikeRoute from '../assets/bikes/route.svg?react';
 import { AiFillPlusCircle } from "react-icons/ai";
-import { FaHome, FaUserEdit, FaMedal } from "react-icons/fa";
+import { FaHome, FaCog, FaMedal } from "react-icons/fa";
 
 const BADGE_ICONS = {
   first_route: MdDirectionsBike,
@@ -46,10 +47,11 @@ const formatProgress = (value, criteria) =>
   criteria === "total_distance_km" ? Number(value).toFixed(1) : Math.round(value);
 
 export default function ProfilePage() {
+  const { t } = useTranslation('auth');
   const { user, updateUser, token, userBikes, updateBikes, historic, updateHistoric } = useAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isModalOpenInfo, setIsModalOpenInfo] = useState(false);
+  const [isModalOpenSettings, setIsModalOpenSettings] = useState(false);
   const [isModalOpenAddress, setIsModalOpenAddress] = useState(false);
   const [isModalOpenSuppress, setIsModalOpenSuppress] = useState(false);
   const [isModalOpenEditBike, setIsModalOpenEditBike] = useState(false);
@@ -98,7 +100,7 @@ export default function ProfilePage() {
   const handleBike = (bike, index) => {
     const isElec = bike.is_electric === true;
     const type = bike.type?.toLowerCase();
-    const nameLabel = bike.name || (type === "vtt" ? "VTT" : type === "route" ? "Route" : "Ville");
+    const nameLabel = bike.name || t(`velo.${type === "vtt" || type === "route" ? type : "ville"}`);
 
     if (type === "vtt") {
       return (
@@ -164,10 +166,11 @@ export default function ProfilePage() {
 
       updateUser({ ...user, ...updated });
 
-      setIsModalOpenInfo(false);
       setHasError(false);
+      return true;
     } catch (error) {
       setHasError(true);
+      return false;
     }
   };
 
@@ -263,27 +266,27 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Meta title="Mon Profil | Sécu'Cycle" description="Gérez vos informations personnelles, vos adresses, vos vélos et votre historique de navigation." />
+      <Meta title={t('profil.titrePage')} description={t('profil.metaDescription')} />
       <div className="profile-page">
 
         <div className="title">
           {firstName || lastName ? (
             <h1>{firstName} {lastName}</h1>
           ) : (
-            <h1>Mon Profil</h1>
+            <h1>{t('profil.h1')}</h1>
           )}
-          <IconButton className="button-modification" onClick={() => setIsModalOpenInfo(true)}>Modifier mon compte < FaUserEdit size={30} /></IconButton>
+          <IconButton className="button-modification" onClick={() => setIsModalOpenSettings(true)}>{t('profil.parametres')} < FaCog size={30} /></IconButton>
         </div>
 
         <div className="content">
 
           <div className="profile-section">
             <div className="section-title">
-              <h2>Mes adresses</h2>
+              <h2>{t('profil.adresses.h2')}</h2>
               <IconButton className="button-address" onClick={() => setIsModalOpenAddress(true)}>
                 {
                   (homeAddress && homeAddress !== "" && workAddress && workAddress !== "")
-                    ? "Modifier mes adresses" : "Ajouter mes adresses"
+                    ? t('profil.adresses.modifier') : t('profil.adresses.ajouter')
                 } <MdEditLocationAlt size={20} />
               </IconButton>
             </div>
@@ -297,9 +300,9 @@ export default function ProfilePage() {
               >
                 <span className="address-card-icon address-home"><FaHome size={20} /></span>
                 <div className="address-card-text">
-                  <span className="address-card-label">Domicile</span>
+                  <span className="address-card-label">{t('adresses.domicile')}</span>
                   <span className={`address-card-value${homeAddress ? "" : " address-empty"}`}>
-                    {homeAddress || "Aucune adresse renseignée"}
+                    {homeAddress || t('profil.adresses.aucune')}
                   </span>
                 </div>
                 <MdEditLocationAlt className="address-card-edit" size={18} />
@@ -313,9 +316,9 @@ export default function ProfilePage() {
               >
                 <span className="address-card-icon address-work"><MdOutlineWork size={20} /></span>
                 <div className="address-card-text">
-                  <span className="address-card-label">Travail</span>
+                  <span className="address-card-label">{t('adresses.travail')}</span>
                   <span className={`address-card-value${workAddress ? "" : " address-empty"}`}>
-                    {workAddress || "Aucune adresse renseignée"}
+                    {workAddress || t('profil.adresses.aucune')}
                   </span>
                 </div>
                 <MdEditLocationAlt className="address-card-edit" size={18} />
@@ -325,10 +328,10 @@ export default function ProfilePage() {
 
           <div className="profile-section">
             <div className="section-title">
-              <h2>Mes vélos</h2>
+              <h2>{t('profil.velos.h2')}</h2>
               {bikes.length > 0 && (
                 <IconButton className="button-suppress-bike" onClick={() => setIsModalOpenSuppress(true)}>
-                  Supprimer un vélo <MdDelete size={20} />
+                  {t('profil.supprimerVelo')} <MdDelete size={20} />
                 </IconButton>
               )}
             </div>
@@ -341,28 +344,28 @@ export default function ProfilePage() {
 
           <div className="profile-section">
             <div className="section-title">
-              <h2>Historique</h2>
+              <h2>{t('profil.historique.h2')}</h2>
               {historic.length > 0 && (
                 confirmDeleteHistoric ? (
                   <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    <span style={{ fontSize: "0.9em", color: "var(--text-secondary)" }}>Confirmer ?</span>
+                    <span style={{ fontSize: "0.9em", color: "var(--text-secondary)" }}>{t('profil.historique.confirmer')}</span>
                     <IconButton className="button-suppress-bike" onClick={handleDeleteAllHistoric}>
-                      Oui <MdDelete size={16} />
+                      {t('profil.oui')} <MdDelete size={16} />
                     </IconButton>
                     <IconButton className="button-address" onClick={() => setConfirmDeleteHistoric(false)}>
-                      Non
+                      {t('profil.non')}
                     </IconButton>
                   </div>
                 ) : (
                   <IconButton className="button-suppress-bike" onClick={handleDeleteAllHistoric}>
-                    Supprimer l'historique <MdDelete size={20} />
+                    {t('profil.supprimerHistorique')} <MdDelete size={20} />
                   </IconButton>
                 )
               )}
             </div>
             <div className="historic">
               {historic.length === 0 ? (
-                <p>Aucun trajet enregistré pour le moment.</p>
+                <p>{t('profil.historique.aucunTrajet')}</p>
               ) : (
                 <div className="historic-list">
                   {historic.map((entry, index) => (
@@ -386,7 +389,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="profile-section">
-            <h2>Statistiques</h2>
+            <h2>{t('profil.statistiques.h2')}</h2>
             <div className="statistic">
               {(() => {
                 // Seuls les trajets réellement parcourus comptent : une recherche persiste
@@ -401,42 +404,43 @@ export default function ProfilePage() {
                   acc[t] = (acc[t] || 0) + 1;
                   return acc;
                 }, {});
-                const typeLabels = { fast: "Rapide", safe: "Sécurisé", compromise: "Compromis" };
+                // Les identifiants viennent de l'API ; seuls les libellés sont traduits.
+                const typeLabels = { fast: t('variantes.fast'), safe: t('variantes.safe'), compromise: t('variantes.compromise') };
                 const typeIcons = { fast: MdOutlineSpeed, safe: MdHealthAndSafety, compromise: FaBalanceScale };
                 const prefType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
                 const PrefTypeIcon = prefType ? (typeIcons[prefType[0]] || FaStar) : FaStar;
 
-                if (totalTrajets === 0) return <p style={{ paddingLeft: "3%", color: "var(--text-secondary)" }}>Aucun trajet enregistré pour le moment.</p>;
+                if (totalTrajets === 0) return <p style={{ paddingLeft: "3%", color: "var(--text-secondary)" }}>{t('profil.historique.aucunTrajet')}</p>;
 
                 return (
                   <div className="stats-grid">
                     <div className="stat-card">
                       <span className="stat-card-icon"><MdDirectionsBike size={24} /></span>
                       <span className="stat-value">{totalTrajets}</span>
-                      <span className="stat-label">Trajets terminés</span>
+                      <span className="stat-label">{t('profil.statistiques.trajetsTermines')}</span>
                     </div>
                     <div className="stat-card">
                       <span className="stat-card-icon"><MdOutlineRoute size={24} /></span>
                       <span className="stat-value">{totalDist.toFixed(1)} km</span>
-                      <span className="stat-label">Distance totale</span>
+                      <span className="stat-label">{t('profil.statistiques.distanceTotale')}</span>
                     </div>
                     <div className="stat-card">
                       <span className="stat-card-icon"><MdOutlineTimer size={24} /></span>
                       <span className="stat-value">
                         {Math.floor(totalTime / 60) > 0 ? `${Math.floor(totalTime / 60)}h ` : ""}{Math.round(totalTime % 60)}min
                       </span>
-                      <span className="stat-label">Temps total</span>
+                      <span className="stat-label">{t('profil.statistiques.tempsTotal')}</span>
                     </div>
                     <div className="stat-card">
                       <span className="stat-card-icon"><MdStraighten size={24} /></span>
                       <span className="stat-value">{avgDist.toFixed(1)} km</span>
-                      <span className="stat-label">Distance moyenne</span>
+                      <span className="stat-label">{t('profil.statistiques.distanceMoyenne')}</span>
                     </div>
                     {prefType && (
                       <div className="stat-card">
                         <span className="stat-card-icon"><PrefTypeIcon size={24} /></span>
                         <span className="stat-value">{typeLabels[prefType[0]] || prefType[0]}</span>
-                        <span className="stat-label">Type préféré</span>
+                        <span className="stat-label">{t('profil.statistiques.typePrefere')}</span>
                       </div>
                     )}
                   </div>
@@ -446,10 +450,10 @@ export default function ProfilePage() {
           </div>
 
           <div className="profile-section">
-            <h2>Mes badges</h2>
+            <h2>{t('profil.badges.h2')}</h2>
             <div className="statistic">
               {badges.length === 0 ? (
-                <p style={{ paddingLeft: "3%", color: "var(--text-secondary)" }}>Aucun badge disponible.</p>
+                <p style={{ paddingLeft: "3%", color: "var(--text-secondary)" }}>{t('profil.badges.aucun')}</p>
               ) : (
                 <div className="badges-grid">
                   {badges.map((badge) => {
@@ -465,7 +469,7 @@ export default function ProfilePage() {
                         <span className="stat-value badge-name">{badge.name}</span>
                         <span className="stat-label">
                           {unlocked
-                            ? "Débloqué"
+                            ? t('profil.badges.debloque')
                             : `${formatProgress(badge.progress, badge.criteria)}/${badge.goal_value}`}
                         </span>
                       </div>
@@ -479,10 +483,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <EditProfileModal
-        isOpen={isModalOpenInfo}
+      <SettingsModal
+        isOpen={isModalOpenSettings}
         hasError={hasError}
-        onClose={() => setIsModalOpenInfo(false) || setHasError(false)}
+        onClose={() => setIsModalOpenSettings(false) || setHasError(false)}
         onConfirm={handleSubmitInfo}
         userData={{ firstName, lastName, email, birthDate, level }}
       />

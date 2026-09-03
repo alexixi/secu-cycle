@@ -10,13 +10,20 @@ import { MdElectricBike, MdLocalParking } from 'react-icons/md';
 
 /* ------------------------------------------------------------------ fonds de carte */
 
+// Les tables ci-dessous ne portent plus de libellé : leur `id` sert de clé dans
+// i18n/locales/<langue>/carte.json, sous les préfixes fond./parking./toilettes./
+// reparation./poi. C'est ce qui permet de les partager entre la carte
+// d'itinéraire et les cartes thématiques sans dupliquer le texte.
+import i18n from '../../../i18n/index.js';
+import { carteLabel } from '../../../i18n/carteLabels.js';
+
 export const MAP_STYLES = [
-    { id: "base", lightId: "base-v4", darkId: "base-v4-dark", label: "Basic", icon: "🍃" },
-    { id: "streets", lightId: "streets-v4", darkId: "streets-v4-dark", label: "Rues", icon: "🛣️" },
-    { id: "outdoor", lightId: "outdoor-v4", darkId: "outdoor-v4-dark", label: "Outdoor", icon: "🚴" },
-    { id: "topo", lightId: "topo-v4", darkId: "topo-v4-dark", label: "Relief", icon: "⛰️" },
-    { id: "hybrid", lightId: "hybrid-v4", darkId: "hybrid-v4", label: "Satellite", icon: "🛰️" },
-    { id: "openstreetmap", lightId: "openstreetmap", darkId: "openstreetmap", label: "Détaillée", icon: "🗺️" },
+    { id: "base", lightId: "base-v4", darkId: "base-v4-dark", icon: "🍃" },
+    { id: "streets", lightId: "streets-v4", darkId: "streets-v4-dark", icon: "🛣️" },
+    { id: "outdoor", lightId: "outdoor-v4", darkId: "outdoor-v4-dark", icon: "🚴" },
+    { id: "topo", lightId: "topo-v4", darkId: "topo-v4-dark", icon: "⛰️" },
+    { id: "hybrid", lightId: "hybrid-v4", darkId: "hybrid-v4", icon: "🛰️" },
+    { id: "openstreetmap", lightId: "openstreetmap", darkId: "openstreetmap", icon: "🗺️" },
 ];
 
 // Construit l'URL MapTiler du fond choisi. `theme` vaut 'dark' ou autre chose.
@@ -26,33 +33,45 @@ export function mapStyleUrl(styleId, theme) {
     return `https://api.maptiler.com/maps/${id}/style.json?key=${import.meta.env.VITE_MAPTILER_KEY}`;
 }
 
-export const RELATIVE_TIME_FR = new Intl.RelativeTimeFormat('fr-FR', { numeric: 'auto' });
+const relatifsParLangue = new Map();
+
+/** Formateur de durées relatives, dans la langue active de la page. */
+export const relativeTime = () => {
+    const lang = i18n.language || 'fr';
+    if (!relatifsParLangue.has(lang)) {
+        relatifsParLangue.set(lang, new Intl.RelativeTimeFormat(lang, { numeric: 'auto' }));
+    }
+    return relatifsParLangue.get(lang);
+};
+
+/** Langue de formatage des dates et heures — jamais figée sur le français. */
+export const localeActive = () => i18n.language || 'fr';
 
 /* ------------------------------------------------------------------------- POI */
 
 export const PARKING_TYPES = [
-    { id: 'stands', label: 'Arceaux', color: '#22C55E' },
-    { id: 'racks', label: 'Râteliers, pince-roues', color: '#0D9488' },
-    { id: 'shelter', label: 'Abris et consignes', color: '#15803D' },
-    { id: 'other', label: 'Autres, non précisé', color: '#9CA3AF' },
+    { id: 'stands', color: '#22C55E' },
+    { id: 'racks', color: '#0D9488' },
+    { id: 'shelter', color: '#15803D' },
+    { id: 'other', color: '#9CA3AF' },
 ];
 
 export const TOILET_TYPES = [
-    { id: 'free', label: 'Gratuites', color: '#EC4899' },
-    { id: 'paid', label: 'Payantes', color: '#9F1239' },
-    { id: 'unknown', label: 'Non précisé', color: '#8B5CF6' },
+    { id: 'free', color: '#EC4899' },
+    { id: 'paid', color: '#9F1239' },
+    { id: 'unknown', color: '#8B5CF6' },
 ];
 
 export const REPAIR_TYPES = [
-    { id: 'selfservice', label: 'Libre-service', color: '#F97316' },
-    { id: 'shop', label: 'Atelier / magasin', color: '#C2410C' },
+    { id: 'selfservice', color: '#F97316' },
+    { id: 'shop', color: '#C2410C' },
 ];
 
 export const POI_CATEGORIES = [
-    { id: 'water', label: "Points d'eau", color: '#0EA5E9' },
-    { id: 'toilets', label: 'Toilettes', color: '#8B5CF6', subTypes: TOILET_TYPES, subTypeProp: 'toilet_fee' },
-    { id: 'parking', label: 'Parkings vélo', color: '#22C55E', subTypes: PARKING_TYPES, subTypeProp: 'parking_type' },
-    { id: 'repair', label: 'Réparation', color: '#F97316', subTypes: REPAIR_TYPES, subTypeProp: 'repair_kind' },
+    { id: 'water', color: '#0EA5E9' },
+    { id: 'toilets', color: '#8B5CF6', subTypes: TOILET_TYPES, subTypeProp: 'toilet_fee', subTypeLabels: 'toilettes' },
+    { id: 'parking', color: '#22C55E', subTypes: PARKING_TYPES, subTypeProp: 'parking_type', subTypeLabels: 'parking' },
+    { id: 'repair', color: '#F97316', subTypes: REPAIR_TYPES, subTypeProp: 'repair_kind', subTypeLabels: 'reparation' },
 ];
 
 export const DEFAULT_SUB_TYPES = Object.fromEntries(
@@ -134,37 +153,33 @@ export const poiIconSrc = (poi) => {
     return POI_IMAGE_SRC_BY_KEY[key + poiStateSuffix(poi)];
 };
 
-export const TOILET_FEE_LABELS = { free: 'Gratuit', paid: 'Payant', unknown: 'Non précisé' };
 
 export const formatPoiTag = (value) => {
-    if (value === 'yes') return 'Oui';
-    if (value === 'no') return 'Non';
+    if (value === 'yes') return carteLabel('ui', 'oui');
+    if (value === 'no') return carteLabel('ui', 'non');
     return String(value);
 };
 
 export const POI_DETAIL_FIELDS = [
     {
         key: 'parking_type',
-        label: 'Aménagement',
-        format: (value) => PARKING_TYPES.find(t => t.id === value)?.label || value,
+        format: (value) => carteLabel('parking', value),
     },
     {
         key: 'toilet_fee',
-        label: 'Tarif',
-        format: (value) => TOILET_FEE_LABELS[value] || value,
+        format: (value) => carteLabel('tarif', value),
     },
     {
         key: 'repair_kind',
-        label: 'Type',
-        format: (value) => REPAIR_TYPES.find(t => t.id === value)?.label || value,
+        format: (value) => carteLabel('reparation', value),
     },
-    { key: 'opening_hours', label: 'Horaires' },
-    { key: 'fee', label: 'Payant', except: 'toilets' },
-    { key: 'capacity', label: 'Capacité' },
-    { key: 'covered', label: 'Couvert' },
-    { key: 'access', label: 'Accès' },
-    { key: 'wheelchair', label: 'Accessible PMR' },
-    { key: 'seasonal', label: 'Saisonnier' },
+    { key: 'opening_hours' },
+    { key: 'fee', except: 'toilets' },
+    { key: 'capacity' },
+    { key: 'covered' },
+    { key: 'access' },
+    { key: 'wheelchair' },
+    { key: 'seasonal' },
 ];
 
 export const POI_LAYER_ID = 'pois-symbol';
@@ -280,17 +295,17 @@ export const ACCIDENT_SEVERITY_COLOR = [
 ];
 
 export const ACCIDENT_LEGEND = [
-    { label: 'Accident mortel', color: '#7f1d1d' },
-    { label: 'Blessé hospitalisé', color: '#dc2626' },
-    { label: 'Blessé léger', color: '#f97316' },
+    { key: 'mortel', color: '#7f1d1d' },
+    { key: 'hospitalise', color: '#dc2626' },
+    { key: 'leger', color: '#f97316' },
 ];
 
 export const ACCIDENT_DETAIL_FIELDS = [
-    { key: 'light', label: 'Luminosité' },
-    { key: 'weather', label: 'Météo' },
-    { key: 'collision', label: 'Type de collision' },
-    { key: 'road_type', label: 'Type de voie' },
-    { key: 'intersection', label: 'Intersection' },
+    { key: 'light' },
+    { key: 'weather' },
+    { key: 'collision' },
+    { key: 'road_type' },
+    { key: 'intersection' },
 ];
 
 export const formatAccidentDate = (properties) => {
@@ -300,7 +315,7 @@ export const formatAccidentDate = (properties) => {
     const options = properties.date_precision === 'month'
         ? { month: 'long', year: 'numeric' }
         : { day: 'numeric', month: 'long', year: 'numeric' };
-    return parsed.toLocaleDateString('fr-FR', options);
+    return parsed.toLocaleDateString(localeActive(), options);
 };
 
 export const ACCIDENT_HEAT_PAINT = {
@@ -337,17 +352,13 @@ export const TRAFFIC_HITBOX_LAYER_ID = 'traffic-hitbox';
 
 export const TRAFFIC_COLORS = { green: "#22c55e", orange: "#f97316", red: "#ef4444", gray: "#9ca3af" };
 
-export const TRAFFIC_LABELS = {
-    green: 'Circulation fluide',
-    orange: 'Circulation dense',
-    red: 'Axe embouteillé',
-    gray: 'État inconnu',
-};
+/** Libellé d'un niveau de trafic, dans la langue active. */
+export const trafficLabel = (level) => carteLabel('trafic', level in TRAFFIC_COLORS ? level : 'gray');
 
-export const TRAFFIC_CYCLIST_HINT = {
-    orange: '🚲 Trafic ralenti : dépassements serrés et portières, restez visible.',
-    red: '🚲 Axe évité par nos itinéraires sécurisés dès que possible.',
-};
+/** Conseil au cycliste pour un niveau de trafic, ou `null` s'il n'y en a pas. */
+export const trafficCyclistHint = (level) => (
+    level === 'orange' || level === 'red' ? carteLabel('traficConseil', level) : null
+);
 
 export const TRAFFIC_LINE_PAINT = {
     'line-color': ['match', ['get', 'level'],
@@ -415,19 +426,19 @@ export const BIKESHARE_BADGE_TRANSLATE = ['interpolate', ['linear'], ['zoom'],
     18, ['literal', [14, -14]]];
 
 export const BIKESHARE_COUNT_FIELDS = [
-    { key: 'bikes_mechanical', label: 'Mécaniques', Icon: FaBicycle, tone: 'mechanical' },
-    { key: 'bikes_electric', label: 'Électriques', Icon: MdElectricBike, tone: 'electric' },
-    { key: 'docks_available', label: 'Places libres', Icon: MdLocalParking, tone: 'docks' },
+    { key: 'bikes_mechanical', Icon: FaBicycle, tone: 'mechanical' },
+    { key: 'bikes_electric', Icon: MdElectricBike, tone: 'electric' },
+    { key: 'docks_available', Icon: MdLocalParking, tone: 'docks' },
 ];
 
 export const BIKESHARE_TOTAL_FIELD = {
-    key: 'bikes_available', label: 'Vélos', Icon: FaBicycle, tone: 'mechanical',
+    key: 'bikes_available', Icon: FaBicycle, tone: 'mechanical',
 };
 
 export const BIKESHARE_DETAIL_FIELDS = [
-    { key: 'capacity', label: 'Capacité', format: (value) => `${value} points d'attache` },
-    { key: 'system_name', label: 'Réseau' },
-    { key: 'address', label: 'Adresse' },
+    { key: 'capacity', format: (value) => carteLabel('vls', 'pointsAttache').replace('{{n}}', value) },
+    { key: 'system_name' },
+    { key: 'address' },
 ];
 
 export function bikeshareShare(station, ventile) {
@@ -453,11 +464,12 @@ export const formatStationFreshness = (lastReported) => {
     const then = new Date(lastReported).getTime();
     if (Number.isNaN(then)) return null;
     const minutes = Math.round((Date.now() - then) / 60000);
-    if (minutes < 1) return 'Données à jour';
-    if (minutes < 60) return `Relevé ${RELATIVE_TIME_FR.format(-minutes, 'minute')}`;
+    const dire = (cle, options) => i18n.t(`ui.popupCarte.${cle}`, { ns: 'carte', ...options });
+    if (minutes < 1) return dire('donneesAJour');
+    if (minutes < 60) return dire('releve', { quand: relativeTime().format(-minutes, 'minute') });
     const hours = Math.round(minutes / 60);
-    if (hours < 24) return `Relevé ${RELATIVE_TIME_FR.format(-hours, 'hour')}`;
-    return 'Relevé ancien, fiabilité incertaine';
+    if (hours < 24) return dire('releve', { quand: relativeTime().format(-hours, 'hour') });
+    return dire('releveAncien');
 };
 
 export const BIKESHARE_HITBOX_PAINT = {

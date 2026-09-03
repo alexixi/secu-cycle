@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import * as Haptics from "expo-haptics";
@@ -6,10 +7,13 @@ import * as Haptics from "expo-haptics";
 import { Button, OutlineButton } from "../ui/Button";
 import { useTheme } from "../../hooks/useTheme";
 
+// Valeur et icône seulement : un libellé posé ici serait figé à la langue du
+// chargement du bundle. Les identifiants sont ceux du catalogue (auth.velo.*),
+// partagés avec le web.
 const BIKE_TYPES = [
-    { value: "ville", label: "Ville", icon: "bicycle" },
-    { value: "vtt", label: "VTT", icon: "bike" },
-    { value: "route", label: "Route", icon: "bike-fast" },
+    { value: "ville", icon: "bicycle" },
+    { value: "vtt", icon: "bike" },
+    { value: "route", icon: "bike-fast" },
 ];
 
 const getIcon = (type, electric) => {
@@ -21,6 +25,7 @@ const getIcon = (type, electric) => {
 
 export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing }) {
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
 
     const [name, setName] = useState("");
     const [selectedType, setSelectedType] = useState("ville");
@@ -30,7 +35,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
     const handleAdd = async () => {
         if (!name.trim()) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
-            Alert.alert("Nom requis", "Veuillez donner un nom à votre vélo.");
+            Alert.alert(t('auth.velo.nomRequisTitre'), t('auth.velo.nomRequisTexte'));
             return;
         }
         setIsAdding(true);
@@ -41,7 +46,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
             setIsElectric(false);
         } catch (_error) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { });
-            Alert.alert("Erreur", "Impossible d'ajouter le vélo. Veuillez réessayer.");
+            Alert.alert(t('commun.erreur'), t('auth.onboarding.velos.erreurAjout'));
         } finally {
             setIsAdding(false);
         }
@@ -49,9 +54,9 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
 
     return (
         <View style={styles.formContainer}>
-            <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>Vos vélos</Text>
+            <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>{t('auth.onboarding.velos.h2')}</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Ajoutez vos vélos pour des itinéraires adaptés. Facultatif. Vous pourrez ajouter des vélos plus tard dans votre profil.
+                {t('auth.onboarding.velos.intro')}
             </Text>
 
             {addedBikes.length > 0 && (
@@ -69,8 +74,9 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                             <View style={{ flex: 1 }}>
                                 <Text style={[styles.bikeName, { color: colors.textMain }]}>{bike.name}</Text>
                                 <Text style={[styles.bikeType, { color: colors.textSecondary }]}>
-                                    {BIKE_TYPES.find((t) => t.value === bike.type)?.label}
-                                    {bike.is_electric ? " • électrique" : ""}
+                                    {/* i18n-suffixes: ville vtt route */}
+                                    {t(`auth.velo.${bike.type}`)}
+                                    {bike.is_electric ? t('auth.velo.electriqueSuffixePuce') : ""}
                                 </Text>
                             </View>
                             <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
@@ -80,19 +86,19 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
             )}
 
             <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Nom du vélo</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.velo.nom')}</Text>
                 <TextInput
                     style={[styles.input, { backgroundColor: colors.bgSurface, color: colors.textMain, borderColor: colors.borderStrong }]}
                     value={name}
                     onChangeText={setName}
-                    placeholder="ex: Vélo de ville rouge"
+                    placeholder={t('auth.velo.nomPlaceholder')}
                     placeholderTextColor={colors.textSecondary}
                     maxLength={30}
                 />
             </View>
 
             <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Type de vélo</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.velo.typeVelo')}</Text>
                 <View style={styles.typeContainer}>
                     {BIKE_TYPES.map((type) => {
                         const isSelected = selectedType === type.value;
@@ -116,7 +122,8 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                                     { color: isSelected ? "#FFF" : colors.textMain },
                                     isSelected && { fontWeight: "bold" },
                                 ]}>
-                                    {type.label}
+                                    {/* i18n-suffixes: ville vtt route */}
+                                    {t(`auth.velo.${type.value}`)}
                                 </Text>
                             </TouchableOpacity>
                         );
@@ -125,7 +132,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
             </View>
 
             <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Assistance électrique</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.velo.assistance')}</Text>
                 <TouchableOpacity
                     style={[
                         styles.electricToggle,
@@ -144,7 +151,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                         { color: isElectric ? colors.primary : colors.textMain },
                         isElectric && { fontWeight: "bold" },
                     ]}>
-                        {isElectric ? "Vélo électrique" : "Pas d'assistance électrique"}
+                        {isElectric ? t('auth.velo.veloElectrique') : t('auth.velo.sansAssistance')}
                     </Text>
                     <Ionicons
                         name={isElectric ? "checkmark-circle" : "ellipse-outline"}
@@ -157,7 +164,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
 
             <View style={styles.footer}>
                 <OutlineButton
-                    title="Ajouter ce vélo"
+                    title={t('auth.velo.ajouterCeVelo')}
                     iconName="add-circle-outline"
                     onPress={handleAdd}
                     isLoading={isAdding}
@@ -165,7 +172,7 @@ export default function StepBikes({ addedBikes, onAddBike, onFinish, isFinishing
                 />
                 <View style={{ marginTop: 15 }}>
                     <Button
-                        title="Terminer"
+                        title={t('commun.terminer')}
                         iconName="checkmark-circle-outline"
                         onPress={onFinish}
                         isLoading={isFinishing}

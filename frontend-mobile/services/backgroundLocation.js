@@ -2,6 +2,7 @@ import { Alert, DeviceEventEmitter } from 'react-native';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { hasAcceptedBackgroundLocation } from './locationDisclosure';
+import i18n from '../i18n';
 
 export const LOCATION_TASK = 'background-location-task';
 export const BACKGROUND_LOCATION_EVENT = 'background-location';
@@ -25,15 +26,18 @@ export const startBackgroundLocation = async () => {
 
     const foreground = await Location.requestForegroundPermissionsAsync();
     if (foreground.status !== 'granted') {
-        Alert.alert("Permission requise", "Le GPS est nécessaire pour la navigation.");
+        Alert.alert(
+            i18n.t('notification.localisation.permissionRequise'),
+            i18n.t('notification.localisation.gpsNecessaire'),
+        );
         return;
     }
 
     const background = await Location.requestBackgroundPermissionsAsync();
     if (background.status !== 'granted') {
         Alert.alert(
-            "Mode restreint",
-            "La navigation s'arrêtera si vous verrouillez votre téléphone. Autorisez 'Toujours' dans les paramètres pour corriger ça."
+            i18n.t('notification.localisation.modeRestreint'),
+            i18n.t('notification.localisation.modeRestreintTexte'),
         );
         return;
     }
@@ -44,7 +48,7 @@ export const startBackgroundLocation = async () => {
         distanceInterval: 5,
         foregroundService: {
             notificationTitle: "Sécu'Cycle",
-            notificationBody: "Guidage en cours",
+            notificationBody: i18n.t('notification.localisation.corps'),
             notificationColor: "#646cff",
             killServiceOnDestroy: true,
         },

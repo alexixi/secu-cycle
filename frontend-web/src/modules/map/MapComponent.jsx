@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import Map, { Marker, Popup, Source, Layer, NavigationControl } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -10,6 +11,8 @@ import WeatherInfoModal from './WeatherInfoModal';
 import WeatherBar from './WeatherBar';
 import { zoneForPoint, pointForCenter, rainBanner, snapshotAgeMin, isHintUsable, STALE_AGE_MIN } from './weather';
 import { useTheme } from '../../context/ThemeContext';
+import i18n from '../../i18n/index.js';
+import { carteLabel } from '../../i18n/carteLabels';
 import { getPois, getAccidents, getStreetlights, getLitRoads, getStreetlightSources, getAirQuality, getBikeshareStations, getWeather } from '../../services/apiBack';
 import { getAddressFromCoordinates, getApproxLocationFromIp } from '../../services/geocodingService';
 import { trackEvent } from '../../services/analytics';
@@ -22,7 +25,7 @@ import reportTravauxIcon from '../../assets/reports/travaux.png';
 import reportDangerIcon from '../../assets/reports/danger.png';
 import reportObstacleIcon from '../../assets/reports/obstacle.png';
 import {
-    MAP_STYLES, RELATIVE_TIME_FR,
+    MAP_STYLES, relativeTime, localeActive,
     POI_CATEGORIES, DEFAULT_SUB_TYPES, mergeSubTypes,
     POI_IMAGE_ASSETS, BIKESHARE_IMAGE_ASSETS, BIKESHARE_LOGOS,
     poiAccentColor, poiIconSrc,
@@ -31,7 +34,7 @@ import {
     LIT_ROADS_LINE_LAYER_ID, LIGHTING_HEATMAP_PAINT, LIT_ROADS_GLOW_PAINT, LIT_ROADS_LINE_PAINT,
     ACCIDENT_HEAT_LAYER_ID, ACCIDENT_POINT_LAYER_ID, ACCIDENT_SWITCH_ZOOM, ACCIDENT_LEGEND,
     ACCIDENT_DETAIL_FIELDS, formatAccidentDate, ACCIDENT_HEAT_PAINT, ACCIDENT_POINT_PAINT,
-    TRAFFIC_LAYER_ID, TRAFFIC_HITBOX_LAYER_ID, TRAFFIC_COLORS, TRAFFIC_LABELS, TRAFFIC_CYCLIST_HINT,
+    TRAFFIC_LAYER_ID, TRAFFIC_HITBOX_LAYER_ID, TRAFFIC_COLORS, trafficLabel, trafficCyclistHint,
     TRAFFIC_LINE_PAINT,
     BIKESHARE_ICON_LAYER_ID, BIKESHARE_HITBOX_LAYER_ID, BIKESHARE_BADGE_LAYER_ID, BIKESHARE_NAVY,
     BIKESHARE_COLORS, BIKESHARE_HAS_BADGE, BIKESHARE_COUNT_FIELDS, BIKESHARE_TOTAL_FIELD,
@@ -41,11 +44,11 @@ import {
 } from './shared/mapConstants';
 import './MapComponent.css';
 
-const REPORT_TYPE_META = {
-    accident: { label: 'Accident', color: '#ef4444' },
-    travaux: { label: 'Travaux', color: '#f97316' },
-    danger: { label: 'Danger', color: '#f59e0b' },
-    obstacle: { label: 'Obstacle', color: '#a16207' },
+const REPORT_TYPE_COLORS = {
+    accident: '#ef4444',
+    travaux: '#f97316',
+    danger: '#f59e0b',
+    obstacle: '#a16207',
 };
 
 const formatReportAge = (createdAt) => {
@@ -53,13 +56,16 @@ const formatReportAge = (createdAt) => {
     const then = new Date(createdAt).getTime();
     if (Number.isNaN(then)) return null;
     const minutes = Math.round((Date.now() - then) / 60000);
-    if (minutes < 1) return 'Signalé à l’instant';
-    if (minutes < 60) return `Signalé ${RELATIVE_TIME_FR.format(-minutes, 'minute')}`;
+    const dire = (cle, options) => i18n.t(`ui.popupCarte.${cle}`, { ns: 'carte', ...options });
+    if (minutes < 1) return dire('signaleInstant');
+    if (minutes < 60) return dire('signale', { quand: relativeTime().format(-minutes, 'minute') });
     const hours = Math.round(minutes / 60);
-    if (hours < 24) return `Signalé ${RELATIVE_TIME_FR.format(-hours, 'hour')}`;
+    if (hours < 24) return dire('signale', { quand: relativeTime().format(-hours, 'hour') });
     const days = Math.round(hours / 24);
-    if (days < 7) return `Signalé ${RELATIVE_TIME_FR.format(-days, 'day')}`;
-    return `Signalé le ${new Date(createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+    if (days < 7) return dire('signale', { quand: relativeTime().format(-days, 'day') });
+    return dire('signaleLe', {
+        date: new Date(createdAt).toLocaleDateString(localeActive(), { day: 'numeric', month: 'short' }),
+    });
 };
 
 const REPORT_IMAGE_ASSETS = [
@@ -136,7 +142,8 @@ const isRouteFeature = (feature) => feature?.layer?.id?.startsWith('route-hitbox
 
 import ReportAbuseModal from "../../components/layout/modals/ReportAbuseModal";
 
-export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, onVote, onReportAbuse, onBlockAuthor, canVote, currentUserId, isReportMode, onToggleReportMode, canReport, traffic = null, trafficError = null, showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
+export default function MapComponent({ start, end, pointilles, itineraires, selectedItineraire, setSelectedItineraire, reports, onMapClick, onDeleteReport, onVote, onReportAbuse, onBlockAuthor, canVote, currentUserId, isReportMode, onToggleReportMode, canReport, traffic = null, trafficError = false, showTraffic = false, onToggleTraffic, onNavigateToPoi, onSetStart, onSetEnd, onReportAt, littleMap = false }) {
+    const { t } = useTranslation('carte');
 
     const mapRef = useRef();
     const { effectiveTheme } = useTheme();
@@ -394,7 +401,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 timer = setTimeout(load, (data?.refresh_interval_s || 900) * 1000);
             } catch (error) {
                 if (cancelled) return;
-                setAirError("Qualité de l'air momentanément indisponible.");
+                setAirError(t('ui.erreursCarte.airIndisponible'));
                 timer = setTimeout(load, 60000);
             }
         };
@@ -457,7 +464,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 schedule((data?.refresh_interval_s || 60) * 1000);
             } catch (error) {
                 if (cancelled) return;
-                setBikeshareError("Stations momentanément indisponibles.");
+                setBikeshareError(t('ui.erreursCarte.stationsIndisponibles'));
                 schedule(60000);
             }
         };
@@ -676,7 +683,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         if (!traffic?.updated_at) return null;
         const date = new Date(traffic.updated_at);
         if (Number.isNaN(date.getTime())) return null;
-        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString(localeActive(), { hour: '2-digit', minute: '2-digit' });
     }, [traffic]);
 
     const airGeoJSON = useMemo(
@@ -718,14 +725,14 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         if (!weatherData?.updated_at) return null;
         const date = new Date(weatherData.updated_at);
         if (Number.isNaN(date.getTime())) return null;
-        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString(localeActive(), { hour: '2-digit', minute: '2-digit' });
     }, [weatherData]);
 
     const airUpdatedAt = useMemo(() => {
         if (!airData?.updated_at) return null;
         const date = new Date(airData.updated_at);
         if (Number.isNaN(date.getTime())) return null;
-        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString(localeActive(), { hour: '2-digit', minute: '2-digit' });
     }, [airData]);
 
     const activeAir = useMemo(() => zoneForPoint(airData, mapCenter), [airData, mapCenter]);
@@ -740,7 +747,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         if (!worse) return null;
         const date = new Date(worse.time);
         if (Number.isNaN(date.getTime())) return null;
-        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString(localeActive(), { hour: '2-digit', minute: '2-digit' });
     }, [activeAir]);
 
     const bikeshareGeoJSON = useMemo(
@@ -752,7 +759,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         if (!bikeshareData?.updated_at) return null;
         const date = new Date(bikeshareData.updated_at);
         if (Number.isNaN(date.getTime())) return null;
-        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString(localeActive(), { hour: '2-digit', minute: '2-digit' });
     }, [bikeshareData]);
 
     const bikeshareSources = useMemo(
@@ -772,7 +779,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
 
     const handleLocate = () => {
         if (!navigator.geolocation) {
-            alert("La géolocalisation n'est pas disponible sur ce navigateur.");
+            alert(t('ui.erreursCarte.geolocIndisponible'));
             return;
         }
         setIsLocating(true);
@@ -785,7 +792,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             },
             () => {
                 setIsLocating(false);
-                alert("Impossible de récupérer votre position. Vérifiez que la localisation est autorisée pour ce site.");
+                alert(t('ui.erreursCarte.positionImpossible'));
             },
             { enableHighAccuracy: true, timeout: 10000 }
         );
@@ -974,7 +981,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         onNavigateToPoi({
             lat: activePoi.lat,
             lon: activePoi.lon,
-            name: activePoi.name || POI_CATEGORIES.find(c => c.id === activePoi.category)?.label,
+            name: activePoi.name || carteLabel('poi', activePoi.category),
         });
         setActivePoi(null);
     };
@@ -984,7 +991,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
         onNavigateToPoi({
             lat: activeStation.lat,
             lon: activeStation.lon,
-            name: activeStation.name || 'Station de vélos',
+            name: activeStation.name || t('ui.popupCarte.stationVelos'),
         });
         trackEvent("bikeshare_navigated", {
             system: activeStation.system || 'inconnu',
@@ -1052,10 +1059,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                         id="report-button"
                         onClick={onToggleReportMode}
                         className={isReportMode ? "report-button-active" : "report-button"}
-                        title="Ajouter un signalement"
+                        title={t('ui.controles.ajouterSignalement')}
                     >
                         <MdOutlineReportProblem size={18} />
-                        <span className="map-btn-label">{isReportMode ? "Cliquez sur la carte..." : "Ajouter un signalement"}</span>
+                        <span className="map-btn-label">{t(isReportMode ? 'ui.controles.cliquezSurCarte' : 'ui.controles.ajouterSignalement')}</span>
                     </Button>
                 </div>
             )}
@@ -1064,22 +1071,22 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 <div className="map-traffic-control">
                     {showTraffic && (
                         <div className="traffic-legend">
-                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.green }} />Fluide</span>
-                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.orange }} />Dense</span>
-                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.red }} />Embouteillé</span>
-                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.gray }} />Inconnu</span>
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.green }} />{t('ui.controles.fluide')}</span>
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.orange }} />{t('ui.controles.dense')}</span>
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.red }} />{t('ui.controles.embouteille')}</span>
+                            <span className="traffic-legend-item"><span className="traffic-line-sample" style={{ backgroundColor: TRAFFIC_COLORS.gray }} />{t('ui.controles.inconnu')}</span>
                             {trafficError
-                                ? <span className="traffic-legend-time">{trafficError}</span>
-                                : trafficUpdatedAt && <span className="traffic-legend-time">Relevé de {trafficUpdatedAt}</span>}
+                                ? <span className="traffic-legend-time">{t('ui.erreursCarte.traficIndisponible')}</span>
+                                : trafficUpdatedAt && <span className="traffic-legend-time">{t('ui.controles.releveDe', { heure: trafficUpdatedAt })}</span>}
                         </div>
                     )}
                     <Button
                         onClick={onToggleTraffic}
                         className="traffic-button"
-                        title="Trafic en temps réel"
+                        title={t('ui.controles.traficTempsReel')}
                     >
                         <MdOutlineTraffic size={18} />
-                        <span className="map-btn-label">{showTraffic ? "Masquer le trafic" : "Trafic en temps réel"}</span>
+                        <span className="map-btn-label">{t(showTraffic ? 'ui.controles.masquerTrafic' : 'ui.controles.traficTempsReel')}</span>
                     </Button>
                 </div>
             )}
@@ -1089,13 +1096,13 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     {showAir && (
                         <div className="air-legend">
                             <div className="air-legend-head">
-                                <span className="air-legend-title">Qualité de l'air</span>
+                                <span className="air-legend-title">{t('ui.controles.qualiteAir')}</span>
                                 <button
                                     type="button"
                                     className="air-info-btn"
                                     onClick={handleAirInfoToggle}
-                                    title="Comment ça marche et d'où viennent les données"
-                                    aria-label="Informations sur la qualité de l'air"
+                                    title={t('ui.controles.infoDonnees')}
+                                    aria-label={t('ui.controles.infoAir')}
                                 >
                                     <MdInfoOutline />
                                 </button>
@@ -1109,30 +1116,30 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                             className="air-legend-dot"
                                             style={{ backgroundColor: AIR_BAND_COLORS[activeAir.summary.band] || '#9ca3af' }}
                                         />
-                                        Indice {activeAir.summary.aqi} · {activeAir.summary.label}
+                                        {t('ui.controles.indiceAir', { indice: activeAir.summary.aqi, libelle: activeAir.summary.label })}
                                     </span>
                                     {activeAir.summary.dominant && (
-                                        <span className="air-legend-sub">Polluant dominant : {activeAir.summary.dominant}</span>
+                                        <span className="air-legend-sub">{t('ui.controles.polluantDominant', { polluant: activeAir.summary.dominant })}</span>
                                     )}
                                     {airForecastWarning && (
-                                        <span className="air-legend-sub">Dégradation prévue vers {airForecastWarning}</span>
+                                        <span className="air-legend-sub">{t('ui.controles.degradationPrevue', { heure: airForecastWarning })}</span>
                                     )}
                                     {airData.stale
-                                        ? <span className="air-legend-time">Dernier relevé disponible{airUpdatedAt ? ` (${airUpdatedAt})` : ''}</span>
-                                        : airUpdatedAt && <span className="air-legend-time">Relevé de {airUpdatedAt} · maille ~{airData.resolution_km || 11} km</span>}
+                                        ? <span className="air-legend-time">{airUpdatedAt ? t('ui.controles.dernierReleveDispoHeure', { heure: airUpdatedAt }) : t('ui.controles.dernierReleveDispo')}</span>
+                                        : airUpdatedAt && <span className="air-legend-time">{t('ui.controles.releveMaille', { heure: airUpdatedAt, km: airData.resolution_km || 11 })}</span>}
                                 </>
                             ) : (
-                                <span className="air-legend-time">Chargement…</span>
+                                <span className="air-legend-time">{t('ui.controles.chargement')}</span>
                             )}
                         </div>
                     )}
                     <Button
                         onClick={handleAirToggle}
                         className="air-button"
-                        title="Qualité de l'air"
+                        title={t('ui.controles.qualiteAir')}
                     >
                         <MdOutlineAir size={18} />
-                        <span className="map-btn-label">{showAir ? "Masquer l'air" : "Qualité de l'air"}</span>
+                        <span className="map-btn-label">{t(showAir ? 'ui.controles.masquerAir' : 'ui.controles.qualiteAir')}</span>
                     </Button>
                 </div>
             )}
@@ -1142,13 +1149,13 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     {isLightingMenuOpen && (
                         <div className="map-style-menu map-lighting-menu">
                             <div className="lighting-menu-head">
-                                <div className="map-style-menu-title">Éclairage public</div>
+                                <div className="map-style-menu-title">{t('ui.controles.eclairagePublic')}</div>
                                 <button
                                     type="button"
                                     className="lighting-info-btn"
                                     onClick={handleLightingInfoToggle}
-                                    title="Comment ça marche et d'où viennent les données"
-                                    aria-label="Informations sur l'éclairage"
+                                    title={t('ui.controles.infoDonnees')}
+                                    aria-label={t('ui.controles.infoEclairage')}
                                 >
                                     <MdInfoOutline />
                                 </button>
@@ -1156,7 +1163,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
 
                             <label className="map-poi-item">
                                 <span className="map-poi-badge" style={{ backgroundColor: LIGHTING_LAMP_COLOR }} />
-                                <span className="map-poi-label">Lampadaires</span>
+                                <span className="map-poi-label">{t('ui.controles.lampadaires')}</span>
                                 <input
                                     type="checkbox"
                                     checked={showLighting}
@@ -1166,7 +1173,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
 
                             <label className="map-poi-item">
                                 <span className="map-poi-badge" style={{ backgroundColor: LIT_ROADS_COLORS.osm }} />
-                                <span className="map-poi-label">Rues éclairées</span>
+                                <span className="map-poi-label">{t('ui.controles.ruesEclairees')}</span>
                                 <input
                                     type="checkbox"
                                     checked={showLitRoads}
@@ -1177,11 +1184,11 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 <>
                                     <span className="lighting-legend-item">
                                         <span className="lighting-line-sample" style={{ backgroundColor: LIT_ROADS_COLORS.osm }} />
-                                        Éclairage connu
+                                        {t('ui.controles.eclairageConnu')}
                                     </span>
                                     <span className="lighting-legend-item">
                                         <span className="lighting-line-sample" style={{ backgroundColor: LIT_ROADS_COLORS.inferred }} />
-                                        Éclairage déduit
+                                        {t('ui.controles.eclairageDeduit')}
                                     </span>
                                 </>
                             )}
@@ -1192,11 +1199,11 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                         type="button"
                         className="map-layer-toggle"
                         onClick={handleLightingButton}
-                        title={lightingShown ? "Masquer l'éclairage" : "Éclairage public"}
+                        title={t(lightingShown ? 'ui.controles.masquerEclairage' : 'ui.controles.eclairagePublic')}
                     >
                         <MdOutlineLightbulb size={18} />
                         <span className="map-btn-label">
-                            {lightingShown ? "Masquer l'éclairage" : "Éclairage"}
+                            {t(lightingShown ? 'ui.controles.masquerEclairage' : 'ui.controles.eclairage')}
                         </span>
                     </Button>
                 </div>
@@ -1233,10 +1240,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                         className="map-locate-toggle"
                         onClick={handleLocate}
                         disabled={isLocating}
-                        title="Centrer la carte sur ma position"
+                        title={t('ui.controles.centrerPosition')}
                     >
                         <MdMyLocation size={18} />
-                        {littleMap ? "" : <span className="map-btn-label">{isLocating ? "Localisation..." : "Ma position"}</span>}
+                        {littleMap ? "" : <span className="map-btn-label">{t(isLocating ? 'ui.controles.localisationEnCours' : 'ui.controles.maPosition')}</span>}
                     </Button>
                 </div>
             )}
@@ -1245,12 +1252,12 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                 <div className="map-poi-control">
                     {isPoiMenuOpen && (
                         <div className="map-style-menu">
-                            <div className="map-style-menu-title">{"Points d'intérêt"}</div>
+                            <div className="map-style-menu-title">{t('ui.controles.pointsInteret')}</div>
                             {POI_CATEGORIES.map((category) => (
                                 <div key={category.id}>
                                     <label className="map-poi-item">
                                         <span className="map-poi-badge" style={{ backgroundColor: category.color }} />
-                                        <span className="map-poi-label">{category.label}</span>
+                                        <span className="map-poi-label">{carteLabel('poi', category.id)}</span>
                                         <input
                                             type="checkbox"
                                             checked={!!enabledPoiCats[category.id]}
@@ -1261,7 +1268,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                     {category.subTypes && enabledPoiCats[category.id] && category.subTypes.map((subType) => (
                                         <label key={subType.id} className="map-poi-item map-poi-subitem">
                                             <span className="map-poi-dot" style={{ backgroundColor: subType.color }} />
-                                            <span className="map-poi-label">{subType.label}</span>
+                                            <span className="map-poi-label">{carteLabel(category.subTypeLabels, subType.id)}</span>
                                             <input
                                                 type="checkbox"
                                                 checked={!!enabledSubTypes[category.id]?.[subType.id]}
@@ -1271,15 +1278,15 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                     ))}
                                 </div>
                             ))}
-                            <div className="map-poi-hint">Zoomez pour les faire apparaître.</div>
+                            <div className="map-poi-hint">{t('ui.controles.zoomerPourVoir')}</div>
 
-                            <div className="map-style-menu-title map-poi-section">Vélos en libre-service</div>
+                            <div className="map-style-menu-title map-poi-section">{t('ui.controles.velosLibreService')}</div>
                             <label className="map-poi-item">
                                 {/* Bleu nuit comme le disque sur la carte : la
                                     pastille du menu doit désigner la couche, pas
                                     l'un de ses états. */}
                                 <span className="map-poi-badge" style={{ backgroundColor: BIKESHARE_NAVY }} />
-                                <span className="map-poi-label">Stations de vélos</span>
+                                <span className="map-poi-label">{t('ui.controles.stationsVelos')}</span>
                                 <input
                                     type="checkbox"
                                     checked={showBikeshare}
@@ -1291,9 +1298,9 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                     {bikeshareError
                                         ? <div className="map-poi-hint">{bikeshareError}</div>
                                         : bikeshareData?.stale
-                                            ? <div className="map-poi-hint">Dernier relevé disponible.</div>
+                                            ? <div className="map-poi-hint">{t('ui.controles.dernierReleve')}</div>
                                             : bikeshareUpdatedAt && (
-                                                <div className="map-poi-hint">Relevé de {bikeshareUpdatedAt}</div>
+                                                <div className="map-poi-hint">{t('ui.controles.releveDe', { heure: bikeshareUpdatedAt })}</div>
                                             )}
                                     {bikeshareSources && (
                                         <div className="map-poi-hint map-poi-source">{bikeshareSources}</div>
@@ -1301,10 +1308,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 </>
                             )}
 
-                            <div className="map-style-menu-title map-poi-section">Accidentologie</div>
+                            <div className="map-style-menu-title map-poi-section">{t('ui.controles.accidentologie')}</div>
                             <label className="map-poi-item">
                                 <span className="map-poi-badge" style={{ backgroundColor: '#dc2626' }} />
-                                <span className="map-poi-label">Accidents à vélo</span>
+                                <span className="map-poi-label">{t('ui.controles.accidentsVelo')}</span>
                                 <input
                                     type="checkbox"
                                     checked={showAccidents}
@@ -1314,15 +1321,12 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                             {showAccidents && (
                                 <>
                                     {ACCIDENT_LEGEND.map(item => (
-                                        <span key={item.label} className="map-poi-item map-poi-subitem">
+                                        <span key={item.key} className="map-poi-item map-poi-subitem">
                                             <span className="map-poi-dot" style={{ backgroundColor: item.color }} />
-                                            <span className="map-poi-label">{item.label}</span>
+                                            <span className="map-poi-label">{carteLabel('graviteAccident', item.key)}</span>
                                         </span>
                                     ))}
-                                    <div className="map-poi-hint">
-                                        Accidents déclarés aux forces de l'ordre : l'absence de point
-                                        ne signifie pas l'absence de danger.
-                                    </div>
+                                    <div className="map-poi-hint">{t('ui.controles.avertissementAccidents')}</div>
                                     {accidentData?.attributions?.length > 0 && (
                                         <div className="map-poi-hint map-poi-source">
                                             {accidentData.attributions.join(' · ')}
@@ -1338,10 +1342,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                         type="button"
                         className="map-layer-toggle"
                         onClick={() => setIsPoiMenuOpen(!isPoiMenuOpen)}
-                        title="Afficher des points d'intérêt"
+                        title={t('ui.controles.afficherPoi')}
                     >
                         <MdOutlinePlace size={18} />
-                        <span className="map-btn-label">Points d'intérêt</span>
+                        <span className="map-btn-label">{t('ui.controles.pointsInteret')}</span>
                     </Button>
                 </div>
             )}
@@ -1349,7 +1353,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
             <div className="map-layer-control">
                 {isMapSelectOpen && (
                     <div className="map-style-menu">
-                        <div className="map-style-menu-title">Fonds de carte</div>
+                        <div className="map-style-menu-title">{t('ui.controles.fondsCarte')}</div>
                         {MAP_STYLES.map((style) => (
                             <button
                                 key={style.id}
@@ -1360,7 +1364,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 }}
                             >
                                 <span className="style-icon">{style.icon}</span>
-                                {style.label}
+                                {carteLabel('fond', style.id)}
                             </button>
                         ))}
                     </div>
@@ -1370,10 +1374,10 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                     type="button"
                     className="map-layer-toggle"
                     onClick={() => setIsMapSelectOpen(!isMapSelectOpen)}
-                    title="Changer le fond de carte"
+                    title={t('ui.controles.changerFond')}
                 >
                     <FaLayerGroup size={18} />
-                    {littleMap ? "" : <span className="map-btn-label">Calques</span>}
+                    {littleMap ? "" : <span className="map-btn-label">{t('ui.controles.calques')}</span>}
                 </Button>
             </div>
             <Map
@@ -1643,14 +1647,14 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                 style={{ backgroundColor: TRAFFIC_COLORS[activeTraffic.level] || TRAFFIC_COLORS.gray }}
                             >
                                 <span className="map-popup-icon">🚦</span>
-                                <span className="map-popup-title">{TRAFFIC_LABELS[activeTraffic.level] || "État inconnu"}</span>
+                                <span className="map-popup-title">{trafficLabel(activeTraffic.level)}</span>
                             </div>
                             <div className="map-popup-body">
                                 {activeTraffic.commune && <p className="map-popup-line">📍 <strong>{activeTraffic.commune}</strong></p>}
-                                {TRAFFIC_CYCLIST_HINT[activeTraffic.level] && (
-                                    <p className="map-popup-line">{TRAFFIC_CYCLIST_HINT[activeTraffic.level]}</p>
+                                {trafficCyclistHint(activeTraffic.level) && (
+                                    <p className="map-popup-line">{trafficCyclistHint(activeTraffic.level)}</p>
                                 )}
-                                {trafficUpdatedAt && <p className="map-popup-line map-popup-muted">Relevé {trafficUpdatedAt}</p>}
+                                {trafficUpdatedAt && <p className="map-popup-line map-popup-muted">{t('ui.popupCarte.releveHeure', { heure: trafficUpdatedAt })}</p>}
                             </div>
                         </div>
                     </Popup>
@@ -1675,8 +1679,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                             </div>
                             <div className="map-popup-body">
                                 {activeAirStation.name && <p className="map-popup-line">📍 <strong>{activeAirStation.name}</strong></p>}
-                                <p className="map-popup-line map-popup-muted">Capteur au sol · échelle AQI US</p>
-                                {activeAirStation.time && <p className="map-popup-line map-popup-muted">Relevé {activeAirStation.time}</p>}
+                                <p className="map-popup-line map-popup-muted">{t('ui.popupCarte.capteurSol')}</p>
+                                {activeAirStation.time && <p className="map-popup-line map-popup-muted">{t('ui.popupCarte.releveHeure', { heure: activeAirStation.time })}</p>}
                             </div>
                         </div>
                     </Popup>
@@ -1694,11 +1698,11 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                         <div className="map-popup">
                             <div
                                 className="map-popup-header"
-                                style={{ backgroundColor: REPORT_TYPE_META[activeReport.report_type]?.color || '#6b7280' }}
+                                style={{ backgroundColor: REPORT_TYPE_COLORS[activeReport.report_type] || '#6b7280' }}
                             >
                                 <img className="map-popup-icon map-popup-icon-img" src={reportIconSrc(activeReport.report_type)} alt="" />
                                 <span className="map-popup-title">
-                                    {REPORT_TYPE_META[activeReport.report_type]?.label || activeReport.report_type}
+                                    {carteLabel('signalement', activeReport.report_type)}
                                 </span>
                             </div>
                             <div className="map-popup-body">
@@ -1709,8 +1713,8 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                     <p className="map-popup-meta">{formatReportAge(activeReport.created_at)}</p>
                                 )}
                                 <p className="map-popup-votes">
-                                    <span className="vote-chip vote-chip-yes">👍 {activeReport.confirmations_count ?? 0} là</span>
-                                    <span className="vote-chip vote-chip-no">👎 {activeReport.denials_count ?? 0} pas là</span>
+                                    <span className="vote-chip vote-chip-yes">{t('ui.popupCarte.voteLa', { count: activeReport.confirmations_count ?? 0 })}</span>
+                                    <span className="vote-chip vote-chip-no">{t('ui.popupCarte.votePasLa', { count: activeReport.denials_count ?? 0 })}</span>
                                 </p>
                             </div>
                             {(() => {
@@ -1728,14 +1732,14 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                                     type="button"
                                                     onClick={() => handleVote(activeReport.id, true)}
                                                 >
-                                                    Confirmer
+                                                    {t('ui.popupCarte.confirmer')}
                                                 </Button>
                                                 <Button
                                                     className="vote-button-no"
                                                     type="button"
                                                     onClick={() => handleVote(activeReport.id, false)}
                                                 >
-                                                    Pas là
+                                                    {t('ui.popupCarte.pasLa')}
                                                 </Button>
                                             </div>
                                         )}
@@ -1745,7 +1749,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                                 type="button"
                                                 onClick={() => { onDeleteReport(activeReport.id); setActiveReport(null); }}
                                             >
-                                                Supprimer
+                                                {t('ui.popupCarte.supprimer')}
                                             </Button>
                                         )}
                                         {showAbuse && (
@@ -1754,7 +1758,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                                 className="map-popup-abuse"
                                                 onClick={() => setAbuseTarget(activeReport)}
                                             >
-                                                Signaler ce contenu
+                                                {t('ui.popupCarte.signalerContenu')}
                                             </button>
                                         )}
                                     </div>
@@ -1789,15 +1793,15 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                     <div className="map-popup-header" style={{ backgroundColor: poiAccentColor(activePoi, category?.color || '#6b7280') }}>
                                         <img className="map-popup-icon map-popup-icon-img" src={poiIconSrc(activePoi)} alt="" />
                                         <span className="map-popup-header-text">
-                                            <span className="map-popup-title">{activePoi.name || category?.label}</span>
-                                            {activePoi.name && <span className="map-popup-subtitle">{category?.label}</span>}
+                                            <span className="map-popup-title">{activePoi.name || carteLabel('poi', category?.id)}</span>
+                                            {activePoi.name && <span className="map-popup-subtitle">{carteLabel('poi', category?.id)}</span>}
                                         </span>
                                     </div>
                                     {details.length > 0 && (
                                         <div className="map-popup-body">
                                             {details.map(field => (
                                                 <p key={field.key} className="map-popup-detail">
-                                                    {field.label} : <strong>{(field.format || formatPoiTag)(activePoi[field.key])}</strong>
+                                                    {carteLabel('champPoi', field.key)} : <strong>{(field.format || formatPoiTag)(activePoi[field.key])}</strong>
                                                 </p>
                                             ))}
                                         </div>
@@ -1805,7 +1809,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                     {onNavigateToPoi && (
                                         <div className="map-popup-footer">
                                             <Button type="button" onClick={handleNavigateToPoi}>
-                                                Y aller
+                                                {t('ui.popupCarte.yAller')}
                                             </Button>
                                         </div>
                                     )}
@@ -1851,19 +1855,19 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                                 <span className="map-popup-logo">
                                                     <img
                                                         src={BIKESHARE_LOGOS[activeStation.system]}
-                                                        alt={activeStation.system_name || 'Réseau'}
+                                                        alt={activeStation.system_name || t('ui.popupCarte.reseau')}
                                                     />
                                                 </span>
                                             )
                                             : <FaBicycle className="map-popup-icon" aria-hidden="true" />}
                                         <span className="map-popup-header-text">
-                                            <span className="map-popup-title">{activeStation.name || 'Station de vélos'}</span>
+                                            <span className="map-popup-title">{activeStation.name || t('ui.popupCarte.stationVelos')}</span>
                                             <span className="map-popup-subtitle">
                                                 {isOff
-                                                    ? 'Station hors service'
+                                                    ? t('ui.popupCarte.stationHorsService')
                                                     : bikes == null
-                                                        ? 'Disponibilité inconnue'
-                                                        : `${bikes} vélo${bikes > 1 ? 's' : ''} disponible${bikes > 1 ? 's' : ''}`}
+                                                        ? t('ui.popupCarte.disponibiliteInconnue')
+                                                        : t('ui.popupCarte.velosDisponibles', { count: bikes })}
                                             </span>
                                         </span>
                                     </div>
@@ -1879,7 +1883,7 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                                             <field.Icon className="bikeshare-count-icon" aria-hidden="true" />
                                                             <span className="bikeshare-count-value">{activeStation[field.key]}</span>
                                                         </span>
-                                                        <span className="bikeshare-count-label">{field.label}</span>
+                                                        <span className="bikeshare-count-label">{carteLabel('vls', field.key)}</span>
                                                     </span>
                                                 ))}
                                             </div>
@@ -1888,10 +1892,12 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                             <>
                                                 <div
                                                     className="bikeshare-bar"
-                                                    title={`${parts.mecha + parts.elec + parts.autres} vélo(s), `
-                                                        + `${parts.docks} place(s) libre(s)`
-                                                        + (parts.indispo ? `, ${parts.indispo} indisponible(s)` : '')
-                                                        + ` — ${parts.total} points d'attache`}
+                                                    title={t(parts.indispo ? 'ui.popupCarte.repartitionIndispo' : 'ui.popupCarte.repartition', {
+                                                        velos: parts.mecha + parts.elec + parts.autres,
+                                                        places: parts.docks,
+                                                        indispo: parts.indispo,
+                                                        total: parts.total,
+                                                    })}
                                                 >
                                                     {[
                                                         ['mechanical', parts.mecha],
@@ -1909,32 +1915,32 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                                 </div>
                                                 {parts.indispoNotable && (
                                                     <p className="map-popup-warning">
-                                                        {`${parts.indispo} points d'attache indisponibles.`}
+                                                        {t('ui.popupCarte.attachesIndisponibles', { count: parts.indispo })}
                                                     </p>
                                                 )}
                                             </>
                                         )}
-                                        {isOff && <p className="map-popup-warning">Ni retrait ni retour possible.</p>}
+                                        {isOff && <p className="map-popup-warning">{t('ui.popupCarte.niRetraitNiRetour')}</p>}
                                         {!isOff && activeStation.is_returning === false && (
-                                            <p className="map-popup-warning">Retour de vélo impossible.</p>
+                                            <p className="map-popup-warning">{t('ui.popupCarte.retourImpossible')}</p>
                                         )}
                                         {!isOff && activeStation.is_returning !== false && activeStation.docks_available === 0 && (
-                                            <p className="map-popup-warning">Station pleine : aucun retour possible.</p>
+                                            <p className="map-popup-warning">{t('ui.popupCarte.stationPleine')}</p>
                                         )}
                                         {details.map(field => (
                                             <p key={field.key} className="map-popup-detail">
-                                                {field.label} : <strong>{(field.format || String)(activeStation[field.key])}</strong>
+                                                {carteLabel('vls', field.key)} : <strong>{(field.format || String)(activeStation[field.key])}</strong>
                                             </p>
                                         ))}
                                         {activeStation.stale && (
-                                            <p className="map-popup-meta">Dernier relevé disponible, données non rafraîchies.</p>
+                                            <p className="map-popup-meta">{t('ui.popupCarte.donneesNonRafraichies')}</p>
                                         )}
                                         {freshness && <p className="map-popup-meta">{freshness}</p>}
                                     </div>
                                     {onNavigateToPoi && (
                                         <div className="map-popup-footer">
                                             <Button type="button" onClick={handleNavigateToStation}>
-                                                Y aller
+                                                {t('ui.popupCarte.yAller')}
                                             </Button>
                                         </div>
                                     )}
@@ -1965,19 +1971,19 @@ export default function MapComponent({ start, end, pointilles, itineraires, sele
                                             : activeAccident.severity >= 3 ? '#dc2626' : '#f97316' }}
                                     >
                                         <span className="map-popup-header-text">
-                                            <span className="map-popup-title">Accident à vélo</span>
+                                            <span className="map-popup-title">{t('ui.popupCarte.accidentVelo')}</span>
                                             {date && <span className="map-popup-subtitle">{date}</span>}
                                         </span>
                                     </div>
                                     <div className="map-popup-body">
                                         {activeAccident.severity_label && (
                                             <p className="map-popup-detail">
-                                                Gravité : <strong>{activeAccident.severity_label}</strong>
+                                                {t('ui.popupCarte.gravite')} <strong>{activeAccident.severity_label}</strong>
                                             </p>
                                         )}
                                         {details.map(field => (
                                             <p key={field.key} className="map-popup-detail">
-                                                {field.label} : <strong>{activeAccident[field.key]}</strong>
+                                                {carteLabel('champAccident', field.key)} : <strong>{activeAccident[field.key]}</strong>
                                             </p>
                                         ))}
                                     </div>

@@ -5,8 +5,10 @@ import { isCovered } from '../../services/apiBack';
 import { trackEvent } from '../../services/analytics';
 import { useTheme } from '../../hooks/useTheme';
 import { withAlpha } from '../../constants/theme';
+import { useTranslation } from 'react-i18next';
 
 export default function AdressInput({ placeholder, onSelect, icon, defaultValue, variant = 'search', zIndex = 1000, onFocusChange, checkCoverage = false }) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState(defaultValue || "");
   const [suggestions, setSuggestions] = useState([]);
   const [showList, setShowList] = useState(false);
@@ -109,7 +111,7 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
 
       {outOfZone && (
         <Text style={[styles.warningText, { color: colors.warning, backgroundColor: colors.warningBg }]}>
-          Cette adresse est en dehors de la zone couverte par Sécu-Cycle.
+          {t('itineraire.recherche.horsZoneTexte')}
         </Text>
       )}
 
@@ -121,7 +123,7 @@ export default function AdressInput({ placeholder, onSelect, icon, defaultValue,
         }]}>
           <View style={[styles.suggestionItem, { borderBottomWidth: 0 }]}>
             <Text style={[styles.suggestionSubText, { color: colors.textSecondary }]}>
-              Aucun résultat trouvé
+              {t('itineraire.recherche.aucunResultat')}
             </Text>
           </View>
         </View>

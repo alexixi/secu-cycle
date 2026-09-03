@@ -1,1 +1,438 @@
-{}
+{
+    "weather": {
+        "condition": {
+            "clear": "Clear sky",
+            "mainly_clear": "Mainly clear",
+            "partly_cloudy": "Partly cloudy",
+            "overcast": "Overcast",
+            "fog": "Fog",
+            "rime_fog": "Freezing fog",
+            "drizzle_light": "Light drizzle",
+            "drizzle": "Drizzle",
+            "drizzle_dense": "Heavy drizzle",
+            "freezing_drizzle_light": "Freezing drizzle",
+            "freezing_drizzle": "Heavy freezing drizzle",
+            "rain_slight": "Light rain",
+            "rain": "Rain",
+            "rain_heavy": "Heavy rain",
+            "freezing_rain_light": "Freezing rain",
+            "freezing_rain": "Heavy freezing rain",
+            "snow_slight": "Light snow",
+            "snow": "Snow",
+            "snow_heavy": "Heavy snow",
+            "snow_grains": "Snow grains",
+            "showers_slight": "Showers",
+            "showers": "Moderate showers",
+            "showers_violent": "Violent showers",
+            "snow_showers_slight": "Snow showers",
+            "snow_showers": "Heavy snow showers",
+            "thunderstorm": "Thunderstorm",
+            "thunderstorm_hail": "Thunderstorm with hail",
+            "thunderstorm_hail_heavy": "Severe thunderstorm with hail",
+            "unknown": "Conditions unknown"
+        },
+        "alert": {
+            "none": "Nothing to report",
+            "watch": "Watch",
+            "warning": "Difficult conditions",
+            "severe": "Danger"
+        },
+        "hazard": {
+            "hail": "Risk of hail",
+            "thunderstorm": "Risk of thunderstorm",
+            "gust": "Gusts",
+            "ice": "Risk of ice",
+            "freezing": "Sub-zero temperatures",
+            "cold": "Cold",
+            "heavy_rain": "Heavy rain",
+            "rain": "Rain",
+            "snow": "Snow",
+            "fog": "Reduced visibility"
+        },
+        "equipment": {
+            "rain_jacket": "Waterproof jacket",
+            "mudguards": "Mudguards",
+            "gloves": "Gloves",
+            "warm_layer": "Warm layer",
+            "lights": "Lights",
+            "windbreaker": "Windbreaker"
+        },
+        "reason": {
+            "rain_now": "{mm} mm falling",
+            "rain_soon": "{mm} mm expected in the next {hours} h",
+            "rain_probability": "{percent}% chance of rain",
+            "wet_road": "Wet road",
+            "felt_temperature": "Feels like {degrees} °C",
+            "gusts": "Gusts at {speed} km/h",
+            "wind": "Wind at {speed} km/h",
+            "fog": "Fog",
+            "night": "Riding after dark"
+        },
+        "cardinal": {
+            "N": "N",
+            "NNE": "NNE",
+            "NE": "NE",
+            "ENE": "ENE",
+            "E": "E",
+            "ESE": "ESE",
+            "SE": "SE",
+            "SSE": "SSE",
+            "S": "S",
+            "SSW": "SSW",
+            "SW": "SW",
+            "WSW": "WSW",
+            "W": "W",
+            "WNW": "WNW",
+            "NW": "NW",
+            "NNW": "NNW"
+        }
+    },
+    "air": {
+        "band": {
+            "good": "Good",
+            "fair": "Fair",
+            "moderate": "Moderate",
+            "poor": "Poor",
+            "very_poor": "Very poor",
+            "extreme": "Extremely poor"
+        },
+        "us_band": {
+            "good": "Good",
+            "moderate": "Moderate",
+            "usg": "Unhealthy for sensitive groups",
+            "unhealthy": "Unhealthy",
+            "very_unhealthy": "Very unhealthy",
+            "hazardous": "Hazardous"
+        },
+        "pollutant": {
+            "european_aqi_pm2_5": "Fine particles (PM2.5)",
+            "european_aqi_pm10": "Particles (PM10)",
+            "european_aqi_nitrogen_dioxide": "Nitrogen dioxide (NO₂)",
+            "european_aqi_ozone": "Ozone (O₃)",
+            "european_aqi_sulphur_dioxide": "Sulphur dioxide (SO₂)"
+        }
+    },
+    "badge": {
+        "first_route": {
+            "name": "First route",
+            "description": "Complete your first ride."
+        },
+        "routes_10": {
+            "name": "10 routes",
+            "description": "Complete 10 rides."
+        },
+        "rain_rider": {
+            "name": "Rain rider",
+            "description": "Complete 5 rides that started in the rain."
+        },
+        "safe_routes_10": {
+            "name": "10 safer routes",
+            "description": "Complete 10 rides following the safer route."
+        },
+        "distance_50": {
+            "name": "50 km ridden",
+            "description": "Ride a total of 50 km on completed trips."
+        },
+        "distance_200": {
+            "name": "200 km ridden",
+            "description": "Ride a total of 200 km on completed trips."
+        }
+    },
+    "email": {
+        "common": {
+            "footer": "Sécu'Cycle — safer cycling routes",
+            "code_validity": "This code is valid for 15 minutes.",
+            "no_link": "This e-mail is purely informational: it deliberately contains no links."
+        },
+        "verification": {
+            "subject": "Your Sécu'Cycle verification code",
+            "heading": "Welcome to Sécu'Cycle!",
+            "intro": "To activate your account, enter the verification code below:",
+            "hint": "If you did not request this, ignore this e-mail.",
+            "text_code": "Your verification code is: {code}"
+        },
+        "password_reset": {
+            "subject": "Reset your Sécu'Cycle password",
+            "heading": "Password reset",
+            "intro": "You asked to reset your password. Enter the code below to choose a new one:",
+            "hint": "If you did not request this, ignore this e-mail: your password remains unchanged.",
+            "text_code": "Your reset code is: {code}"
+        },
+        "email_change_code": {
+            "subject": "Confirm your new Sécu'Cycle address",
+            "heading": "Confirming your new address",
+            "intro": "You asked to use {email} as the sign-in address of your Sécu'Cycle account. Enter the code below in the app to confirm:",
+            "hint": "If you did not request this, ignore this e-mail: your address remains unchanged, and this mailbox will not be linked to any account.",
+            "text_title": "Confirming your new Sécu'Cycle address",
+            "text_intro": "You asked to use {email} as your sign-in address.",
+            "text_code": "Your confirmation code is: {code}",
+            "text_hint": "If you did not request this, ignore this e-mail: your address remains unchanged."
+        },
+        "email_change_alert": {
+            "subject": "Address change requested on your Sécu'Cycle account",
+            "heading": "Address change requested",
+            "intro": "A request to change the sign-in address of your Sécu'Cycle account has just been recorded, to:",
+            "effect": "The change will only take effect once a confirmation code has been entered from that new address.",
+            "warning_lead": "If you did not make this request",
+            "warning": "{lead}, your password is probably compromised: change it immediately from the app, then contact us.",
+            "text_title": "Address change requested on your Sécu'Cycle account",
+            "text_intro": "A request to change your sign-in address to {email} has just been recorded."
+        },
+        "account_deleted": {
+            "subject": "Your Sécu'Cycle account has been deleted",
+            "heading": "Account deleted",
+            "data": "Your Sécu'Cycle account has just been deleted, along with the data attached to it: your personal details, your addresses, your bikes, your routes and their tracks, your history and your badges.",
+            "reports": "The hazard reports you created remain visible to other cyclists, but they are no longer linked to your account.",
+            "final": "This deletion is permanent: no restoration is possible. You can create a new account at any time.",
+            "warning_lead": "If you did not request this deletion",
+            "warning": "{lead}, write to us at {email}."
+        },
+        "recap": {
+            "subject_monthly": "Your {periode} on the bike",
+            "subject_yearly": "Your {periode} on the bike",
+            "title_monthly": "Your {periode}",
+            "title_yearly": "Your {periode}",
+            "greeting": "Hello,",
+            "greeting_named": "Hello {prenom},",
+            "intro": "Here is how far you rode in {periode}: {trajets}.",
+            "trips_one": "{count} ride",
+            "trips_other": "{count} rides",
+            "tile_trips": "Rides",
+            "tile_distance": "Distance",
+            "tile_time": "Estimated time",
+            "tile_elevation": "Elevation gain",
+            "comparison_more": "That is {ecart}% more than in {periode}.",
+            "comparison_less": "That is {ecart}% less than in {periode}.",
+            "comparison_same": "That is about as much as in {periode}.",
+            "longest": "Your longest ride: {distance}.",
+            "safe_routes": "Including {count} on the safest route.",
+            "estimate_note": "Durations are those estimated when your routes were computed.",
+            "badges_one": "New badge",
+            "badges_other": "{count} new badges",
+            "tile_text": "{libelle}: {valeur}",
+            "badges_text_header": "Badges unlocked:",
+            "unsubscribe_reason": "You are receiving this e-mail because you have a Sécu'Cycle account.",
+            "unsubscribe_link": "Stop receiving these summaries",
+            "unsubscribe_text": "To stop receiving these summaries: {lien}",
+            "unit_minutes": "{value} min",
+            "unit_hours": "{value} h",
+            "unit_hours_minutes": "{hours} h {minutes}",
+            "unit_km": "{value} km",
+            "unit_m": "{value} m",
+            "month": {
+                "1": "January",
+                "2": "February",
+                "3": "March",
+                "4": "April",
+                "5": "May",
+                "6": "June",
+                "7": "July",
+                "8": "August",
+                "9": "September",
+                "10": "October",
+                "11": "November",
+                "12": "December"
+            }
+        },
+        "unsubscribe": {
+            "confirm_heading": "Stop receiving the summaries?",
+            "confirm_intro": "You will no longer receive the monthly and yearly summary of your rides. Your account and your data remain unchanged.",
+            "confirm_button": "Confirm unsubscribe",
+            "confirm_note": "You can turn them back on at any time from the app settings.",
+            "done_heading": "Done",
+            "done_intro": "You will no longer receive activity summaries.",
+            "done_note": "E-mails tied to your account — verification, password reset — are still sent: they are not covered by this setting. You can turn the summaries back on whenever you like from the app settings.",
+            "invalid_heading": "This link is no longer valid",
+            "invalid_intro": "We could not process this request: the link is incomplete or has been replaced.",
+            "invalid_note": "You can turn the summaries off from the app settings, or write to us at {email}."
+        }
+    },
+    "error": {
+        "common": {
+            "no_fields": "No field to update.",
+            "graph_unavailable": "Graph unavailable.",
+            "graph_not_loaded": "Graph not loaded",
+            "sync_running": "A synchronisation is already running.",
+            "bbox_format": "bbox expected in the format lon_min,lat_min,lon_max,lat_max.",
+            "bbox_bounds": "bbox: the minimum bounds exceed the maximum ones."
+        },
+        "auth": {
+            "invalid_token": "Invalid token.",
+            "invalid_token_payload": "Invalid token payload.",
+            "user_not_found": "User not found.",
+            "account_suspended": "Account suspended.",
+            "account_suspended_contact": "Account suspended. Please contact the administrators.",
+            "account_unverified": "Account not verified. Please check your e-mail.",
+            "token_revoked": "Token revoked.",
+            "admin_only": "Administrators only",
+            "invalid_credentials": "Invalid credentials.",
+            "refresh_invalid_or_expired": "Refresh token invalid or expired",
+            "refresh_invalid": "Refresh token invalid",
+            "refresh_revoked": "Refresh token revoked",
+            "code_invalid_or_expired": "Invalid or expired code.",
+            "wrong_old_password": "Current password is incorrect.",
+            "wrong_password": "Incorrect password.",
+            "email_taken": "This e-mail address is already linked to an account.",
+            "email_unchanged": "This address is already the one on your account.",
+            "code_cooldown": "A code has just been sent. Try again in a minute.",
+            "change_request_not_found": "Change request not found."
+        },
+        "user": {
+            "self_demote": "You cannot remove your own administrator rights.",
+            "self_sanction": "You cannot sanction yourself.",
+            "self_delete": "You cannot delete your own account."
+        },
+        "bike": {
+            "not_found": "Bike not found"
+        },
+        "history": {
+            "not_found": "History entry not found"
+        },
+        "report": {
+            "banned": "You are no longer allowed to submit reports.",
+            "not_found": "Report not found.",
+            "self_vote": "You cannot vote on your own report.",
+            "self_flag": "You cannot flag your own report.",
+            "no_author": "This report no longer has an author, there is nobody to block.",
+            "self_block": "You cannot block yourself."
+        },
+        "geo": {
+            "no_address": "No address at this location."
+        },
+        "poi": {
+            "unknown_categories": "Unknown categories: {unknown}. Accepted values: {accepted}."
+        },
+        "route": {
+            "not_found": "Route not found",
+            "computation_failed": "The route could not be computed.",
+            "snap_failed": "Neither the start nor the destination could be attached to the cycle network.",
+            "out_of_zone_start": "The start is outside the area covered by Sécu-Cycle.",
+            "out_of_zone_end": "The destination is outside the area covered by Sécu-Cycle.",
+            "no_route": "No route found between the start and the destination.",
+            "unexpected": "The route computation failed.",
+            "failed": "Computation failed."
+        },
+        "tag": {
+            "name_taken": "A label with this name already exists.",
+            "not_found": "Label not found."
+        },
+        "task": {
+            "assignee_not_found": "Assigned user not found.",
+            "assignee_not_admin": "A task can only be assigned to an administrator.",
+            "tags_not_found": "One or more labels could not be found.",
+            "not_found": "Task not found."
+        },
+        "recap": {
+            "no_period": "No period can be computed.",
+            "no_recap": "No summary for this user over the period: no completed ride, unsubscribed, unverified, or already sent."
+        },
+        "contact": {
+            "send_failed": "The message could not be sent. Try again later, or write to us directly."
+        },
+        "commune": {
+            "not_found": "Municipality not found: “{name}”.",
+            "not_found_reason": "Municipality not found: “{name}” ({reason})."
+        },
+        "graph": {
+            "profile_not_found": "Profile not found.",
+            "profile_name_taken": "A profile already has this name.",
+            "base_profile_not_found": "Base profile not found (id {id}).",
+            "profile_needs_commune": "A profile must contain at least one municipality: select a base profile or add a municipality.",
+            "rename_active": "The active profile cannot be renamed: activate another one first.",
+            "delete_active": "The active profile cannot be deleted: activate another one first.",
+            "delete_default": "The default profile cannot be deleted: designate another one first.",
+            "delete_data_scope": "This profile bounds the data: deleting it would fall the synchronisations back on the graph extent, which would purge the municipalities outside it. Designate another data extent first.",
+            "import_empty": "This file contains no profile.",
+            "import_duplicate": "The file contains two profiles named “{name}”.",
+            "import_name_taken": "A profile already has this name: “{name}”.",
+            "build_running": "A build is already running.",
+            "not_built": "The graph for this profile has not been built yet.",
+            "reload_running": "A reload is already running.",
+            "build_running_activate": "A build is running: wait for it to finish before activating a profile.",
+            "already_active": "This profile is already active.",
+            "scope_no_commune": "This profile contains no municipality: the synchronisations would have nothing to fetch and would purge the whole database.",
+            "already_data_scope": "This profile already bounds the data."
+        }
+    },
+    "message": {
+        "account_verified": "Account verified.",
+        "verification_code_sent": "If an unverified account exists for this e-mail, a code has been sent.",
+        "reset_code_sent": "If an account exists for this e-mail, a code has been sent.",
+        "password_reset": "Password reset.",
+        "email_change_code_sent": "A confirmation code has been sent to the new address.",
+        "contact_sent": "Message sent.",
+        "recap_test_sent": "Test summary sent to {email}."
+    },
+    "ordinal": {
+        "one": "{count}st",
+        "two": "{count}nd",
+        "few": "{count}rd",
+        "other": "{count}th"
+    },
+    "guidance": {
+        "distance": {
+            "now": "now",
+            "meters": "in {distance} m",
+            "kilometers": "in {distance} km"
+        },
+        "turn": {
+            "depart": {
+                "plain": "Set off",
+                "street": "Set off on {street}"
+            },
+            "continue": {
+                "plain": "Continue straight on",
+                "street": "Continue straight on {street}"
+            },
+            "slight_right": {
+                "plain": "Keep right",
+                "street": "Keep right onto {street}"
+            },
+            "turn_right": {
+                "plain": "Turn right",
+                "street": "Turn right onto {street}"
+            },
+            "sharp_right": {
+                "plain": "Sharp right",
+                "street": "Sharp right onto {street}"
+            },
+            "u_turn": {
+                "plain": "Make a U-turn",
+                "street": "Make a U-turn onto {street}"
+            },
+            "sharp_left": {
+                "plain": "Sharp left",
+                "street": "Sharp left onto {street}"
+            },
+            "turn_left": {
+                "plain": "Turn left",
+                "street": "Turn left onto {street}"
+            },
+            "slight_left": {
+                "plain": "Keep left",
+                "street": "Keep left onto {street}"
+            },
+            "fallback": {
+                "plain": "Continue",
+                "street": "Continue on {street}"
+            }
+        },
+        "roundabout": {
+            "exit": "At the roundabout, take the {ordinal} exit",
+            "exit_street": "At the roundabout, take the {ordinal} exit onto {street}",
+            "generic": "At the roundabout, take the exit",
+            "generic_street": "At the roundabout, take the exit onto {street}"
+        },
+        "arrival": {
+            "near": "You are nearly there",
+            "reached": "You have arrived at your destination"
+        }
+    },
+    "route": {
+        "variant": {
+            "fast": "Fastest",
+            "safe": "Safest",
+            "compromise": "Balanced"
+        }
+    }
+}

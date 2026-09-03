@@ -1,0 +1,18 @@
+{
+    "guidage": {
+        "canal": "Navigation",
+        "demarrage": "Navigation in progress",
+        "calcul": "Calculating route…",
+        "titreParDefaut": "Navigation",
+        "arrive": "You have arrived!",
+        "recalcul": "Recalculating route…",
+        "ensuite": "Then: {{instruction}}"
+    },
+    "localisation": {
+        "permissionRequise": "Permission required",
+        "gpsNecessaire": "GPS is required for navigation.",
+        "modeRestreint": "Restricted mode",
+        "modeRestreintTexte": "Guidance will stop if you lock your phone. Choose “Always” in the settings to fix this.",
+        "corps": "Guidance in progress"
+    }
+}

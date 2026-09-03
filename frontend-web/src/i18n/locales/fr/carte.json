@@ -1,0 +1,489 @@
+{
+    "theme": {
+        "stationnements-velo": {
+            "label": "Stationnements vélo",
+            "legend": {
+                "arceaux": "Arceaux",
+                "rateliers_pince_roues": "Râteliers, pince-roues",
+                "abris_et_consignes": "Abris et consignes",
+                "autres_non_precise": "Autres, non précisé"
+            },
+            "stats": {
+                "points_de_stationnement": "points de stationnement",
+                "places_declarees": "places déclarées",
+                "arceaux": "arceaux",
+                "emplacements_abrites": "emplacements abrités"
+            }
+        },
+        "toilettes-publiques": {
+            "label": "Toilettes publiques",
+            "legend": {
+                "gratuites": "Gratuites",
+                "payantes": "Payantes",
+                "tarif_non_precise": "Tarif non précisé"
+            },
+            "stats": {
+                "toilettes_recensees": "toilettes recensées",
+                "gratuites": "gratuites",
+                "payantes": "payantes",
+                "accessibles_en_fauteuil": "accessibles en fauteuil"
+            }
+        },
+        "points-eau": {
+            "label": "Points d’eau potable",
+            "legend": {
+                "point_deau_potable": "Point d’eau potable"
+            },
+            "stats": {
+                "points_deau_recenses": "points d’eau recensés",
+                "en_acces_libre": "en accès libre"
+            }
+        },
+        "toilettes-et-points-eau": {
+            "label": "Toilettes et points d’eau",
+            "legend": {
+                "toilettes": "Toilettes",
+                "point_deau_potable": "Point d’eau potable"
+            },
+            "stats": {
+                "haltes_recensees": "haltes recensées",
+                "toilettes": "toilettes",
+                "points_deau": "points d’eau"
+            }
+        },
+        "reparation-velo": {
+            "label": "Réparation de vélo",
+            "legend": {
+                "station_libre_service": "Station libre-service",
+                "atelier_magasin": "Atelier / magasin"
+            },
+            "stats": {
+                "adresses_recensees": "adresses recensées",
+                "stations_en_libre_service": "stations en libre-service",
+                "ateliers_et_magasins": "ateliers et magasins"
+            }
+        },
+        "eclairage-public": {
+            "label": "Éclairage public",
+            "legend": {
+                "densite_de_points_lumineux": "Densité de points lumineux",
+                "rue_eclairee_releve": "Rue éclairée (relevé)",
+                "rue_eclairee_deduite": "Rue éclairée (déduite)"
+            },
+            "stats": {
+                "points_lumineux": "points lumineux"
+            }
+        },
+        "velos-libre-service": {
+            "label": "Vélos en libre-service",
+            "legend": {
+                "velos_disponibles": "Vélos disponibles",
+                "station_presque_vide": "Station presque vide",
+                "station_vide": "Station vide",
+                "station_pleine": "Station pleine",
+                "hors_service": "Hors service"
+            },
+            "stats": {
+                "stations": "stations",
+                "velos_disponibles": "vélos disponibles",
+                "velos_electriques": "vélos électriques",
+                "places_libres": "places libres"
+            }
+        },
+        "trafic-routier": {
+            "label": "Trafic routier",
+            "legend": {
+                "circulation_fluide": "Circulation fluide",
+                "circulation_dense": "Circulation dense",
+                "axe_embouteille": "Axe embouteillé",
+                "etat_inconnu": "État inconnu"
+            },
+            "stats": {
+                "troncons_suivis": "tronçons suivis",
+                "fluides": "fluides",
+                "denses": "denses",
+                "embouteilles": "embouteillés"
+            }
+        },
+        "accidents-velo": {
+            "label": "Accidents à vélo",
+            "legend": {
+                "accident_mortel": "Accident mortel",
+                "blesse_hospitalise": "Blessé hospitalisé",
+                "blesse_leger": "Blessé léger"
+            },
+            "stats": {
+                "accidents_cartographies": "accidents cartographiés",
+                "blesses_hospitalises": "blessés hospitalisés",
+                "accidents_mortels": "accidents mortels",
+                "periode_couverte": "période couverte"
+            }
+        }
+    },
+    "source": {
+        "osm": {
+            "detail": "collecté via Overpass"
+        },
+        "baac": {
+            "detail": "dérivé des BAAC de l’ONISR, publié par Koumoul"
+        },
+        "licence": {
+            "fluxOuvert": "Flux ouvert, attribution requise"
+        }
+    },
+    "ui": {
+        "filAriane": "Fil d’Ariane",
+        "accueil": "Accueil",
+        "cartes": "Cartes",
+        "chiffresCles": "Chiffres clés",
+        "hub": {
+            "titrePage": "Cartes cyclables par ville | Sécu’Cycle",
+            "metaDescription": "Toutes les cartes Sécu’Cycle : stationnements vélo, toilettes, points d’eau, éclairage, trafic et accidents à {{villes}}.",
+            "h1": "Cartes cyclables par ville",
+            "villeManquante": "Une ville manquante ?",
+            "villeManquanteTexte": "Nous ne publions une carte que lorsque les données ouvertes du territoire sont assez complètes pour être utiles — un recensement trop clairsemé donnerait une image fausse. La couverture s’étend au fil des territoires intégrés au calculateur : vous pouvez nous suggérer une ville via la <contact>page de contact</contact>.",
+            "intro": "Sécu’Cycle calcule des itinéraires à vélo sécurisés à partir d’une douzaine de jeux de données ouvertes. Ces cartes thématiques donnent accès à chacune de ces couches séparément, ville par ville : où garer son vélo, où trouver de l’eau, quelles rues sont éclairées, où les cyclistes sont accidentés.",
+            "sansItineraire": " Le calcul d’itinéraire n’y est pas encore disponible.",
+            "couvertureTexte": "Nous ne publions une carte que lorsque les données ouvertes du territoire sont assez complètes pour être utiles — un recensement trop clairsemé donnerait une image fausse. La couverture s’étend au fil des territoires intégrés au calculateur : vous pouvez nous suggérer une ville via la <contact>page de contact</contact>."
+        },
+        "ville": {
+            "zoneCouverte": "Zone couverte",
+            "sansRoutage": "Les cartes ci-dessus couvrent {{communes}}. Le calcul d’itinéraire, lui, n’y est pas encore proposé : il s’appuie sur un réseau routier chargé en mémoire par notre serveur, dont l’emprise est plus étroite que celle des données.",
+            "avecRoutage": "Le calculateur d’itinéraires couvre {{communes}}. Les cartes ci-dessus portent sur cette même emprise.",
+            "detailDonnees": "Le détail des jeux de données et de leurs licences figure sur la page <donnees>Données et sources</donnees>.",
+            "suffixeTitre": " | Sécu’Cycle"
+        },
+        "cta": {
+            "pasEncore": "Itinéraires : pas encore {{prep}}",
+            "villesCouvertes": "Voir les villes couvertes",
+            "trajet": "Un trajet à vélo {{prep}} ?",
+            "trajetTexte": "Sécu’Cycle calcule un itinéraire cyclable sécurisé qui tient compte des aménagements, de l’éclairage, du trafic et des accidents recensés — avec cette couche affichée sur la carte.",
+            "calculer": "Calculer mon itinéraire",
+            "itinerairesCalculesA": "Les itinéraires sont pour l’instant calculés à {{villes}}.",
+            "villeTexte": "Toutes ces couches alimentent le calculateur d’itinéraires : il en tient compte pour proposer un trajet cyclable réellement praticable, adapté à votre vélo et à votre profil.",
+            "themeTexte": "Sécu’Cycle calcule un itinéraire cyclable sécurisé qui tient compte des aménagements, de l’éclairage, du trafic et des accidents recensés — avec cette couche affichée sur la carte."
+        },
+        "theme": {
+            "reduireCarte": "Réduire la carte",
+            "agrandirCarte": "Agrandir la carte",
+            "questionsFrequentes": "Questions fréquentes",
+            "sourcesLicences": "Sources et licences",
+            "detailDonnees": "Le détail des jeux de données et de leurs licences figure sur la page <donnees>Données et sources</donnees>.",
+            "autresCartes": "Autres cartes {{prep}}",
+            "memeThemeAilleurs": "{{theme}} dans d’autres villes",
+            "themeDansVille": "{{theme}} {{prep}}",
+            "tempsReel": "Données rafraîchies en continu à partir du flux officiel."
+        },
+        "fermer": "Fermer",
+        "carte": {
+            "changerFond": "Changer le fond de carte",
+            "chargementDonnees": "Chargement des données…",
+            "aucuneDonnee": "Aucune donnée sur cette emprise pour le moment.",
+            "pointInteret": "Point d’intérêt",
+            "aucunDetail": "Aucun détail supplémentaire renseigné.",
+            "date": "Date",
+            "commune": "Commune",
+            "accident": "Accident",
+            "accidentAvecGravite": "Accident — {{gravite}}",
+            "station": "Station",
+            "stationHorsService": "Station hors service.",
+            "velosDisponibles": "Vélos disponibles",
+            "dontElectriques": "dont {{n}} électriques",
+            "placesLibres": "Places libres",
+            "reseau": "Réseau",
+            "oui": "Oui",
+            "non": "Non",
+            "placeholderPrerendu": "Carte interactive {{prep}} — {{theme}}."
+        },
+        "menu": {
+            "copiezCoordonnees": "Copiez les coordonnées :",
+            "itineraireDepuis": "Itinéraire depuis ce point",
+            "itineraireVers": "Itinéraire vers ce point",
+            "ajouterSignalement": "Ajouter un signalement ici",
+            "centrerZoomer": "Centrer et zoomer ici",
+            "copie": "Copié !",
+            "copierCoordonnees": "Copier les coordonnées",
+            "rechercheAdresse": "Recherche de l'adresse...",
+            "pointSurCarte": "Point sur la carte"
+        },
+        "meteo": {
+            "titre": "Météo",
+            "sourcesTitre": "D'où viennent ces données et comment les lire",
+            "sourcesAria": "Sources et méthode",
+            "precipitations": "Précipitations",
+            "vent": "Vent",
+            "vigilance": "Vigilance",
+            "rienASignaler": "Rien à signaler.",
+            "aPrevoir": "À prévoir",
+            "prochainesHeures": "Prochaines heures",
+            "replier": "Cliquer pour replier",
+            "detail": "Cliquer pour le détail",
+            "ventTitre": "vent {{vitesse}} km/h",
+            "ventDirection": " de {{cardinal}}",
+            "rafalesTitre": ", rafales {{vitesse}}",
+            "dernierReleveTitre": "dernier relevé {{heure}}",
+            "dernierReleveDispo": "Dernier relevé disponible ({{heure}})",
+            "releveDe": "Relevé de {{heure}}",
+            "echelle": "échelle : {{mm}} mm / {{minutes}} min",
+            "ventDe": " de {{cardinal}}",
+            "rafales": "Rafales jusqu'à {{vitesse}} km/h",
+            "heure": "{{h}}h{{m}}",
+            "pluiePersistante": "Il pleut, et ça devrait durer.",
+            "accalmieDansVers": "Accalmie dans ~{{minutes}} min (vers {{heure}}).",
+            "accalmieDans": "Accalmie dans ~{{minutes}} min.",
+            "accalmieVers": "Accalmie annoncée vers {{heure}}.",
+            "accalmie": "Accalmie annoncée.",
+            "pluieDans": "Pluie dans ~{{minutes}} min.",
+            "pluieProchainesHeures": "Pluie annoncée dans les prochaines heures.",
+            "departConseille": "Partez vers {{heure}} (dans {{minutes}} min) : l'averse sera passée.",
+            "cumulPeriode": "Cumul sur la période : {{mm}} mm",
+            "nowcastExpire": "Prévision au quart d'heure expirée : le dernier relevé est trop ancien pour dire quoi que ce soit des deux prochaines heures.",
+            "nowcastHorsZone": "Pas de prévision au quart d'heure sur cette zone — hors couverture des modèles à fine maille. Seules les probabilités horaires sont fiables ici.",
+            "ressenti": "Ressenti {{degres}} °C"
+        },
+        "eclairage": {
+            "h2": "Éclairage public",
+            "lampadaires": "<b>Lampadaires</b> : les lampadaires renseignés par OpenStreetMap, ou synchronisés depuis des jeux de données open data des métropoles. Un lampadaire = un halo lumineux sur la carte.",
+            "ruesEclairees": "<b>Rues éclairées</b> : les rues marquées comme éclairées sur OpenStreetMap. Toutes les routes n'ont pas nécessairement cette information, c'est pour ça que nous déduisons l'éclairage de certaines routes avec la présence de lampadaires ou la proximité immédiate d'une rue éclairée.",
+            "avertissement": "Une zone sans halo n'est pas forcément non éclairée : le plus souvent, c'est la donnée qui manque. Peu de villes françaises ont un jeu open data de lampadaires, et OpenStreetMap n'est pas complet partout, surtout dans les zones rurales.",
+            "sourcesZone": "Sources sur cette zone",
+            "chargement": "Chargement…",
+            "aucunLampadaire": "Aucun lampadaire synchronisé sur cette zone.",
+            "points": "{{n}} points",
+            "couverture": "OpenStreetMap couvre l'ensemble de la zone ; les jeux open data métropolitains n'existent que sur certaines villes et viennent alors densifier la couverture."
+        },
+        "meteoModal": {
+            "h2": "Météo",
+            "niveauxVigilance": "Niveaux de vigilance",
+            "releve": "Le relevé est pris en <b>un point au centre de l'agglomération</b>, et le bandeau porte le niveau de vigilance le plus élevé du moment. C'est un niveau <b>régional</b> : une cellule orageuse fait 5 à 15 km, nous n'échantillonnons qu'un point. D'où « Risque d'orage », jamais « Orage sur votre trajet ».",
+            "avertissement": "On dit donc « <b>risque</b> d'orage », jamais « orage sur votre trajet ». La météo <b>n'infléchit pas</b> le calcul d'itinéraire : elle vous informe, elle ne vous fait pas faire un détour sur une prévision de cette résolution.",
+            "pluie30": "Pluie dans les 30 minutes",
+            "pluie30Texte": "La prévision au pas de <b>15 minutes</b> vient des modèles à fine maille <b>AROME</b> (Météo-France) et<b> ICON-D2</b> (DWD). Hors de leur couverture, elle n'est pas affichée du tout plutôt que d'être interpolée en silence depuis la prévision horaire.",
+            "sources": "Sources",
+            "sourcesTexte": "Prévisions : <b>Open-Meteo</b> (DWD ICON-D2, Météo-France AROME, NOAA GFS).",
+            "niveaux": {
+                "none": "Rien à signaler",
+                "noneDetail": "Conditions ordinaires",
+                "watch": "Vigilance",
+                "watchDetail": "Rafales ≥ 40 km/h, pluie, froid, brouillard",
+                "warning": "Conditions difficiles",
+                "warningDetail": "Orage, neige, fortes pluies, gel",
+                "severe": "Danger",
+                "severeDetail": "Verglas, grêle, rafales ≥ 80 km/h"
+            },
+            "ventPonts": "Le <b>vent</b> ajuste la durée <em>affichée</em> de l'itinéraire, jamais le tracé retenu. Sous 3 °C, les <b>ponts</b> d'au moins 30 m sont signalés : un tablier perd sa chaleur par ses deux faces et gèle une à deux heures avant la chaussée voisine."
+        },
+        "airModal": {
+            "h2": "Qualité de l'air",
+            "cellules": "Cellules — indice européen (CAMS)",
+            "cellulesTexte": "Indice européen (<b>EAQI</b>) du service Copernicus (<b>CAMS</b>). Chaque cellule ≈ <b>{{resolution}} km</b> : un niveau régional, pas une mesure de rue.",
+            "cellulesAvertissement": "Deux rues voisines ont donc le même indice. Pour l'itinéraire, on privilégie les rues<b> à l'écart du trafic</b> (déduit du réseau routier), pas la cellule. Air bon = critère inactif.",
+            "pastilles": "Pastilles — capteurs au sol",
+            "pastillesTexte": "Les <b>pastilles</b> sont des <b>stations réelles</b>. Un modèle peut être en retard sur un feu récent ; une station le <b>mesure</b> sans latence. Un pic proche pèse alors sur l'itinéraire.",
+            "pastillesAvertissement": "Deux échelles : cellules en EAQI (européen), pastilles en <b>AQI US</b> — échelle native des capteurs, non convertie.",
+            "sources": "Sources",
+            "sourcesTexte": "Cellules : <b>CAMS ENSEMBLE</b> / <b>Open-Meteo</b>. Pastilles :<b> World Air Quality Index</b> (waqi.info).",
+            "eaqi": {
+                "good": "Bon",
+                "fair": "Moyen",
+                "moderate": "Dégradé",
+                "poor": "Mauvais",
+                "very_poor": "Très mauvais",
+                "extreme": "Extrêmement mauvais"
+            },
+            "us": {
+                "good": "Bon",
+                "moderate": "Moyen",
+                "usg": "Mauvais pour sensibles",
+                "unhealthy": "Mauvais",
+                "very_unhealthy": "Très mauvais",
+                "hazardous": "Dangereux"
+            }
+        },
+        "controles": {
+            "ajouterSignalement": "Ajouter un signalement",
+            "traficTempsReel": "Trafic en temps réel",
+            "fluide": "Fluide",
+            "dense": "Dense",
+            "embouteille": "Embouteillé",
+            "inconnu": "Inconnu",
+            "qualiteAir": "Qualité de l'air",
+            "infoDonnees": "Comment ça marche et d'où viennent les données",
+            "infoAir": "Informations sur la qualité de l'air",
+            "infoEclairage": "Informations sur l'éclairage",
+            "chargement": "Chargement…",
+            "eclairagePublic": "Éclairage public",
+            "masquerEclairage": "Masquer l'éclairage",
+            "eclairage": "Éclairage",
+            "lampadaires": "Lampadaires",
+            "ruesEclairees": "Rues éclairées",
+            "centrerPosition": "Centrer la carte sur ma position",
+            "afficherPoi": "Afficher des points d'intérêt",
+            "pointsInteret": "Points d'intérêt",
+            "zoomerPourVoir": "Zoomez pour les faire apparaître.",
+            "velosLibreService": "Vélos en libre-service",
+            "stationsVelos": "Stations de vélos",
+            "dernierReleve": "Dernier relevé disponible.",
+            "accidentologie": "Accidentologie",
+            "accidentsVelo": "Accidents à vélo",
+            "fondsCarte": "Fonds de carte",
+            "calques": "Calques",
+            "changerFond": "Changer le fond de carte",
+            "cliquezSurCarte": "Cliquez sur la carte...",
+            "masquerTrafic": "Masquer le trafic",
+            "masquerAir": "Masquer l'air",
+            "maPosition": "Ma position",
+            "localisationEnCours": "Localisation...",
+            "releveDe": "Relevé de {{heure}}",
+            "indiceAir": "Indice {{indice}} · {{libelle}}",
+            "polluantDominant": "Polluant dominant : {{polluant}}",
+            "degradationPrevue": "Dégradation prévue vers {{heure}}",
+            "dernierReleveDispo": "Dernier relevé disponible",
+            "dernierReleveDispoHeure": "Dernier relevé disponible ({{heure}})",
+            "releveMaille": "Relevé de {{heure}} · maille ~{{km}} km",
+            "eclairageConnu": "Éclairage connu",
+            "eclairageDeduit": "Éclairage déduit",
+            "avertissementAccidents": "Accidents déclarés aux forces de l'ordre : l'absence de point ne signifie pas l'absence de danger."
+        },
+        "popupCarte": {
+            "capteurSol": "Capteur au sol · échelle AQI US",
+            "niRetraitNiRetour": "Ni retrait ni retour possible.",
+            "retourImpossible": "Retour de vélo impossible.",
+            "stationPleine": "Station pleine : aucun retour possible.",
+            "donneesNonRafraichies": "Dernier relevé disponible, données non rafraîchies.",
+            "accidentVelo": "Accident à vélo",
+            "stationVelos": "Station de vélos",
+            "stationHorsService": "Station hors service",
+            "disponibiliteInconnue": "Disponibilité inconnue",
+            "velosDisponibles_one": "{{count}} vélo disponible",
+            "velosDisponibles_other": "{{count}} vélos disponibles",
+            "donneesAJour": "Données à jour",
+            "releve": "Relevé {{quand}}",
+            "releveAncien": "Relevé ancien, fiabilité incertaine",
+            "signaleInstant": "Signalé à l’instant",
+            "signale": "Signalé {{quand}}",
+            "signaleLe": "Signalé le {{date}}",
+            "releveHeure": "Relevé {{heure}}",
+            "voteLa": "👍 {{count}} là",
+            "votePasLa": "👎 {{count}} pas là",
+            "confirmer": "Confirmer",
+            "pasLa": "Pas là",
+            "supprimer": "Supprimer",
+            "signalerContenu": "Signaler ce contenu",
+            "yAller": "Y aller",
+            "reseau": "Réseau",
+            "repartition": "{{velos}} vélo(s), {{places}} place(s) libre(s) — {{total}} points d'attache",
+            "repartitionIndispo": "{{velos}} vélo(s), {{places}} place(s) libre(s), {{indispo}} indisponible(s) — {{total}} points d'attache",
+            "attachesIndisponibles": "{{count}} points d'attache indisponibles.",
+            "gravite": "Gravité :"
+        },
+        "erreursCarte": {
+            "airIndisponible": "Qualité de l'air momentanément indisponible.",
+            "stationsIndisponibles": "Stations momentanément indisponibles.",
+            "geolocIndisponible": "La géolocalisation n'est pas disponible sur ce navigateur.",
+            "positionImpossible": "Impossible de récupérer votre position. Vérifiez que la localisation est autorisée pour ce site.",
+            "traficIndisponible": "Trafic momentanément indisponible.",
+            "donneesIndisponibles": "Les données ne sont pas disponibles pour le moment. Le fond de carte reste consultable."
+        },
+        "abus": {
+            "titre": "Signaler ce contenu",
+            "offensant": "Contenu offensant",
+            "offensantAide": "Insultes, haine, propos déplacés",
+            "spam": "Spam ou publicité",
+            "spamAide": "Message sans rapport avec la sécurité à vélo",
+            "fantaisiste": "Signalement fantaisiste",
+            "fantaisisteAide": "Danger inventé ou placé n'importe où",
+            "autre": "Autre motif",
+            "bloquer": "Bloquer cet auteur",
+            "bloquerAide": "Vous ne verrez plus aucun de ses signalements. Réversible depuis votre profil.",
+            "delai": "Nous examinons chaque signalement sous 24 heures. Au-delà de deux signalements, le contenu disparaît de la carte en attendant notre décision.",
+            "annuler": "Annuler"
+        }
+    },
+    "carte": {
+        "fond": {
+            "base": "Basic",
+            "streets": "Rues",
+            "outdoor": "Outdoor",
+            "topo": "Relief",
+            "hybrid": "Satellite",
+            "openstreetmap": "Détaillée"
+        },
+        "parking": {
+            "stands": "Arceaux",
+            "racks": "Râteliers, pince-roues",
+            "shelter": "Abris et consignes",
+            "other": "Autres, non précisé"
+        },
+        "toilettes": {
+            "free": "Gratuites",
+            "paid": "Payantes",
+            "unknown": "Non précisé"
+        },
+        "reparation": {
+            "selfservice": "Libre-service",
+            "shop": "Atelier / magasin"
+        },
+        "poi": {
+            "water": "Points d'eau",
+            "toilets": "Toilettes",
+            "parking": "Parkings vélo",
+            "repair": "Réparation"
+        },
+        "champPoi": {
+            "parking_type": "Aménagement",
+            "toilet_fee": "Tarif",
+            "repair_kind": "Type",
+            "opening_hours": "Horaires",
+            "fee": "Payant",
+            "capacity": "Capacité",
+            "covered": "Couvert",
+            "access": "Accès",
+            "wheelchair": "Accessible PMR",
+            "seasonal": "Saisonnier"
+        },
+        "champAccident": {
+            "light": "Luminosité",
+            "weather": "Météo",
+            "collision": "Type de collision",
+            "road_type": "Type de voie",
+            "intersection": "Intersection"
+        },
+        "tarif": {
+            "free": "Gratuit",
+            "paid": "Payant",
+            "unknown": "Non précisé"
+        },
+        "vls": {
+            "bikes_mechanical": "Mécaniques",
+            "bikes_electric": "Électriques",
+            "docks_available": "Places libres",
+            "bikes_available": "Vélos",
+            "capacity": "Capacité",
+            "system_name": "Réseau",
+            "address": "Adresse",
+            "pointsAttache": "{{n}} points d'attache"
+        },
+        "graviteAccident": {
+            "mortel": "Accident mortel",
+            "hospitalise": "Blessé hospitalisé",
+            "leger": "Blessé léger"
+        },
+        "signalement": {
+            "accident": "Accident",
+            "travaux": "Travaux",
+            "danger": "Danger",
+            "obstacle": "Obstacle"
+        },
+        "trafic": {
+            "green": "Circulation fluide",
+            "orange": "Circulation dense",
+            "red": "Axe embouteillé",
+            "gray": "État inconnu"
+        },
+        "traficConseil": {
+            "orange": "🚲 Trafic ralenti : dépassements serrés et portières, restez visible.",
+            "red": "🚲 Axe évité par nos itinéraires sécurisés dès que possible."
+        }
+    }
+}

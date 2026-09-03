@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Platform, TouchableOpacity, Text, ScrollView, TextInput, LayoutAnimation, UIManager, Keyboard } from 'react-native';
 import AdressInput from './ui/AdressInput';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -6,16 +6,50 @@ import { useTheme } from '../hooks/useTheme';
 import { withAlpha } from '../constants/theme';
 import * as Haptics from 'expo-haptics';
 import { searchAddressAutocomplete } from '../services/geocodingService';
+import { Trans, useTranslation } from 'react-i18next';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useFormat } from '../hooks/useFormat';
+import { bcp47 } from '../utils/datetime';
 
 export default function SearchContainer({
   onStartSelect, onEndSelect, start, end, onCalculate,
   currentPosition, homeAddress, workAddress,
   bikes = [], selectedBike, setSelectedBike,
-  maxDuration, setMaxDuration
+  maxDuration, arrivalTime, isPastTime, setDuration, setArrival, clearMaxTime,
+  hasLocationPermission = false, onRequestLocation
 }) {
+  const { t, i18n } = useTranslation();
   const { colors, typography } = useTheme();
+  const f = useFormat();
   const [focusedField, setFocusedField] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const defaultArrivalRef = useRef(null);
+
+  const hasConstraint = maxDuration != null || arrivalTime != null;
+
+  const openTimePicker = () => {
+    Haptics.selectionAsync().catch(() => { });
+    Keyboard.dismiss();
+    defaultArrivalRef.current = new Date(Date.now() + 30 * 60000);
+    setShowTimePicker(prev => !prev);
+  };
+
+  const onChangeTime = (event, selectedDate) => {
+    if (Platform.OS === 'android') setShowTimePicker(false);
+    if (event.type === 'dismissed') return;
+    if (selectedDate) setArrival(selectedDate);
+  };
+
+  const onChangeDuration = (text) => {
+    const digits = text.replace(/[^0-9]/g, '');
+    setDuration(digits === '' ? null : Number(digits));
+  };
+
+  const clearConstraints = () => {
+    Haptics.selectionAsync().catch(() => { });
+    clearMaxTime();
+  };
 
   const toggleExpand = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
@@ -32,26 +66,26 @@ export default function SearchContainer({
   const isReady = start?.lat && end?.lat;
 
   const quickSuggestions = [
-    currentPosition && {
+    (currentPosition || !hasLocationPermission) && {
       id: 'current',
       icon: '📍',
-      label: 'Ma position',
-      point: {
+      label: t('itineraire.recherche.maPosition'),
+      point: currentPosition ? {
         lat: currentPosition.lat,
         lon: currentPosition.lon,
-        name: 'Ma position actuelle',
-      }
+        name: t('itineraire.recherche.maPositionActuelle'),
+      } : null,
     },
     homeAddress && {
       id: 'home',
       icon: '🏠',
-      label: 'Domicile',
+      label: t('auth.adresses.domicile'),
       address: homeAddress,
     },
     workAddress && {
       id: 'work',
       icon: '💼',
-      label: 'Travail',
+      label: t('auth.adresses.travail'),
       address: workAddress,
     },
   ].filter(Boolean)
@@ -109,6 +143,11 @@ export default function SearchContainer({
     const select = field === 'start' ? onStartSelect : onEndSelect;
 
     if (suggestion.id === 'current') {
+      if (!suggestion.point) {
+        onRequestLocation?.();
+        setFocusedField(null);
+        return;
+      }
       select({ ...suggestion.point, _sourceId: 'current' });
       setFocusedField(null);
       return;
@@ -146,7 +185,7 @@ export default function SearchContainer({
           <View style={styles.inputsColumn}>
             <View style={{ zIndex: 2, position: 'relative' }}>
               <AdressInput
-                placeholder="Départ"
+                placeholder={t('itineraire.recherche.depart')}
                 defaultValue={start?.name ?? ''}
                 onSelect={onStartSelect}
                 icon={<MaterialCommunityIcons name="bike" size={20} color={colors.primary} />}
@@ -159,7 +198,7 @@ export default function SearchContainer({
             </View>
             <View style={{ zIndex: 1, position: 'relative' }}>
               <AdressInput
-                placeholder="Destination"
+                placeholder={t('itineraire.recherche.arrivee')}
                 defaultValue={end?.name ?? ''}
                 onSelect={(val) => {
                   Haptics.selectionAsync().catch(() => { });
@@ -209,13 +248,19 @@ export default function SearchContainer({
           <View style={styles.expandedSection}>
             <View style={[styles.expandedDivider, { backgroundColor: colors.borderLight }]} />
 
-            {displayedBikes.length > 1 && <Text style={[styles.settingLabel, { color: colors.textSecondary }]}>Choix du vélo</Text>}
+            {displayedBikes.length > 1 && <Text style={[styles.settingLabel, { color: colors.textSecondary }]}>{t('itineraire.recherche.choixVelo')}</Text>}
 
             {displayedBikes.length === 1 ? (
               <View style={styles.singleBikeInfo}>
                 <MaterialCommunityIcons name={displayedBikes[0].icon} size={22} color={colors.textMain} />
                 <Text style={[typography.body, { color: colors.textMain, marginLeft: 8 }]}>
-                  <Text style={{ fontWeight: 'bold' }}>{displayedBikes[0].name}</Text> sélectionné
+                  {/* Le nom du vélo reste en gras : la balise vit dans le catalogue,
+                      pour que l'ordre des mots puisse changer d'une langue à l'autre. */}
+                  <Trans
+                      i18nKey="itineraire.recherche.veloSelectionne"
+                      values={{ velo: displayedBikes[0].name }}
+                      components={{ b: <Text style={{ fontWeight: 'bold' }} /> }}
+                  />
                 </Text>
                 {displayedBikes[0].is_electric && <MaterialCommunityIcons name="lightning-bolt" size={16} color={colors.primary} style={{ marginLeft: 4 }} />}
               </View>
@@ -249,15 +294,75 @@ export default function SearchContainer({
               </ScrollView>
             )}
 
-            <Text style={[styles.settingLabel, { color: colors.textSecondary, marginTop: 15 }]}>{"Heure d'arrivée max. (Optionnel)"}</Text>
-            <TextInput
-              style={[styles.timeInput, { borderColor: colors.borderStrong, color: colors.textMain, backgroundColor: withAlpha(colors.bgSurface, 0.95) }]}
-              placeholder="ex: 18:30"
-              placeholderTextColor={colors.textSecondary}
-              value={maxDuration}
-              onChangeText={setMaxDuration}
-              keyboardType="numbers-and-punctuation"
-            />
+            <View style={styles.constraintsHeader}>
+              <Text style={[styles.settingLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
+                {t('itineraire.recherche.contraintes')}
+              </Text>
+              {hasConstraint && (
+                <TouchableOpacity
+                  onPress={clearConstraints}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('itineraire.recherche.effacerContraintes')}
+                >
+                  <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={styles.constraintsRow}>
+              <View style={styles.constraintField}>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('itineraire.recherche.heureMax')}</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.constraintInput,
+                    { borderColor: isPastTime ? colors.error : colors.borderStrong, backgroundColor: withAlpha(colors.bgSurface, 0.95) }
+                  ]}
+                  onPress={openTimePicker}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('itineraire.recherche.heureMax')}
+                >
+                  <Text style={{ color: arrivalTime ? colors.textMain : colors.textSecondary, fontSize: 15 }}>
+                    {arrivalTime ? f.heure(arrivalTime) : t('itineraire.recherche.choisirHeure')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.constraintField}>
+                <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('itineraire.recherche.dureeMax')}</Text>
+                <View style={[
+                  styles.constraintInput,
+                  styles.durationBox,
+                  { borderColor: colors.borderStrong, backgroundColor: withAlpha(colors.bgSurface, 0.95) }
+                ]}>
+                  <TextInput
+                    style={[styles.durationInput, { color: colors.textMain }]}
+                    value={maxDuration != null ? String(maxDuration) : ''}
+                    onChangeText={onChangeDuration}
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    accessibilityLabel={t('itineraire.recherche.dureeMax')}
+                  />
+                  <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{t('itineraire.recherche.dureeMaxUnite')}</Text>
+                </View>
+              </View>
+            </View>
+
+            {isPastTime && (
+              <Text style={[styles.constraintError, { color: colors.error }]}>
+                {t('itineraire.recherche.heurePassee')}
+              </Text>
+            )}
+
+            {showTimePicker && (
+              <DateTimePicker
+                value={arrivalTime ?? defaultArrivalRef.current ?? new Date()}
+                mode="time"
+                display={Platform.OS === 'ios' ? 'spinner' : 'clock'}
+                locale={bcp47(i18n.language)}
+                onChange={onChangeTime}
+              />
+            )}
           </View>
         )}
 
@@ -283,7 +388,7 @@ export default function SearchContainer({
             }}
           >
             <MaterialCommunityIcons name="directions" size={18} color="white" style={{ marginRight: 6 }} />
-            <Text style={styles.calcButtonText}>Calculer</Text>
+            <Text style={styles.calcButtonText}>{t('itineraire.recherche.calculer')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -407,13 +512,45 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  timeInput: {
+  constraintsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 15,
+    marginBottom: 8,
+  },
+  constraintsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  constraintField: {
+    flex: 1,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  constraintInput: {
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 15,
     paddingVertical: 10,
+    minHeight: 42,
+    justifyContent: 'center',
+  },
+  durationBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  durationInput: {
+    flex: 1,
     fontSize: 15,
-    width: '50%',
+    padding: 0,
+  },
+  constraintError: {
+    fontSize: 12,
+    marginTop: 6,
   },
   expandButtonAbsolute: {
     position: 'absolute',

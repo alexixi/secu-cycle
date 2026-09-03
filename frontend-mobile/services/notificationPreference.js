@@ -62,6 +62,39 @@ export async function getNotificationPermission() {
     }
 }
 
+export async function getNotificationPermissionState() {
+    try {
+        const { status, canAskAgain } = await Notifications.getPermissionsAsync();
+        return { status, canAskAgain: canAskAgain !== false };
+    } catch {
+        return { status: 'undetermined', canAskAgain: true };
+    }
+}
+
+export const NOTIFICATIONS_PRIMING_KEY = 'notificationPrimingShown';
+
+let cachedPrimingShown = null;
+
+export async function hasShownNotificationPriming() {
+    if (cachedPrimingShown !== null) return cachedPrimingShown;
+
+    try {
+        cachedPrimingShown = (await AsyncStorage.getItem(NOTIFICATIONS_PRIMING_KEY)) === 'true';
+    } catch {
+        cachedPrimingShown = false;
+    }
+    return cachedPrimingShown;
+}
+
+export async function markNotificationPrimingShown() {
+    cachedPrimingShown = true;
+    try {
+        await AsyncStorage.setItem(NOTIFICATIONS_PRIMING_KEY, 'true');
+    } catch (e) {
+        console.warn('Pré-demande de notifications non mémorisée :', e);
+    }
+}
+
 export async function requestNotificationPermission() {
     try {
         const { status } = await Notifications.requestPermissionsAsync();

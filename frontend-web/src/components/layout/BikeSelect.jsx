@@ -1,6 +1,8 @@
+import { Trans, useTranslation } from 'react-i18next';
 import './BikeSelect.css';
 import IconCard from '../ui/IconCard';
-import { useRef, useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import useScrollFade from '../../hooks/useScrollFade';
 import { useAuth } from "../../context/AuthContext";
 import IconBikeStandard from '../../assets/bikes/standard.svg?react';
 import IconBikeStandardElectric from '../../assets/bikes/standard-electric.svg?react';
@@ -10,43 +12,17 @@ import IconBikeRoute from '../../assets/bikes/route.svg?react';
 import { MdBatteryChargingFull } from "react-icons/md";
 
 export default function BikeSelect({ selectedBike, onSelect }) {
+    const { t } = useTranslation('itineraire');
     const { userBikes } = useAuth();
 
-    const listRef = useRef(null);
-    const [scrollState, setScrollState] = useState('start');
-
-    const checkScroll = () => {
-        const el = listRef.current;
-        if (!el) return;
-
-        const { scrollLeft, scrollWidth, clientWidth } = el;
-
-        const isStart = scrollLeft <= 0;
-        const isEnd = Math.abs(scrollWidth - clientWidth - scrollLeft) <= 1;
-
-        if (scrollWidth === clientWidth) {
-            setScrollState('none');
-        } else if (isStart) {
-            setScrollState('start');
-        } else if (isEnd) {
-            setScrollState('end');
-        } else {
-            setScrollState('middle');
-        }
-    };
-
-    useEffect(() => {
-        checkScroll();
-        window.addEventListener('resize', checkScroll);
-        return () => window.removeEventListener('resize', checkScroll);
-    }, []);
+    const { ref: listRef, scrollState, checkScroll, scrollProps } = useScrollFade();
 
     const defaultBikes = [
-        { id: "default-ville", type: "ville", electric: false, name: "Ville", icon: IconBikeStandard },
-        { id: "default-ville-electric", type: "ville", electric: true, name: "Ville", icon: IconBikeStandardElectric },
-        { id: "default-vtt", type: "vtt", electric: false, name: "VTT", icon: IconBikeVTT },
-        { id: "default-vtt-electric", type: "vtt", electric: true, name: "VTT", icon: IconBikeVTT_Electric },
-        { id: "default-route", type: "route", electric: false, name: "Route", icon: IconBikeRoute },
+        { id: "default-ville", type: "ville", electric: false, name: t('velo.ville'), icon: IconBikeStandard },
+        { id: "default-ville-electric", type: "ville", electric: true, name: t('velo.ville'), icon: IconBikeStandardElectric },
+        { id: "default-vtt", type: "vtt", electric: false, name: t('velo.vtt'), icon: IconBikeVTT },
+        { id: "default-vtt-electric", type: "vtt", electric: true, name: t('velo.vtt'), icon: IconBikeVTT_Electric },
+        { id: "default-route", type: "route", electric: false, name: t('velo.route'), icon: IconBikeRoute },
     ];
 
     let bikes = defaultBikes;
@@ -75,17 +51,19 @@ export default function BikeSelect({ selectedBike, onSelect }) {
         }
     }, [bikes.length, selectedBike, onSelect]);
 
+    useEffect(() => { checkScroll(); }, [checkScroll, bikes.length]);
+
     const SingleBikeIcon = bikes.length === 1 ? bikes[0].icon : null;
 
     return (
         <div className="bike-select-container">
-            {bikes.length > 1 && <h2>Choix du vélo</h2>}
-            <div ref={listRef} onScroll={checkScroll} data-scroll={scrollState} className='bike-select'>
+            {bikes.length > 1 && <h2>{t('velo.choix')}</h2>}
+            <div ref={listRef} data-scroll={scrollState} className='bike-select' {...scrollProps}>
                 {
                     bikes.length === 1 ? (
                         <div className='default-bike-info'>
                             {SingleBikeIcon && <SingleBikeIcon className='default-bike-icon' />}
-                            <p><strong>{bikes[0].name}</strong> sélectionné</p>
+                            <p><Trans t={t} i18nKey="velo.selectionne" values={{ nom: bikes[0].name }} components={{ nom: <strong /> }} /></p>
                         </div>
                     ) : (
                         bikes.map((bike) => (

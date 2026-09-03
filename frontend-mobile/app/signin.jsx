@@ -29,12 +29,14 @@ import {
     verifyEmail,
 } from "../services/apiBack";
 import { trackEvent } from "../services/analytics";
+import { useTranslation } from "react-i18next";
 
 const TOTAL_STEPS = 7;
 
 export default function OnboardingScreen() {
     const router = useRouter();
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const { loginAuth, updateUser, updateBikes, updateHistoric } = useAuth();
 
     const params = useLocalSearchParams();
@@ -144,12 +146,12 @@ export default function OnboardingScreen() {
                         return;
                     }
                     errorHaptic();
-                    setGeneralError("Cette adresse e-mail est déjà utilisée et le mot de passe ne correspond pas.");
+                    setGeneralError(t('auth.creationCompte.emailDejaUtilise'));
                     return;
                 }
             }
             errorHaptic();
-            setGeneralError("Une erreur est survenue lors de la création du compte. Veuillez réessayer.");
+            setGeneralError(t('auth.creationCompte.erreurCreation'));
         } finally {
             setIsLoading(false);
         }
@@ -164,7 +166,7 @@ export default function OnboardingScreen() {
             await verifyEmail(email, code);
         } catch (_error) {
             errorHaptic();
-            setVerifyError("Code invalide ou expiré.");
+            setVerifyError(t('auth.creationCompte.codeInvalide'));
             setIsLoading(false);
             return;
         }
@@ -205,14 +207,14 @@ export default function OnboardingScreen() {
         setIsResending(true);
         try {
             await resendVerification(email);
-            setResendMessage("Si un compte non vérifié existe, un nouveau code a été envoyé.");
+            setResendMessage(t('auth.creationCompte.codeRenvoye'));
             startResendCooldown();
         } catch (error) {
             if (error?.status === 429) {
-                setResendMessage("Trop de tentatives. Veuillez réessayer plus tard.");
+                setResendMessage(t('auth.creationCompte.tropDeTentatives'));
                 startResendCooldown();
             } else {
-                setResendMessage("Impossible d'envoyer le code pour le moment.");
+                setResendMessage(t('auth.creationCompte.envoiImpossible'));
             }
         } finally {
             setIsResending(false);

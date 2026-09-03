@@ -1,3 +1,6 @@
+import i18n, { DEFAULT_LANG } from '../i18n/index';
+import { pathFor } from '../i18n/routes';
+
 function clearSession() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
@@ -14,7 +17,10 @@ async function refreshAccessToken() {
     try {
         const response = await fetch(`${API_BASE_URL}/users/refresh`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Accept-Language": i18n.language || DEFAULT_LANG,
+            },
             body: JSON.stringify({ refresh_token: refreshToken }),
         });
         if (!response.ok) return null;
@@ -45,6 +51,7 @@ const SESSION_INVALID_CODE = "session_invalid";
 const SESSION_INVALID_DETAILS = [
     "Invalid token",
     "Invalid token payload",
+    // i18n-exempt: détail de 401 renvoyé par l'API, comparé et non affiché — voir X-Auth-Error
     "Token révoqué",
     "Compte suspendu.",
 ];
@@ -68,6 +75,13 @@ function isSessionInvalid(response, errorData) {
 export async function apiFetch(url, options = {}, token = null, _retried = false) {
     const headers = {
         "Content-Type": "application/json",
+        // Le backend négocie ?lang= > Accept-Language > fr. Le navigateur en
+        // envoie un, mais c'est celui du système : sur /en/ avec un navigateur
+        // français, les messages d'erreur et la météo revenaient en français.
+        // C'est aussi lui qui renseigne users.language à l'inscription, donc la
+        // langue des e-mails. DEFAULT_LANG couvre le prérendu, où i18next peut
+        // ne pas être initialisé.
+        "Accept-Language": i18n.language || DEFAULT_LANG,
         ...options.headers,
     };
 
@@ -77,6 +91,7 @@ export async function apiFetch(url, options = {}, token = null, _retried = false
 
     let API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
     if (!API_BASE_URL) {
+        // i18n-exempt: erreur de configuration du build, jamais servie à un visiteur
         throw new Error("VITE_API_BASE_URL n'est pas défini dans les variables d'environnement");
     }
     const fullUrl = `${API_BASE_URL}${url}`
@@ -94,10 +109,14 @@ export async function apiFetch(url, options = {}, token = null, _retried = false
             }
             if (localStorage.getItem("access_token")) {
                 clearSession();
-                window.location.href = "/login";
+                // Une redirection en dur renverrait un visiteur de /en/ vers la
+                // page française : la cible se résout dans la langue de la page.
+                window.location.href = pathFor('login', i18n.language) || '/login';
             }
+            // i18n-exempt: message d'Error interne, jamais rendu
             throw new Error("Non autorisé");
         }
+        // i18n-exempt: message d'Error interne, jamais rendu — le texte affiché vient de l'API
         const apiError = new Error(errorData || "Erreur lors de la requête API");
         apiError.status = response.status;
         apiError.statusText = response.statusText;
@@ -340,6 +359,30 @@ export async function confirmEmailChange(token, code) {
     } catch (error) {
         throw error;
     }
+}
+
+export async function setProfileLanguage(token, language) {
+    // La langue du site est dans l'URL ; la colonne users.language, elle, sert
+    // aux e-mails — dont le récapitulatif, envoyé par une boucle de fond qui
+    // n'a aucune requête d'où lire une préférence.
+    return apiFetch("/users/me", {
+        method: "PATCH",
+        body: JSON.stringify({ language }),
+    }, token);
+}
+
+export async function setRecapEmails(token, enabled) {
+    // Charge utile posée telle quelle : un `false` ne doit pas être confondu avec
+    // un champ vide et disparaître du corps de la requête.
+    const data = await apiFetch("/users/me", {
+        method: "PATCH",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ recap_emails: enabled })
+    }, token);
+    return data;
 }
 
 export async function changeAddress(token, homeAddress, workAddress) {
@@ -623,24 +666,6 @@ export async function getWeather() {
 export async function getBikeshareStations() {
     try {
         const data = await apiFetch("/bikeshare/", { method: "GET" });
-        return data;
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function getHomeCases() {
-    try {
-        const data = await apiFetch("/home-cases/", { method: "GET" });
-        return data;
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function getFaqs() {
-    try {
-        const data = await apiFetch("/faqs/", { method: "GET" });
         return data;
     } catch (error) {
         throw error;

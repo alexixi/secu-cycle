@@ -1,7 +1,9 @@
 import React from 'react';
 import { Modal, View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { useFormat } from '../hooks/useFormat';
 import { useTheme } from '../hooks/useTheme';
+import { useTranslation } from 'react-i18next';
 import {
     WEATHER_ALERT_COLORS, weatherIcon, formatHM, formatHMShifted,
     precipBarHeight, PRECIP_FULL_BAR_MM, MINUTELY_STEP_MIN,
@@ -11,6 +13,8 @@ export default function WeatherDetailModal({
     visible, zone, stale, updatedAt, minutely = [], outdated = false, rain, onClose, onOpenInfo,
 }) {
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
+    const f = useFormat();
     const summary = zone?.summary;
 
     const wind = summary?.wind;
@@ -38,13 +42,13 @@ export default function WeatherDetailModal({
                 >
                     <View style={styles.head}>
                         <Text style={[typography.h1, styles.title, { color: colors.textMain }]}>
-                            Météo
+                            {t('carte.ui.meteo.titre')}
                         </Text>
                         <TouchableOpacity
                             onPress={onOpenInfo}
                             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                             accessibilityRole="button"
-                            accessibilityLabel="Sources et méthode"
+                            accessibilityLabel={t('carte.ui.meteo.sourcesAria')}
                         >
                             <Ionicons name="information-circle-outline" size={22} color={colors.textSecondary} />
                         </TouchableOpacity>
@@ -52,7 +56,7 @@ export default function WeatherDetailModal({
 
                     {!summary ? (
                         <Text style={[typography.body, styles.text, muted]}>
-                            Météo momentanément indisponible.
+                            {t('carte.ui.meteo.indisponible')}
                         </Text>
                     ) : (
                         <ScrollView
@@ -75,13 +79,13 @@ export default function WeatherDetailModal({
                                     </Text>
                                     {showFeels && (
                                         <Text style={[typography.body, styles.small, muted]}>
-                                            {`Ressenti ${Math.round(feels)} °C`}
+                                            {t('carte.ui.meteo.ressenti', { degres: f.nombre(Math.round(feels)) })}
                                         </Text>
                                     )}
                                 </View>
                             </View>
 
-                            <Text style={heading}>Précipitations</Text>
+                            <Text style={heading}>{t('carte.ui.meteo.precipitations')}</Text>
                             {rain && (
                                 <Text style={[typography.body, styles.lead, { color: colors.textMain }]}>
                                     {rain.text}
@@ -110,7 +114,7 @@ export default function WeatherDetailModal({
                                             {formatHM(minutely[0].time)}
                                         </Text>
                                         <Text style={[typography.body, styles.small, muted]}>
-                                            {`échelle : ${PRECIP_FULL_BAR_MM} mm / ${MINUTELY_STEP_MIN} min`}
+                                            {t('carte.ui.meteo.echelle', { mm: PRECIP_FULL_BAR_MM, minutes: MINUTELY_STEP_MIN })}
                                         </Text>
                                         <Text style={[typography.body, styles.small, muted]}>
                                             {formatHMShifted(minutely[minutely.length - 1].time, MINUTELY_STEP_MIN)}
@@ -118,19 +122,16 @@ export default function WeatherDetailModal({
                                     </View>
 
                                     <Text style={[typography.body, styles.small, muted]}>
-                                        {`Cumul sur la période : ${total.toFixed(1)} mm`}
+                                        {t('carte.ui.meteo.cumulPeriode', { mm: f.nombre(total, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })}
                                     </Text>
                                 </>
                             ) : outdated ? (
                                 <Text style={[typography.body, styles.text, muted]}>
-                                    {"Prévision au quart d'heure expirée : le dernier relevé est trop "}
-                                    {"ancien pour dire quoi que ce soit des deux prochaines heures."}
+                                    {t('carte.ui.meteo.nowcastExpire')}
                                 </Text>
                             ) : (
                                 <Text style={[typography.body, styles.text, muted]}>
-                                    {"Pas de prévision au quart d'heure sur cette zone — hors couverture "}
-                                    {"des modèles à fine maille. Seules les probabilités horaires sont "}
-                                    {"fiables ici."}
+                                    {t('carte.ui.meteo.nowcastHorsZone')}
                                 </Text>
                             )}
 
@@ -158,7 +159,7 @@ export default function WeatherDetailModal({
 
                             {wind?.speed != null && (
                                 <>
-                                    <Text style={heading}>Vent</Text>
+                                    <Text style={heading}>{t('carte.ui.meteo.vent')}</Text>
                                     <View style={styles.windRow}>
                                         {wind.direction != null && (
                                             <MaterialCommunityIcons
@@ -169,33 +170,33 @@ export default function WeatherDetailModal({
                                             />
                                         )}
                                         <Text style={[typography.body, styles.text, { color: colors.textMain, fontWeight: '600' }]}>
-                                            {`${Math.round(wind.speed)} km/h`}
+                                            {t('carte.ui.meteo.vitesseVent', { vitesse: f.nombre(Math.round(wind.speed)) })}
                                         </Text>
                                         {wind.cardinal && (
                                             <Text style={[typography.body, styles.text, muted]}>
-                                                {`de ${wind.cardinal}`}
+                                                {t('carte.ui.meteo.ventDe', { cardinal: wind.cardinal }).trim()}
                                             </Text>
                                         )}
                                     </View>
                                     {wind.gusts != null && (
                                         <Text style={[typography.body, styles.small, muted]}>
-                                            {`Rafales jusqu'à ${Math.round(wind.gusts)} km/h`}
+                                            {t('carte.ui.meteo.rafales', { vitesse: f.nombre(Math.round(wind.gusts)) })}
                                         </Text>
                                     )}
                                 </>
                             )}
 
-                            <Text style={heading}>Vigilance</Text>
+                            <Text style={heading}>{t('carte.ui.meteo.vigilance')}</Text>
                             {alerts.length === 0 ? (
-                                <Text style={[typography.body, styles.text, muted]}>Rien à signaler.</Text>
+                                <Text style={[typography.body, styles.text, muted]}>{t('carte.ui.meteo.rienASignaler')}</Text>
                             ) : (
                                 alerts.map((alert) => (
                                     <View key={alert.key} style={styles.alertRow}>
                                         <View style={[styles.dot, { backgroundColor: WEATHER_ALERT_COLORS[alert.level] }]} />
                                         <Text style={[typography.body, styles.text, { color: colors.textMain, flex: 1 }]}>
                                             {alert.label}
-                                            {alert.at ? ` vers ${formatHM(alert.at)}` : ''}
-                                            {alert.official && alert.source ? ` · ${alert.source}` : ''}
+                                            {alert.at ? t('carte.ui.meteo.alerteVers', { heure: formatHM(alert.at) }) : ''}
+                                            {alert.official && alert.source ? t('carte.ui.meteo.alerteSource', { source: alert.source }) : ''}
                                         </Text>
                                     </View>
                                 ))
@@ -203,7 +204,7 @@ export default function WeatherDetailModal({
 
                             {equipment.length > 0 && (
                                 <>
-                                    <Text style={heading}>À prévoir</Text>
+                                    <Text style={heading}>{t('carte.ui.meteo.aPrevoir')}</Text>
                                     <View style={styles.chips}>
                                         {equipment.map((item) => (
                                             <View
@@ -221,7 +222,7 @@ export default function WeatherDetailModal({
 
                             {hourly.length > 0 && (
                                 <>
-                                    <Text style={heading}>Prochaines heures</Text>
+                                    <Text style={heading}>{t('carte.ui.meteo.prochainesHeures')}</Text>
                                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.strip}>
                                         {hourly.map((h) => (
                                             <View key={h.time} style={styles.hourItem}>
@@ -244,7 +245,9 @@ export default function WeatherDetailModal({
 
                             {updatedAt && (
                                 <Text style={[typography.body, styles.small, styles.updated, muted]}>
-                                    {stale ? `Dernier relevé disponible (${updatedAt})` : `Relevé de ${updatedAt}`}
+                                    {stale
+                                        ? t('carte.ui.meteo.dernierReleveDispo', { heure: updatedAt })
+                                        : t('carte.ui.meteo.releveDe', { heure: updatedAt })}
                                 </Text>
                             )}
                         </ScrollView>
@@ -254,7 +257,7 @@ export default function WeatherDetailModal({
                         style={[styles.close, { backgroundColor: colors.primary }]}
                         onPress={onClose}
                     >
-                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Fermer</Text>
+                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{t('carte.ui.fermer')}</Text>
                     </TouchableOpacity>
                 </View>
             </TouchableOpacity>

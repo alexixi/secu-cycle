@@ -7,16 +7,21 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { Button, OutlineButton } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
+import { useFormat } from "../hooks/useFormat";
+import { bcp47 } from "../utils/datetime";
 import { useTheme } from "../hooks/useTheme";
 import { changeProfileInfo } from "../services/apiBack";
 import { ScreenHeader } from "../components/ui/ScreenHeader";
 import { SwipeBackScreen } from "../components/SwipeBackScreen";
 
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 
 export default function EditProfilePage() {
     const router = useRouter();
     const { colors } = useTheme();
+    const { t, i18n } = useTranslation();
+    const f = useFormat();
     const { user, token, updateUser } = useAuth();
 
     const [firstName, setFirstName] = useState(user?.first_name || "");
@@ -26,11 +31,7 @@ export default function EditProfilePage() {
     const [isLoading, setIsLoading] = useState(false);
     const [level, setLevel] = useState(user?.sport_level || "intermediaire");
 
-    const levels = [
-        { label: 'Débutant', value: 'debutant' },
-        { label: 'Intermédiaire', value: 'intermediaire' },
-        { label: 'Expérimenté', value: 'experimente' }
-    ];
+    const levels = ['debutant', 'intermediaire', 'experimente'];
 
     const handleSave = async () => {
         setIsLoading(true);
@@ -67,12 +68,12 @@ export default function EditProfilePage() {
             style={[styles.container, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContainer}
         >
-            <ScreenHeader title="Modifier mon profil" onBack={close} />
+            <ScreenHeader title={t('compte.modales.profil.titre')} onBack={close} />
 
             <View style={styles.formContainer}>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Prénom</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.champs.prenom')}</Text>
                     <TextInput
                         style={[styles.input, { backgroundColor: colors.bgSurface, color: colors.textMain, borderColor: colors.borderStrong }]}
                         value={firstName}
@@ -81,7 +82,7 @@ export default function EditProfilePage() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Nom</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.champs.nom')}</Text>
                     <TextInput
                         style={[styles.input, { backgroundColor: colors.bgSurface, color: colors.textMain, borderColor: colors.borderStrong }]}
                         value={lastName}
@@ -90,31 +91,31 @@ export default function EditProfilePage() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Adresse mail</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.champs.email')}</Text>
                     <TouchableOpacity
                         style={[styles.input, styles.readOnlyRow, { backgroundColor: colors.bgSurface, borderColor: colors.borderStrong }]}
                         onPress={() => router.push("/editemail")}
                         accessibilityRole="button"
-                        accessibilityLabel="Modifier mon adresse mail"
+                        accessibilityLabel={t('compte.email.titre')}
                     >
                         <Text style={{ color: colors.textMain, fontSize: 16, flex: 1 }} numberOfLines={1}>
-                            {user?.email || "Non renseignée"}
+                            {user?.email || t('compte.modales.profil.emailNonRenseigne')}
                         </Text>
                         <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                     </TouchableOpacity>
                     <Text style={[styles.helpText, { color: colors.textSecondary }]}>
-                        Changer d&apos;adresse nécessite une vérification par code.
+                        {t('compte.modales.profil.verificationCode')}
                     </Text>
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Date de naissance</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('compte.modales.profil.naissance')}</Text>
                     <TouchableOpacity
                         style={[styles.input, { backgroundColor: colors.bgSurface, borderColor: colors.borderStrong, justifyContent: 'center' }]}
                         onPress={() => setShowDatePicker(true)}
                     >
                         <Text style={{ color: colors.textMain, fontSize: 16 }}>
-                            {birthDate.toLocaleDateString('fr-FR')}
+                            {f.dateSeule(birthDate)}
                         </Text>
                     </TouchableOpacity>
                     {showDatePicker && (
@@ -122,30 +123,32 @@ export default function EditProfilePage() {
                             value={birthDate}
                             mode="date"
                             display="spinner"
+                            locale={bcp47(i18n.language)}
                             onChange={onChangeDate}
                         />
                     )}
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Niveau sportif</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('compte.modales.profil.niveauSportif')}</Text>
                     <View style={styles.levelContainer}>
-                        {levels.map((item) => (
+                        {levels.map((valeur) => (
                             <TouchableOpacity
-                                key={item.value}
+                                key={valeur}
                                 style={[
                                     styles.levelButton,
                                     { borderColor: colors.borderStrong, backgroundColor: colors.bgSurface },
-                                    level === item.value && { backgroundColor: colors.primary, borderColor: colors.primary }
+                                    level === valeur && { backgroundColor: colors.primary, borderColor: colors.primary }
                                 ]}
-                                onPress={() => setLevel(item.value)}
+                                onPress={() => setLevel(valeur)}
                             >
                                 <Text style={[
                                     styles.levelButtonText,
                                     { color: colors.textMain },
-                                    level === item.value && { color: '#FFF', fontWeight: 'bold' }
+                                    level === valeur && { color: '#FFF', fontWeight: 'bold' }
                                 ]}>
-                                    {item.label}
+                                    {/* i18n-suffixes: debutant intermediaire experimente */}
+                                    {t(`auth.niveau.${valeur}`)}
                                 </Text>
                             </TouchableOpacity>
                         ))}
@@ -154,7 +157,7 @@ export default function EditProfilePage() {
 
                 <View style={styles.buttonWrapper}>
                     <Button
-                        title="Enregistrer les modifications"
+                        title={t('compte.adresses.enregistrer')}
                         iconName="checkmark-circle-outline"
                         onPress={handleSave}
                         isLoading={isLoading}
@@ -162,7 +165,7 @@ export default function EditProfilePage() {
 
                     <View style={{ marginTop: 15 }}>
                         <OutlineButton
-                            title="Annuler"
+                            title={t('commun.annuler')}
                             onPress={close}
                         />
                     </View>

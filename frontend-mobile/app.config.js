@@ -5,7 +5,7 @@ export default {
     expo: {
         name: IS_DEV ? "Sécu Cycle Dev" : "Sécu Cycle",
         slug: "secu-cycle",
-        version: "1.1.0",
+        version: "1.2.0",
         runtimeVersion: {
             policy: "appVersion"
         },
@@ -24,9 +24,10 @@ export default {
             bundleIdentifier: IS_DEV ? "fr.secucycle.app.dev" : "fr.secucycle.app",
             infoPlist: {
                 ITSAppUsesNonExemptEncryption: false,
-                UIBackgroundModes: ["location"],
-                NSLocationWhenInUseUsageDescription: "Sécu'Cycle a besoin de votre position pour vous guider en temps réel.",
-                NSLocationAlwaysAndWhenInUseUsageDescription: "Sécu Cycle utilise votre position en arrière-plan pour continuer la navigation avec le téléphone dans votre poche."
+                UIBackgroundModes: ["location"]
+                // Les descriptions NSLocation* sont fournies par la clé `locales`
+                // ci-dessous, qui les traduit. Les redéclarer ici les figerait en
+                // français : l'Info.plist littéral gagne sur les catalogues.
             }
         },
         android: {
@@ -68,8 +69,10 @@ export default {
             [
                 "expo-location",
                 {
-                    "locationAlwaysAndWhenInUsePermission": "Sécu Cycle utilise votre position pour la navigation vélo.",
-                    "locationAlwaysPermission": "Sécu Cycle utilise votre position en arrière-plan pour continuer la navigation avec le téléphone dans votre poche.",
+                    // Volontairement sans locationAlways*Permission : ces clés
+                    // écrasent l'Info.plist et gagneraient sur les catalogues de
+                    // `locales`, ce qui figerait les demandes de permission en
+                    // français. Les textes vivent dans i18n/locales/native/.
                     "isAndroidBackgroundLocationEnabled": true
                 }
             ],
@@ -80,9 +83,21 @@ export default {
                     "color": "#646cff"
                 }
             ],
+            "expo-localization",
             "@react-native-community/datetimepicker",
-            "@maplibre/maplibre-react-native"
+            "@maplibre/maplibre-react-native",
+            "./plugins/withAndroidLint.js"
         ],
+        // Chaînes lues par le système d'exploitation : nom de l'application et
+        // descriptions de permission. Elles suivent la langue du TÉLÉPHONE, pas la
+        // préférence choisie dans l'application — iOS lit l'Info.plist avant que
+        // le moindre code JS ne tourne. Sans conséquence : elles n'apparaissent
+        // qu'à l'installation et au premier octroi de permission.
+        defaultLanguage: "fr",
+        locales: {
+            fr: "./i18n/locales/native/fr.json",
+            en: "./i18n/locales/native/en.json"
+        },
         experiments: {
             typedRoutes: true,
             reactCompiler: true

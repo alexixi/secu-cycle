@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { MdNavigation } from "react-icons/md";
 import {
     WEATHER_ALERT_COLORS, weatherIcon, formatHM, formatHMShifted,
@@ -5,6 +6,7 @@ import {
 } from "./weather";
 
 export default function WeatherDetail({ summary, hourly = [], minutely = [], outdated = false, rain }) {
+    const { t } = useTranslation('carte');
     const wind = summary.wind;
     const alerts = summary.alerts || [];
     const equipment = summary.equipment || [];
@@ -26,14 +28,14 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
                     <span className="weather-detail-now-label">{summary.label}</span>
                     {showFeels && (
                         <span className="weather-detail-muted">
-                            Ressenti {Math.round(feels)} °C
+                            {t('ui.meteo.ressenti', { degres: Math.round(feels) })}
                         </span>
                     )}
                 </span>
             </section>
 
             <section className="weather-detail-block">
-                <h4>Précipitations</h4>
+                <h4>{t('ui.meteo.precipitations')}</h4>
                 {rain && <p className="weather-detail-lead">{rain.text}</p>}
 
                 {hasNowcast ? (
@@ -51,27 +53,25 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
                         <div className="weather-precip-axis">
                             <span>{formatHM(minutely[0].time)}</span>
                             <span className="weather-detail-muted">
-                                {`échelle : ${PRECIP_FULL_BAR_MM} mm / ${MINUTELY_STEP_MIN} min`}
+                                {t('ui.meteo.echelle', { mm: PRECIP_FULL_BAR_MM, minutes: MINUTELY_STEP_MIN })}
                             </span>
                             <span>
                                 {formatHMShifted(minutely[minutely.length - 1].time, MINUTELY_STEP_MIN)}
                             </span>
                         </div>
                         <p className="weather-detail-muted">
-                            {`Cumul sur la période : ${minutely
-                                .reduce((sum, s) => sum + (s.precipitation || 0), 0)
-                                .toFixed(1)} mm`}
+                            {t('ui.meteo.cumulPeriode', {
+                                mm: minutely.reduce((sum, s) => sum + (s.precipitation || 0), 0).toFixed(1),
+                            })}
                         </p>
                     </>
                 ) : outdated ? (
                     <p className="weather-detail-muted">
-                        Prévision au quart d'heure expirée : le dernier relevé est trop ancien
-                        pour dire quoi que ce soit des deux prochaines heures.
+                        {t('ui.meteo.nowcastExpire')}
                     </p>
                 ) : (
                     <p className="weather-detail-muted">
-                        Pas de prévision au quart d'heure sur cette zone — hors couverture des
-                        modèles à fine maille. Seules les probabilités horaires sont fiables ici.
+                        {t('ui.meteo.nowcastHorsZone')}
                     </p>
                 )}
 
@@ -92,7 +92,7 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
 
             {wind?.speed != null && (
                 <section className="weather-detail-block">
-                    <h4>Vent</h4>
+                    <h4>{t('ui.meteo.vent')}</h4>
                     <p className="weather-detail-wind">
                         {wind.direction != null && (
                             <MdNavigation
@@ -103,21 +103,21 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
                         )}
                         <strong>{Math.round(wind.speed)} km/h</strong>
                         {wind.cardinal && (
-                            <span className="weather-detail-muted">{` de ${wind.cardinal}`}</span>
+                            <span className="weather-detail-muted">{t('ui.meteo.ventDe', { cardinal: wind.cardinal })}</span>
                         )}
                     </p>
                     {wind.gusts != null && (
                         <p className="weather-detail-muted">
-                            {`Rafales jusqu'à ${Math.round(wind.gusts)} km/h`}
+                            {t('ui.meteo.rafales', { vitesse: Math.round(wind.gusts) })}
                         </p>
                     )}
                 </section>
             )}
 
             <section className="weather-detail-block">
-                <h4>Vigilance</h4>
+                <h4>{t('ui.meteo.vigilance')}</h4>
                 {alerts.length === 0 ? (
-                    <p className="weather-detail-muted">Rien à signaler.</p>
+                    <p className="weather-detail-muted">{t('ui.meteo.rienASignaler')}</p>
                 ) : (
                     <ul className="weather-detail-alerts">
                         {alerts.map((alert) => (
@@ -141,7 +141,7 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
 
             {equipment.length > 0 && (
                 <section className="weather-detail-block">
-                    <h4>À prévoir</h4>
+                    <h4>{t('ui.meteo.aPrevoir')}</h4>
                     <div className="weather-detail-chips">
                         {equipment.map((item) => (
                             <span key={item.key} className="weather-detail-chip" title={item.reason}>
@@ -154,7 +154,7 @@ export default function WeatherDetail({ summary, hourly = [], minutely = [], out
 
             {nextHours.length > 0 && (
                 <section className="weather-detail-block">
-                    <h4>Prochaines heures</h4>
+                    <h4>{t('ui.meteo.prochainesHeures')}</h4>
                     <div className="weather-detail-hours">
                         {nextHours.map((h) => {
                             const Icon = weatherIcon(h.condition, h.is_day !== false);

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useState, useEffect, useRef } from "react";
 import { searchAddressAutocomplete, getCoordinatesFromAddress } from "../../services/geocodingService";
 import { isCovered } from "../../services/apiBack";
@@ -7,6 +8,7 @@ import "./AdressInput.css";
 import "./Input.css"
 
 export default function AdressInput({ id, placeholder, onSelect, defaultValue, autoFocus = false, showFavorite = false, checkCoverage = false, children: icon }) {
+    const { t } = useTranslation('common');
     const { user } = useAuth();
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
@@ -26,7 +28,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         if (user.home_address) {
             favs.push({
                 id: "fav-home",
-                name: "🏠 Domicile",
+                name: t('adresses.domicile'),
                 display_name: user.home_address,
                 isFavorite: true
             });
@@ -35,7 +37,7 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
         if (user.work_address) {
             favs.push({
                 id: "fav-work",
-                name: "💼 Travail",
+                name: t('adresses.travail'),
                 display_name: user.work_address,
                 isFavorite: true
             });
@@ -203,20 +205,20 @@ export default function AdressInput({ id, placeholder, onSelect, defaultValue, a
 
             {hasError && (
                 <div className="error-text">
-                    Adresse invalide. Veuillez choisir dans la liste.
+                    {t('adresses.adresseInvalide')}
                 </div>
             )}
 
             {outOfZone && !hasError && (
                 <div className="warning-text">
-                    Cette adresse est en dehors de la zone couverte par Sécu-Cycle.
+                    {t('adresses.adresseHorsZone')}
                 </div>
             )}
 
             {isOpen && noResults && suggestions.length === 0 && (
                 <ul className="autocomplete-list">
                     <li className="autocomplete-empty" aria-disabled="true">
-                        Aucun résultat trouvé
+                        {t('adresses.aucunResultat')}
                     </li>
                 </ul>
             )}

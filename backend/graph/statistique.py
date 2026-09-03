@@ -17,6 +17,7 @@ from graph.config import (
     WIND_HEADWIND_SECTOR_DEG, BRIDGE_MIN_LENGTH_M,
 )
 from graph.extent import graph_zones, zone_center, zone_of
+from graph.elevation_profile import gain_perte
 
 # Repli lorsqu'aucun centre de graphe n'est connu (place de la Bourse, Bordeaux).
 BORDEAUX_LAT, BORDEAUX_LON = 44.8378, -0.5792
@@ -130,41 +131,15 @@ def analyser_qualite_trajet(G, route, nom_trajet="Trajet"):
     print(f" - % du trajet en zone apaisée (<= 30 km/h) : {pct_zone30:.1f} %")
 
 def calculate_route_elevation(G, route, window_size=7, threshold=0.15):
+    """Dénivelé (positif, négatif) d'un trajet, en mètres.
+
+    Façade côté graphe : elle ne fait qu'aller chercher les altitudes des nœuds.
+    Le calcul lui-même vit dans `graph/elevation_profile.py`, qui n'a aucune
+    dépendance — il est ainsi testable, et partagé avec la reprise de l'historique
+    qui part du tracé `routes.path` au lieu des nœuds.
     """
-    Calcule le dénivelé en appliquant d'abord un lissage (Moyenne Mobile)
-    pour effacer le "bruit" du radar (arbres, toits, erreurs de 1m).
-    """
-    altitudes = []
-    for node in route:
-        alt = G.nodes[node].get('elevation', 0.0)
-        if not math.isnan(alt):
-            altitudes.append(alt)
-        else:
-            altitudes.append(altitudes[-1] if altitudes else 0.0)
-
-    if len(altitudes) < 2:
-        return 0.0, 0.0
-
-    altitudes_lissees = []
-    for i in range(len(altitudes)):
-        debut = max(0, i - window_size // 2)
-        fin = min(len(altitudes), i + window_size // 2 + 1)
-
-        moyenne = sum(altitudes[debut:fin]) / (fin - debut)
-        altitudes_lissees.append(moyenne)
-
-    elevation_gain = 0.0
-    elevation_loss = 0.0
-
-    for i in range(len(altitudes_lissees) - 1):
-        diff = altitudes_lissees[i+1] - altitudes_lissees[i]
-
-        if diff > threshold:
-            elevation_gain += diff
-        elif diff < -threshold:
-            elevation_loss += abs(diff)
-
-    return round(elevation_gain, 1), round(elevation_loss, 1)
+    altitudes = [G.nodes[node].get('elevation', 0.0) for node in route]
+    return gain_perte(altitudes, window_size, threshold)
 
 
 def _speed_settings(bike_type, is_electric, cyclist_level):

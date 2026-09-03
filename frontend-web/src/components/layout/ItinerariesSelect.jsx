@@ -1,143 +1,263 @@
+import { useTranslation } from "react-i18next";
 import './ItinerariesSelect.css';
 
-import { useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { FaArrowTrendUp, FaArrowTrendDown, FaBicycle } from "react-icons/fa6";
 import { PiPathBold } from "react-icons/pi";
-import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdOutlineReportProblem, MdOutlineDarkMode, MdOutlineAir, MdOutlineWaterDrop, MdOutlineAir as MdWind, MdOutlineWarningAmber } from "react-icons/md";
-import { weatherSummary } from "../../modules/map/weather";
+import { MdOutlineTimer, MdOutlineSpeed, MdLightbulbOutline, MdInfoOutline, MdClose, MdOutlineReportProblem, MdOutlineDarkMode, MdOutlineAir, MdOutlineWaterDrop, MdOutlineAir as MdWind, MdOutlineWarningAmber } from "react-icons/md";
+import { weatherSummary, formatHM } from "../../modules/map/weather";
+import useScrollFade from "../../hooks/useScrollFade";
 
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
-function buildSafetyExplanation(id, stats, weather) {
+// `t` est passé en argument plutôt que lu par un hook : la fonction est appelée
+// hors rendu et sert à composer une liste de phrases, pas du JSX.
+function buildSafetyExplanation(t, id, stats, weather) {
     if (!stats) return null;
 
     const points = [];
 
     if (stats.pct_cyclable >= 50) {
-        points.push(`Plus de la moitié du trajet (${stats.pct_cyclable}%) emprunte des pistes ou bandes cyclables dédiées, séparées du trafic motorisé.`);
+        points.push(t('securite.cyclableFort', { pct: stats.pct_cyclable }));
     } else if (stats.pct_cyclable >= 20) {
-        points.push(`${stats.pct_cyclable}% du trajet utilise des infrastructures cyclables (piste, bande ou voie verte), limitant les interactions avec les voitures.`);
+        points.push(t('securite.cyclableMoyen', { pct: stats.pct_cyclable }));
     } else {
-        points.push(`Le trajet favorise les rues résidentielles et voies apaisées pour minimiser le trafic motorisé.`);
+        points.push(t('securite.cyclableFaible'));
     }
 
     if (stats.pct_low_speed >= 60) {
-        points.push(`${stats.pct_low_speed}% du trajet se déroule en zone ≤30 km/h, ce qui réduit significativement le risque et la gravité des accidents.`);
+        points.push(t('securite.lentFort', { pct: stats.pct_low_speed }));
     } else if (stats.pct_low_speed >= 30) {
-        points.push(`${stats.pct_low_speed}% du trajet passe par des zones à vitesse réduite (≤30 km/h).`);
+        points.push(t('securite.lentMoyen', { pct: stats.pct_low_speed }));
     }
 
     if (stats.pct_lit >= 70) {
-        points.push(`${stats.pct_lit}% du trajet est éclairé, assurant une bonne visibilité de nuit.`);
+        points.push(t('securite.eclaire', { pct: stats.pct_lit }));
     }
 
     if (stats.accidents_count === 0) {
-        points.push("Aucun accident à vélo n'a été officiellement recensé le long de ce trajet.");
+        points.push(t('securite.sansAccident'));
     } else if (stats.accidents_count > 0) {
-        points.push(`${stats.accidents_count} accident${stats.accidents_count > 1 ? 's' : ''} à vélo `
-            + `${stats.accidents_count > 1 ? 'ont' : 'a'} été recensé${stats.accidents_count > 1 ? 's' : ''} `
-            + `le long de ce trajet ; ces segments voient leur note de sécurité abaissée.`);
+        points.push(t('securite.accidents', { count: stats.accidents_count }));
     }
 
     if (id === "safe") {
-        points.push("Ce trajet a été sélectionné par l'algorithme comme le plus sécurisé parmi les options calculées, en privilégiant le score de sécurité sur la vitesse.");
+        points.push(t('securite.varianteSafe'));
     } else if (id === "compromise") {
-        points.push("Ce trajet équilibre sécurité et durée : il reste dans le temps imparti tout en maximisant le passage sur des voies sécurisées.");
+        points.push(t('securite.varianteCompromise'));
     }
 
     const summary = weatherSummary(weather);
     const bridges = summary?.ice_bridges;
     if (bridges?.count) {
-        points.push(`Il fait ${Math.round(summary.temperature)} °C et ce trajet franchit `
-            + `${bridges.count} pont${bridges.count > 1 ? 's' : ''} : un tablier perd sa chaleur `
-            + `par ses deux faces et peut être verglacé alors que la chaussée voisine ne l'est pas.`);
+        points.push(t('securite.ponts', {
+            count: bridges.count,
+            temperature: Math.round(summary.temperature),
+        }));
     }
     for (const alert of (summary?.alerts || []).slice(0, 2)) {
-        points.push(`${alert.label}${alert.at ? ` vers ${alert.at.slice(11, 16).replace(':', 'h')}` : ' en cours'} `
-            + `sur la zone de départ. Cette information n'a pas modifié le tracé : à cette résolution `
-            + `(~28 km), la météo vous avertit sans faire dévier l'itinéraire.`);
+        const quand = alert.at
+            ? t('securite.alerteVers', { heure: formatHM(alert.at) })
+            : t('securite.alerteEnCours');
+        points.push(t('securite.alerte', { libelle: alert.label, quand }));
     }
 
     return points;
 }
 
-function SafetyInfo({ id, stats, weather }) {
-    const [open, setOpen] = useState(false);
-    const points = buildSafetyExplanation(id, stats, weather);
+const MARGE_ECRAN = 8;
+const ECART_BOUTON = 6;
+
+function SafetyInfo({ id, stats, weather, open, onToggle, onClose }) {
+    const { t } = useTranslation('itineraire');
+    const btnRef = useRef(null);
+    const panelRef = useRef(null);
+    const [pos, setPos] = useState(null);
+    const points = buildSafetyExplanation(t, id, stats, weather);
+
+    useLayoutEffect(() => {
+        if (!open) {
+            setPos(null);
+            return;
+        }
+
+        const placer = () => {
+            const bouton = btnRef.current;
+            const panneau = panelRef.current;
+            if (!bouton || !panneau) return;
+
+            const ancre = bouton.getBoundingClientRect();
+            const { width, height } = panneau.getBoundingClientRect();
+
+            const gaucheMax = window.innerWidth - width - MARGE_ECRAN;
+            const left = Math.max(MARGE_ECRAN, Math.min(ancre.left, gaucheMax));
+
+            const dessous = ancre.bottom + ECART_BOUTON;
+            const auDessus = dessous + height > window.innerHeight - MARGE_ECRAN
+                && ancre.top - height - ECART_BOUTON >= MARGE_ECRAN;
+
+            setPos({
+                top: auDessus ? ancre.top - height - ECART_BOUTON : dessous,
+                left,
+                auDessus,
+                fleche: ancre.left + ancre.width / 2 - left,
+            });
+        };
+
+        placer();
+        window.addEventListener('resize', placer);
+        window.addEventListener('scroll', placer, true);
+        return () => {
+            window.removeEventListener('resize', placer);
+            window.removeEventListener('scroll', placer, true);
+        };
+    }, [open, points?.length]);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const surTouche = (e) => {
+            if (e.key !== 'Escape') return;
+            onClose();
+            btnRef.current?.focus();
+        };
+        const surClic = (e) => {
+            if (btnRef.current?.contains(e.target)) return;
+            if (panelRef.current?.contains(e.target)) return;
+            onClose();
+        };
+
+        const vigie = new IntersectionObserver(
+            ([entree]) => { if (!entree.isIntersecting) onClose(); },
+            { threshold: 0 },
+        );
+        if (btnRef.current) vigie.observe(btnRef.current);
+
+        document.addEventListener('keydown', surTouche);
+        document.addEventListener('mousedown', surClic);
+        return () => {
+            vigie.disconnect();
+            document.removeEventListener('keydown', surTouche);
+            document.removeEventListener('mousedown', surClic);
+        };
+    }, [open, onClose]);
+
     if (!points) return null;
 
     return (
         <div className="safety-info-wrapper">
             <button
+                ref={btnRef}
+                type="button"
                 className="safety-info-btn"
-                onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
-                title="Pourquoi ce trajet est-il sécurisé ?"
+                onClick={(e) => { e.stopPropagation(); onToggle(); }}
+                title={t('securite.bouton')}
+                aria-label={t('securite.bouton')}
+                aria-haspopup="dialog"
+                aria-expanded={open}
             >
                 <MdInfoOutline />
             </button>
-            {open && (
-                <div className="safety-info-panel" onClick={e => e.stopPropagation()}>
-                    <p className="safety-info-title">Pourquoi ce trajet est sécurisé ?</p>
+            {open && createPortal(
+                <div
+                    ref={panelRef}
+                    className={`safety-info-panel${pos?.auDessus ? ' is-above' : ''}`}
+                    role="dialog"
+                    aria-label={t('securite.titre')}
+                    onClick={e => e.stopPropagation()}
+                    style={pos
+                        ? { top: pos.top, left: pos.left, '--fleche-x': `${pos.fleche}px` }
+                        : { top: 0, left: 0, visibility: 'hidden' }}
+                >
+                    <div className="safety-info-head">
+                        <p className="safety-info-title">{t('securite.titre')}</p>
+                        <button
+                            type="button"
+                            className="safety-info-close"
+                            onClick={() => { onClose(); btnRef.current?.focus(); }}
+                            title={t('securite.fermer')}
+                            aria-label={t('securite.fermer')}
+                        >
+                            <MdClose />
+                        </button>
+                    </div>
                     <ul>
                         {points.map((p, i) => <li key={i}>{p}</li>)}
                     </ul>
-                </div>
+                </div>,
+                document.body,
             )}
         </div>
     );
 }
 
 function InfraStats({ stats, lightingAware, weather, route }) {
-    if (!stats) return null;
+    const { t } = useTranslation('itineraire');
+    const { ref, scrollState, checkScroll, scrollProps } = useScrollFade();
     const summary = weatherSummary(weather);
     const headwind = route?.pct_headwind;
     const windEffect = route?.wind_effect_min;
+
+    const badgesConditionnels = [
+        stats?.accidents_count > 0,
+        stats?.air_aware,
+        summary?.headwind_notable && headwind != null,
+        summary?.ice_bridges?.count > 0,
+    ].join();
+    useEffect(() => { checkScroll(); }, [checkScroll, badgesConditionnels]);
+
+    if (!stats) return null;
+
     return (
-        <div className="path-infra-stats">
+        <div
+            ref={ref}
+            className="path-infra-stats"
+            data-scroll={scrollState}
+            tabIndex={0}
+            {...scrollProps}
+        >
             <span className="infra-badge badge-green">
-                <FaBicycle /> {stats.pct_cyclable}% piste cyclable
+                <FaBicycle /> {t('badges.pisteCyclable', { pct: stats.pct_cyclable })}
             </span>
             <span className="infra-badge badge-blue">
-                <MdOutlineSpeed /> {stats.pct_low_speed}% zone ≤30 km/h
+                <MdOutlineSpeed /> {t('badges.zoneLente', { pct: stats.pct_low_speed })}
             </span>
             <span
                 className={`infra-badge ${lightingAware ? 'badge-yellow' : 'badge-muted'}`}
-                title={lightingAware
-                    ? "Il fait nuit : l'éclairage est pris en compte dans le calcul de cet itinéraire."
-                    : "De jour (ou pendant la coupure nocturne), l'éclairage n'entre pas dans le calcul de l'itinéraire."}
+                title={t(lightingAware ? 'badges.eclairageActif' : 'badges.eclairageInactif')}
             >
-                <MdLightbulbOutline /> {stats.pct_lit}% éclairé
+                <MdLightbulbOutline /> {t('badges.eclaire', { pct: stats.pct_lit })}
                 {lightingAware && <MdOutlineDarkMode className="infra-badge-flag" />}
             </span>
             {stats.accidents_count > 0 && (
                 <span className="infra-badge badge-red">
-                    <MdOutlineReportProblem /> {stats.accidents_count} accident{stats.accidents_count > 1 ? 's' : ''} recensé{stats.accidents_count > 1 ? 's' : ''}
+                    <MdOutlineReportProblem /> {t('badges.accidents', { count: stats.accidents_count })}
                 </span>
             )}
             {stats.air_aware && (
                 <span
                     className="infra-badge badge-teal"
-                    title="L'air régional est dégradé : cet itinéraire privilégie les rues les plus à l'écart de la circulation, où l'exposition à la pollution est la plus faible."
+                    title={t('badges.airDegrade')}
                 >
-                    <MdOutlineAir /> {stats.pct_low_air_exposure}% à l'écart du trafic
+                    <MdOutlineAir /> {t('badges.horsTrafic', { pct: stats.pct_low_air_exposure })}
                 </span>
             )}
             {summary?.headwind_notable && headwind != null && (
                 <span
                     className="infra-badge badge-cyan"
-                    title={`Vent de ${Math.round(summary.wind?.speed ?? 0)} km/h. `
-                        + `L'estimation de durée en tient compte, mais le tracé n'a pas été modifié.`}
+                    title={t('badges.ventTitre', { vitesse: Math.round(summary.wind?.speed ?? 0) })}
                 >
-                    <MdWind /> Vent de face sur {Math.round(headwind)}%
-                    {windEffect > 0 && ` · +${Math.round(windEffect)} min`}
+                    <MdWind /> {t('badges.ventDeFace', { pct: Math.round(headwind) })}
+                    {windEffect > 0 && t('badges.ventMinutes', { minutes: Math.round(windEffect) })}
                 </span>
             )}
             {summary?.ice_bridges?.count > 0 && (
                 <span
                     className="infra-badge badge-red"
-                    title="Un tablier de pont perd sa chaleur par ses deux faces et gèle une à deux heures avant la chaussée voisine."
+                    title={t('badges.pontsTitre')}
                 >
-                    <MdOutlineWarningAmber /> {summary.ice_bridges.count} pont{summary.ice_bridges.count > 1 ? 's' : ''} · risque de verglas
+                    <MdOutlineWarningAmber /> {t('badges.ponts', { count: summary.ice_bridges.count })}
                 </span>
             )}
         </div>
@@ -145,11 +265,12 @@ function InfraStats({ stats, lightingAware, weather, route }) {
 }
 
 function WeatherAdvice({ weather }) {
+    const { t } = useTranslation('carte');
     const items = weatherSummary(weather)?.equipment;
     if (!items?.length) return null;
     return (
         <div className="weather-advice">
-            <span className="weather-advice-title"><MdOutlineWaterDrop /> À prévoir</span>
+            <span className="weather-advice-title"><MdOutlineWaterDrop /> {t('ui.meteo.aPrevoir')}</span>
             <div className="weather-advice-chips">
                 {items.map((item) => (
                     <span key={item.key} className="weather-advice-chip" title={item.reason}>
@@ -162,10 +283,23 @@ function WeatherAdvice({ weather }) {
 }
 
 export default function ItinerariesSelect({ itineraires, weather, selectedItineraire, setSelectedItineraire }) {
+    const { t } = useTranslation('itineraire');
+    const [infoOuverte, setInfoOuverte] = useState(null);
+    const fermerInfo = useCallback(() => setInfoOuverte(null), []);
+    useEffect(() => { setInfoOuverte(null); }, [selectedItineraire]);
+    // Le backend renvoie encore le nom de la variante en français (`Rapide`,
+    // `Sécurisé`, `Compromis`). L'`id`, lui, est une clé stable : on résout le
+    // libellé ici, et on ne retombe sur le nom de l'API que pour une variante
+    // qu'on ne connaîtrait pas.
+    const nomVariante = (itineraire) => {
+        const cle = `itineraires.nom.${itineraire.id}`;
+        const libelle = t(cle);
+        return libelle === cle ? itineraire.name : libelle;
+    };
     if (itineraires && itineraires.length > 0) {
         return (
             <div className="itineraries-select">
-                <h3>Itinéraires disponibles</h3>
+                <h3>{t('itineraires.titre')}</h3>
                 <div className='path-container'>
                     {itineraires.map((itineraire) => {
                         const isSelected = selectedItineraire === itineraire.id;
@@ -180,8 +314,15 @@ export default function ItinerariesSelect({ itineraires, weather, selectedItiner
                             >
                                 <div className="path-top">
                                     <div className="path-title-row">
-                                        <h3>{itineraire.name}</h3>
-                                        <SafetyInfo id={itineraire.id} stats={itineraire.infra_stats} weather={weather} />
+                                        <h3>{nomVariante(itineraire)}</h3>
+                                        <SafetyInfo
+                                            id={itineraire.id}
+                                            stats={itineraire.infra_stats}
+                                            weather={weather}
+                                            open={infoOuverte === itineraire.id}
+                                            onToggle={() => setInfoOuverte(o => (o === itineraire.id ? null : itineraire.id))}
+                                            onClose={fermerInfo}
+                                        />
                                     </div>
                                     <div className='path-info'>
                                         <span className='color-red'><FaArrowTrendUp /> {itineraire.height_difference[0]} m</span>
@@ -215,7 +356,7 @@ export default function ItinerariesSelect({ itineraires, weather, selectedItiner
                                                     }}
                                                     itemStyle={{ color: 'var(--text-main)', margin: 0, fontWeight: 'bold' }}
                                                     labelFormatter={() => ""}
-                                                    formatter={(value) => [`${value} m`, "Altitude"]}
+                                                    formatter={(value) => [`${value} m`, t('itineraires.altitude')]}
                                                     wrapperStyle={{ outline: 'none' }}
                                                 />
                                                 <Area

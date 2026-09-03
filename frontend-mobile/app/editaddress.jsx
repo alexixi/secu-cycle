@@ -11,10 +11,12 @@ import AdressInput from '../components/ui/AdressInput';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { SwipeBackScreen } from '../components/SwipeBackScreen';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 
 export default function EditAddressPage() {
     const router = useRouter();
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const { user, updateUser, token } = useAuth();
 
     const [home, setHome] = useState(user?.home_address || "");
@@ -43,15 +45,15 @@ export default function EditAddressPage() {
             style={[styles.container, { backgroundColor: colors.bgMain }]}
             contentContainerStyle={styles.scrollContainer}
         >
-            <ScreenHeader title="Mes adresses" onBack={close} />
+            <ScreenHeader title={t('compte.adresses.titreEcran')} onBack={close} />
 
             <View style={styles.formContainer}>
 
                 <View style={[styles.inputGroup, { zIndex: 2000 }]}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Domicile</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.adresses.domicile')}</Text>
                     <View style={[styles.inputWrapper, { backgroundColor: colors.bgSurface, borderColor: colors.borderStrong }]}>
                         <AdressInput
-                            placeholder="Rechercher votre domicile..."
+                            placeholder={t('auth.onboarding.adresses.rechercherDomicile')}
                             defaultValue={home}
                             onSelect={(address) => setHome(address ? address.name : "")}
                             icon={<Ionicons name="home" size={20} color={colors.textSecondary} />}
@@ -60,10 +62,10 @@ export default function EditAddressPage() {
                 </View>
 
                 <View style={[styles.inputGroup, { zIndex: 1000 }]}>
-                    <Text style={[styles.label, { color: colors.textSecondary }]}>Travail</Text>
+                    <Text style={[styles.label, { color: colors.textSecondary }]}>{t('auth.adresses.travail')}</Text>
                     <View style={[styles.inputWrapper, { backgroundColor: colors.bgSurface, borderColor: colors.borderStrong }]}>
                         <AdressInput
-                            placeholder="Rechercher votre lieu de travail..."
+                            placeholder={t('auth.onboarding.adresses.rechercherTravail')}
                             defaultValue={work}
                             onSelect={(address) => setWork(address ? address.name : "")}
                             icon={<FontAwesome name="suitcase" size={20} color={colors.textSecondary} />}
@@ -73,7 +75,7 @@ export default function EditAddressPage() {
 
                 <View style={styles.buttonWrapper}>
                     <Button
-                        title="Enregistrer les modifications"
+                        title={t('compte.adresses.enregistrer')}
                         iconName="checkmark-circle-outline"
                         onPress={handleSave}
                         isLoading={isLoading}
@@ -81,7 +83,7 @@ export default function EditAddressPage() {
 
                     <View style={{ marginTop: 15 }}>
                         <OutlineButton
-                            title="Annuler"
+                            title={t('commun.annuler')}
                             onPress={close}
                         />
                     </View>

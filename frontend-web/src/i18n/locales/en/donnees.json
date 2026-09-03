@@ -1,0 +1,146 @@
+{
+    "sources": {
+        "openstreetmap": {
+            "detail": "via Overpass",
+            "usage": "Road graph, cycling infrastructure, signposted cycle routes (véloroutes, RAVeL, cycle superhighways), surface, lighting, traffic direction and points of interest"
+        },
+        "ign_rge_alti": {
+            "detail": "Géoplateforme",
+            "usage": "Elevation of every node in the graph, from which segment gradients are derived"
+        },
+        "points_lumineux": {
+            "detail": "Bordeaux Métropole",
+            "usage": "Densifying street lighting where OpenStreetMap is patchy"
+        },
+        "luminaires_declairage_public": {
+            "detail": "Nantes Métropole",
+            "usage": "Densifying street lighting"
+        },
+        "accidents_de_velo": {
+            "detail": "derived from the ONISR BAAC files, published by Koumoul",
+            "usage": "Accident penalty on road segments, France"
+        },
+        "geolocalisation_des_accidents_de": {
+            "detail": "Statbel",
+            "usage": "Accident penalty on road segments, Belgium"
+        },
+        "base_adresse_nationale": {
+            "usage": "Autocomplete and geocoding of French addresses"
+        },
+        "trafic_temps_reel": {
+            "detail": "Bordeaux Métropole",
+            "usage": "Traffic conditions on main roads"
+        },
+        "trafic_temps_reel_sirac": {
+            "detail": "Eurométropole de Strasbourg",
+            "usage": "Traffic conditions on main roads"
+        },
+        "etat_du_trafic_en_temps_reel": {
+            "detail": "Rennes Métropole",
+            "usage": "Traffic conditions on main roads"
+        },
+        "fluidite_des_axes_routiers": {
+            "detail": "Nantes Métropole",
+            "usage": "Traffic conditions on main roads"
+        },
+        "gbfs": {
+            "detail": "nine bike-share systems",
+            "usage": "Live availability of stations and bikes"
+        },
+        "cams": {
+            "detail": "Copernicus, redistributed by Open-Meteo",
+            "usage": "European air quality index along the route"
+        },
+        "world_air_quality_index": {
+            "usage": "Ground monitoring station readings, complementing CAMS"
+        },
+        "open_meteo": {
+            "detail": "ICON-D2 (DWD) and AROME (Météo-France) models",
+            "usage": "Weather conditions, 15-minute rain forecast, wind, and threshold-derived alerts (storms, hail, black ice, gusts)"
+        },
+        "vigilance_meteo_france": {
+            "detail": "via the Opendatasoft mirror",
+            "usage": "Official weather warnings by département (storms, wind, snow and ice, heatwave…) in France"
+        },
+        "meteoalarm": {
+            "detail": "EUMETNET, relaying the RMI",
+            "usage": "Official weather warnings by province in Belgium"
+        },
+        "maptiler": {
+            "usage": "Base maps and geocoding outside France"
+        }
+    },
+    "titrePage": "Sécu'Cycle | Data sources",
+    "metaDescription": "The open data behind Sécu'Cycle: OpenStreetMap, IGN, BAAC and Statbel accident records, live traffic, GBFS, air quality.",
+    "jsonLd": {
+        "nom": "Data sources — Sécu'Cycle",
+        "description": "An inventory of the open datasets Sécu'Cycle reuses to plan safer bike routes: how each one is used, its licence and its producer."
+    },
+    "h1": "Data sources",
+    "maj": "Last updated: 28 July 2026",
+    "chapo": "Sécu'Cycle plans bike routes optimised for safety rather than distance alone. The service builds a road graph from OpenStreetMap, then gives every segment a safety score out of 10 that combines several open datasets. This page lists all of those sources, exactly how each is used, its licence and its producer.",
+    "tableau": {
+        "h2": "Summary table",
+        "colSource": "Source",
+        "colUsage": "Use in Sécu'Cycle",
+        "colLicence": "Licence",
+        "colProducteur": "Producer"
+    },
+    "reseau": {
+        "h2": "Road network and cycling infrastructure",
+        "texte": "The type of cycling facility, the road hierarchy, the surface, street lighting and traffic direction all come from <osm>OpenStreetMap</osm> via the Overpass API. These attributes make up a segment's infrastructure score, before penalties are applied.",
+        "poi": "The same source feeds the points of interest shown on the map: drinking water and fountains, public toilets, bike parking, repair workshops and pumping stations."
+    },
+    "eclairage": {
+        "h2": "Street lighting",
+        "texte": "The street lights mapped in OpenStreetMap cover the whole service area, but unevenly. In two cities they are densified by the operator's open dataset: the <bordeaux>Bordeaux Métropole street lights</bordeaux> and the <nantes>Nantes Métropole street lighting</nantes>."
+    },
+    "denivele": {
+        "h2": "Elevation",
+        "texte": "Elevations are queried for every node of the graph from the elevation service of the <ign>IGN Géoplateforme</ign> (RGE ALTI dataset). A segment's gradient is computed from the difference between its endpoints, then weighted according to the rider's profile and whether the bike has electric assistance."
+    },
+    "accidents": {
+        "h2": "Accident records",
+        "registres": "Two national registers are used, one either side of the border. In France, the <baac>“Accidents de vélo”</baac> dataset, derived from the ONISR BAAC files. In Belgium, the <statbel>geolocated road accidents 2017-2024</statbel> published by Statbel, whose Lambert 72 coordinates are reprojected to WGS84 on ingest.",
+        "calcul": "Each accident is attached to the graph segments within a 25 metre radius, then weighted by exponential decay with a 5 year half-life. The resulting penalty is normalised by segment length, compressed logarithmically and capped at 1.5 points out of 10.",
+        "plafond": "That cap is deliberate: these registers carry no exposure denominator, so a busy cycle route mechanically accumulates accidents without being more dangerous per kilometre ridden. The penalty is also strictly subtractive — a segment with no recorded accident keeps its infrastructure score, so that poorly covered areas are not favoured.",
+        "limite": "<b>A known limitation.</b> Both registers only record injury accidents reported to the police. Falls without a third party are heavily under-represented, and geocoding is patchier outside built-up areas. The signal is therefore structurally more reliable in cities, and a segment with no recorded accident is not a safe segment."
+    },
+    "trafic": {
+        "h2": "Live traffic",
+        "texte": "Traffic conditions are collected every five minutes from the open data portals of four cities: Bordeaux Métropole, the Eurométropole de Strasbourg, Rennes Métropole and Nantes Métropole. A source is only queried if its extent overlaps the data we sync. Where route planning is available, a congested road becomes more costly without ever being forbidden; elsewhere, the layer remains viewable on the city's thematic map."
+    },
+    "bikeshare": {
+        "h2": "Bike share",
+        "texte": "Station availability is collected in <gbfs>GBFS</gbfs> format from nine French and Belgian systems, by auto-discovery of their feeds. This layer is informational: it does not affect route planning."
+    },
+    "air": {
+        "h2": "Air quality",
+        "texte": "The European Air Quality Index (EAQI) comes from <cams>CAMS</cams> (Copernicus Atmosphere Monitoring Service), redistributed by Open-Meteo, and sampled along the route on a grid of roughly 11 kilometres. It is complemented by ground monitoring station readings from the <waqi>World Air Quality Index</waqi>, published on the US AQI scale — distinct from the European index, and shown as such."
+    },
+    "adresses": {
+        "h2": "Addresses, geocoding and base maps",
+        "texte": "Autocomplete and geocoding of French addresses rely on the <ban>Base Adresse Nationale</ban>. Outside France, in Belgium in particular, they are handled by <maptiler>MapTiler</maptiler>, which also supplies the base map tiles. MapTiler is a commercial service: it is the only source on this page that is not open data, even though its base maps are themselves built on OpenStreetMap data."
+    },
+    "attributions": {
+        "h2": "Attributions",
+        "osm": "© <osm>OpenStreetMap</osm> contributors, under the <odbl>ODbL</odbl> licence.",
+        "lo": "IGN, ONISR, Base Adresse Nationale, Bordeaux Métropole, Eurométropole de Strasbourg, Rennes Métropole and Nantes Métropole, under the <lo>Licence Ouverte</lo>.",
+        "statbel": "Statbel, under the <ccby>CC BY 4.0</ccby> licence.",
+        "cams": "Generated using Copernicus Atmosphere Monitoring Service information 2026. CAMS data is modified by Sécu'Cycle (sampling along the route) and obtained through Open-Meteo. Neither the European Commission nor ECMWF is responsible for any use made of it.",
+        "waqi": "World Air Quality Index Project (waqi.info).",
+        "maptiler": "Base maps © MapTiler © OpenStreetMap contributors."
+    },
+    "reutiliser": {
+        "h2": "Reusing our data",
+        "texte": "Sécu'Cycle exposes a public API. The datasets we reuse remain the property of their producers and are subject to their respective licences, listed above: any downstream reuse must respect them, in particular the ODbL share-alike clause. For any question, write to us at <mail>contact@secu-cycle.fr</mail>.",
+        "voirAussi": "See also our <mentions>legal notice</mentions> and our <faq>frequently asked questions</faq>."
+    },
+    "licence": {
+        "fluxOuvertsParSysteme": "Open feeds, attribution per system",
+        "copernicus": "Copernicus — attribution required",
+        "attributionRequise": "Attribution required",
+        "eumetnetIrm": "EUMETNET and RMI attribution required",
+        "commercial": "Commercial service — not open data"
+    }
+}

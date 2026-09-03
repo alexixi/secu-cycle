@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database import get_db
-from i18n import etag_for, get_locale
+from i18n import etag_for, get_locale, t
 from dependencies import require_admin
 from lighting import runner
 from models.street_lamp import StreetLamp, SOURCE_ATTRIBUTIONS
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/streetlights", tags=["Éclairage"])
 CACHE_CONTROL = "public, max-age=3600"
 
 
-def _parse_bbox(bbox: str | None) -> tuple[float, float, float, float] | None:
+def _parse_bbox(bbox: str | None, locale: str) -> tuple[float, float, float, float] | None:
     if not bbox:
         return None
     try:
@@ -32,10 +32,10 @@ def _parse_bbox(bbox: str | None) -> tuple[float, float, float, float] | None:
     except ValueError:
         raise HTTPException(
             status_code=400,
-            detail="bbox attendu au format lon_min,lat_min,lon_max,lat_max.",
+            detail=t("error.common.bbox_format", locale),
         )
     if lon_min > lon_max or lat_min > lat_max:
-        raise HTTPException(status_code=400, detail="bbox : les bornes min dépassent les max.")
+        raise HTTPException(status_code=400, detail=t("error.common.bbox_bounds", locale))
     return lon_min, lat_min, lon_max, lat_max
 
 
@@ -51,7 +51,7 @@ def get_streetlights(
     Volumineux (dizaines de milliers de points) : passer `bbox` pour ne charger
     que l'emprise visible.
     """
-    bounds = _parse_bbox(bbox)
+    bounds = _parse_bbox(bbox, locale)
 
     def apply_filters(query):
         if bounds:
@@ -123,7 +123,7 @@ def get_lit_roads(request: Request, locale: str = Depends(get_locale)):
     """
     G = getattr(request.app.state, "G", None)
     if G is None:
-        raise HTTPException(status_code=503, detail="Graphe indisponible.")
+        raise HTTPException(status_code=503, detail=t("error.common.graph_unavailable", locale))
 
     from graph.lighting import lit_roads_geojson
 
@@ -164,6 +164,7 @@ async def trigger_streetlight_sync(
     request: Request,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Déclenche une synchronisation de l'éclairage en tâche de fond.
 
@@ -171,7 +172,7 @@ async def trigger_streetlight_sync(
     le run « en cours », dont l'issue se lit via `/streetlights/admin/runs`.
     """
     if runner.is_running(db):
-        raise HTTPException(status_code=409, detail="Une synchronisation est déjà en cours.")
+        raise HTTPException(status_code=409, detail=t("error.common.sync_running", locale))
 
     run = runner.create_run(db, "manual")
 
@@ -212,11 +213,12 @@ def update_streetlight_sync_settings(
     updates: StreetLampSyncSettingsUpdate,
     db: Session = Depends(get_db),
     _admin: User = Depends(require_admin),
+    locale: str = Depends(get_locale),
 ):
     """Règle l'intervalle de synchronisation automatique (0 ou null = désactivé)."""
     update_data = updates.model_dump(exclude_unset=True)
     if not update_data:
-        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+        raise HTTPException(status_code=400, detail=t("error.common.no_fields", locale))
 
     settings = runner.get_settings(db)
     for field, value in update_data.items():

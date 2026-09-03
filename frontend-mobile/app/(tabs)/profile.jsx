@@ -6,8 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, DangerButton, OutlineButton } from '../../components/ui/Button';
 import HistoricModal from '../../components/HistoricModal';
 import { useAuth } from '../../context/AuthContext';
+import { useFormat } from '../../hooks/useFormat';
 import { useTheme } from '../../hooks/useTheme';
 import { getUserHistoric, deleteHistoricEntry, getBadges } from '../../services/apiBack';
+import { useTranslation } from "react-i18next";
 
 const formatProgress = (value, criteria) =>
     criteria === 'total_distance_km' ? Number(value).toFixed(1) : Math.round(value);
@@ -16,6 +18,8 @@ export default function ProfilePage() {
 
     const router = useRouter();
     const { colors, typography } = useTheme();
+    const { t } = useTranslation();
+    const f = useFormat();
     const insets = useSafeAreaInsets();
 
     const { user, updateUser, token, bikes, updateBikes, historic, updateHistoric, logoutAuth } = useAuth();
@@ -76,18 +80,21 @@ export default function ProfilePage() {
     const totalDist = trajetsTermines.reduce((s, e) => s + (e.route.distance_km || 0), 0);
     const totalTime = trajetsTermines.reduce((s, e) => s + (e.route.duration_min || 0), 0);
     const typeCount = trajetsTermines.reduce((acc, e) => {
-        const t = e.route.route_type;
-        acc[t] = (acc[t] || 0) + 1;
+        const type = e.route.route_type;
+        acc[type] = (acc[type] || 0) + 1;
         return acc;
     }, {});
-    const typeLabels = { fast: "Rapide", safe: "Sécurisé", compromise: "Compromis" };
     const prefType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
 
+    // Les libellés sont résolus ici, dans le corps du composant : construits au
+    // niveau module ils resteraient dans la langue du chargement du bundle. Les
+    // variantes d'itinéraire reprennent les identifiants du backend.
     const statsData = [
-        { label: "Trajets terminés", value: totalTrajets, icon: "bicycle-outline", color: "#3d46f6" },
-        { label: "Distance totale", value: `${totalDist.toFixed(1)} km`, icon: "navigate-outline", color: "#10B981" },
-        { label: "Temps total", value: `${Math.floor(totalTime / 60)}h ${Math.round(totalTime % 60)}min`, icon: "time-outline", color: "#F59E0B" },
-        { label: "Type préféré", value: prefType ? typeLabels[prefType[0]] : `--`, icon: "heart-outline", color: "#EC4899" },
+        { label: t('compte.profil.statistiques.trajetsTermines'), value: f.nombre(totalTrajets), icon: "bicycle-outline", color: "#3d46f6" },
+        { label: t('compte.profil.statistiques.distanceTotale'), value: t('compte.historique.kilometres', { valeur: f.nombre(totalDist, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }), icon: "navigate-outline", color: "#10B981" },
+        { label: t('compte.profil.statistiques.tempsTotal'), value: t('compte.profil.tempsTotal', { heures: Math.floor(totalTime / 60), minutes: Math.round(totalTime % 60) }), icon: "time-outline", color: "#F59E0B" },
+        // i18n-suffixes: safe fast compromise
+        { label: t('compte.profil.statistiques.typePrefere'), value: prefType ? t(`itineraire.variant.${prefType[0]}`) : t('compte.profil.valeurIndisponible'), icon: "heart-outline", color: "#EC4899" },
     ];
 
     if (!user) {
@@ -98,7 +105,7 @@ export default function ProfilePage() {
                     onPress={() => router.push("/settings")}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     accessibilityRole="button"
-                    accessibilityLabel="Paramètres"
+                    accessibilityLabel={t('compte.profil.parametres')}
                 >
                     <Ionicons name="settings-outline" size={26} color={colors.textMain} />
                 </TouchableOpacity>
@@ -106,22 +113,22 @@ export default function ProfilePage() {
                 <Ionicons name="person-circle-outline" size={100} color={colors.textSecondary} />
 
                 <Text style={[typography.h1, { color: colors.textMain, marginTop: 20, textAlign: 'center' }]}>
-                    Mon Profil
+                    {t('compte.profil.h1')}
                 </Text>
 
                 <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginVertical: 20 }]}>
-                    Connectez-vous pour accéder à vos informations personnelles, vos itinéraires favoris et vos vélos.
+                    {t('compte.profil.nonConnecte')}
                 </Text>
 
                 <View style={styles.buttonsContainer}>
                     <Button
-                        title="Se connecter"
+                        title={t('auth.connexion.seConnecter')}
                         iconName="log-in-outline"
                         onPress={() => router.push("/login")}
                     />
 
                     <OutlineButton
-                        title="Créer un compte"
+                        title={t('auth.connexion.creerCompte')}
                         iconName="person-add-outline"
                         onPress={() => router.push("/signin")}
                     />
@@ -141,7 +148,7 @@ export default function ProfilePage() {
                     onPress={() => router.push("/settings")}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     accessibilityRole="button"
-                    accessibilityLabel="Paramètres"
+                    accessibilityLabel={t('compte.profil.parametres')}
                 >
                     <Ionicons name="settings-outline" size={26} color={colors.textMain} />
                 </TouchableOpacity>
@@ -154,7 +161,7 @@ export default function ProfilePage() {
                         </Text>
                     ) :
                         <Text style={[typography.h1, { color: colors.textMain, marginTop: 10 }]}>
-                            Mon Profil
+                            {t('compte.profil.h1')}
                         </Text>
                     }
                     <Text style={[typography.body, { color: colors.textSecondary }]}>
@@ -166,7 +173,7 @@ export default function ProfilePage() {
                     <View style={styles.sectionTitleRow}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
                             <Ionicons name="location-outline" size={24} color={colors.textMain} />
-                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes adresses</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('compte.profil.adresses.h2')}</Text>
                         </View>
                         <TouchableOpacity
                             onPress={() => router.push("/editaddress")}
@@ -179,14 +186,14 @@ export default function ProfilePage() {
                         <View style={styles.addressRow}>
                             <View style={styles.adressTitleRow}>
                                 <Ionicons name="home-outline" size={20} color={colors.textMain} />
-                                <Text style={{ color: colors.textMain }}>Domicile :</Text>
+                                <Text style={{ color: colors.textMain }}>{t('compte.profil.domicile')}</Text>
                             </View>
                             <Text style={{ color: colors.textSecondary }}>{user.home_address}</Text>
                         </View>
                         <View style={styles.addressRow}>
                             <View style={styles.adressTitleRow}>
                                 <FontAwesome name="suitcase" size={20} color={colors.textMain} />
-                                <Text style={{ color: colors.textMain }}>Travail :</Text>
+                                <Text style={{ color: colors.textMain }}>{t('compte.profil.travail')}</Text>
                             </View>
                             <Text style={{ color: colors.textSecondary }}>{user.work_address}</Text>
                         </View>
@@ -196,7 +203,7 @@ export default function ProfilePage() {
                 <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                     <View style={styles.sectionTitleRow}>
                         <Ionicons name="bicycle-outline" size={24} color={colors.textMain} />
-                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes vélos</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('compte.profil.velos.h2')}</Text>
                         <TouchableOpacity
                             onPress={() => router.push("/editbike")}
                             style={{ padding: 5, marginLeft: 'auto' }}
@@ -248,7 +255,7 @@ export default function ProfilePage() {
                             >
                                 <Ionicons name="add-circle-outline" size={28} color={colors.textSecondary} />
                                 <Text style={[styles.bikeType, { color: colors.textSecondary, marginTop: 8 }]}>
-                                    Ajouter
+                                    {t('compte.profil.ajouterVeloCourt')}
                                 </Text>
                             </TouchableOpacity>
                         </ScrollView>
@@ -259,10 +266,10 @@ export default function ProfilePage() {
                         >
                             <Ionicons name="bicycle-outline" size={40} color={colors.borderStrong} />
                             <Text style={{ color: colors.textSecondary, marginTop: 10 }}>
-                                Aucun vélo enregistré
+                                {t('compte.profil.aucunVelo')}
                             </Text>
                             <Text style={{ color: colors.primary, marginTop: 5, fontWeight: '600' }}>
-                                + Ajouter un vélo
+                                {t('compte.profil.ajouterUnVelo')}
                             </Text>
                         </TouchableOpacity>
                     )}
@@ -271,7 +278,7 @@ export default function ProfilePage() {
                 <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                     <View style={styles.sectionTitleRow}>
                         <Ionicons name="bar-chart-outline" size={24} color={colors.textMain} />
-                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes statistiques</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('compte.profil.statistiques.h2')}</Text>
                     </View>
 
                     <View style={styles.statsGrid}>
@@ -292,7 +299,7 @@ export default function ProfilePage() {
                 <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                     <View style={styles.sectionTitleRow}>
                         <Ionicons name="trophy-outline" size={24} color={colors.textMain} />
-                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mes badges</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('compte.profil.badges.h2')}</Text>
                     </View>
 
                     {badgesLoading ? (
@@ -300,7 +307,7 @@ export default function ProfilePage() {
                     ) : badges.length === 0 ? (
                         <View style={styles.emptyContainer}>
                             <Ionicons name="trophy-outline" size={40} color={colors.borderStrong} />
-                            <Text style={{ color: colors.textSecondary, marginTop: 10 }}>Aucun badge disponible</Text>
+                            <Text style={{ color: colors.textSecondary, marginTop: 10 }}>{t('compte.profil.aucunBadge')}</Text>
                         </View>
                     ) : (
                         <ScrollView
@@ -328,7 +335,7 @@ export default function ProfilePage() {
                                         </Text>
                                         <Text style={[styles.statLabel, { color: unlocked ? '#10B981' : colors.textSecondary }]}>
                                             {unlocked
-                                                ? 'Débloqué'
+                                                ? t('compte.profil.badges.debloque')
                                                 : `${formatProgress(badge.progress, badge.criteria)}/${badge.goal_value}`}
                                         </Text>
                                     </View>
@@ -341,7 +348,7 @@ export default function ProfilePage() {
                 <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                     <View style={styles.sectionTitleRow}>
                         <Ionicons name="time-outline" size={24} color={colors.textMain} />
-                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Mon historique</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('compte.historique.titreEcran')}</Text>
                         {trajets.length > 0 && (
                             <TouchableOpacity
                                 onPress={() => router.push("/historic")}
@@ -362,7 +369,7 @@ export default function ProfilePage() {
                                 >
                                     <View style={styles.historyTextContainer}>
                                         <Text style={[styles.historyDate, { color: colors.textSecondary }]}>
-                                            {new Date(item.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                            {f.dateCourte(item.created_at)}
                                         </Text>
 
                                         <Text style={[styles.historyRoute, { color: colors.textMain }]} numberOfLines={1}>
@@ -376,10 +383,10 @@ export default function ProfilePage() {
                                     <View style={styles.historyRight}>
                                         <View style={{ alignItems: 'flex-end' }}>
                                             <Text style={[styles.historyValue, { color: colors.textMain }]}>
-                                                {item.route.distance_km.toFixed(1)} km
+                                                {t('compte.historique.kilometres', { valeur: f.nombre(item.route.distance_km, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })}
                                             </Text>
                                             <Text style={[styles.historyDuration, { color: colors.textSecondary }]}>
-                                                {Math.round(item.route.duration_min)} min
+                                                {t('compte.historique.minutes', { valeur: f.nombre(Math.round(item.route.duration_min)) })}
                                             </Text>
                                         </View>
                                         <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
@@ -389,7 +396,7 @@ export default function ProfilePage() {
                         ) : (
                             <View style={styles.emptyContainer}>
                                 <Ionicons name="bicycle" size={40} color={colors.borderStrong} />
-                                <Text style={{ color: colors.textSecondary, marginTop: 10 }}>Aucun trajet pour le moment</Text>
+                                <Text style={{ color: colors.textSecondary, marginTop: 10 }}>{t('compte.historique.aucunTrajet')}</Text>
                             </View>
                         )}
                     </View>
@@ -400,7 +407,7 @@ export default function ProfilePage() {
                             onPress={() => router.push("/historic")}
                             accessibilityRole="button"
                         >
-                            <Text style={[styles.seeMoreText, { color: colors.primary }]}>Voir plus</Text>
+                            <Text style={[styles.seeMoreText, { color: colors.primary }]}>{t('compte.profil.voirPlus')}</Text>
                             <Ionicons name="chevron-forward" size={16} color={colors.primary} />
                         </TouchableOpacity>
                     )}
@@ -412,14 +419,14 @@ export default function ProfilePage() {
                 >
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
                         <Ionicons name="settings-outline" size={24} color={colors.textMain} />
-                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Paramètres</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('compte.profil.parametres')}</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                 </TouchableOpacity>
 
                 <View style={styles.buttonsContainer}>
                     <DangerButton
-                        title="Se déconnecter"
+                        title={t('compte.profil.deconnexion')}
                         iconName="log-out-outline"
                         onPress={() => logoutAuth() && router.push("/")}
                         isLoading={false}

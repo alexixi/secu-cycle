@@ -24,6 +24,7 @@ from datetime import datetime, timedelta
 from graph.guidance import build_maneuvers
 from graph.statistique import route_bridge_stats, wind_adjusted_travel_time
 from graph.config import ICE_BRIDGE_TEMP_C, WIND_HEADWIND_REPORT_PCT
+from i18n import get_locale, t
 from weather import config as weather_config
 from weather import service as weather_service
 from limiter import limiter
@@ -42,13 +43,38 @@ def get_my_routes(db: Session = Depends(get_db), current_user=Depends(get_curren
     return db.query(Route).filter(Route.user_id == current_user.id).order_by(Route.created_at.desc()).all()
 
 @router.get("/{route_id}", response_model=RouteRead)
-def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def get_route(route_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user),
+              locale: str = Depends(get_locale)):
     route = db.query(Route).filter(Route.id == route_id, Route.user_id == current_user.id).first()
     if not route:
-        raise HTTPException(status_code=404, detail="Route introuvable")
+        raise HTTPException(status_code=404, detail=t("error.route.not_found", locale))
     return route
 
-def _apply_weather(G, result, start, bike_type, is_electric, cyclist_level):
+def _height_difference(route_info):
+    """Extrait le couple (dénivelé positif, négatif) d'un résultat de calcul.
+
+    `height_difference` est typé `Any` et vaut normalement un tuple `(gain, perte)`
+    posé par `graph.routing`. On ne fait ici que de la persistance d'agrément :
+    une forme inattendue doit se traduire par deux `NULL`, jamais par un calcul
+    d'itinéraire qui échoue.
+
+    Cas connu : quand départ et arrivée tombent sur la même arête, le trajet ne
+    compte que deux nœuds et le lissage les moyenne, si bien que le dénivelé
+    ressort à zéro quelle que soit la pente. On enregistre cette valeur telle
+    quelle plutôt que `NULL`, parce que c'est déjà exactement ce que
+    l'application affiche pour ces trajets : mieux vaut un récapitulatif fidèle à
+    ce que l'utilisateur a vu qu'un chiffre plus juste mais contradictoire.
+    """
+    valeur = route_info.get("height_difference")
+    if not isinstance(valeur, (list, tuple)) or len(valeur) < 2:
+        return None, None
+    try:
+        return float(valeur[0]), float(valeur[1])
+    except (TypeError, ValueError):
+        return None, None
+
+
+def _apply_weather(G, result, start, bike_type, is_electric, cyclist_level, locale):
     """Pose les conditions au départ et l'effet du vent sur un résultat de calcul.
 
     Ne touche jamais `duration` ni le tracé : la météo informe, elle ne fait pas
@@ -61,7 +87,7 @@ def _apply_weather(G, result, start, bike_type, is_electric, cyclist_level):
     fond. Silencieux si la météo est indisponible ou périmée — les champs restent
     simplement à None et les fronts n'affichent rien.
     """
-    conditions = weather_service.conditions_at(G, start[0], start[1])
+    conditions = weather_service.conditions_at(G, start[0], start[1], locale)
     if not conditions:
         return
 
@@ -97,10 +123,11 @@ def _apply_weather(G, result, start, bike_type, is_electric, cyclist_level):
 
 @router.post("/route", response_model=ComputeRoutesResponse)
 @limiter.limit("60/minute")
-async def compute_route(request: Request, data: ComputeRouteRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user_optional)):
+async def compute_route(request: Request, data: ComputeRouteRequest, db: Session = Depends(get_db),
+                        current_user=Depends(get_current_user_optional), locale: str = Depends(get_locale)):
     G = request.app.state.G
     if G is None:
-        raise HTTPException(status_code=503, detail="Graphe non chargé")
+        raise HTTPException(status_code=503, detail=t("error.common.graph_not_loaded", locale))
 
     start = (data.start_lat, data.start_lon)
     end = (data.end_lat, data.end_lon)
@@ -179,13 +206,13 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
     except Exception:
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Erreur lors du calcul de l'itinéraire.")
+        raise HTTPException(status_code=500, detail=t("error.route.computation_failed", locale))
 
 
     if not result.get("success"):
         raise HTTPException(status_code=404, detail={
             "code": result.get("error_code"),
-            "message": result.get("error", "Calcul échoué."),
+            "message": t(result.get("error_key", "error.route.failed"), locale),
         })
 
     # Enrichissement météo, APRÈS `get_optimal_routes` donc hors du cache, et
@@ -195,9 +222,15 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
     #
     # Muter `result` est sans risque : `route_cache.get()` renvoie une copie
     # profonde — c'est déjà ce sur quoi repose l'ajout de `route_id` plus bas.
-    _apply_weather(G, result, start, bike_type, is_electric, cyclist_level)
+    _apply_weather(G, result, start, bike_type, is_electric, cyclist_level, locale)
 
+    # Le nom de variante se rend ICI et pas dans `get_optimal_routes` : le
+    # résultat de celui-ci part dans `route_cache`, un LRU partagé par tous les
+    # visiteurs du worker et dont la clé ignore la langue. Un nom rendu en amont
+    # serait resservi tel quel à un visiteur de l'autre langue. Seul l'`id`
+    # voyage, comme pour `route_id` posé plus bas.
     for route in result.get("routes", []):
+            route["name"] = t(f"route.variant.{route['id']}", locale)
             maneuvers = build_maneuvers(route["nodes"], G)
 
             # Nettoyage : si OSMnx a renvoyé une liste pour le nom de la rue, on la fusionne en string
@@ -216,6 +249,7 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
         was_rainy = weather_config.is_wet(result.get("weather"))
 
         for route_info in result.get("routes", []):
+            gain, perte = _height_difference(route_info)
             db_route = Route(
                 user_id=current_user.id,
                 start_address=start_address,
@@ -227,6 +261,8 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
                 bike_type=bike_type,
                 is_electric=str(is_electric),
                 was_rainy=was_rainy,
+                elevation_gain_m=gain,
+                elevation_loss_m=perte,
             )
             db.add(db_route)
             db.flush()
@@ -244,7 +280,7 @@ async def compute_route(request: Request, data: ComputeRouteRequest, db: Session
 
 @router.post("/{route_id}/complete", response_model=CompleteRouteResponse)
 def complete_route(route_id: int, db: Session = Depends(get_db),
-                   current_user=Depends(get_current_user)):
+                   current_user=Depends(get_current_user), locale: str = Depends(get_locale)):
     """Marque un trajet comme terminé (appelé à l'arrivée) et débloque les badges atteints."""
     # Un seul UPDATE : appartenance (anti-IDOR), idempotence et pose du timestamp.
     updated = db.execute(text("""
@@ -261,7 +297,7 @@ def complete_route(route_id: int, db: Session = Depends(get_db),
         ), {"rid": route_id, "uid": current_user.id}).first()
         db.commit()
         if already_mine is None:
-            raise HTTPException(status_code=404, detail="Route introuvable")
+            raise HTTPException(status_code=404, detail=t("error.route.not_found", locale))
         return CompleteRouteResponse(completed=False, newly_unlocked=[])
 
     # L'historique n'enregistre que les trajets réellement parcourus en guidage.

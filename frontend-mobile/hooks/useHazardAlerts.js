@@ -1,19 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import * as Speech from 'expo-speech';
 import { haversineDistance } from '../services/guidanceEngine';
+import i18n from '../i18n';
+import { bcp47 } from '../utils/datetime';
 
 
 const ALERT_DISTANCE_M = 150;
 const ON_ROUTE_M = 40;
-const REPORT_LABELS = {
-    accident: 'accident',
-    travaux: 'travaux',
-    danger: 'danger',
-    obstacle: 'obstacle',
-};
-
 function spokenDistance(meters) {
-    return `${Math.max(10, Math.round(meters / 10) * 10)} mètres`;
+    return i18n.t('signalement.alerte.distanceMetres', {
+        n: Math.max(10, Math.round(meters / 10) * 10),
+    });
 }
 
 export default function useHazardAlerts(reports, currentPosition, activeRoute, isNavigating) {
@@ -60,11 +57,14 @@ export default function useHazardAlerts(reports, currentPosition, activeRoute, i
             if (userDist > ALERT_DISTANCE_M) continue;
 
             announcedRef.current.add(report.id);
-            const label = REPORT_LABELS[report.report_type] || 'danger';
+            // Le type de signalement partage ses identifiants avec la carte et l'API.
+            // i18n-suffixes: accident travaux danger obstacle
+            const label = i18n.t(`carte.signalement.${report.report_type}`);
             Speech.stop();
-            Speech.speak(`Attention, ${label} signalé dans ${spokenDistance(userDist)}`, {
-                language: 'fr-FR', pitch: 1, rate: 1,
-            });
+            Speech.speak(
+                i18n.t('signalement.alerte.parle', { danger: label, distance: spokenDistance(userDist) }),
+                { language: bcp47(i18n.language), pitch: 1, rate: 1 },
+            );
             setActiveAlert({ report, distance: Math.round(userDist) });
             break;
         }

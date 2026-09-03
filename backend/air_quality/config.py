@@ -42,14 +42,16 @@ MAX_GRID_POINTS = 150
 # Sous-indices EAQI par polluant. Le polluant dominant est celui dont le
 # sous-indice égale l'indice global (l'EAQI est le max des sous-indices). L'ordre
 # fixe la priorité d'affichage en cas d'égalité.
-POLLUTANT_SUBINDICES = {
-    "european_aqi_pm2_5": "Particules fines (PM2.5)",
-    "european_aqi_pm10": "Particules (PM10)",
-    "european_aqi_nitrogen_dioxide": "Dioxyde d'azote (NO₂)",
-    "european_aqi_ozone": "Ozone (O₃)",
-    "european_aqi_sulphur_dioxide": "Dioxyde de soufre (SO₂)",
-}
-CURRENT_VARS = ["european_aqi", *POLLUTANT_SUBINDICES.keys()]
+# Clés seules : le nom du polluant est rendu à la sérialisation, dans la langue
+# de la requête. La collecte tourne en tâche de fond et finit en cache.
+POLLUTANT_SUBINDICES = [
+    "european_aqi_pm2_5",
+    "european_aqi_pm10",
+    "european_aqi_nitrogen_dioxide",
+    "european_aqi_ozone",
+    "european_aqi_sulphur_dioxide",
+]
+CURRENT_VARS = ["european_aqi", *POLLUTANT_SUBINDICES]
 
 HOURLY_VARS = ["european_aqi"]
 FORECAST_HOURS = 24
@@ -58,12 +60,12 @@ FORECAST_STEP = 3
 
 # Barème officiel EEA (borne supérieure incluse), valable France et Belgique.
 EAQI_BANDS = [
-    (20, "good", "Bon"),
-    (40, "fair", "Moyen"),
-    (60, "moderate", "Dégradé"),
-    (80, "poor", "Mauvais"),
-    (100, "very_poor", "Très mauvais"),
-    (math.inf, "extreme", "Extrêmement mauvais"),
+    (20, "good"),
+    (40, "fair"),
+    (60, "moderate"),
+    (80, "poor"),
+    (100, "very_poor"),
+    (math.inf, "extreme"),
 ]
 
 # Modulation temporelle du malus de routage : en deçà de START (« Dégradé »),
@@ -88,12 +90,12 @@ ATTRIBUTION_WAQI = "World Air Quality Index Project (waqi.info)"
 
 # Barème AQI US (EPA), borne supérieure incluse, avec couleurs officielles.
 US_AQI_BANDS = [
-    (50, "good", "Bon", "#00e400"),
-    (100, "moderate", "Moyen", "#ffff00"),
-    (150, "usg", "Mauvais pour sensibles", "#ff7e00"),
-    (200, "unhealthy", "Mauvais", "#ff0000"),
-    (300, "very_unhealthy", "Très mauvais", "#8f3f97"),
-    (math.inf, "hazardous", "Dangereux", "#7e0023"),
+    (50, "good", "#00e400"),
+    (100, "moderate", "#ffff00"),
+    (150, "usg", "#ff7e00"),
+    (200, "unhealthy", "#ff0000"),
+    (300, "very_unhealthy", "#8f3f97"),
+    (math.inf, "hazardous", "#7e0023"),
 ]
 
 # Modulation de routage à partir d'une station : le cycliste est un usager à
@@ -104,20 +106,20 @@ STATION_INTENSITY_FULL_US = 200.0
 
 
 def band_for(aqi):
-    """(clé, libellé) de la bande EAQI d'un indice."""
-    for upper, key, label in EAQI_BANDS:
+    """Clé de la bande EAQI d'un indice. Le mot vit au catalogue."""
+    for upper, key in EAQI_BANDS:
         if aqi <= upper:
-            return key, label
-    return EAQI_BANDS[-1][1], EAQI_BANDS[-1][2]
+            return key
+    return EAQI_BANDS[-1][1]
 
 
 def us_band_for(aqi):
-    """(clé, libellé, couleur) de la bande AQI US d'un indice de station."""
-    for upper, key, label, color in US_AQI_BANDS:
+    """(clé, couleur) de la bande AQI US d'un indice de station."""
+    for upper, key, color in US_AQI_BANDS:
         if aqi <= upper:
-            return key, label, color
+            return key, color
     last = US_AQI_BANDS[-1]
-    return last[1], last[2], last[3]
+    return last[1], last[2]
 
 
 def intensity_for(aqi_mean):

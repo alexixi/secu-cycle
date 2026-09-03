@@ -1,127 +1,97 @@
 import { Link } from "react-router";
+import { Trans, useTranslation } from "react-i18next";
 import Meta from "../components/Meta";
+import ExternalLink from "../components/ui/ExternalLink";
 import "./legal.css";
+import { useLocalizedPath } from '../i18n/useLang';
+
+// Substitutions de <Trans> : le catalogue porte des ancres nommées (<osm>…</osm>),
+// jamais des URL ni des indices de position. C'est lisible pour qui traduit, et une
+// balise mal refermée ne peut pas décaler tout le paragraphe.
+const LIENS = {
+    osm: <ExternalLink href="https://www.openstreetmap.org/copyright" />,
+    odbl: <ExternalLink href="https://opendatacommons.org/licenses/odbl/" />,
+    ign: <ExternalLink href="https://geoservices.ign.fr/rgealti" />,
+    ban: <ExternalLink href="https://adresse.data.gouv.fr/" />,
+    lo: <ExternalLink href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" />,
+    statbel: <ExternalLink href="https://statbel.fgov.be/fr/open-data/geolocalisation-des-accidents-de-la-circulation-2017-2024" />,
+    ccby: <ExternalLink href="https://creativecommons.org/licenses/by/4.0/deed.fr" />,
+    cams: <ExternalLink href="https://atmosphere.copernicus.eu/" />,
+    waqi: <ExternalLink href="https://waqi.info/" />,
+    maptiler: <ExternalLink href="https://www.maptiler.com/" />,
+    mail: <a href="mailto:contact@secu-cycle.fr" />,
+    b: <strong />,
+};
 
 export default function MentionsLegalesPage() {
+    const { t } = useTranslation('legal');
+    const path = useLocalizedPath();
+
+    // Les liens internes suivent la langue de la page : ils ne peuvent donc pas
+    // vivre au niveau module comme les liens sortants.
+    const composants = {
+        ...LIENS,
+        donnees: <Link to={path("donnees")} />,
+        confidentialite: <Link to={path("confidentialite")} />,
+        conditions: <Link to={path("conditions")} />,
+    };
+
     return (
         <>
             <Meta
-                title="Sécu'Cycle | Mentions légales"
-                description="Mentions légales du site et de l'application Sécu'Cycle : éditeur, directeur de la publication et hébergeur."
+                title={t('mentions.titrePage')}
+                description={t('mentions.metaDescription')}
             />
             <div className="legal-page">
                 <article className="legal-content">
-                    <h1>Mentions légales</h1>
-                    <p className="legal-updated">Dernière mise à jour : 28 juillet 2026</p>
+                    <h1>{t('mentions.h1')}</h1>
+                    <p className="legal-updated">{t('mentions.maj')}</p>
 
-                    <p>
-                        Conformément à l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance
-                        dans l'économie numérique (LCEN), les présentes mentions légales identifient les
-                        personnes responsables du site <strong>secu-cycle.fr</strong> et de l'application
-                        mobile <strong>Sécu'Cycle</strong>, ainsi que leur hébergeur.
-                    </p>
+                    <p><Trans t={t} i18nKey="mentions.lcen" components={composants} /></p>
 
-                    <h2>Éditeurs du site et de l'application</h2>
-                    <p>
-                        Sécu'Cycle est un projet étudiant réalisé dans le cadre d'un Projet de Fin d'Année (PFA)
-                        par des élèves ingénieurs de l'<strong>ENSEIRB-MATMECA</strong> (Bordeaux INP), 1 avenue
-                        du Docteur Albert Schweitzer, 33400 Talence, France. Il ne s'agit pas d'une société
-                        commerciale immatriculée au Registre du Commerce et des Sociétés.
-                    </p>
-                    <p>
-                        Le site et l'application sont édités conjointement par&nbsp;:
-                    </p>
+                    <h2>{t('mentions.editeurs.h2')}</h2>
+                    <p><Trans t={t} i18nKey="mentions.editeurs.projet" components={composants} /></p>
+                    <p><Trans t={t} i18nKey="mentions.editeurs.conjointement" components={composants} /></p>
+                    {/* i18n-exempt-start: noms des éditeurs du site */}
                     <ul>
                         <li><strong>Alexis Gaudray Bouju</strong></li>
                         <li><strong>Matheline Chevalier</strong></li>
+                        {/* i18n-exempt-end */}
                     </ul>
-                    <p>
-                        Contact : <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>
-                    </p>
+                    <p><Trans t={t} i18nKey="mentions.editeurs.contact" components={composants} /></p>
 
-                    <h2>Directeur de la publication</h2>
-                    <p>
-                        Le directeur de la publication est <strong>Alexis Gaudray Bouju</strong>, joignable à
-                        l'adresse <a href="mailto:contact@secu-cycle.fr">contact@secu-cycle.fr</a>.
-                    </p>
+                    <h2>{t('mentions.directeur.h2')}</h2>
+                    <p><Trans t={t} i18nKey="mentions.directeur.texte" components={composants} /></p>
 
-                    <h2>Hébergeur</h2>
+                    <h2>{t('mentions.hebergeur.h2')}</h2>
+                    <p><Trans t={t} i18nKey="mentions.hebergeur.intro" components={composants} /></p>
+                    {/* Coordonnées de l'hébergeur : une adresse postale ne se traduit pas. */}
                     <p>
-                        Le site et l'API de Sécu'Cycle sont hébergés par&nbsp;:
-                    </p>
-                    <p>
+                        {/* i18n-exempt: raison sociale de l'hébergeur */}
                         <strong>IONOS SARL</strong><br />
                         7 place de la Gare, BP 70109<br />
                         57201 Sarreguemines Cedex, France<br />
-                        Téléphone : 0970 808 911<br />
-                        <a href="https://www.ionos.fr" target="_blank" rel="noopener noreferrer">www.ionos.fr</a>
+                        {t('mentions.hebergeur.telephone')}<br />
+                        {/* i18n-exempt: adresse du site de l'hébergeur */}
+                        <ExternalLink href="https://www.ionos.fr">www.ionos.fr</ExternalLink>
                     </p>
 
-                    <h2>Propriété intellectuelle</h2>
-                    <p>
-                        La marque « Sécu'Cycle », le logo, les textes et l'interface du site et de l'application
-                        sont la propriété de leurs éditeurs. Toute reproduction ou représentation, totale ou
-                        partielle, sans autorisation préalable, est interdite.
-                    </p>
-                    <p>
-                        Les données cartographiques, d'accidentologie et de mobilité proviennent de sources
-                        tierces, restent la propriété de leurs producteurs et sont exploitées dans le respect
-                        de leurs licences respectives&nbsp;:
-                    </p>
+                    <h2>{t('mentions.propriete.h2')}</h2>
+                    <p><Trans t={t} i18nKey="mentions.propriete.marque" components={composants} /></p>
+                    <p><Trans t={t} i18nKey="mentions.propriete.sources" components={composants} /></p>
                     <ul>
-                        <li>
-                            © les contributeurs{" "}
-                            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>,
-                            sous licence{" "}
-                            <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener noreferrer">ODbL</a>{" "}
-                            — réseau routier, aménagements cyclables, revêtement, éclairage et points d'intérêt.
-                        </li>
-                        <li>
-                            <a href="https://geoservices.ign.fr/rgealti" target="_blank" rel="noopener noreferrer">IGN</a> (RGE ALTI),
-                            ONISR (fichiers BAAC, via le jeu «&nbsp;Accidents de vélo&nbsp;»),{" "}
-                            <a href="https://adresse.data.gouv.fr/" target="_blank" rel="noopener noreferrer">Base Adresse Nationale</a>,
-                            et les portails open data de Bordeaux Métropole, de l'Eurométropole de Strasbourg,
-                            de Rennes Métropole et de Nantes Métropole (trafic en temps réel et éclairage
-                            public), sous{" "}
-                            <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" target="_blank" rel="noopener noreferrer">Licence Ouverte</a>.
-                        </li>
-                        <li>
-                            <a href="https://statbel.fgov.be/fr/open-data/geolocalisation-des-accidents-de-la-circulation-2017-2024" target="_blank" rel="noopener noreferrer">Statbel</a>{" "}
-                            — accidents de la circulation géolocalisés, sous licence{" "}
-                            <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>.
-                        </li>
-                        <li>
-                            Generated using Copernicus Atmosphere Monitoring Service information 2026&nbsp;:
-                            les données de qualité de l'air issues du{" "}
-                            <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noopener noreferrer">CAMS</a>{" "}
-                            sont modifiées par Sécu'Cycle et obtenues par l'intermédiaire d'Open-Meteo. Ni la
-                            Commission européenne ni l'ECMWF ne sont responsables de l'usage qui en est fait.
-                        </li>
-                        <li>
-                            <a href="https://waqi.info/" target="_blank" rel="noopener noreferrer">World Air Quality Index Project</a>{" "}
-                            — mesures des stations de surveillance au sol.
-                        </li>
-                        <li>
-                            Flux GBFS des neuf systèmes de vélos en libre-service intégrés, chacun sous
-                            l'attribution de son opérateur.
-                        </li>
-                        <li>
-                            Fonds de carte et géocodage hors de France&nbsp;:{" "}
-                            <a href="https://www.maptiler.com/" target="_blank" rel="noopener noreferrer">MapTiler</a>,
-                            service commercial.
-                        </li>
+                        <li><Trans t={t} i18nKey="mentions.propriete.osm" components={composants} /></li>
+                        <li><Trans t={t} i18nKey="mentions.propriete.ign" components={composants} /></li>
+                        <li><Trans t={t} i18nKey="mentions.propriete.statbel" components={composants} /></li>
+                        <li><Trans t={t} i18nKey="mentions.propriete.cams" components={composants} /></li>
+                        <li><Trans t={t} i18nKey="mentions.propriete.waqi" components={composants} /></li>
+                        <li><Trans t={t} i18nKey="mentions.propriete.gbfs" components={composants} /></li>
+                        <li><Trans t={t} i18nKey="mentions.propriete.maptiler" components={composants} /></li>
                     </ul>
-                    <p>
-                        Le détail de chaque source, son usage exact et son producteur sont listés sur notre
-                        page <Link to="/donnees">sources des données</Link>.
-                    </p>
+                    <p><Trans t={t} i18nKey="mentions.propriete.detail" components={composants} /></p>
 
-                    <h2>Données personnelles et conditions d'utilisation</h2>
-                    <p>
-                        Le traitement de vos données personnelles est décrit dans notre{" "}
-                        <Link to="/confidentialite">politique de confidentialité</Link>. L'utilisation du service
-                        est régie par nos <Link to="/conditions-utilisation">conditions générales d'utilisation</Link>.
-                    </p>
+                    <h2>{t('mentions.donneesEtCgu.h2')}</h2>
+                    <p><Trans t={t} i18nKey="mentions.donneesEtCgu.texte" components={composants} /></p>
                 </article>
             </div>
         </>

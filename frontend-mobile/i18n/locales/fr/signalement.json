@@ -1,0 +1,9 @@
+{
+    "alerte": {
+        "parle": "Attention, {{danger}} signalé dans {{distance}}",
+        "distanceMetres": "{{n}} mètres",
+        "aDistance": "{{danger}} à {{distance}} m",
+        "votes": "👍 {{confirmations}}   👎 {{denials}}",
+        "merci": "Merci pour votre retour !"
+    }
+}

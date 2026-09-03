@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useLocation } from 'react-router';
+import { Trans, useTranslation } from 'react-i18next';
+import { langFromPathname, matchPath, pathFor } from '../i18n/routes';
+import { licenceLabel, sourceDetail, statLabel, themeLabel } from '../i18n/carteLabels';
 import { Helmet } from 'react-helmet-async';
 import { MdOutlineOpenInFull, MdOutlineCloseFullscreen } from 'react-icons/md';
 import Meta from '../components/Meta';
@@ -7,49 +10,40 @@ import ThematicMap from '../modules/map/ThematicMap';
 import ErrorPage from './ErrorPage';
 import ThemeIcon from '../components/carte/ThemeIcon';
 import { trackEvent } from '../services/analytics';
-import {
-    SITE_URL, findPage, pagesForCity, pagesForTheme, routableCitiesLabel,
-} from '../data/thematicMaps';
+import { SITE_URL } from '../data/thematicMapsCore';
 import './CartePages.css';
 
-function CtaItineraire({ page, position }) {
+function CtaItineraire({ page, position, lang, t, routableCitiesLabel }) {
     const { city } = page;
 
     if (city.routing === false) {
         return (
             <aside className="carte-cta">
                 <div>
-                    <p className="carte-cta-titre">Itinéraires : pas encore {city.prep}</p>
-                    <p className="carte-cta-texte">
-                        {city.routingNote} Les itinéraires sont pour l’instant calculés
-                        à {routableCitiesLabel()}.
-                    </p>
+                    <p className="carte-cta-titre">{t('ui.cta.pasEncore', { prep: city.prep, ville: city.name })}</p>
+                    <p className="carte-cta-texte">{t('ui.cta.trajetTexte')}</p>
                 </div>
                 <Link
                     className="button carte-cta-bouton"
-                    to="/carte"
+                    to={pathFor("carteHub", lang)}
                     onClick={() => trackEvent('carte_cta_villes_couvertes', {
                         ville: city.slug,
                         theme: page.themeSlug,
                         position,
                     })}
                 >
-                    Voir les villes couvertes
+                    {t('ui.cta.villesCouvertes')}
                 </Link>
             </aside>
         );
     }
 
-    const cible = `/itineraire?couche=${page.theme.itineraireLayer}`;
+    const cible = `${pathFor('itineraire', lang)}?couche=${page.theme.itineraireLayer}`;
     return (
         <aside className="carte-cta">
             <div>
-                <p className="carte-cta-titre">Un trajet à vélo {city.prep} ?</p>
-                <p className="carte-cta-texte">
-                    Sécu’Cycle calcule un itinéraire cyclable sécurisé qui tient compte des
-                    aménagements, de l’éclairage, du trafic et des accidents recensés — avec cette
-                    couche affichée sur la carte.
-                </p>
+                <p className="carte-cta-titre">{t('ui.cta.trajet', { prep: city.prep, ville: city.name })}</p>
+                <p className="carte-cta-texte">{t('ui.cta.themeTexte')}</p>
             </div>
             <Link
                 className="button carte-cta-bouton"
@@ -60,14 +54,20 @@ function CtaItineraire({ page, position }) {
                     position,
                 })}
             >
-                Calculer mon itinéraire
+                {t('ui.cta.calculer')}
             </Link>
         </aside>
     );
 }
 
-export default function CarteThematiquePage() {
-    const { citySlug, themeSlug } = useParams();
+export default function CarteThematiquePage({ registre }) {
+    // Le registre vient en prop : il porte l'éditorial de la langue de la page.
+    const { findPage, pagesForCity, pagesForTheme, routableCitiesLabel } = registre;
+    const { pathname } = useLocation();
+    const { t } = useTranslation('carte');
+    const lang = langFromPathname(pathname);
+
+    const { citySlug, themeSlug } = matchPath(pathname)?.params ?? {};
     const page = findPage(citySlug, themeSlug);
 
     const [features, setFeatures] = useState(null);
@@ -86,7 +86,11 @@ export default function CarteThematiquePage() {
     if (!page) return <ErrorPage />;
 
     const { city, theme, content } = page;
-    const canonical = `${SITE_URL}${page.path}/`;
+    const composants = { donnees: <Link to={pathFor("donnees", lang)} /> };
+    const T = ({ k, ...params }) => <Trans t={t} i18nKey={k} components={composants} values={params} />;
+
+    const abs = (chemin) => `${SITE_URL}${chemin.endsWith('/') ? chemin : `${chemin}/`}`;
+    const canonical = abs(pathFor('carteTheme', lang, { citySlug: city.slug, themeSlug: page.themeSlug }));
     const autresCartesVille = pagesForCity(city.slug).filter(p => p.themeSlug !== page.themeSlug);
     const memeThemeAilleurs = pagesForTheme(page.themeSlug).filter(p => p.city.slug !== city.slug);
 
@@ -96,10 +100,10 @@ export default function CarteThematiquePage() {
             {
                 '@type': 'BreadcrumbList',
                 itemListElement: [
-                    { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE_URL}/` },
-                    { '@type': 'ListItem', position: 2, name: 'Cartes', item: `${SITE_URL}/carte/` },
-                    { '@type': 'ListItem', position: 3, name: city.name, item: `${SITE_URL}/carte/${city.slug}/` },
-                    { '@type': 'ListItem', position: 4, name: theme.label, item: canonical },
+                    { '@type': 'ListItem', position: 1, name: t('ui.accueil'), item: abs(pathFor('home', lang)) },
+                    { '@type': 'ListItem', position: 2, name: t('ui.cartes'), item: abs(pathFor('carteHub', lang)) },
+                    { '@type': 'ListItem', position: 3, name: city.name, item: abs(pathFor('carteVille', lang, { citySlug: city.slug })) },
+                    { '@type': 'ListItem', position: 4, name: themeLabel(theme), item: canonical },
                 ],
             },
             {
@@ -115,8 +119,8 @@ export default function CarteThematiquePage() {
                 '@id': canonical,
                 name: content.h1,
                 description: content.description,
-                inLanguage: 'fr',
-                isPartOf: { '@type': 'WebSite', url: `${SITE_URL}/`, name: 'Sécu’Cycle' },
+                inLanguage: lang,
+                isPartOf: { '@type': 'WebSite', url: abs(pathFor('home', lang)), name: 'Sécu’Cycle' },
                 about: { '@type': 'Place', name: city.name },
                 mentions: page.sources.map(source => ({
                     '@type': 'Dataset',
@@ -145,14 +149,14 @@ export default function CarteThematiquePage() {
             </Helmet>
 
             <article className="carte-page">
-                <nav className="carte-fil" aria-label="Fil d’Ariane">
-                    <Link to="/">Accueil</Link>
+                <nav className="carte-fil" aria-label={t('ui.filAriane')}>
+                    <Link to={pathFor("home", lang)}>{t('ui.accueil')}</Link>
                     <span aria-hidden="true">›</span>
-                    <Link to="/carte">Cartes</Link>
+                    <Link to={pathFor("carteHub", lang)}>{t('ui.cartes')}</Link>
                     <span aria-hidden="true">›</span>
-                    <Link to={`/carte/${city.slug}`}>{city.name}</Link>
+                    <Link to={pathFor("carteVille", lang, { citySlug: city.slug })}>{city.name}</Link>
                     <span aria-hidden="true">›</span>
-                    <span aria-current="page">{theme.label}</span>
+                    <span aria-current="page">{themeLabel(theme)}</span>
                 </nav>
 
                 <div className="carte-entete">
@@ -161,11 +165,11 @@ export default function CarteThematiquePage() {
                 </div>
 
                 {stats.length > 0 && (
-                    <ul className="carte-stats" aria-label="Chiffres clés">
+                    <ul className="carte-stats" aria-label={t('ui.chiffresCles')}>
                         {stats.map(stat => (
-                            <li key={stat.label}>
-                                <strong>{stat.text ?? stat.value.toLocaleString('fr-FR')}</strong>
-                                <span>{stat.label}</span>
+                            <li key={stat.key}>
+                                <strong>{stat.text ?? stat.value.toLocaleString(lang)}</strong>
+                                <span>{statLabel(page.themeSlug, stat.key)}</span>
                             </li>
                         ))}
                     </ul>
@@ -187,18 +191,16 @@ export default function CarteThematiquePage() {
                         }}
                     >
                         {carteAgrandie
-                            ? <><MdOutlineCloseFullscreen aria-hidden="true" /> Réduire la carte</>
-                            : <><MdOutlineOpenInFull aria-hidden="true" /> Agrandir la carte</>}
+                            ? <><MdOutlineCloseFullscreen aria-hidden="true" /> {t('ui.theme.reduireCarte')}</>
+                            : <><MdOutlineOpenInFull aria-hidden="true" /> {t('ui.theme.agrandirCarte')}</>}
                     </button>
                 </div>
 
                 {theme.realtime && (
-                    <p className="carte-note">
-                        Données rafraîchies en continu à partir du flux officiel.
-                    </p>
+                    <p className="carte-note">{t('ui.theme.tempsReel')}</p>
                 )}
 
-                <CtaItineraire page={page} position="sous-carte" />
+                <CtaItineraire page={page} lang={lang} t={t} routableCitiesLabel={routableCitiesLabel} position="sous-carte" />
 
                 <div className="carte-corps">
                     {content.sections.map(section => (
@@ -212,7 +214,7 @@ export default function CarteThematiquePage() {
                     ))}
 
                     <section>
-                        <h2>Questions fréquentes</h2>
+                        <h2>{t('ui.theme.questionsFrequentes')}</h2>
                         <dl className="carte-faq">
                             {content.faq.map(item => (
                                 <div key={item.q}>
@@ -224,12 +226,12 @@ export default function CarteThematiquePage() {
                     </section>
 
                     <section>
-                        <h2>Sources et licences</h2>
+                        <h2>{t('ui.theme.sourcesLicences')}</h2>
                         <ul className="carte-sources">
                             {page.sources.map(source => (
                                 <li key={source.name}>
                                     <strong>{source.name}</strong>
-                                    {source.detail && <> — {source.detail}</>}
+                                    {sourceDetail(source) && <> — {sourceDetail(source)}</>}
                                     {source.producer && (
                                         <>
                                             {' · '}
@@ -242,31 +244,28 @@ export default function CarteThematiquePage() {
                                         <>
                                             {' · '}
                                             {source.licence.href
-                                                ? <a href={source.licence.href} target="_blank" rel="noreferrer noopener">{source.licence.label}</a>
-                                                : source.licence.label}
+                                                ? <a href={source.licence.href} target="_blank" rel="noreferrer noopener">{licenceLabel(source.licence)}</a>
+                                                : licenceLabel(source.licence)}
                                         </>
                                     )}
                                 </li>
                             ))}
                         </ul>
-                        <p className="carte-note">
-                            L’inventaire complet des sources utilisées par Sécu’Cycle est détaillé sur
-                            la page <Link to="/donnees">Données et sources</Link>.
-                        </p>
+                        <p className="carte-note"><T k="ui.theme.detailDonnees" /></p>
                     </section>
                 </div>
 
-                <CtaItineraire page={page} position="fin-article" />
+                <CtaItineraire page={page} lang={lang} t={t} routableCitiesLabel={routableCitiesLabel} position="fin-article" />
 
                 {autresCartesVille.length > 0 && (
                     <section className="carte-maillage">
-                        <h2>Autres cartes {city.prep}</h2>
+                        <h2>{t('ui.theme.autresCartes', { prep: city.prep, ville: city.name })}</h2>
                         <ul className="carte-liens">
                             {autresCartesVille.map(autre => (
                                 <li key={autre.key}>
                                     <Link to={autre.path}>
                                         <ThemeIcon slug={autre.themeSlug} className="carte-lien-icone" />
-                                        {autre.theme.label}
+                                        {themeLabel(autre.theme)}
                                     </Link>
                                 </li>
                             ))}
@@ -276,13 +275,13 @@ export default function CarteThematiquePage() {
 
                 {memeThemeAilleurs.length > 0 && (
                     <section className="carte-maillage">
-                        <h2>{theme.label} dans d’autres villes</h2>
+                        <h2>{t('ui.theme.memeThemeAilleurs', { theme: themeLabel(theme) })}</h2>
                         <ul className="carte-liens">
                             {memeThemeAilleurs.map(autre => (
                                 <li key={autre.key}>
                                     <Link to={autre.path}>
                                         <ThemeIcon slug={autre.themeSlug} className="carte-lien-icone" />
-                                        {autre.theme.label} {autre.city.prep}
+                                        {t('ui.theme.themeDansVille', { theme: themeLabel(autre.theme), prep: autre.city.prep, ville: autre.city.name })}
                                     </Link>
                                 </li>
                             ))}

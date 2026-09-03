@@ -1,14 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Linking, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 import { SwipeBackScreen } from '../components/SwipeBackScreen';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
+import { SegmentedSelector } from '../components/ui/SegmentedSelector';
 import { useAuth } from '../context/AuthContext';
+import { useLocale } from '../hooks/useLocale';
 import { useTheme } from '../hooks/useTheme';
 import { LEGAL_LINKS, openLegalPage } from '../constants/legal';
+import { setRecapEmails } from '../services/apiBack';
 import {
     ACCEPTED,
     DECLINED,
@@ -24,10 +28,16 @@ import {
     setNotificationsEnabled,
 } from '../services/notificationPreference';
 
-const THEME_OPTIONS = [
-    { mode: 'light', label: 'Clair', icon: 'sunny' },
-    { mode: 'auto', label: 'Auto', icon: 'settings-outline' },
-    { mode: 'dark', label: 'Sombre', icon: 'moon' },
+const LANGUAGE_OPTIONS = [
+    { value: 'auto', icon: 'phone-portrait-outline' },
+    // i18n-exempt-start: endonymes — un sélecteur de langue s'affiche toujours
+    // dans la langue qu'il propose. « Français » reste « Français » sur une
+    // interface anglaise, sans quoi un anglophone égaré ne reconnaît pas
+    // l'option qu'il cherche. C'est la seule position de l'application où ne pas
+    // traduire est le comportement correct.
+    { value: 'fr', label: 'Français' },
+    { value: 'en', label: 'English' },
+    // i18n-exempt-end
 ];
 
 function LinkRow({ icon, label, onPress, colors, isLast, tint }) {
@@ -51,12 +61,27 @@ function LinkRow({ icon, label, onPress, colors, isLast, tint }) {
 export default function SettingsPage() {
     const router = useRouter();
     const { colors, themeMode, setThemeMode } = useTheme();
-    const { user } = useAuth();
+    const { languageMode, setLanguageMode } = useLocale();
+    const { t } = useTranslation();
+    const { user, token, updateUser } = useAuth();
+
+    // Les libellés portent la clé en toutes lettres, et non un gabarit composé
+    // sur `option.value` : les valeurs du mode de thème sont anglaises parce
+    // qu'AsyncStorage les persiste telles quelles, alors que les feuilles du
+    // catalogue sont françaises comme partout ailleurs. Composer la clé sur la
+    // valeur affichait « parametres.apparence.light » à l'écran.
+    const themeOptions = useMemo(() => [
+        { value: 'light', icon: 'sunny', label: t('parametres.apparence.clair') },
+        { value: 'auto', icon: 'settings-outline', label: t('parametres.apparence.auto') },
+        { value: 'dark', icon: 'moon', label: t('parametres.apparence.sombre') },
+    ], [t]);
 
     const [notifEnabled, setNotifEnabled] = useState(true);
     const [weatherAlertsEnabled, setWeatherAlerts] = useState(true);
     const [permission, setPermission] = useState('granted');
     const [backgroundLocation, setBackgroundLocation] = useState(false);
+    const [recapEmails, setRecapEmailsState] = useState(true);
+    const [recapPending, setRecapPending] = useState(false);
 
     useEffect(() => {
         areNotificationsEnabled().then(setNotifEnabled);
@@ -64,17 +89,15 @@ export default function SettingsPage() {
         getBackgroundLocationChoice().then((choice) => setBackgroundLocation(choice === ACCEPTED));
     }, []);
 
+    useEffect(() => {
+        if (user) setRecapEmailsState(user.recap_emails !== false);
+    }, [user]);
+
     useFocusEffect(
         useCallback(() => {
             getNotificationPermission().then(setPermission);
         }, []),
     );
-
-    const handleThemeChange = (mode) => {
-        if (mode === themeMode) return;
-        Haptics.selectionAsync().catch(() => { });
-        setThemeMode(mode);
-    };
 
     const handleNotifToggle = async (value) => {
         Haptics.selectionAsync().catch(() => { });
@@ -85,11 +108,11 @@ export default function SettingsPage() {
 
             if (status !== 'granted') {
                 Alert.alert(
-                    'Notifications bloquées',
-                    "Autorisez les notifications pour Sécu'Cycle dans les réglages de votre téléphone.",
+                    t('parametres.notifications.bloqueesTitre'),
+                    t('parametres.notifications.bloqueesTexte'),
                     [
-                        { text: 'Annuler', style: 'cancel' },
-                        { text: 'Ouvrir les réglages', onPress: () => Linking.openSettings() },
+                        { text: t('commun.annuler'), style: 'cancel' },
+                        { text: t('parametres.notifications.ouvrirReglages'), onPress: () => Linking.openSettings() },
                     ],
                 );
                 return;
@@ -108,11 +131,11 @@ export default function SettingsPage() {
             setPermission(status);
             if (status !== 'granted') {
                 Alert.alert(
-                    'Notifications bloquées',
-                    "Autorisez les notifications pour Sécu'Cycle dans les réglages de votre téléphone.",
+                    t('parametres.notifications.bloqueesTitre'),
+                    t('parametres.notifications.bloqueesTexte'),
                     [
-                        { text: 'Annuler', style: 'cancel' },
-                        { text: 'Ouvrir les réglages', onPress: () => Linking.openSettings() },
+                        { text: t('commun.annuler'), style: 'cancel' },
+                        { text: t('parametres.notifications.ouvrirReglages'), onPress: () => Linking.openSettings() },
                     ],
                 );
                 return;
@@ -121,6 +144,26 @@ export default function SettingsPage() {
 
         setWeatherAlerts(value);
         await setWeatherAlertsEnabled(value);
+    };
+
+    const handleRecapEmailsToggle = async (value) => {
+        Haptics.selectionAsync().catch(() => { });
+
+        const precedent = recapEmails;
+        setRecapEmailsState(value);
+        setRecapPending(true);
+        try {
+            const misAJour = await setRecapEmails(token, value);
+            updateUser(misAJour);
+        } catch {
+            setRecapEmailsState(precedent);
+            Alert.alert(
+                t('parametres.notifications.reglageNonEnregistre'),
+                t('parametres.notifications.reglageErreur'),
+            );
+        } finally {
+            setRecapPending(false);
+        }
     };
 
     const handleBackgroundLocationToggle = async (value) => {
@@ -138,36 +181,36 @@ export default function SettingsPage() {
                     style={[styles.container, { backgroundColor: colors.bgMain }]}
                     contentContainerStyle={styles.scrollContainer}
                 >
-                    <ScreenHeader title="Paramètres" onBack={close} />
+                    <ScreenHeader title={t('parametres.titre')} onBack={close} />
 
                     {user && (
                         <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                             <View style={styles.sectionTitleRow}>
                                 <Ionicons name="person-outline" size={24} color={colors.textMain} />
-                                <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Compte</Text>
+                                <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('parametres.compte.titre')}</Text>
                             </View>
 
                             <LinkRow
                                 icon="create-outline"
-                                label="Modifier mes informations"
+                                label={t('parametres.compte.modifierInfos')}
                                 onPress={() => router.push('/editprofil')}
                                 colors={colors}
                             />
                             <LinkRow
                                 icon="mail-outline"
-                                label="Modifier mon adresse mail"
+                                label={t('parametres.compte.modifierEmail')}
                                 onPress={() => router.push('/editemail')}
                                 colors={colors}
                             />
                             <LinkRow
                                 icon="lock-closed-outline"
-                                label="Changer le mot de passe"
+                                label={t('parametres.compte.changerMotDePasse')}
                                 onPress={() => router.push('/editpassword')}
                                 colors={colors}
                             />
                             <LinkRow
                                 icon="person-remove-outline"
-                                label="Auteurs bloqués"
+                                label={t('parametres.compte.auteursBloques')}
                                 onPress={() => router.push('/blockedauthors')}
                                 colors={colors}
                                 isLast
@@ -178,61 +221,59 @@ export default function SettingsPage() {
                     <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                         <View style={styles.sectionTitleRow}>
                             <Ionicons name="color-palette-outline" size={24} color={colors.textMain} />
-                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Apparence</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('parametres.apparence.titre')}</Text>
                         </View>
 
                         <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                            « Auto » suit le thème de votre téléphone.
+                            {t('parametres.apparence.indice')}
                         </Text>
 
-                        <View style={[styles.themeSelector, { backgroundColor: colors.bgMain }]}>
-                            {THEME_OPTIONS.map(({ mode, label, icon }) => {
-                                const isActive = themeMode === mode;
-                                return (
-                                    <TouchableOpacity
-                                        key={mode}
-                                        style={[
-                                            styles.themeBtn,
-                                            isActive && [styles.themeBtnActive, { backgroundColor: colors.bgSurface }],
-                                        ]}
-                                        onPress={() => handleThemeChange(mode)}
-                                        accessibilityRole="radio"
-                                        accessibilityState={{ selected: isActive }}
-                                        accessibilityLabel={`Thème ${label}`}
-                                    >
-                                        <Ionicons
-                                            name={icon}
-                                            size={20}
-                                            color={isActive ? colors.primary : colors.textSecondary}
-                                        />
-                                        <Text
-                                            style={[
-                                                styles.themeBtnText,
-                                                { color: isActive ? colors.primary : colors.textSecondary },
-                                            ]}
-                                        >
-                                            {label}
-                                        </Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
+                        <SegmentedSelector
+                            value={themeMode}
+                            options={themeOptions}
+                            onChange={setThemeMode}
+                            accessibilityLabelFor={(option) =>
+                                t('parametres.apparence.a11y', { theme: option.label })}
+                        />
+                    </View>
+
+                    <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
+                        <View style={styles.sectionTitleRow}>
+                            <Ionicons name="language-outline" size={24} color={colors.textMain} />
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>
+                                {t('parametres.langue.titre')}
+                            </Text>
                         </View>
+
+                        <Text style={[styles.hint, { color: colors.textSecondary }]}>
+                            {t('parametres.langue.indice')}
+                        </Text>
+
+                        <SegmentedSelector
+                            value={languageMode}
+                            options={LANGUAGE_OPTIONS.map((option) => ({
+                                ...option,
+                                label: option.label ?? t('parametres.langue.auto'),
+                            }))}
+                            onChange={setLanguageMode}
+                            accessibilityLabelFor={(option) =>
+                                t('parametres.langue.a11y', { langue: option.label })}
+                        />
                     </View>
 
                     <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                         <View style={styles.sectionTitleRow}>
                             <Ionicons name="notifications-outline" size={24} color={colors.textMain} />
-                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Notifications</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('parametres.notifications.titre')}</Text>
                         </View>
 
                         <View style={styles.switchRow}>
                             <View style={styles.switchLabel}>
                                 <Text style={[styles.rowTitle, { color: colors.textMain }]}>
-                                    Notifications de guidage
+                                    {t('parametres.notifications.guidage')}
                                 </Text>
                                 <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                    Affiche la prochaine instruction dans la barre de notifications
-                                    pendant un trajet.
+                                    {t('parametres.notifications.guidageAide')}
                                 </Text>
                             </View>
 
@@ -241,18 +282,17 @@ export default function SettingsPage() {
                                 onValueChange={handleNotifToggle}
                                 trackColor={{ false: colors.borderStrong, true: colors.primary }}
                                 thumbColor={colors.bgMain}
-                                accessibilityLabel="Activer les notifications"
+                                accessibilityLabel={t('parametres.notifications.guidageA11y')}
                             />
                         </View>
 
                         <View style={styles.switchRow}>
                             <View style={styles.switchLabel}>
                                 <Text style={[styles.rowTitle, { color: colors.textMain }]}>
-                                    Alertes météo
+                                    {t('parametres.notifications.meteo')}
                                 </Text>
                                 <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                    Prévient d'une averse, d'un orage, de la grêle ou du verglas
-                                    pendant un trajet.
+                                    {t('parametres.notifications.meteoAide')}
                                 </Text>
                             </View>
 
@@ -261,9 +301,31 @@ export default function SettingsPage() {
                                 onValueChange={handleWeatherAlertsToggle}
                                 trackColor={{ false: colors.borderStrong, true: colors.primary }}
                                 thumbColor={colors.bgMain}
-                                accessibilityLabel="Activer les alertes météo"
+                                accessibilityLabel={t('parametres.notifications.meteoA11y')}
                             />
                         </View>
+
+                        {user && (
+                            <View style={styles.switchRow}>
+                                <View style={styles.switchLabel}>
+                                    <Text style={[styles.rowTitle, { color: colors.textMain }]}>
+                                        {t('parametres.notifications.recap')}
+                                    </Text>
+                                    <Text style={[styles.hint, { color: colors.textSecondary }]}>
+                                        {t('parametres.notifications.recapAide')}
+                                    </Text>
+                                </View>
+
+                                <Switch
+                                    value={recapEmails}
+                                    onValueChange={handleRecapEmailsToggle}
+                                    disabled={recapPending}
+                                    trackColor={{ false: colors.borderStrong, true: colors.primary }}
+                                    thumbColor={colors.bgMain}
+                                    accessibilityLabel={t('parametres.notifications.recapA11y')}
+                                />
+                            </View>
+                        )}
 
                         {isBlocked && (
                             <TouchableOpacity
@@ -272,8 +334,7 @@ export default function SettingsPage() {
                             >
                                 <Ionicons name="warning-outline" size={20} color={colors.warning} />
                                 <Text style={[styles.warningText, { color: colors.warning }]}>
-                                    Les notifications sont bloquées par votre téléphone. Appuyez pour
-                                    ouvrir les réglages.
+                                    {t('parametres.notifications.bloqueesBandeau')}
                                 </Text>
                             </TouchableOpacity>
                         )}
@@ -282,19 +343,16 @@ export default function SettingsPage() {
                     <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                         <View style={styles.sectionTitleRow}>
                             <Ionicons name="location-outline" size={24} color={colors.textMain} />
-                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Localisation</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('parametres.localisation.titre')}</Text>
                         </View>
 
                         <View style={styles.switchRow}>
                             <View style={styles.switchLabel}>
                                 <Text style={[styles.rowTitle, { color: colors.textMain }]}>
-                                    Guidage en arrière-plan
+                                    {t('parametres.localisation.arrierePlan')}
                                 </Text>
                                 <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                    Poursuit le guidage quand l&apos;écran est éteint ou que
-                                    l&apos;application n&apos;est plus au premier plan. Votre position
-                                    n&apos;est relevée que pendant un trajet, uniquement pour vous guider,
-                                    et n&apos;est pas conservée.
+                                    {t('parametres.localisation.arrierePlanAide')}
                                 </Text>
                             </View>
 
@@ -303,7 +361,7 @@ export default function SettingsPage() {
                                 onValueChange={handleBackgroundLocationToggle}
                                 trackColor={{ false: colors.borderStrong, true: colors.primary }}
                                 thumbColor={colors.bgMain}
-                                accessibilityLabel="Activer le guidage en arrière-plan"
+                                accessibilityLabel={t('parametres.localisation.arrierePlanA11y')}
                             />
                         </View>
                     </View>
@@ -311,24 +369,24 @@ export default function SettingsPage() {
                     <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                         <View style={styles.sectionTitleRow}>
                             <Ionicons name="document-text-outline" size={24} color={colors.textMain} />
-                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>Informations légales</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.textMain }]}>{t('parametres.legal.titre')}</Text>
                         </View>
 
                         <LinkRow
                             icon="shield-checkmark-outline"
-                            label="Politique de confidentialité"
+                            label={t('parametres.legal.confidentialite')}
                             onPress={() => openLegalPage(LEGAL_LINKS.privacy)}
                             colors={colors}
                         />
                         <LinkRow
                             icon="reader-outline"
-                            label="Conditions d'utilisation"
+                            label={t('parametres.legal.conditions')}
                             onPress={() => openLegalPage(LEGAL_LINKS.terms)}
                             colors={colors}
                         />
                         <LinkRow
                             icon="business-outline"
-                            label="Mentions légales"
+                            label={t('parametres.legal.mentions')}
                             onPress={() => openLegalPage(LEGAL_LINKS.legalNotice)}
                             colors={colors}
                             isLast
@@ -339,17 +397,16 @@ export default function SettingsPage() {
                         <View style={[styles.section, { backgroundColor: colors.bgSurface }]}>
                             <View style={styles.sectionTitleRow}>
                                 <Ionicons name="alert-circle-outline" size={24} color={colors.error} />
-                                <Text style={[styles.sectionTitle, { color: colors.error }]}>Zone de danger</Text>
+                                <Text style={[styles.sectionTitle, { color: colors.error }]}>{t('parametres.zoneDanger.titre')}</Text>
                             </View>
 
                             <Text style={[styles.hint, { color: colors.textSecondary }]}>
-                                La suppression efface définitivement votre compte et les données
-                                qui y sont rattachées.
+                                {t('parametres.zoneDanger.avertissement')}
                             </Text>
 
                             <LinkRow
                                 icon="trash-outline"
-                                label="Supprimer mon compte"
+                                label={t('parametres.zoneDanger.supprimerCompte')}
                                 onPress={() => router.push('/deleteaccount')}
                                 colors={colors}
                                 tint={colors.error}
@@ -402,33 +459,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 15,
         fontWeight: '500',
-    },
-    themeSelector: {
-        flexDirection: 'row',
-        borderRadius: 12,
-        padding: 4,
-        marginTop: 15,
-        width: '100%',
-    },
-    themeBtn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 10,
-        borderRadius: 8,
-        gap: 6,
-    },
-    themeBtnActive: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    themeBtnText: {
-        fontSize: 14,
-        fontWeight: '600',
     },
     switchRow: {
         flexDirection: 'row',

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import Button from "../../ui/Button";
 import PasswordInput from "../../ui/PasswordInput";
@@ -10,6 +11,7 @@ import "../../ui/Form.css"
 const MIN_PASSWORD_LENGTH = 10;
 
 export default function EditPasswordModal({ isOpen, onClose, onConfirm, oldPasswordError, generalError }) {
+    const { t } = useTranslation('auth');
     const [formData, setFormData] = useState({
         oldPassword: "",
         newPassword: "",
@@ -75,45 +77,45 @@ export default function EditPasswordModal({ isOpen, onClose, onConfirm, oldPassw
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2>Modifier mon mot de passe</h2>
+                <h2>{t('modales.motDePasse.titre')}</h2>
                 <form onSubmit={handleSubmit}>
 
                     <div className="input-container">
 
                         <div className="input-group">
-                            <label>Mot de passe actuel</label>
+                            <label>{t('modales.motDePasse.actuel')}</label>
                             <PasswordInput value={formData.oldPassword} onChange={handleChange} name="oldPassword" autoFocus />
                             {oldPasswordError &&
-                                <p className="error-text">Ancien mot de passe incorrect.</p>
+                                <p className="error-text">{t('modales.motDePasse.actuelIncorrect')}</p>
                             }
                         </div>
 
                         <div className={"input-group" + (newPasswordError || tooShortError ? " input-error" : "")}>
-                            <label>Nouveau mot de passe</label>
+                            <label>{t('modales.motDePasse.nouveau')}</label>
                             <PasswordInput value={formData.newPassword} onChange={handleChange} name="newPassword" />
-                            <div className="rule">Au moins {MIN_PASSWORD_LENGTH} caractères.</div>
+                            <div className="rule">{t('modales.motDePasse.regle', { min: MIN_PASSWORD_LENGTH })}</div>
                             {tooShortError &&
-                                <p className="error-text">Le mot de passe doit contenir au moins {MIN_PASSWORD_LENGTH} caractères.</p>
+                                <p className="error-text">{t('modales.motDePasse.tropCourt', { min: MIN_PASSWORD_LENGTH })}</p>
                             }
                         </div>
 
                         <div className={"input-group" + (newPasswordError ? " input-error" : "")}>
-                            <label>Confirmation du nouveau mot de passe</label>
+                            <label>{t('modales.motDePasse.confirmation')}</label>
                             <PasswordInput value={formData.confirmPassword} onChange={handleChange} name="confirmPassword" />
                         </div>
 
                     </div>
 
                     {newPasswordError &&
-                        <p className="error-text">Les nouveaux mots de passe doivent être les mêmes.</p>
+                        <p className="error-text">{t('modales.motDePasse.discordants')}</p>
                     }
                     {generalError &&
-                        <p className="error-text">Une erreur est survenue. Veuillez réessayer.</p>
+                        <p className="error-text">{t('erreurs.generique')}</p>
                     }
 
                     <div className="modal-actions">
-                        <Button type="button" onClick={onClose}>Annuler</Button>
-                        <Button type="submit">Confirmer <FaPen size={13} /></Button>
+                        <Button type="button" onClick={onClose}>{t('actions.annuler')}</Button>
+                        <Button type="submit">{t('actions.confirmer')} <FaPen size={13} /></Button>
                     </div>
                 </form>
             </div>
