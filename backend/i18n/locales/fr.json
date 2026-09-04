@@ -306,6 +306,7 @@
             "not_found": "Route introuvable",
             "computation_failed": "Erreur lors du calcul de l'itinéraire.",
             "snap_failed": "Impossible d'accrocher le départ ou l'arrivée au réseau cyclable.",
+            "out_of_zone": "Ce lieu est en dehors de la zone couverte par Sécu-Cycle.",
             "out_of_zone_start": "Le départ est en dehors de la zone couverte par Sécu-Cycle.",
             "out_of_zone_end": "L'arrivée est en dehors de la zone couverte par Sécu-Cycle.",
             "no_route": "Aucun itinéraire trouvé entre le départ et l'arrivée.",
