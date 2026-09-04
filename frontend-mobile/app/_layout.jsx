@@ -14,17 +14,19 @@ import '../services/backgroundLocation';
 import { stopNavigationNotification } from '../services/navigationNotification';
 import { ensureNotificationHandler } from '../services/weatherNotification';
 import { initAnalytics, trackScreen } from '../services/analytics';
+import { useIncomingDestination, useIncomingShare } from '../hooks/useIncomingDestination';
 
 initAnalytics();
 
-// Sans cela, le splash natif disparaît au premier frame : un utilisateur ayant
-// choisi une langue différente de celle de son téléphone verrait l'écran
-// clignoter de l'une à l'autre. En contrepartie, il FAUT le masquer
-// explicitement — un chemin qui oublierait hideAsync laisserait l'application
-// bloquée sur le splash (d'où le garde-fou temporisé dans LocaleProvider).
 SplashScreen.preventAutoHideAsync().catch(() => { });
 
 const ANDROID_OPAQUE_ROUTES = ['(tabs)', 'login', '_sitemap', '+not-found'];
+
+function IncomingDestinationBridge() {
+  useIncomingDestination();
+  useIncomingShare();
+  return null;
+}
 
 function RootNavigator() {
   const pathname = usePathname();
@@ -40,18 +42,21 @@ function RootNavigator() {
   }, [pathname]);
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        fullScreenGestureEnabled: true,
-        ...(Platform.OS === 'android' ? ANDROID_REVEAL : {}),
-      }}
-    >
-      {Platform.OS === 'android' &&
-        ANDROID_OPAQUE_ROUTES.map((name) => (
-          <Stack.Screen key={name} name={name} options={androidOpaque(colors.bgMain)} />
-        ))}
-    </Stack>
+    <>
+      <IncomingDestinationBridge />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          fullScreenGestureEnabled: true,
+          ...(Platform.OS === 'android' ? ANDROID_REVEAL : {}),
+        }}
+      >
+        {Platform.OS === 'android' &&
+          ANDROID_OPAQUE_ROUTES.map((name) => (
+            <Stack.Screen key={name} name={name} options={androidOpaque(colors.bgMain)} />
+          ))}
+      </Stack>
+    </>
   );
 }
 
