@@ -46,7 +46,14 @@ export default {
                 "FOREGROUND_SERVICE",
                 "FOREGROUND_SERVICE_LOCATION",
                 "POST_NOTIFICATIONS"
-            ]
+            ],
+            intentFilters: [
+                {
+                    action: 'VIEW',
+                    category: ['DEFAULT', 'BROWSABLE'],
+                    data: [{ scheme: 'geo' }],
+                },
+            ],
         },
         web: {
             output: "static",
@@ -86,13 +93,10 @@ export default {
             "expo-localization",
             "@react-native-community/datetimepicker",
             "@maplibre/maplibre-react-native",
-            "./plugins/withAndroidLint.js"
+            "./plugins/withAndroidLint.js",
+            "expo-quick-actions",
+            "expo-share-intent"
         ],
-        // Chaînes lues par le système d'exploitation : nom de l'application et
-        // descriptions de permission. Elles suivent la langue du TÉLÉPHONE, pas la
-        // préférence choisie dans l'application — iOS lit l'Info.plist avant que
-        // le moindre code JS ne tourne. Sans conséquence : elles n'apparaissent
-        // qu'à l'installation et au premier octroi de permission.
         defaultLanguage: "fr",
         locales: {
             fr: "./i18n/locales/native/fr.json",
