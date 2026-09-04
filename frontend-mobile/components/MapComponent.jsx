@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo, use } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
@@ -470,10 +470,6 @@ export default function MapComponent({
         const styleIdToUse = resolvedTheme === "dark" ? styleConfig.darkId : styleConfig.lightId;
         return `https://api.maptiler.com/maps/${styleIdToUse}/style.json?key=${MAPTILER_KEY}`;
     }, [activeBaseStyle, mapThemeMode, isDark, MAPTILER_KEY]);
-
-    useEffect(() => {
-        isNavigatingRef.current = isNavigating;
-    }, [isNavigating]);
 
     useEffect(() => {
         isNavigatingRef.current = isNavigating;
