@@ -487,6 +487,7 @@ export default function MapComponent({
 
         (async () => {
             headingSubscription = await Location.watchHeadingAsync((headingObj) => {
+                if (annule) return;
                 if (!headingObj?.magHeading) return;
                 if (!isNavigatingRef.current) return;
                 if (speedRef.current >= SPEED_THRESHOLD) return;
@@ -508,9 +509,12 @@ export default function MapComponent({
                     easing: "linear",
                 });
             });
+            if (annule) { headingSubscription.remove(); return; }
+
             locationSubscription = await Location.watchPositionAsync(
                 { accuracy: Location.Accuracy.Highest, timeInterval: 1000, distanceInterval: 2 },
                 (location) => {
+                    if (annule) return;
                     const speed = location.coords.speed || 0;
                     const gpsHeading = location.coords.heading;
                     speedRef.current = speed;
