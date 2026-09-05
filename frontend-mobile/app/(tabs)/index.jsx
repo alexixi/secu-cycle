@@ -34,6 +34,11 @@ import {
 } from '../../services/notificationPreference';
 import useLocationPermission, { GRANTED, PRIMING } from '../../hooks/useLocationPermission';
 import { LocationPriming, NotificationPriming } from '../../components/PermissionPriming';
+import {
+    clearPendingDestination,
+    consumePendingDestination,
+    subscribePendingDestination,
+} from '../../services/pendingDestination';
 
 export default function Index() {
     const { t } = useTranslation();
@@ -61,6 +66,8 @@ export default function Index() {
     // Vrai tant qu'un « Démarrer » attend qu'une modale se referme : les mêmes
     // modales servent aussi aux boutons de la carte, qui n'ont rien à reprendre.
     const attenteDemarrageRef = useRef(false);
+    // Destination entrante : soit un point, soit une recherche.
+    const [incoming, setIncoming] = useState(null);
 
     const { token, user, bikes } = useAuth();
     const { colors, typography } = useTheme();
@@ -231,6 +238,45 @@ export default function Index() {
         })();
     }, [guidanceState?.hasArrived, token, routePaths, selectedItineraire]);
 
+    useEffect(() => {
+        const apply = (resolved) => {
+            switch (resolved.kind) {
+                case 'coords':
+                    setEndPoint({
+                        lat: resolved.lat,
+                        lon: resolved.lon,
+                        name: resolved.label ?? '',
+                    });
+                    setPendingPoiRoute(true);
+                    break;
+                case 'candidates':
+                    setIncoming({
+                        type: 'search',
+                        query: resolved.query,
+                        items: resolved.items,
+                    });
+                    break;
+                case 'raw':
+                default:
+                    setIncoming({
+                        type: 'search',
+                        query: resolved.text,
+                        items: [],
+                        reason: resolved.reason,
+                    });
+                    break;
+            }
+        };
+
+        const pending = consumePendingDestination();
+        if (pending) apply(pending);
+
+        return subscribePendingDestination((resolved) => {
+            const value = consumePendingDestination();
+            if (value) apply(value);
+        });
+    }, []);
+
     const handleCalculate = React.useCallback(async () => {
         if (!startPoint?.lat || !startPoint?.lon || !endPoint?.lat || !endPoint?.lon) {
             console.log("Coordonnées manquantes pour le calcul");
@@ -294,7 +340,7 @@ export default function Index() {
             return;
         }
         if (!startPoint) {
-            setStartPoint({ lat: currentPosition.lat, lon: currentPosition.lon, name: 'Ma position actuelle' });
+            setStartPoint({ lat: currentPosition.lat, lon: currentPosition.lon, name: t('itineraire.recherche.maPositionActuelle') });
         }
         setEndPoint({ lat: poi.lat, lon: poi.lon, name: poi.name });
         setPendingPoiRoute(true);
@@ -306,6 +352,19 @@ export default function Index() {
             handleCalculate();
         }
     }, [pendingPoiRoute, startPoint, endPoint, handleCalculate]);
+
+    useEffect(() => {
+        if (!pendingPoiRoute || startPoint) return;
+        if (currentPosition) {
+            setStartPoint({
+                lat: currentPosition.lat,
+                lon: currentPosition.lon,
+                name: t('itineraire.recherche.maPositionActuelle'),
+            });
+        } else if (!locationGranted) {
+            ensureLocationGranted();
+        }
+    }, [pendingPoiRoute, startPoint, currentPosition, locationGranted, ensureLocationGranted, t]);
 
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();

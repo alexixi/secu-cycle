@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from database import get_db
-from geocoding import config, service
+from geocoding import config, service, shortlink
 from i18n import get_locale, t
 from limiter import limiter
 from models.graph_profile import GraphProfile
@@ -52,3 +52,33 @@ def reverse_geocode(
     if result is None:
         raise HTTPException(status_code=404, detail=t("error.geo.no_address", locale))
     return result
+
+@router.get("/resolve")
+@limiter.limit("30/minute")
+def resolve_shortlink(
+    request: Request,
+    url: str = Query(..., max_length=500),
+    db: Session = Depends(get_db),
+    locale: str = Depends(get_locale),
+):
+    """Point désigné par un lien court de cartographie partagé par l'utilisateur.
+
+    Limite basse : chaque appel déclenche une requête sortante vers Google
+    depuis notre IP. Un débit libre ferait du serveur un relais.
+    """
+    G, profile_name, communes = _context(request, db, locale)
+
+    resolved = shortlink.resolve(url)
+    if resolved is None:
+        raise HTTPException(status_code=404, detail=t("error.geo.no_address", locale))
+
+    if resolved["lat"] is None:
+        results = service.search(db, G, profile_name, communes, resolved["label"])
+        if not results:
+            raise HTTPException(status_code=404, detail=t("error.geo.no_address", locale))
+        return results[0]
+
+    if not service._within_extent(G, resolved):
+        raise HTTPException(status_code=404, detail=t("error.geo.out_of_zone", locale))
+
+    return resolved

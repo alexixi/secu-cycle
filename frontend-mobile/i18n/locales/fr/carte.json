@@ -67,6 +67,10 @@
         "danger": "Danger",
         "obstacle": "Obstacle"
     },
+    "actionsRapides": {
+        "rentrer": "Rentrer",
+        "travail": "Aller au travail"
+    },
     "ui": {
         "fermer": "Fermer",
         "carte": {

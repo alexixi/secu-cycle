@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo, use } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { StyleSheet, View, TouchableOpacity, Modal, Text, Image, Animated, Dimensions, Alert, KeyboardAvoidingView, Platform, TextInput, Switch, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Map, Camera, ViewAnnotation, GeoJSONSource, Layer, Images, NativeUserLocation } from '@maplibre/maplibre-react-native';
@@ -473,10 +473,6 @@ export default function MapComponent({
 
     useEffect(() => {
         isNavigatingRef.current = isNavigating;
-    }, [isNavigating]);
-
-    useEffect(() => {
-        isNavigatingRef.current = isNavigating;
         if (isNavigating) {
             navigationStartTimeRef.current = Date.now();
         }
@@ -491,6 +487,7 @@ export default function MapComponent({
 
         (async () => {
             headingSubscription = await Location.watchHeadingAsync((headingObj) => {
+                if (annule) return;
                 if (!headingObj?.magHeading) return;
                 if (!isNavigatingRef.current) return;
                 if (speedRef.current >= SPEED_THRESHOLD) return;
@@ -512,9 +509,12 @@ export default function MapComponent({
                     easing: "linear",
                 });
             });
+            if (annule) { headingSubscription.remove(); return; }
+
             locationSubscription = await Location.watchPositionAsync(
                 { accuracy: Location.Accuracy.Highest, timeInterval: 1000, distanceInterval: 2 },
                 (location) => {
+                    if (annule) return;
                     const speed = location.coords.speed || 0;
                     const gpsHeading = location.coords.heading;
                     speedRef.current = speed;
