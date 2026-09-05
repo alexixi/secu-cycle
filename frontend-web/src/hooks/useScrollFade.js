@@ -6,6 +6,7 @@ export default function useScrollFade() {
     const ref = useRef(null);
     const [scrollState, setScrollState] = useState('none');
     const glisse = useRef(null);
+    const ignoreNextClick = useRef(false);
 
     const checkScroll = useCallback(() => {
         const el = ref.current;
@@ -41,11 +42,16 @@ export default function useScrollFade() {
     const onPointerDown = (e) => {
         if (e.pointerType !== 'mouse' || e.button !== 0) return;
         const el = ref.current;
-        if (!el || el.scrollWidth - el.clientWidth <= 1) return;
+        if (!el) return;
+
+        if (el.scrollWidth - el.clientWidth <= 1) {
+            glisse.current = null;
+            ignoreNextClick.current = false;
+            return;
+        }
 
         glisse.current = { x: e.clientX, depart: el.scrollLeft, aBouge: false };
-        el.setPointerCapture(e.pointerId);
-        el.classList.add('is-dragging');
+        ignoreNextClick.current = false;
     };
 
     const onPointerMove = (e) => {
@@ -53,23 +59,24 @@ export default function useScrollFade() {
         if (!glisse.current || !el) return;
 
         const dx = e.clientX - glisse.current.x;
-        if (Math.abs(dx) > SEUIL_GLISSE) glisse.current.aBouge = true;
-        el.scrollLeft = glisse.current.depart - dx;
+        if (Math.abs(dx) > SEUIL_GLISSE) {
+            glisse.current.aBouge = true;
+            el.scrollLeft = glisse.current.depart - dx;
+        }
     };
 
     const finGlisse = (e) => {
         const el = ref.current;
         if (!glisse.current || !el) return;
 
-        el.releasePointerCapture?.(e.pointerId);
-        el.classList.remove('is-dragging');
-        glisse.current = glisse.current.aBouge ? { aBouge: true } : null;
+        if (glisse.current.aBouge) ignoreNextClick.current = true;
+        glisse.current = null;
     };
 
     const onClickCapture = (e) => {
-        if (!glisse.current?.aBouge) return;
+        if (!ignoreNextClick.current) return;
         e.stopPropagation();
-        glisse.current = null;
+        ignoreNextClick.current = false;
     };
 
     return {
