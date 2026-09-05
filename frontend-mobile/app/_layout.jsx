@@ -15,6 +15,7 @@ import { stopNavigationNotification } from '../services/navigationNotification';
 import { ensureNotificationHandler } from '../services/weatherNotification';
 import { initAnalytics, trackScreen } from '../services/analytics';
 import { useIncomingDestination, useIncomingShare } from '../hooks/useIncomingDestination';
+import { useQuickActions } from '../hooks/useQuickActions';
 
 initAnalytics();
 
@@ -25,6 +26,11 @@ const ANDROID_OPAQUE_ROUTES = ['(tabs)', 'login', '_sitemap', '+not-found'];
 function IncomingDestinationBridge() {
   useIncomingDestination();
   useIncomingShare();
+  return null;
+}
+
+function QuickActionsBridge() {
+  useQuickActions();
   return null;
 }
 
@@ -44,6 +50,7 @@ function RootNavigator() {
   return (
     <>
       <IncomingDestinationBridge />
+      <QuickActionsBridge />
       <Stack
         screenOptions={{
           headerShown: false,

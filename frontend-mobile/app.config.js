@@ -94,6 +94,7 @@ export default {
             "@react-native-community/datetimepicker",
             "@maplibre/maplibre-react-native",
             "./plugins/withAndroidLint.js",
+            "./plugins/withQuickActionIcons.js",
             "expo-quick-actions",
             "expo-share-intent"
         ],
