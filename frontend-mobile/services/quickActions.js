@@ -14,6 +14,7 @@ export async function syncQuickActions(user, t) {
         items.push({
             id: ACTION_HOME,
             title: t('carte.actionsRapides.rentrer'),
+            icon: 'ic_home',
             subtitle: user.home_address,
             params: { adresse: user.home_address },
         });
@@ -23,6 +24,7 @@ export async function syncQuickActions(user, t) {
         items.push({
             id: ACTION_WORK,
             title: t('carte.actionsRapides.travail'),
+            icon: 'ic_work',
             subtitle: user.work_address,
             params: { adresse: user.work_address },
         });
