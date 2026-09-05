@@ -240,7 +240,6 @@ export default function Index() {
 
     useEffect(() => {
         const apply = (resolved) => {
-            console.log('[index] reçu:', resolved.kind);
             switch (resolved.kind) {
                 case 'coords':
                     setEndPoint({

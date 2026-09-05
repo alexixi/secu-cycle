@@ -64,16 +64,6 @@ export function useIncomingDestination(options = {}) {
     }, []);
 }
 
-/**
- * Partage entrant (ACTION_SEND).
- * ACTION_SEND ne passe pas par Linking : le texte est dans
- * Intent.EXTRA_TEXT, donc getInitialURL() renvoie null.
- *
- * Sur Android, une URL partagée arrive dans `text` (EXTRA_TEXT) ;
- * `webUrl` n'est renseigné que sur iOS. L'ordre couvre les deux.
- *
- * @param {{ bias?: { lat: number, lon: number } }} [options]
- */
 export function useIncomingShare(options = {}) {
     const { bias } = options;
     const biasRef = useRef(bias);
@@ -82,13 +72,10 @@ export function useIncomingShare(options = {}) {
     const { isReady, hasShareIntent, shareIntent, resetShareIntent } = useShareIntent({
         resetOnBackground: true,
     });
-    console.log('[share] hook', isReady, hasShareIntent, JSON.stringify(shareIntent));
     useEffect(() => {
         if (!isReady || !hasShareIntent) return;
 
         const raw = shareIntent?.webUrl ?? shareIntent?.text;
-
-        if (__DEV__) console.log('[share] reçu:', JSON.stringify(shareIntent));
 
         if (!raw) {
             resetShareIntent();
@@ -97,7 +84,6 @@ export function useIncomingShare(options = {}) {
 
         resolveDestination(raw, { bias: biasRef.current, source: 'share' })
             .then((resolved) => {
-                if (__DEV__) console.log('[share] résolu:', JSON.stringify(resolved));
                 setPendingDestination(resolved);
             })
             .catch((e) => console.warn('[share] résolution', e))
