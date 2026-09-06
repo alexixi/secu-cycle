@@ -141,7 +141,8 @@ export default function HomePage() {
                         >
                         <img
                             src={`/badges/smollaunch-featured-${effectiveTheme}.svg`}
-                            alt="Sécu'Cycle — Featured on Smol Launch"
+                            // i18n-exempt: nom d'une marque
+                            alt="Sécu'Cycle — Smol Launch"
                             loading="lazy"
                             width="250"
                             height="60"
