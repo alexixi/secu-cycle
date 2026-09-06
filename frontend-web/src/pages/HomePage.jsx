@@ -10,12 +10,14 @@ import apercuApplication from "../assets/screenshots/mobile/apercu_itineraire-le
 import { IoIosArrowDropdown } from "react-icons/io";
 import { FaLinkedin } from "react-icons/fa";
 import { useLocalizedPath } from '../i18n/useLang';
+import { useTheme } from "../context/ThemeContext";
 
 const CAS = ['projet', 'problematiques', 'pourquoi', 'sources'];
 
 export default function HomePage() {
     const { t } = useTranslation('home');
     const path = useLocalizedPath();
+    const { effectiveTheme } = useTheme();
 
     const composants = {
         mentions: <Link to={path("mentionsLegales")} />,
@@ -129,6 +131,25 @@ export default function HomePage() {
                     ))}
                 </div>
             </div>
+            <aside id="launch-badge-container">
+                <h2>{t('launch.title')}</h2>
+                <div className="badges">
+                    <a
+                        href="https://smollaunch.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >
+                        <img
+                            src={`/badges/smollaunch-featured-${effectiveTheme}.svg`}
+                            // i18n-exempt: nom d'une marque
+                            alt="Sécu'Cycle — Smol Launch"
+                            loading="lazy"
+                            width="250"
+                            height="60"
+                            />
+                    </a>
+                </div>
+            </aside>
         </>
     )
 }
