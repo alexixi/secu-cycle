@@ -42,7 +42,7 @@
     position: relative;
 }
 
-.home-section h2 {
+h2 {
     margin-top: 0;
     font-size: 2.5rem;
     color: var(--primary-hover);
@@ -124,11 +124,6 @@
     min-width: 380px;
 }
 
-#app-section aside h2 {
-    font-size: 2.5rem;
-    color: var(--primary-hover);
-}
-
 #app-section aside p {
     font-size: 1.2rem;
     color: var(--text-main);
@@ -174,12 +169,6 @@
     justify-content: center;
     gap: 50px;
     padding: 4em 1em;
-}
-
-#team-section h2 {
-    font-size: 2.5rem;
-    margin: 0;
-    color: var(--primary-hover);
 }
 
 #team-section .team-wrapper {
@@ -233,6 +222,36 @@
 
 #team-section .team-wrapper a.team-member:hover .icon {
     color: var(--primary-hover);
+}
+
+#launch-badge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 4em;
+    background-color: var(--bg-surface);
+}
+
+#launch-badge-container.badges {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
+#launch-badge-container img {
+    transition: opacity 0.2s ease-in-out;
+    opacity: 0.85;
+    height: auto;
+    max-width: 180px;
+    display: block;
+}
+
+#launch-badge-container img:hover {
+    opacity: 1;
 }
 
 @media (max-width: 800px) {
